@@ -2,6 +2,7 @@ import { supabase } from '../supabase';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useGlobalStore } from "../store";
+import ReviewGrid from './ReviewGrid';
 
 export default function ReviewPage({}) {
 

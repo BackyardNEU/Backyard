@@ -2,8 +2,8 @@
   position: fixed;
   inset: 0;               /* ← fills viewport */
   margin: auto;           /* ← centers */
-  width: 120vh;
-  height: fit-content;
+  width: 80vh;
+  height: 95vh;
 
   background: rgb(252, 252, 252);
   border-radius: 0px;
@@ -12,10 +12,14 @@
   flex-direction: column;
   align-items: center;
 
-  border: 1px solid rgb(162, 162, 162);
+  border: 2px solid rgb(185, 185, 185);
   border-radius: 15px;
   box-shadow: 0 20px 80px rgba(0,0,0,0.4), 
-            0 0 0 9999px rgba(0,0,0,0.65);
+            0 0 0 9999px rgba(46, 46, 46, 0.65);
+
+
+  overflow-y: auto;
+
   z-index: 9999;   
 }
 
@@ -23,7 +27,7 @@
 .close-btn {
   position: absolute;
   top: 16px;
-  right: 20px;
+  margin-right: -1vh;
 
   background: none;
   border: none;
@@ -31,3 +35,98 @@
   cursor: pointer;
   line-height: 1;
 }
+
+.review-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: rgb(62, 42, 9);
+  text-decoration: none;
+  color: white;
+  border: none;
+  border-radius: 90px;
+
+}
+
+.club-img-exp {
+  margin-top: 20px;
+  background-color:#f7e077;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 70vh;
+  height: 70vh;
+  flex-shrink: 0;
+  margin-bottom: 20px;
+  border-radius: 20px;
+  font-size: 10rem;
+  border: 1px solid;
+  border-color:rgb(107, 107, 107)
+  
+}
+
+
+.club-name-exp{
+  font-family: "Josefin Sans", sans-serif;
+  margin-left: 5vh;
+  margin-right: 5vh;
+  align-self: flex-start;
+  color: rgb(60, 120, 35);
+  font-weight: 500;
+  font-style: normal;
+  letter-spacing: -1.2px;
+  font-size: 70px;
+  
+  text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+}
+
+.club-tag1 {
+  font-family: "Josefin Sans", sans-serif;
+  font-weight: 400;
+  align-self: flex-start;
+  margin-left: 5vh;
+  margin-bottom: 30px;
+  gap: 1rem;
+  letter-spacing: -1.2px;
+  font-size: 30px;
+  color:grey;
+
+}
+
+.club-tag2 {
+  font-size: 10px;
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 10px;
+
+}
+
+.tag {
+  padding: 6px 30px;
+  font-size: 15px;
+  background-color: rgb(0, 0, 0);
+  text-decoration: none;
+  color: white;
+  border: none;
+  border-radius: 90px;
+}
+  
+.club-description-exp {
+
+  align-self: flex-start;
+  margin-left: 10vh;
+  margin-right: 10vh;
+  color:rgb(66, 66, 66);
+  text-align: center;
+}
+
+
+.divider {
+  width: 60vh;
+  height: 1px;
+  background-color: rgb(71, 71, 71);
+  margin: 20px 0;
+}
+
+
+  
+  

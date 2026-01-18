@@ -34,31 +34,7 @@ export const ClubGrid = ({ result, onExpand }) => {
     setTimeout(() => setAnimating(false), 250);
   };
 
-  const handleMouseEnter = (e) => {
-    if (!cardRef.current) return;
-
-    const rect = cardRef.current.getBoundingClientRect();
-    const mouseX = e.clientX;
-    const mouseY = e.clientY;
-
-    // Find closest point on rectangle edge to mouse
-    const closestX = Math.max(rect.left, Math.min(mouseX, rect.right));
-    const closestY = Math.max(rect.top, Math.min(mouseY, rect.bottom));
-
-    // Calculate angle from center to closest edge point
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-
-    const angleRad = Math.atan2(closestY - centerY, closestX - centerX);
-    const angleDeg = angleRad * (180 / Math.PI) + 90; // +90 so 0deg is at top
-
-    setStartAngle(angleDeg);
-    setIsHovered(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-  };
+  
 
   const truncate = (text, wordLimit = 15) => {
     const words = text.split(" ");
@@ -67,16 +43,8 @@ export const ClubGrid = ({ result, onExpand }) => {
   };
 
   return (
-    <div
-      className="card-wrapper"
-      ref={cardRef}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      <div
-        className={`orbit-shadow ${isHovered ? 'active' : ''}`}
-        style={{ '--start-angle': `${startAngle}deg` }}
-      />
+    
+  
       <div className="club-card" onClick={onExpand}>
         <img
           className={`heart-btn ${animating ? 'pop' : ''}`}
@@ -89,6 +57,5 @@ export const ClubGrid = ({ result, onExpand }) => {
           <p>{truncate(result.club_description)}</p>
         </div>
       </div>
-    </div>
   );
 };

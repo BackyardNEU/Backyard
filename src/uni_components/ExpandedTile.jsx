@@ -9,19 +9,28 @@ function ExpandedTile({club, onClose}){
     <AnimatePresence>
 
         <motion.div
-            layoutId = {'club-${club.id}'}
+            layoutId = {`club-${club.id}`}
             className = "expanded-card"
             initial = {{opacity: 0}}
             animate = {{opacity: 1}}
             exit = {{ opacity: 0}}
 
         >
+        <div className="club-img-exp">🦝</div>
         <button className = "close-btn" onClick={onClose}>x</button>
         
-        <h2>{club.club_name}</h2>
-        <p>{club.club_description}</p>
+        <h2 className ="club-name-exp">{club.club_name}</h2>
+        <h2 className ="club-tag1">Web Dev • Introductory</h2>
+        <div className ="club-tag2">
+        <div className = "tag">Beginner</div>
+        <div className = "tag">Hands On</div>
+        <div className = "tag">Good Mentors</div>
+        </div>
+        <p className= "club-description-exp">{club.club_description}</p>
 
-        <Link to="/reviews/:id">Click here to see reviews</Link>
+        <div className = "divider"></div>
+        <h3>Have you been in this club?</h3>
+        <Link to="/reviews/:id" className = "review-btn">Share your experience</Link>
         
 
 

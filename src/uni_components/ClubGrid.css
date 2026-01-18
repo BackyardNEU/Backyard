@@ -2,40 +2,9 @@
   position: relative;
 }
 
-@property --angle {
-  syntax: '<angle>';
-  initial-value: 0deg;
-  inherits: false;
-}
 
-@keyframes orbit {
-  from { --angle: 0deg; }
-  to { --angle: 360deg; }
-}
 
-.orbit-shadow {
-  position: absolute;
-  inset: -2px;
-  border-radius: 20px;
-  z-index: 0;
-  pointer-events: none;
-  background: conic-gradient(
-    from calc(var(--start-angle, 0deg) + var(--angle)),
-    transparent 0deg,
-    transparent 20deg,
-    rgba(88, 88, 88, 0.3) 45deg,
-    transparent 60deg,
-    transparent 360deg
-  );
-  filter: blur(5px);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
 
-.orbit-shadow.active {
-  opacity: 1;
-  animation: orbit 8s linear infinite;
-}
 
 .club-card {
   background: #f9f9f9;

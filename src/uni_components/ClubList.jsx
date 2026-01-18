@@ -26,6 +26,7 @@ export const ClubList = ({ results }) => {
     {expandedClub && (
       <ExpandedTile
         club = {expandedClub}
+        key = {expandedClub.id}
         onClose={() => setExpandedClub(null)}
     />)}
     </>
