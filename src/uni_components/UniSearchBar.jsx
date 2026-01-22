@@ -11,7 +11,7 @@ export const UniSearchBar = ({ setResults, university}) => {
   const [stopped, setStopped] = useState(false)
 
 
-  const fullText = "Explore Clubs...";
+  const fullText = "Show me project based engineering clubs for beginners ";
 useEffect(() => {
     // if user clicked → animation stops forever
     if (stopped) return;

@@ -17,15 +17,7 @@ export const UniversityPage = () => {
   const [favActive, setFavActive] = useState(false);
   const [isDocked, setIsDocked] = useState(false);
   
-    useEffect(() => {
-    const handleScroll = () => {
-      const triggerPoint = 180;
-      setIsDocked(window.scrollY > triggerPoint);
-    };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const fetchFavorites = async () => {
     if(!favActive) {
@@ -75,16 +67,12 @@ export const UniversityPage = () => {
 
   return (
     <div className="UniPage">
-      <h1 className="raleway-uni">{university.uni_name}</h1>
-
-      <div className={`dock-wrapper ${isDocked ? 'docked' : ''}`}>
+      <div className = "fixed-wrapper">
+        <h1 className="raleway-uni">{university.uni_name}</h1>
         <IconBar onFavoritesClick={fetchFavorites} />
         <UniSearchBar setResults={setResults} university={university.uni_name} />
       </div>
-
-      {isDocked && <div className="dock-spacer" />}
-
-      <ClubList results={results} />
+     < ClubList className ="start" results={results} />
     </div>
   );
 };

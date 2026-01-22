@@ -7,59 +7,32 @@
   min-height: 100vh;
   min-width: 800px;
   width: 100%;
-  padding-top: 2vh;
+ 
   box-sizing: border-box;
   color: rgb(0, 0, 0);
 }
 
 .raleway-uni {
+  
   font-family: "Raleway", sans-serif;
   font-optical-sizing: auto;
   font-weight: 210.9rem 1;
+  font-style: normal;
   font-size: 10vh;
+  margin-top: 0.5%;
   margin-bottom: 12px;
 }
 
-.dock-wrapper {
-  position: relative;
+.fixed-wrapper {
+  position: fixed;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   align-items: center;
   width: 100%;
-  transition: all 0.3s ease;
   z-index: 999;
+ 
+  
+  background: linear-gradient(to bottom, #f9f9f9 0%, #f9f9f9 80%, transparent 100%);
 }
 
-/* Docked to top */
-.dock-wrapper.docked {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(to bottom, #f9f9f9 0%, #f9f9f9 70%, transparent 100%);
-  padding-top: 1rem;
-  padding-bottom: 2rem;
-}
-
-/* Spacer to prevent content jump */
-.dock-spacer {
-  height: 120px;
-}
-
-.header-wrapper {
-  width: 40vw;
-  min-width: 300px;
-  max-width: 900px;
-  margin: 0 auto 2rem auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.8rem;
-}
-
-.club-input-wrapper-outer {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
