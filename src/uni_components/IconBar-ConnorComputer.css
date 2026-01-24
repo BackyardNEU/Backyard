@@ -1,0 +1,62 @@
+.icon-bar{
+  width: 80vw;
+
+  height: 100px;
+  background-color: #f4f4f5;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  box-shadow: inset 0 0 3px 1px rgba(226, 226, 226, 0.15);
+  padding: 0 0.5rem;
+  box-sizing: border-box;
+  border-radius: 15px;
+
+  z-index: 100;
+}
+
+.icon-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  cursor: pointer;
+  margin-top: 10px; 
+}
+
+.icon-container.active::before {
+  content: '';
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -55%);
+  width: 70px;       
+  height: 70px;
+  border-radius: 50%;
+  background-color: rgb(255, 166, 166);
+  z-index: 0; 
+}
+
+.icon-container img {
+    transition: transform 0.9s ease;
+}
+
+.icon-container.active img {
+transform: scale(1.1);
+}
+
+.icon {
+    width: 52px;
+    height: 52px;
+    object-fit: containt;
+    object-fit: contain;
+    cursor: pointer;
+    z-index: 1;
+    }
+
+.icon-label {
+margin-top: 14px;
+font-family: "Inter", sans-serif;
+font-size: 0.7rem;
+color: #d14545;
+}
