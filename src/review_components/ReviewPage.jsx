@@ -14,18 +14,21 @@ export default function ReviewPage({}) {
     ]
     const GlobalValue = useGlobalStore((state) => state.GlobalValue);
     const { id } = useParams();
+    console.log(id)
     const [reviews, set_reviews] = useState([]);
     const [warning, setWarning] = useState("")
     
     //user input variables
     const [ user_review , set_user_review ] = useState('');
-    const [ user_rating, set_user_rating ] = useState(0)
+    const [ rating , set_rating ] = useState(0)
+
 
     useEffect(() => {
         async function fetch_reviews() {
             const {data, error} = await supabase
                 .from('reviews')
-                .select('*')
+                .select('*');
+                //.eq('club_id', id);
 
             if (error) {
                 console.error('Error fetching reviews:', error);
@@ -37,12 +40,16 @@ export default function ReviewPage({}) {
     }, [id])
 
     async function post_review() {
+        //gets user data
+        const {
+        data: { user }
+        } = await supabase.auth.getUser();
+
         //first check if the user is logged in
         if (GlobalValue) {
             //then, once checked, check if either field is empty (or rating isn't a number between 0-5)
-            if(user_review && (user_rating in [0,1,2,3,4,5])) {
+            if(user_review && Number.isInteger(Number(rating)) && rating >= 1 && rating <= 5) {
                 //finally, take the values and post the review
-                
                 for(let i=0; i < badWords.length; i++) {
                     const regex = new RegExp(badWords[i], 'gi');
                     if(regex.test(user_review)){
@@ -51,9 +58,9 @@ export default function ReviewPage({}) {
                     }
                 }
 
-                const { data , error } = await supabase
+                const { error } = await supabase
                     .from('reviews')
-                    .upsert({club_name: "test", review_text: user_review, rating: user_rating, user: "test user"})
+                    .insert({club_id: id, user_id: user.id, rating: rating, review_text: user_review})
                     .select()
                 
                 if (error) {
@@ -67,22 +74,6 @@ export default function ReviewPage({}) {
         }
     }
 
-
-    // const submitReview = () => {
-    //     console.log("Button pressed!")
-    //     if(userReview.length < 10){
-    //         setWarning("Written review too short. Use at least 10 characters");
-    //         return;
-    //     }
-    //     for(let i=0; i < badWords.length; i++){
-    //         const regex = new RegExp(badWords[i], 'gi');
-    //         if(regex.test(userReview)){
-    //             setWarning("Review contains harmful content. Please do not use derogatory or harmful speech.");
-    //             return;
-    //         }
-    //     }
-    //     setWarning("")
-    // }
 
     return (
         <div className='review-page'>
@@ -98,8 +89,8 @@ export default function ReviewPage({}) {
                 />
                 <input
                     type="number"
-                    value={user_rating}
-                    onChange={(e) => set_user_rating(e.target.value)}
+                    value={rating}
+                    onChange={(e) => set_rating(e.target.value)}
                     placeholder="Rate club out of 5"
                 />
                 <button onClick={post_review}>Post Review</button>
@@ -110,7 +101,7 @@ export default function ReviewPage({}) {
             <div className='view-reviews'>
                 { 
                     reviews.map((review) => {
-                        return <ReviewGrid review={review} key={review.club_name}/>
+                        return <ReviewGrid review={review} key={review.club_id}/>
                     })
                 }
             </div>
