@@ -1,4 +1,4 @@
-import { useGlobalStore } from "../store";
+import { supabase } from "../supabase"
 
 function Logout() {
   const handleLogout = async () => {
