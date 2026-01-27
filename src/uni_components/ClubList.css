@@ -6,7 +6,7 @@
   width: 80vw;
   max-width: 20000;
   margin: 0 auto 2rem auto;
-  padding-top: 45vh;
+  padding-top: 315px;
   align-items: center;
   justify-items:center;
 }
@@ -18,6 +18,7 @@
    
   display: flex;
   flex-direction: column;
+  margin: -5vh;
 
 
 

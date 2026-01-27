@@ -3,6 +3,7 @@ import './ClubGrid.css';
 import heartEmpty from '/src/assets/empty_heart.png';
 import heartFull from '/src/assets/full_heart.png';
 import { supabase } from '../supabase';
+import { motion } from "framer-motion"
 
 export const ClubGrid = ({ result, onExpand }) => {
   const [liked, setLiked] = useState(false);
@@ -45,7 +46,11 @@ export const ClubGrid = ({ result, onExpand }) => {
   return (
     
   
-      <div className="club-card" onClick={onExpand}>
+      <motion.button 
+      className="club-card" 
+      onClick={onExpand} 
+      layoutId = {`club-${result.id}`}
+      >
         <img
           className={`heart-btn ${animating ? 'pop' : ''}`}
           src={liked ? heartFull : heartEmpty}
@@ -56,6 +61,6 @@ export const ClubGrid = ({ result, onExpand }) => {
           <h2>{result.club_name}</h2>
           <p>{truncate(result.club_description)}</p>
         </div>
-      </div>
+      </motion.button>
   );
 };

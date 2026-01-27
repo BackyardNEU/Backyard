@@ -37,9 +37,8 @@
   background: linear-gradient(to bottom, #f9f9f9 0%, #f9f9f9 80%, transparent 100%);
 }
 
-@media (max-width: 549px) and (min-width: 100px) {
+@media (max-width: 775px) {
   .raleway-uni{
-    font-size: 3rem
-
+    font-size: 12vw
   }
 }

@@ -1,6 +1,5 @@
 .icon-bar{
   width: 80vw;
-
   height: 100px;
   background-color: #f4f4f5;
   display: flex;
@@ -59,4 +58,10 @@ margin-top: 14px;
 font-family: "Inter", sans-serif;
 font-size: 0.7rem;
 color: #d14545;
+}
+
+@media (max-width: 1000px) {
+  .icon-bar{
+    height: calc(100% * .9);
+  }
 }
