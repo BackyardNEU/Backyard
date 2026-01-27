@@ -19,6 +19,7 @@
   font-weight: 210.9rem 1;
   font-style: normal;
   font-size: 10vh;
+  /* 10vh*/
   margin-top: 0.5%;
   margin-bottom: 12px;
 }
@@ -36,3 +37,9 @@
   background: linear-gradient(to bottom, #f9f9f9 0%, #f9f9f9 80%, transparent 100%);
 }
 
+@media (max-width: 549px) and (min-width: 100px) {
+  .raleway-uni{
+    font-size: 3rem
+
+  }
+}

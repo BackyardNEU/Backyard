@@ -44,3 +44,14 @@ input:focus {
 .search-icon {
     color: rgb(0, 0, 0);
 }
+
+
+@media (max-width: 549px) and (min-width: 300px) {
+  .club-input-wrapper-{
+    width: 90vw;
+   
+    
+
+
+  }
+}

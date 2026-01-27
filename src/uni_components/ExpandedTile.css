@@ -3,36 +3,36 @@
   inset: 0;               /* ← fills viewport */
   margin: auto;           /* ← centers */
   width: 44vw;
-  min-width: 425px;
   height: 95vh;
 
   background: rgb(252, 252, 252);
-  border-radius: 0px;
 
   display: flex;
   flex-direction: column;
   align-items: center;
 
-  border: 2px solid rgb(185, 185, 185);
-  border-radius: 15px;
+  border: 3px solid rgb(185, 185, 185);
+  border-radius: clamp(12px, 5.5vw, 28px);
   box-shadow: 0 20px 80px rgba(0,0,0,0.4), 
-            0 0 0 9999px rgba(46, 46, 46, 0.65);
+            0 0 0 9999px rgba(46, 46, 46, 0.65),
+            1px 1px 8px #adadad inset;
+            ;
 
 
   overflow-y: auto;
 
-  z-index: 9999;   
+  z-index: 9900;   
 }
 
 
 .close-btn {
   position: absolute;
-  top: 16px;
-  margin-right: -1vh;
+  top: 15px;
+  margin-right: 1vw;
 
   background: none;
   border: none;
-  font-size: 2rem;
+  font-size: 1rem;
   cursor: pointer;
   line-height: 1;
 }
@@ -49,35 +49,46 @@
 }
 
 .club-img-exp {
-  margin-top: 20px;
   background-color:#f7e077;
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 39vw;
+  width: 45vw;
   max-height: 700px;
   height: 45vw;
   flex-shrink: 0;
   margin-bottom: 20px;
-  border-radius: 20px;
+  border-radius: 5000px;
   font-size: 10rem;
   border: 1px solid;
-  border-color:#a79750;
+  z-index: 9960;
+  border-color:#000000;
   
 }
 
+.rectangle{
+  width: 44vw;
+  height:50vw;
+  margin-top: 5vw;
+  background-color: #F9F5eb;
+  z-index: 9950;
+  position:absolute;
+  border-radius: 20px;
+
+  
+}
 
 .club-name-exp{
   font-family: "Josefin Sans", sans-serif;
-  margin-left: 5vh;
+ 
   margin-right: 5vh;
   align-self: flex-start;
   color: rgb(60, 120, 35);
   font-weight: 500;
   font-style: normal;
   letter-spacing: -1.2px;
-  font-size: 4.5vw;
-  
+  font-size: max(80px,4.5vw);
+  z-index: 9960;
   text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
 }
 
@@ -85,11 +96,11 @@
   font-family: "Josefin Sans", sans-serif;
   font-weight: 400;
   align-self: flex-start;
-  margin-left: 5vh;
+  z-index: 9960;
   margin-bottom: 30px;
   gap: 1rem;
   letter-spacing: -1.2px;
-  font-size: 2vw;
+  font-size: clamp(32px,1rem);
   color:grey;
 
 }
@@ -123,12 +134,73 @@
 
 
 .divider {
-  width: 60vh;
+  width: 40vh;
   height: 1px;
   background-color: rgb(71, 71, 71);
-  margin: 20px 0;
+ 
 }
 
+.content-col{
+  width: 100%;
+  padding-top: 1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
 
+@media (min-width: 550px){
+  .expanded-card
+  {
+  min-width: 494.1px;
+  }
+
+  .club-img-exp{
+    min-width: 411.75px;
+    min-height: 494.1px;
+  }
+
+
+}
+
+@media (max-width: 549px)  {
+  
+  .expanded-card{
+    width: 90vw;
+  }
   
   
+  
+  .club-img-exp {
+  
+  width: 75vw;
+  height: 90vw;
+  }
+  
+  .club-name-exp {
+    font-size: 3rem;
+  }
+
+  .club-tag2 {
+  font-size: 0.5rem;
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 10px;
+
+}
+
+.tag {
+  padding: 0.3rem 1.75rem;
+  font-size: 0.5rem;
+  background-color: rgb(0, 0, 0);
+  text-decoration: none;
+  color: white;
+  border: none;
+  border-radius: 90px;
+}
+  
+}
+
+   
+    

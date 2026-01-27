@@ -5,10 +5,19 @@ import './ClubList.css';
 
 export const ClubList = ({ results }) => {
   const [expandedClub, setExpandedClub] = useState(null);
+  const [animating, setAnimating] = useState(false);
   
   if ( !results || results.length === 0) {
     return <p>No clubs found.</p>;
   }
+
+
+  const handleCardClick = async (e) => {
+    e.stopPropagation();
+    setAnimating(true)
+    setTimeout(() => setAnimating(false),250);
+  }
+
 
   return (
     <>

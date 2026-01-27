@@ -15,7 +15,7 @@
   flex-direction: row;
   align-items: center;
   gap: 2.5rem;
-  min-width: 250px;
+  min-width: 225px;
   border-radius: 15px;
   border: 1px solid rgb(162, 162, 162);
   cursor: pointer;
@@ -79,4 +79,17 @@
   0% { transform: scale(1); }
   40% { transform: scale(1.35); }
   100% { transform: scale(1); }
+}
+
+@media (max-width: 600px) and (min-width: 100px) {
+  .club-card{
+    width: 75vw;
+  }
+}
+
+@media (min-width: 1350px) {
+  .club-card{
+   
+    width:25vw;
+  }
 }

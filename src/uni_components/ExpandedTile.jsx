@@ -5,6 +5,8 @@ import "./ExpandedTile.css";
 
 
 function ExpandedTile({club, onClose}){
+    
+    
     return (
     <AnimatePresence>
 
@@ -16,19 +18,23 @@ function ExpandedTile({club, onClose}){
             exit = {{ opacity: 0}}
 
         >
-        <div className="club-img-exp">🦝</div>
-        <button className = "close-btn" onClick={onClose}>x</button>
         
-        <h2 className ="club-name-exp">{club.club_name}</h2>
+        <button className = "close-btn" onClick={onClose}>x</button>
+        <div className =  "content-col">
+        <div className = "rectangle"></div>
+            <h2 className ="club-name-exp">{club.club_name}</h2>
         <h2 className ="club-tag1">Web Dev • Introductory</h2>
+        </div>
+        <div className="club-img-exp">🦝</div>
         <div className ="club-tag2">
         <div className = "tag">Beginner</div>
         <div className = "tag">Hands On</div>
         <div className = "tag">Good Mentors</div>
         </div>
         <p className= "club-description-exp">{club.club_description}</p>
-
+        <div className="content-col">
         <div className = "divider"></div>
+        </div>
         <h3>Have you been in this club?</h3>
         <Link to="/reviews/:id" className = "review-btn">Share your experience</Link>
         

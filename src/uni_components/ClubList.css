@@ -6,14 +6,29 @@
   width: 80vw;
   max-width: 20000;
   margin: 0 auto 2rem auto;
-  padding-top: 37vh;
-
-  justify-items: center;
+  padding-top: 45vh;
+  align-items: center;
+  justify-items:center;
 }
 
+
+
 @media (max-width: 600px) {
-  .clubs-list {
-    grid-template-columns: 1fr;
-    width: 65vw;
+  .clubs-list{
+   
+  display: flex;
+  flex-direction: column;
+
+
+
+  }
+}
+
+@media (min-width: 1350px) {
+  .clubs-list{
+   
+    grid-template-columns: repeat(3, 0.5fr);
+
+
   }
 }
