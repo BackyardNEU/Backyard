@@ -1,13 +1,8 @@
-import { useGlobalStore } from "../store";
+import { supabase } from "../supabase"
 
 function Logout() {
-  const GlobalValue = useGlobalStore((state) => state.GlobalValue);
-  const setGlobalValue = useGlobalStore((state) => state.setGlobalValue);
-
-  const handleLogout = () => {
-    localStorage.removeItem("google_credential");
-    console.log("User logged out!");
-    setGlobalValue(false)
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
   };
 
   return (

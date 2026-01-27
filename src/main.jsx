@@ -4,16 +4,16 @@ import './index.css'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import { BrowserRouter } from 'react-router-dom'
-import { GoogleOAuthProvider } from "@react-oauth/google";
+//import { GoogleOAuthProvider } from "@react-oauth/google";
 
-const clientId = "856146216508-2sjn2p31ppaikvl9l9tasooiotote82e.apps.googleusercontent.com";
+//const clientId = "856146216508-2sjn2p31ppaikvl9l9tasooiotote82e.apps.googleusercontent.com";
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <GoogleOAuthProvider clientId={clientId}>
+  <StrictMode>
     <BrowserRouter>
       <App />
     </BrowserRouter>
-  </GoogleOAuthProvider>
+  </StrictMode>
 )
 
 //to do:

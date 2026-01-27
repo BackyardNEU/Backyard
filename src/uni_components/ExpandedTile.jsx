@@ -36,7 +36,7 @@ function ExpandedTile({club, onClose}){
         <div className = "divider"></div>
         </div>
         <h3>Have you been in this club?</h3>
-        <Link to="/reviews/:id" className = "review-btn">Share your experience</Link>
+        <Link to={`/reviews/${club.id}`} className="review-btn">Share your experience</Link>
         
 
 

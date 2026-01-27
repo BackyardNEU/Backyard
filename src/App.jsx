@@ -6,6 +6,7 @@ import { SearchResultsList } from './components/SearchResultsList'
 import { UniversityPage } from './uni_components/UniversityPage'
 import LoginMorph from "./login_components/LoginMorph"
 import ReviewPage from "./review_components/ReviewPage"
+import AuthListener from "./login_components/AuthListener"
 
 function App() {
   const [results, setResults] = useState([])
@@ -14,6 +15,7 @@ function App() {
   return (
     <div className="App">
 
+        <AuthListener/>
         <LoginMorph open={loginOpen} setOpen={setLoginOpen} />
       
       <Routes>
