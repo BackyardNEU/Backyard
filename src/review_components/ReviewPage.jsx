@@ -2,7 +2,7 @@ import { supabase } from '../supabase';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useGlobalStore } from "../store";
-import ReviewGrid from './ReviewGrid';
+import { ReviewList } from './ReviewList';
 
 export default function ReviewPage({}) {
 
@@ -27,8 +27,8 @@ export default function ReviewPage({}) {
         async function fetch_reviews() {
             const {data, error} = await supabase
                 .from('reviews')
-                .select('*');
-                //.eq('club_id', id);
+                .select('*')
+                .eq('club_id', id) ;
 
             if (error) {
                 console.error('Error fetching reviews:', error);
@@ -101,7 +101,7 @@ export default function ReviewPage({}) {
             <div className='view-reviews'>
                 { 
                     reviews.map((review) => {
-                        return <ReviewGrid review={review} key={review.club_id}/>
+                        return <ReviewList review={review} key={review.club_id}/>
                     })
                 }
             </div>
