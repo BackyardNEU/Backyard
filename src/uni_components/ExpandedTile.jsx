@@ -1,25 +1,26 @@
-import React from "react";
+import React, {useState} from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
+import ReviewPage from "../review_components/ReviewPage";
 import "./ExpandedTile.css";
 
 
 function ExpandedTile({club, onClose}){
-    
-    
+    const [isOpen, setIsOpen] = useState(false);
+ 
+    const handleClick = () => {
+    setIsOpen(!isOpen);
+    }
     return (
-    <AnimatePresence>
+
 
         <motion.div
             layoutId = {`club-${club.id}`}
             className = "expanded-card"
-            initial = {{opacity: 0}}
-            animate = {{opacity: 1}}
-            exit = {{ opacity: 0}}
-
+           
         >
-        
-        <button className = "close-btn" onClick={onClose}>x</button>
+    
+        <button className = "close-btn" onClick= {onClose}>x</button>
         <div className =  "content-col">
         <div className = "rectangle"></div>
             <h2 className ="club-name-exp">{club.club_name}</h2>
@@ -36,14 +37,22 @@ function ExpandedTile({club, onClose}){
         <div className = "divider"></div>
         </div>
         <h3>Have you been in this club?</h3>
-        <Link to={`/reviews/${club.id}`} className="review-btn">Share your experience</Link>
+        <button className = "review-btn" onClick = {handleClick}>{isOpen ? 'Share your experience': 'Share your experience'}</button>
+        {isOpen && (
+            <div>
+            <ReviewPage/>
+            </div>)
+
+        }
+        
+        
+        
         
 
 
         </motion.div>
-    </AnimatePresence>
+
     );
 }
 
 export default ExpandedTile;
-

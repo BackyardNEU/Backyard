@@ -11,6 +11,7 @@
   box-shadow: 1px 1px 2px #d3d3d3;
   padding: 20px;
   width: 35vw;
+
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -20,8 +21,9 @@
   border: 1px solid rgb(162, 162, 162);
   cursor: pointer;
   position: relative;
-  z-index: 1;
+  z-index: 800;
   transition: transform 0.6s ease;
+  z-index: 100;
 }
 
 .card-wrapper:hover .club-card {
@@ -31,9 +33,9 @@
 
 .club-img {
   background-color: #eee;
-  border-radius: 8px;
+  border-radius: 5000px;
   width: 100px;
-  height: 80px;
+  height: 90px;
   display: flex;
   justify-content: center;
   align-items: center;

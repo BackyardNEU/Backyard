@@ -23,6 +23,7 @@ export const ClubList = ({ results }) => {
           
           key={club.id} 
           result={club} 
+          isExpanded={expandedClub?.id === club.id}
           onExpand={() => setExpandedClub(club)}
         />
       ))}

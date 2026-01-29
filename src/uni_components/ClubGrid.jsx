@@ -5,7 +5,7 @@ import heartFull from '/src/assets/full_heart.png';
 import { supabase } from '../supabase';
 import { motion } from "framer-motion"
 
-export const ClubGrid = ({ result, onExpand }) => {
+export const ClubGrid = ({ result, onExpand, isExpanded}) => {
   const [liked, setLiked] = useState(false);
   const [animating, setAnimating] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -43,13 +43,18 @@ export const ClubGrid = ({ result, onExpand }) => {
     return words.slice(0, wordLimit).join(" ") + "...";
   };
 
-  return (
-    
-  
+  return ( 
+
       <motion.button 
       className="club-card" 
-      onClick={onExpand} 
+      onClick = {onExpand}
+      transition={{ duration: 0.3 }}
       layoutId = {`club-${result.id}`}
+      whileHover = {{
+        scale: 1.04,
+        transition: {duration: 0.1}
+      }}
+
       >
         <img
           className={`heart-btn ${animating ? 'pop' : ''}`}
@@ -62,5 +67,6 @@ export const ClubGrid = ({ result, onExpand }) => {
           <p>{truncate(result.club_description)}</p>
         </div>
       </motion.button>
-  );
+
+);
 };

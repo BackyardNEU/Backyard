@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useGlobalStore } from "../store";
 import ReviewGrid from './ReviewGrid';
+import "./ReviewPage.css"
 
 export default function ReviewPage({}) {
 
@@ -81,7 +82,7 @@ export default function ReviewPage({}) {
 
             <div className='create-review'>
                 <p>this is for the creation of the review</p>
-                <input
+                <input className = "comment-input"
                     type="text"
                     value={user_review}
                     onChange={(e) => set_user_review(e.target.value)}

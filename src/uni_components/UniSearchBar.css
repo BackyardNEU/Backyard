@@ -12,7 +12,7 @@
     display: flex;
     align-items: center;
     border: 1.5px solid #000000;
-    z-index: 100
+    z-index: 10
     
     
 }
@@ -49,9 +49,6 @@ input:focus {
 @media (max-width: 549px) and (min-width: 300px) {
   .club-input-wrapper-{
     width: 90vw;
-   
-    
-
 
   }
 }
