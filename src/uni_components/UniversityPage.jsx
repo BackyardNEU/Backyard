@@ -16,7 +16,6 @@ export const UniversityPage = () => {
   const [results, setResults] = useState([]);
   const [favActive, setFavActive] = useState(false);
   const [isDocked, setIsDocked] = useState(false);
-  
 
 
   const fetchFavorites = async () => {

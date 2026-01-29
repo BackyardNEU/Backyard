@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import { useGlobalStore } from "../store";
 import ReviewGrid from './ReviewGrid';
 import "./ReviewPage.css"
+import { ReviewList } from './ReviewList';
 
 export default function ReviewPage({}) {
 
@@ -88,6 +89,7 @@ export default function ReviewPage({}) {
                     onChange={(e) => set_user_review(e.target.value)}
                     placeholder="Write your review..."
                 />
+                
                 <input
                     type="number"
                     value={rating}
