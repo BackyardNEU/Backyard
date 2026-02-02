@@ -2,9 +2,9 @@ import { supabase } from '../supabase';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useGlobalStore } from "../store";
-
+import ReviewGrid from './ReviewGrid';
 import "./ReviewPage.css"
-import { ReviewGrid } from './ReviewGrid';
+import { ReviewList } from './ReviewList';
 
 export default function ReviewPage({}) {
 
@@ -21,8 +21,7 @@ export default function ReviewPage({}) {
     const [warning, setWarning] = useState("")
     
     //user input variables
-    const [ user_review, set_user_review ] = useState('');
-    const [user_title, set_user_title] = useState('')
+    const [ user_review , set_user_review ] = useState('');
     const [ rating , set_rating ] = useState(0)
     const [user_tags, set_user_tags] = useState({"Beginner Friendly": false, "Advanced": false, "Friendly": false, "Supportive": false, 
                            "Good Networking": false,  "Flexible Attendance": false, "Strict Attendance": false, 
@@ -154,7 +153,7 @@ export default function ReviewPage({}) {
             <div className='view-reviews'>
                 { 
                     reviews.map((review) => {
-                        return <ReviewGrid review={review} key={review.club_id}/>
+                        return <ReviewList review={review} key={review.club_id}/>
                     })
                 }
             </div>
