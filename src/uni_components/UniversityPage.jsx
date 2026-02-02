@@ -19,12 +19,21 @@ export const UniversityPage = () => {
 
 
   const fetchFavorites = async () => {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      console.error('Error getting user', userError);
+      return;
+    }
+    const userId = userData.user.id;
+
     if(!favActive) {
       const { data, error } = await supabase
-        .from('demo_club_data')
+        // .from('demo_club_data')
+        // .select('*')
+        // .eq("favorite", true);
+        .from('user_favorites')
         .select('*')
-        .eq("favorite", true);
-      
+        .eq('user_id', userId);
       setFavActive(true)
       if (error) console.error(error);
       else setResults(data);

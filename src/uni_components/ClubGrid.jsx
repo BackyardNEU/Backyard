@@ -19,27 +19,45 @@ export const ClubGrid = ({ result, onExpand, isExpanded}) => {
   }, [result.favorite]);
 
   const updateFavorite = async (newLiked) => {
-    const { error } = await supabase
-      .from("demo_club_data")
-      .update({ favorite: newLiked })
-      .eq("club_name", result.club_name);
-    if (error) console.error("Error updating favorite:", error);
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      console.error('Error getting user', userError);
+      return;
+    }
+    const userId = userData.user.id;
+    if (liked == true) {
+      const { error } = await supabase //possibly remove newLiked all together, not really necessary given the new supabase structure
+        // .from("demo_club_data")
+        // .update({ favorite: newLiked })
+        // .eq("club_name", result.club_name);
+        .from("user_favorites")
+        .insert({ club_id: result.id, user_id: userId});
+
+      if (error) console.error("Error updating favorite:", error);
+    } else {
+      const { error } = await supabase
+        .from("user_favorites")
+        .delete()
+        .eq("club_id", result.id, "user_id", userId);
+
+      if (error) console.error("Error removing favorite:", error);
+    }
   };
 
   const handleHeartClick = async (e) => {
     e.stopPropagation();
     setAnimating(true);
-    const newLiked = !liked;
-    setLiked(newLiked);
-    await updateFavorite(newLiked);
+    setLiked(!liked);
+    await updateFavorite();
     setTimeout(() => setAnimating(false), 250);
   };
 
   
 
   const truncate = (text, wordLimit = 15) => {
-    const words = text.split(" ");
-    if (words.length <= wordLimit) return text;
+    if (!text) return "";
+    const words = String(text).split(/\s+/).filter(Boolean);
+    if (words.length <= wordLimit) return String(text);
     return words.slice(0, wordLimit).join(" ") + "...";
   };
 
