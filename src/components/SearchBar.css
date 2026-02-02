@@ -21,18 +21,22 @@
 }
 
 .input-wrapper {
-    background-color: rgb(255, 255, 255);
+    
     width: 100%;
-    border-radius: 10px;
-    height: 2.7rem;
-    padding: 0 15px;
-    box-shadow: 0.5px 0.5px 1px #000000;
+    height: 3rem; 
+    border-radius: 20px; 
+    background-color: #fbfbfb;
+    padding: 0 10px;
+
+    margin-top: 1%;
+    
+
     display: flex;
     align-items: center;
-    margin-left: 1%;
+    border: 0.7px solid #dedede;
+    box-shadow: 1px 1px 2px #d3d3d3;
+    z-index: 10
     
-    border: 2px solid #000000;
-    border-radius: 25px; 
 
 
 
@@ -49,7 +53,7 @@ input {
 }
 
 input::placeholder {
-    color: rgb(239, 107, 7);
+    color: rgb(88, 88, 88);
     opacity: 1;
 }
 

@@ -24,11 +24,14 @@
   z-index: 9000;   
 }
 
-.comment-input {
+.create-comment {
     display: flex;
+    flex-direction: column;
+    column-gap: 0.5rem;
     align-items: center;
     z-index: 9010;
     width: 70vw;
     height: 30vh;
-    border: 1px solid rgb(106, 105, 105)
+    border: 1px solid rgb(77, 77, 77);
+    border-radius: clamp(12px, 5.5vw, 28px);
 }

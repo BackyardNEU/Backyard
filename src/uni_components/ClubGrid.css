@@ -8,7 +8,7 @@
 
 .club-card {
   background: #f9f9f9;
-  box-shadow: 1px 1px 2px #d3d3d3;
+  
   padding: 20px;
   width: 35vw;
 
@@ -18,24 +18,23 @@
   gap: 2.5rem;
   min-width: 225px;
   border-radius: 15px;
-  border: 1px solid rgb(162, 162, 162);
+  border: 1px solid rgb(152, 152, 152);
   cursor: pointer;
   position: relative;
-  z-index: 800;
-  transition: transform 0.6s ease;
+  
+  transition: transform 0.6s ease,
+  border-color 0.3s ease;
   z-index: 100;
 }
 
-.card-wrapper:hover .club-card {
-  transform: scale(1.02);
 
-}
+
 
 .club-img {
   background-color: #eee;
   border-radius: 5000px;
-  width: 100px;
-  height: 90px;
+  width: 15vw;
+  height: 15vw;
   display: flex;
   justify-content: center;
   align-items: center;

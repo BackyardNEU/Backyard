@@ -52,7 +52,9 @@ export const ClubGrid = ({ result, onExpand, isExpanded}) => {
       layoutId = {`club-${result.id}`}
       whileHover = {{
         scale: 1.04,
-        transition: {duration: 0.1}
+        transition: {duration: 0.1},
+        borderColor: '#eeeeeeff',
+        boxShadow: '0 8px 20px rgba(171, 171, 171, 0.25)'
       }}
 
       >
