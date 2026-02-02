@@ -2,7 +2,7 @@ import { supabase } from '../supabase';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useGlobalStore } from "../store";
-import ReviewGrid from './ReviewGrid';
+
 import "./ReviewPage.css"
 import { ReviewList } from './ReviewList';
 
@@ -22,7 +22,8 @@ export default function ReviewPage({}) {
     
     //user input variables
     const [ user_review , set_user_review ] = useState('');
-    const [ rating , set_rating ] = useState(0)
+    const [ rating , set_rating ] = useState(0);
+    const [user_title, set_user_title] = useState('');
     const [user_tags, set_user_tags] = useState({"Beginner Friendly": false, "Advanced": false, "Friendly": false, "Supportive": false, 
                            "Good Networking": false,  "Flexible Attendance": false, "Strict Attendance": false, 
                            "Time Intensive": false, "Fun": false, "Boring": false, "Career Focused": false, "High Energy": false, 
@@ -119,25 +120,19 @@ export default function ReviewPage({}) {
                 />
 
                 </div>
+                
                 <h1>Choose Tags</h1>
-                <div className = "tag-box">
-
                 {Object.entries(user_tags).map(key => (
-                <div key ={key}>
+                <div key ={key} className = "tag-box">
                     <input 
                         type = "checkbox"
                         checked = {user_tags[key]}
                         onChange = {() => set_user_tags(prev => ({...prev, [key]: !prev[key]}))}
+                        className = "tag-checkbox"
                     />
-                <label>{key}</label>
-                </div>
+                <label className = "tag">{key}</label>
+                </div> 
                 ))}
-
-
-
-                </div>
-
-
                 
                 <input
                     type="number"

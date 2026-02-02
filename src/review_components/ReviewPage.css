@@ -35,3 +35,39 @@
     border: 1px solid rgb(77, 77, 77);
     border-radius: clamp(12px, 5.5vw, 28px);
 }
+
+
+.tag-box{
+    display: inline-block;
+    margin: 1%;
+
+}
+
+.tag-checkbox {
+    opacity: 0;
+    position: absolute;
+    pointer-events: none;
+
+}
+
+.tag{
+    display: inline-block;
+    font-size: 14px;
+    border-radius: 1999px;
+    padding: 8px 14px;
+    user-select: none;
+    background: rgb(255, 255, 255);
+    color:rgb(21, 176, 26);
+
+
+
+}
+
+
+.tag:hover{
+    background: red;
+}
+
+.tag-checkbox :checked {
+    background: blue;
+}

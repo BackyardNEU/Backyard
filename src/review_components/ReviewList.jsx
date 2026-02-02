@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import "./ReviewGrid.css"
+import "./ReviewList.css"
 
-export const ReviewGrid = ({review}) => {
+export const ReviewList = ({review}) => {
     
 
 
