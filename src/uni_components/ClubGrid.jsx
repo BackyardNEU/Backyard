@@ -3,13 +3,16 @@ import './ClubGrid.css';
 import heartEmpty from '/src/assets/empty_heart.png';
 import heartFull from '/src/assets/full_heart.png';
 import { supabase } from '../supabase';
-import { motion } from "framer-motion"
+import { motion } from "framer-motion";
+import { useGlobalStore } from "../store";
+
 
 export const ClubGrid = ({ result, onExpand, isExpanded}) => {
   const [liked, setLiked] = useState(false);
   const [animating, setAnimating] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [startAngle, setStartAngle] = useState(0);
+  let GlobalValue = useGlobalStore((state) => state.GlobalValue);
   const cardRef = useRef(null);
 
   useEffect(() => {
@@ -76,13 +79,13 @@ export const ClubGrid = ({ result, onExpand, isExpanded}) => {
       }}
 
       >
-        <img
+        {GlobalValue ? <img
           className={`heart-btn ${animating ? 'pop' : ''}`}
           src={liked ? heartFull : heartEmpty}
           onClick={handleHeartClick}
-        />
+        /> : null}
         <div className="club-img">🦝</div>
-        <div className="club-info">
+        <div className="club-info"> 
           <h2>{result.club_name}</h2>
           <p>{truncate(result.club_description)}</p>
         </div>
