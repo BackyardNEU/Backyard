@@ -20,7 +20,6 @@ export const ClubList = ({ results }) => {
       {results.map((club) => (
 
         <ClubGrid 
-          
           key={club.id} 
           result={club} 
           isExpanded={expandedClub?.id === club.id}
