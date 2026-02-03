@@ -48,6 +48,7 @@ export const ClubGrid = ({ result, onExpand, isExpanded}) => {
   };
 
   const handleHeartClick = async (e) => {
+    Console.log("heart button clicked")
     e.stopPropagation();
     setAnimating(true);
     setLiked(!liked);
