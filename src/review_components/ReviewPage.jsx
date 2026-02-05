@@ -58,11 +58,6 @@ export default function ReviewPage({}) {
             }));
         };
     
-
-    
-
-    
-
     async function post_review() {
         //gets user data
         const {
@@ -81,7 +76,6 @@ export default function ReviewPage({}) {
                         return;
                     }
                 }
-
                 const { error } = await supabase
                     .from('reviews')
                     .insert({club_id: id, user_id: user.id, rating: rating, review_text: user_review, review_title: user_title, review_tags: user_tags })
