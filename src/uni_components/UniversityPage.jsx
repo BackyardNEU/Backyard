@@ -27,13 +27,17 @@ export const UniversityPage = () => {
     const userId = userData.user.id;
 
     if(!favActive) {
+      console.log("fav on ")
       const { data, error } = await supabase
         .from('user_favorites')
         .select('*')
         .eq('user_id', userId);
       setFavActive(true)
       if (error) console.error(error);
-      else setResults(data);
+      else { //setResults(data);
+        const newdata = results.filter(club => data.some(fav => fav.club_id === club.id)); //club is the rows from demo_club_data, fav is from user_favorites, final line checks to see where the two match (via id)
+        setResults(newdata);
+      }
     }
     
     else{

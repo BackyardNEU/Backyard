@@ -36,8 +36,8 @@ export default function ReviewPage({}) {
         async function fetch_reviews() {
             const {data, error} = await supabase
                 .from('reviews')
-                .select('*');
-                //.eq('club_id', id);
+                .select('*')
+                .eq('club_id', id);
 
             if (error) {
                 console.error('Error fetching reviews:', error);
