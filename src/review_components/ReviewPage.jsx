@@ -29,6 +29,7 @@ export default function ReviewPage({}) {
                            "Time Intensive": false, "Fun": false, "Boring": false, "Career Focused": false, "High Energy": false, 
                            "Tight-knit": false, "Poor Organization": false, "Collaborative": false, "Web Dev": false, 
                            "Fraternity": false, "Sorority": false})
+    const [user_sliders, set_user_sliders] = useState({"How many hours per week do you spend": null})
 
 
     useEffect(() => {
@@ -100,7 +101,7 @@ export default function ReviewPage({}) {
 
     return (
         <div className='review-page'>
-            <p>this is the review page, write review on the top and see others on the bottom</p>
+            
 
             <div className='create-review'>
                 <h1>Leave a comment</h1>
@@ -122,17 +123,20 @@ export default function ReviewPage({}) {
                 </div>
                 
                 <h1>Choose Tags</h1>
-                {Object.entries(user_tags).map(key => (
+                {Object.entries(user_tags).map(([key, value]) => (
                 <div key ={key} className = "tag-box">
                     <input 
+                        id = {key}
                         type = "checkbox"
-                        checked = {user_tags[key]}
+                        checked = {value}
                         onChange = {() => set_user_tags(prev => ({...prev, [key]: !prev[key]}))}
                         className = "tag-checkbox"
                     />
                 <label className = "tag">{key}</label>
                 </div> 
                 ))}
+
+                <h1>Give Users more data</h1>
                 
                 <input
                     type="number"

@@ -21,12 +21,18 @@ function ExpandedTile({club, onClose}){
         >
     
         <button className = "close-btn" onClick= {onClose}>x</button>
+        
         <div className =  "content-col">
-        <div className = "rectangle"></div>
-            <h2 className ="club-name-exp">{club.club_name}</h2>
+        <div className = "content-row">
+        <div className = "text-flex">
+        <h2 className ="club-name-exp">{club.club_name}</h2>
         <h2 className ="club-tag1">Web Dev • Introductory</h2>
         </div>
+        
         <div className="club-img-exp">🦝</div>
+        </div>
+        </div>
+        
         <div className ="club-tag2">
         <div className = "tag">Beginner</div>
         <div className = "tag">Hands On</div>

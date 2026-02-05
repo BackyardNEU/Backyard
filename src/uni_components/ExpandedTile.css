@@ -11,12 +11,6 @@
   flex-direction: column;
   align-items: center;
 
-  
-  border-radius: clamp(12px, 5.5vw, 28px);
-  box-shadow: 0 20px 80px rgba(0,0,0,0.4), 
-            0 0 0 9999px rgba(46, 46, 46, 0.65),
-            1px 1px 8px #adadad inset;
-            ;
 
 
   overflow-y: auto;
@@ -52,15 +46,9 @@
 .club-img-exp {
   background-color:#f7e077;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 45vw;
-  max-height: 700px;
-  height: 45vw;
   flex-shrink: 0;
   margin-bottom: 20px;
   border-radius: 5000px;
-  font-size: 10rem;
   border: 1px solid;
   z-index: 8200;
   border-color:#000000;
@@ -68,8 +56,7 @@
 }
 
 .rectangle{
-  width: 44vw;
-  height:50vw;
+  
   margin-top: 5vw;
   background-color: #F9F5eb;
   z-index: 8100;
@@ -151,32 +138,45 @@
   align-items: flex-start;
 }
 
-@media (min-width: 550px){
-  .expanded-card
-  {
-  min-width: 494.1px;
-  }
-
-  .club-img-exp{
-    min-width: 411.75px;
-    min-height: 494.1px;
-  }
-
-
+.text-flex{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
-@media (max-width: 549px)  {
+
+
+
+@media (max-width: 699px)  {
   
   .expanded-card{
     width: 90vw;
+    border-radius: clamp(12px, 5.5vw, 28px);
+    box-shadow: 0 20px 80px rgba(0,0,0,0.4), 
+            0 0 0 9999px rgba(46, 46, 46, 0.65),
+            1px 1px 8px #adadad inset;
+            ;
   }
-  
   
   
   .club-img-exp {
   
-  width: 75vw;
-  height: 90vw;
+  width: 87vw;
+  height: 87vw;
+ 
+  background-color:#f7e077;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  margin-bottom: 20px;
+  border-radius: 5000px;
+  font-size: 10rem;
+  border: 1px solid;
+  z-index: 8200;
+  border-color:#000000;
+  
+
   }
   
   .club-name-exp {
@@ -200,8 +200,58 @@
   border: none;
   border-radius: 90px;
 }
+
+.rectangle{
+  width: 44vw;
+  height:50vw;
+
+}
+}
+   
+@media (min-width: 700px) {
+.expanded-card {
+  position: fixed;
+  inset: 0;               /* ← fills viewport */
+  margin: auto;           /* ← centers */
+  width: 100vw;
+  height: 100vh;
+  background: rgb(252, 252, 252);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+  z-index: 8000;   
+}
+
+
+.club-img-exp {
+  background-color:#f7e077;
+  justify-content: flex-start;
+  align-items: center;
+  width: 25vw;
+  height: 25vw;
+  font-size: 5rem;
+
   
 }
 
-   
-    
+.rectangle{
+  width: 95vw;
+  height:20vw;
+
+}
+
+.content-row{
+  display: flex;
+  flex-direction: row-reverse;
+
+}
+
+.club-name-exp{
+margin-top: 2rem;
+margin-left: 2rem;
+}
+.club-tag1{
+  margin-left: 2rem;
+}
+}

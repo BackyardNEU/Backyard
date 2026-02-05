@@ -53,11 +53,12 @@
 .tag{
     display: inline-block;
     font-size: 14px;
-    border-radius: 1999px;
-    padding: 8px 14px;
+    border-radius: 999px;
+    padding: 7px 14px;
     user-select: none;
     background: rgb(255, 255, 255);
     color:rgb(21, 176, 26);
+    transition: 0.4s ease;
 
 
 
@@ -68,6 +69,6 @@
     background: red;
 }
 
-.tag-checkbox :checked {
+.tag-checkbox :checked + .tag{
     background: blue;
 }
