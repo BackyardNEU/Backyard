@@ -16,6 +16,7 @@ export const UniversityPage = () => {
   const [results, setResults] = useState([]);
   const [favActive, setFavActive] = useState(false);
   const [isDocked, setIsDocked] = useState(false);
+  //potentially consider adding another variable that maintains the old dataset prior to clicking on favorites
 
 
   const fetchFavorites = async () => {
