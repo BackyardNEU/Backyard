@@ -29,8 +29,10 @@ export default function ReviewPage({}) {
                            "Time Intensive": false, "Fun": false, "Boring": false, "Career Focused": false, "High Energy": false, 
                            "Tight-knit": false, "Poor Organization": false, "Collaborative": false, "Web Dev": false, 
                            "Fraternity": false, "Sorority": false})
-    const [user_sliders, set_user_sliders] = useState({"How many hours per week do you spend": null})
-
+    
+    const [user_hours, set_user_hours] = useState(0)
+    const [user_fun, set_user_fun] = useState(0)
+    const [user_leadership, set_user_leadership] = useState(0)
 
     useEffect(() => {
         async function fetch_reviews() {
@@ -126,18 +128,37 @@ export default function ReviewPage({}) {
                         onChange = {() => set_user_tags(prev => ({...prev, [key]: !prev[key]}))}
                         className = "tag-checkbox"
                     />
-                <label className = "tag">{key}</label>
+                <label className = "tags">{key}</label>
                 </div> 
                 ))}
 
                 <h1>Give Users more data</h1>
-                
-                <input
-                    type="number"
-                    value={rating}
-                    onChange={(e) => set_rating(e.target.value)}
-                    placeholder="Rate club out of 5"
+            
+                <p>How many hours per week do you spend in this club?</p>
+                <input className = "slider"
+                    type="range" 
+                    min="1" 
+                    max="12" 
+                    value= {user_hours}
+                    onChange={(e) => set_user_hours(Number(e.target.value))}
                 />
+                <p>How strong was the leadership /10?</p>
+                <input className = "slider"
+                    type="range" 
+                    min="1" 
+                    max="10" 
+                    value= {user_leadership}
+                    onChange={(e) => set_user_leadership(Number(e.target.value))}
+                />
+                 <p>How fun was this club /10?</p>
+                <input className = "slider"
+                    type="range" 
+                    min="1" 
+                    max="10" 
+                    value= {user_fun}
+                    onChange={(e) => set_user_fun(Number(e.target.value))}
+                />
+                
                 <button onClick={post_review}>Post Review</button>
                 <p>{warning}</p>
             </div>

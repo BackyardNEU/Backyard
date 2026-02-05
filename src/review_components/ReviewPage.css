@@ -50,14 +50,15 @@
 
 }
 
-.tag{
+.tags{
     display: inline-block;
     font-size: 14px;
     border-radius: 999px;
     padding: 7px 14px;
     user-select: none;
     background: rgb(255, 255, 255);
-    color:rgb(21, 176, 26);
+    color:rgb(0, 0, 0);
+    background: rgb(224, 224, 224);
     transition: 0.4s ease;
 
 
@@ -65,10 +66,40 @@
 }
 
 
-.tag:hover{
-    background: red;
+.tags:hover{
+    background: rgb(47, 115, 164);
+    color:white;
 }
 
-.tag-checkbox :checked + .tag{
+.tags-checkbox :checked + .tag{
     background: blue;
 }
+
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 1px;
+  background: blue;
+  cursor: pointer;
+  margin-bottom: 50px;
+}
+
+.slider::-webkit-slider-runnable-track {
+  height: 23px;
+  background: #ffffff;
+  border: 1px solid rgb(146, 146, 146);
+  border-radius: 20px;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 15px;
+  height: 30px;
+  background: rgb(47, 142, 189);
+  border: 2px solid rgb(255, 255, 255);
+  border-radius: 20px;
+  outline: 1px solid grey;
+  margin-top: -3px;
+}
+
