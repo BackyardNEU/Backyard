@@ -28,9 +28,6 @@ export const UniversityPage = () => {
 
     if(!favActive) {
       const { data, error } = await supabase
-        // .from('demo_club_data')
-        // .select('*')
-        // .eq("favorite", true);
         .from('user_favorites')
         .select('*')
         .eq('user_id', userId);

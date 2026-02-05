@@ -28,35 +28,33 @@ export const ClubGrid = ({ result, onExpand, isExpanded}) => {
       return;
     }
     const userId = userData.user.id;
-    if (liked == true) {
-      const { error } = await supabase //possibly remove newLiked all together, not really necessary given the new supabase structure
-        // .from("demo_club_data")
-        // .update({ favorite: newLiked })
-        // .eq("club_name", result.club_name);
-        .from("user_favorites")
-        .insert({ club_id: result.id, user_id: userId});
 
-      if (error) console.error("Error updating favorite:", error);
+    if (newLiked) {
+      const { error } = await supabase
+        .from("user_favorites")
+        .insert({ club_id: result.id, user_id: userId });
+
+      if (error) console.error("Error adding favorite:", error);
     } else {
       const { error } = await supabase
         .from("user_favorites")
         .delete()
-        .eq("club_id", result.id, "user_id", userId);
+        .match({ club_id: result.id, user_id: userId });
 
       if (error) console.error("Error removing favorite:", error);
     }
   };
 
   const handleHeartClick = async (e) => {
-    Console.log("heart button clicked")
+    console.log("heart button clicked");
     e.stopPropagation();
     setAnimating(true);
-    setLiked(!liked);
-    await updateFavorite();
+    const newLiked = !liked;
+    setLiked(newLiked);
+    await updateFavorite(newLiked);
     setTimeout(() => setAnimating(false), 250);
   };
 
-  
 
   const truncate = (text, wordLimit = 15) => {
     if (!text) return "";
@@ -78,8 +76,7 @@ export const ClubGrid = ({ result, onExpand, isExpanded}) => {
         borderColor: '#eeeeeeff',
         boxShadow: '0 8px 20px rgba(171, 171, 171, 0.25)'
       }}
-
-      >
+>
         {GlobalValue ? <img
           className={`heart-btn ${animating ? 'pop' : ''}`}
           src={liked ? heartFull : heartEmpty}
@@ -91,6 +88,5 @@ export const ClubGrid = ({ result, onExpand, isExpanded}) => {
           <p>{truncate(result.club_description)}</p>
         </div>
       </motion.button>
-
 );
 };
