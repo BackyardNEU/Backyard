@@ -56,7 +56,7 @@ export const ClubGrid = ({ result, onExpand, isExpanded}) => {
   };
 
 
-  const truncate = (text, wordLimit = 15) => {
+  const truncate = (text, wordLimit = 5) => {
     if (!text) return "";
     const words = String(text).split(/\s+/).filter(Boolean);
     if (words.length <= wordLimit) return String(text);
@@ -77,19 +77,21 @@ export const ClubGrid = ({ result, onExpand, isExpanded}) => {
         boxShadow: '0 8px 20px rgba(171, 171, 171, 0.25)'
       }}
 >
+      <div className = "flex-card">
+        <img className="club-img" src ={result.image_url}/>
+        <div className = "flex-card-two">
+        <div className="club-name"> 
+          {truncate(result.club_name)}
+        </div>
         {GlobalValue ? <img
           className={`heart-btn ${animating ? 'pop' : ''}`}
           src={liked ? heartFull : heartEmpty}
           onClick={handleHeartClick}
         /> : null}
-    
-        <img className="club-img" src ={result.image_url}/>
-        <div className="club-name"> 
-          {result.club_name}
         </div>
         <div className="club-info">
-          <p>{truncate(result.email)}</p>
-        </div>
+          <p>{result.email}</p>
+        </div></div>
       </motion.button>
 );
 };

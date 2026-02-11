@@ -38,6 +38,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-bottom: 7%;
   font-size: 2rem;
   border: 1px solid rgb(214, 214, 214);
 }
@@ -48,10 +49,10 @@
   font-family: "Bebas Neue", sans-serif;
   font-weight: 400;
   
-
+  text-align: left;
   position: relative;
+  margin-top: -9%;
   
-  align-self: flex-start;
   color: #2c4630;
 
   font-style: normal;
@@ -63,25 +64,37 @@
   
 
 
-.club-info h3 {
+.club-info{
   margin: 0;
   color: rgb(0, 0, 0);
   font-family: "Inter", sans-serif;
   font-size: medium;
+  text-align: left;
   font-weight: 400;
+  font-style: italic;
   letter-spacing: 0.9px;
 }
 
 .heart-btn {
-  position: absolute;
-  top: 12px;
-  right: 12px;
+  
+  flex-direction: end;
   width: 30px;
   height: 28px;
   cursor: pointer;
   z-index: 50;
   transition: transform 0.12s ease;
   user-select: none;
+}
+
+.flex-card{
+  display: flex;
+  flex-direction: column;
+  
+}
+
+.flex-card-two{
+  display: flex;
+  flex-direction: row;
 }
 
 .heart-btn.pop {
