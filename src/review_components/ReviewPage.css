@@ -23,7 +23,18 @@
 
   z-index: 9000;   
 }
+.instruction-txt{
+  
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  line-height: normal;
+  font-style: normal;
+  position: relative;
 
+  font-size: 70px;
+  color: #000000;
+
+}
 .create-comment {
     display: flex;
     flex-direction: column;

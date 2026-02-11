@@ -82,9 +82,12 @@ export const ClubGrid = ({ result, onExpand, isExpanded}) => {
           src={liked ? heartFull : heartEmpty}
           onClick={handleHeartClick}
         /> : null}
+    
         <img className="club-img" src ={result.image_url}/>
-        <div className="club-info"> 
-          <h2>{result.club_name}</h2>
+        <div className="club-name"> 
+          {result.club_name}
+        </div>
+        <div className="club-info">
           <p>{truncate(result.email)}</p>
         </div>
       </motion.button>

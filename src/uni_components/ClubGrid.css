@@ -7,18 +7,18 @@
 
 
 .club-card {
-  background: #f9f9f9;
+  background: #fbfbfb;
   
   padding: 20px;
-  width: 35vw;
+  width: 30vw;
 
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   gap: 2.5rem;
   min-width: 225px;
   border-radius: 15px;
-  border: 1px solid rgb(152, 152, 152);
+  border: 1px solid rgb(213, 213, 213);
   cursor: pointer;
   position: relative;
   
@@ -32,24 +32,36 @@
 
 .club-img {
   background-color: #eee;
-  border-radius: 30px;
-  width: 15vw;
-  height: 15vw;
+  border-radius: 0px;
+  width: 25vw;
+  height: 25vw;
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 2rem;
+  border: 1px solid rgb(214, 214, 214);
 }
 
-.club-info h2 {
-  margin: 0;
-  color: rgb(206, 0, 0);
-  font-family: "Josefin Sans", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 500;
-  letter-spacing: -1.2px;
+
+
+.club-name {
+  font-family: "Bebas Neue", sans-serif;
+  font-weight: 400;
+  
+
+  position: relative;
+  
+  align-self: flex-start;
+  color: #2c4630;
+
   font-style: normal;
+  font-size: 50px;
+  
+
+  white-space: pre-wrap;
 }
+  
+
 
 .club-info h3 {
   margin: 0;
@@ -91,6 +103,10 @@
 @media (min-width: 1350px) {
   .club-card{
    
-    width:25vw;
+    width:23vw;
+  }
+  .club-img{
+    width: 20vw;
+    height:20vw;
   }
 }

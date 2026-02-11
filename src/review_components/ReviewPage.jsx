@@ -100,7 +100,7 @@ export default function ReviewPage({}) {
             
 
             <div className='create-review'>
-                <h1>Leave a comment</h1>
+                <h1 className="instruction-txt">Leave a comment</h1>
                 <div className = 'create-comment'>
                
                 <input 
@@ -118,7 +118,7 @@ export default function ReviewPage({}) {
 
                 </div>
                 
-                <h1>Choose Tags</h1>
+                <h1 className="instruction-txt">Choose Tags</h1>
                 {Object.entries(user_tags).map(([key, value]) => (
                 <div key ={key} className = "tag-box">
                     <input 
@@ -132,7 +132,7 @@ export default function ReviewPage({}) {
                 </div> 
                 ))}
 
-                <h1>Give Users more data</h1>
+                <h1 className="instruction-txt">Give Users more data</h1>
             
                 <p>How many hours per week do you spend in this club?</p>
                 <input className = "slider"
