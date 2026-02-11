@@ -26,10 +26,11 @@ function ExpandedTile({club, onClose}){
         <div className = "content-row">
         <div className = "text-flex">
         <h2 className ="club-name-exp">{club.club_name}</h2>
+        
         <h2 className ="club-tag1">Web Dev • Introductory</h2>
         </div>
         
-        <div className="club-img-exp">🦝</div>
+        <img className="club-img-exp" src ={club.image_url}/>
         </div>
         </div>
         
@@ -62,3 +63,4 @@ function ExpandedTile({club, onClose}){
 }
 
 export default ExpandedTile;
+
