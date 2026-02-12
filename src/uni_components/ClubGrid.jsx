@@ -78,16 +78,16 @@ export const ClubGrid = ({ result, onExpand, isExpanded}) => {
       }}
 >
       <div className = "flex-card">
+        <div className = "image-container">
         <img className="club-img" src ={result.image_url}/>
-        <div className = "flex-card-two">
-        <div className="club-name"> 
-          {truncate(result.club_name)}
-        </div>
         {GlobalValue ? <img
           className={`heart-btn ${animating ? 'pop' : ''}`}
           src={liked ? heartFull : heartEmpty}
           onClick={handleHeartClick}
         /> : null}
+        </div>
+        <div className="club-name"> 
+          {truncate(result.club_name)}
         </div>
         <div className="club-info">
           <p>{result.email}</p>
