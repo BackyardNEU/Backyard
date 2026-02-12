@@ -15,7 +15,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2.5rem;
+  gap: 0.5rem;
   min-width: 225px;
   border-radius: 15px;
   border: 1px solid rgb(213, 213, 213);
@@ -35,10 +35,10 @@
 .club-img {
   background-color: #eee;
   border-radius: 0px;
-  width: 25vw;
-  height: 25vw;
+  width: 100%;
+  height: 100%;
   
-  margin-bottom: 45%;
+  
   font-size: 2rem;
   border: 1px solid rgb(214, 214, 214);
 }
@@ -52,13 +52,13 @@
   text-align: left;
   position: relative;
   margin-top: -8%;
-  line-height: 51px;
+  line-height: 1.05;
   color: #2c4630;
 
   font-style: normal;
-  font-size: 50px;
+  font-size: clamp(30px, 4vw, 50px);;
   margin-top: 15px;
-
+  padding-right: 35px;
   white-space: pre-wrap;
 }
   
@@ -68,7 +68,10 @@
   margin: 0;
   color: rgb(0, 0, 0);
   font-family: "Inter", sans-serif;
-  font-size: medium;
+  font-size: clamp(14px, 1.5vw, 16px);
+  max-width: 185px; 
+  word-wrap: break-word;
+  overflow-wrap: break-word;
   text-align: left;
   font-weight: 400;
   font-style: italic;
@@ -93,13 +96,14 @@
   flex-direction: column;
   align-items: start;
   align-self: center;
-  
 }
 
 .image-container {
   position: relative;
   width: 25vw;
+  min-width: 185px;
   height: 25vw;
+  min-height: 185px;
 
 }
 
@@ -118,6 +122,8 @@
     width: 75vw;
   }
 }
+
+
 
 @media (min-width: 1350px) {
   .club-card{
