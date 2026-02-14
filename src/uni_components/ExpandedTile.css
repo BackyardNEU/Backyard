@@ -57,11 +57,10 @@
 
 .rectangle{
   
-  margin-top: 5vw;
   background-color: #F9F5eb;
-  z-index: 8100;
-  position:absolute;
+  z-index: 8000;
   border-radius: 20px;
+  align-content: center;
 
   
 }
@@ -84,7 +83,7 @@
   font-family: "Josefin Sans", sans-serif;
   font-weight: 400;
   align-self: flex-start;
-  z-index: 8000;
+  z-index: 8200;
   margin-bottom: 30px;
   gap: 1rem;
   letter-spacing: -1.2px;
@@ -208,8 +207,9 @@
 }
 
 .rectangle{
-  width: 44vw;
-  height:50vw;
+
+  width: 90vw;
+  height: 89vw;
 
 }
 }

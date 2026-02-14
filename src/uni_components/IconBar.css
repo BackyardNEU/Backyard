@@ -59,7 +59,6 @@ transform: scale(1.1);
 .icon {
     width: 52px;
     height: 52px;
-    object-fit: containt;
     object-fit: contain;
     cursor: pointer;
     z-index: 1;
@@ -74,6 +73,6 @@ color: #000000;
 
 @media (max-width: 1000px) {
   .icon-bar{
-    height: calc(100% * .9)
+    height: calc(100% * .7)
   }
 }
