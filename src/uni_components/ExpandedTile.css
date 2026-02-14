@@ -57,6 +57,7 @@
 
 .rectangle{
   
+  gap: 1rem;
   background-color: #F9F5eb;
   z-index: 8000;
   border-radius: 20px;
@@ -210,6 +211,7 @@
 
   width: 90vw;
   height: 89vw;
+  margin-top: -22px;
 
 }
 }
@@ -244,6 +246,7 @@
 .rectangle{
   width: 95vw;
   height:20vw;
+  
 
 }
 

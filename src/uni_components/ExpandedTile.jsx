@@ -49,7 +49,7 @@ function ExpandedTile({club, onClose}){
         <button className = "review-btn" onClick = {handleClick}>{isOpen ? 'Share your experience': 'Share your experience'}</button>
         {isOpen && (
             <div>
-            <ReviewPage/>
+            <ReviewPage clubId = {club.id}/>
             </div>)
 
         }

@@ -67,7 +67,7 @@
     border-radius: 999px;
     padding: 7px 14px;
     user-select: none;
-    background: rgb(255, 255, 255);
+    ;
     color:rgb(0, 0, 0);
     background: rgb(224, 224, 224);
     transition: 0.4s ease;
@@ -78,12 +78,28 @@
 
 
 .tags:hover{
-    background: rgb(47, 115, 164);
+    background: rgb(149, 181, 204);
     color:white;
 }
 
-.tags-checkbox :checked + .tag{
-    background: blue;
+.tag-checkbox:checked + .tags {
+    background: rgb(47, 115, 164);
+    color: white;
+}
+
+.tag-disabled {
+    background: rgb(224, 224, 224);
+    color: rgb(0, 0, 0);
+    
+}
+
+.tag-disabled:hover {
+    background: rgb(233, 166, 166);
+}
+
+.tag-disabled:active {
+    background: rgb(179, 2, 2);
+    color: white;
 }
 
 .slider {
@@ -114,3 +130,12 @@
   margin-top: -3px;
 }
 
+.post{
+display: inline-block;
+  padding: 10px 10px;
+  background-color: rgb(62, 42, 9);
+  text-decoration: none;
+  color: white;
+  border: none;
+  border-radius: 90px;   
+}

@@ -6,7 +6,7 @@ import { useGlobalStore } from "../store";
 import "./ReviewPage.css"
 import { ReviewList } from './ReviewList';
 
-export default function ReviewPage({}) {
+export default function ReviewPage({clubId}) {
 
     //current problem: I need to include all other spellings and cases of swears
     const badWords = [
@@ -15,11 +15,10 @@ export default function ReviewPage({}) {
         'retard', 'pussy', 'ret@rd'
     ]
     const GlobalValue = useGlobalStore((state) => state.GlobalValue);
-    const { id } = useParams();
+    const id  = clubId;
     console.log(id)
     const [reviews, set_reviews] = useState([]);
     const [warning, setWarning] = useState("")
-    
     //user input variables
     const [ user_review , set_user_review ] = useState('');
     const [ rating , set_rating ] = useState(0);
@@ -33,6 +32,7 @@ export default function ReviewPage({}) {
     const [user_hours, set_user_hours] = useState(0)
     const [user_fun, set_user_fun] = useState(0)
     const [user_leadership, set_user_leadership] = useState(0)
+    const [club, setClub] = useState(null);
 
     useEffect(() => {
         async function fetch_reviews() {
@@ -50,15 +50,45 @@ export default function ReviewPage({}) {
         fetch_reviews();
     }, [id])
 
+    useEffect(() => {
+    async function fetchClub() {
+        const { data, error } = await supabase
+            .from('demo_club_data')
+            .select('*')
+            .eq('id', id);
+        
+        if (error) {
+            console.error('Error fetching club:', error);
+            return;
+        }
+        
+        if (data && data.length > 0) {
+            setClub(data[0]);  // Get first item from array
+        } else {
+            console.log('No club found with id:', id);
+        }
+    }
+    
+    fetchClub();
+}, [id]);
+
     //tags function
 
     const toggleTag = (tag) => {
-        set_user_tags((prev) => ({
+        set_user_tags((prev) => {
+        const selectedCount = Object.values(prev).filter(Boolean).length;
+        
+        if (!prev[tag] && selectedCount >3) {
+            setWarning("Maximum 3 tags allowed");
+            return prev;
+        }
+        
+        return {
             ...prev,
             [tag]: !prev[tag], 
-
-            }));
         };
+    });
+};
     
     async function post_review() {
         //gets user data
@@ -73,7 +103,7 @@ export default function ReviewPage({}) {
                 //finally, take the values and post the review
                 for(let i=0; i < badWords.length; i++) {
                     const regex = new RegExp(badWords[i], 'gi');
-                    if(regex.test(user_review) || regex.text(user_title)){
+                    if(regex.test(user_review) || regex.test(user_title)){
                         setWarning("Review contains harmful content. Please do not use derogatory or harmful speech.");
                         return;
                     }
@@ -94,7 +124,7 @@ export default function ReviewPage({}) {
         }
     }
 
-
+    const selectedCount = Object.values(user_tags).filter(Boolean).length;
     return (
         <div className='review-page'>
             
@@ -113,32 +143,42 @@ export default function ReviewPage({}) {
                     type="text"
                     value={user_review}
                     onChange={(e) => set_user_review(e.target.value)}
-                    placeholder="Tell other people about you experience in {club name}.."
+                    placeholder={`Tell other people about you experience in ${club?.club_name || 'this club'}...`}
                 />
 
                 </div>
-                
+            
                 <h1 className="instruction-txt">Choose Tags</h1>
+                    
+                
                 {Object.entries(user_tags).map(([key, value]) => (
-                <div key ={key} className = "tag-box">
-                    <input 
-                        id = {key}
-                        type = "checkbox"
-                        checked = {value}
-                        onChange = {() => set_user_tags(prev => ({...prev, [key]: !prev[key]}))}
-                        className = "tag-checkbox"
-                    />
-                <label className = "tags">{key}</label>
-                </div> 
+                    
+                    <div key ={key} className = "tag-box">
+                        <input 
+                            id = {key}
+                            type = "checkbox"
+                            checked = {value}
+                            onChange = {() => toggleTag(key)}
+                            className = "tag-checkbox"
+                            disabled={!value && selectedCount >= 3}
+                        />
+                        <label 
+                            className={`tags ${!value && selectedCount >= 3 ? 'tag-disabled' : ''}`}
+                            htmlFor={key}
+                        >
+                            {key}
+                        </label>
+                    </div> 
                 ))}
 
                 <h1 className="instruction-txt">Give Users more data</h1>
-            
+                
                 <p>How many hours per week do you spend in this club?</p>
                 <input className = "slider"
                     type="range" 
                     min="1" 
-                    max="12" 
+                    max="12"
+                    step = "0.2"
                     value= {user_hours}
                     onChange={(e) => set_user_hours(Number(e.target.value))}
                 />
@@ -146,7 +186,8 @@ export default function ReviewPage({}) {
                 <input className = "slider"
                     type="range" 
                     min="1" 
-                    max="10" 
+                    max="10"
+                    step = "0.1"
                     value= {user_leadership}
                     onChange={(e) => set_user_leadership(Number(e.target.value))}
                 />
@@ -159,7 +200,7 @@ export default function ReviewPage({}) {
                     onChange={(e) => set_user_fun(Number(e.target.value))}
                 />
                 
-                <button onClick={post_review}>Post Review</button>
+                <button onClick={post_review} className="post">Post Review</button>
                 <p>{warning}</p>
             </div>
 
@@ -174,4 +215,4 @@ export default function ReviewPage({}) {
         </div>
     );
 
-}
+    }
