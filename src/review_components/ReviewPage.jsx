@@ -91,6 +91,7 @@ export default function ReviewPage({clubId}) {
 };
     
     async function post_review() {
+        console.log("posting review")
         //gets user data
         const {
         data: { user }
@@ -99,7 +100,7 @@ export default function ReviewPage({clubId}) {
         //first check if the user is logged in
         if (GlobalValue) {
             //then, once checked, check if either field is empty (or rating isn't a number between 0-5)
-            if(user_review && user_title && Number.isInteger(Number(rating)) && rating >= 1 && rating <= 5) {
+            if(user_review && user_title) {
                 //finally, take the values and post the review
                 for(let i=0; i < badWords.length; i++) {
                     const regex = new RegExp(badWords[i], 'gi');
@@ -108,14 +109,20 @@ export default function ReviewPage({clubId}) {
                         return;
                     }
                 }
+                
+                const selectedTags = Object.entries(user_tags)
+                  .filter(([, v]) => v)
+                  .map(([k]) => k);
+
                 const { error } = await supabase
                     .from('reviews')
-                    .insert({club_id: id, user_id: user.id, rating: rating, review_text: user_review, review_title: user_title, review_tags: user_tags })
+                    .insert({club_id: id, user_id: user.id, review_text: user_review, review_title: user_title, review_tags: selectedTags})
                     .select()
                 
                 if (error) {
-                console.error('Error fetching reviews:', error);
-                return;
+                    console.error('Error fetching reviews:', error);
+                    setWarning(error.message || 'Failed to post review');
+                    return;
                 }
             }    
         }
