@@ -2,6 +2,7 @@ import { supabase } from '../supabase';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useGlobalStore } from "../store";
+import thanksImage from "../assets/thanks.png"
 
 import "./ReviewPage.css"
 import { ReviewList } from './ReviewList';
@@ -32,6 +33,8 @@ export default function ReviewPage({clubId}) {
     const [user_hours, set_user_hours] = useState(0)
     const [user_fun, set_user_fun] = useState(0)
     const [user_leadership, set_user_leadership] = useState(0)
+    const [user_community, set_user_community] = useState(0)
+    const [user_growth, set_user_growth] = useState(0)
     const [club, setClub] = useState(null);
 
     useEffect(() => {
@@ -88,7 +91,12 @@ export default function ReviewPage({clubId}) {
             [tag]: !prev[tag], 
         };
     });
-};
+};  
+    const fill = (backgroundColor, start, end, value) => {
+        const percentage = ((value- start)/ (end-start)) * 100
+        return `linear-gradient(to right, ${backgroundColor} ${percentage}%, #ffffffff ${percentage}%)`
+
+    };
     
     async function post_review() {
         console.log("posting review")
@@ -116,7 +124,7 @@ export default function ReviewPage({clubId}) {
 
                 const { error } = await supabase
                     .from('reviews')
-                    .insert({club_id: id, user_id: user.id, review_text: user_review, review_title: user_title, review_tags: selectedTags})
+                    .insert({club_id: id, user_id: user.id, review_text: user_review, review_title: user_title, review_tags: selectedTags, club_hours: user_hours, club_leadership: user_leadership, club_fun: user_fun, club_community: user_community, club_growth_index: user_growth})
                     .select()
                 
                 if (error) {
@@ -132,6 +140,7 @@ export default function ReviewPage({clubId}) {
     }
 
     const selectedCount = Object.values(user_tags).filter(Boolean).length;
+    
     return (
         <div className='review-page'>
             
@@ -181,15 +190,27 @@ export default function ReviewPage({clubId}) {
                 <h1 className="instruction-txt">Give Users more data</h1>
                 
                 <p>How many hours per week do you spend in this club?</p>
+               
+                <div className = "sliderContainer">
                 <input className = "slider"
                     type="range" 
                     min="1" 
                     max="12"
                     step = "0.2"
                     value= {user_hours}
+                    id = "myRange"
                     onChange={(e) => set_user_hours(Number(e.target.value))}
+                    style = {{
+                        background: fill('rgb(47, 115, 164)', 1, 12, user_hours),
+                        boxShadow:  `0 0 0 1px #adadad`
+                    }}
                 />
-                <p>How strong was the leadership /10?</p>
+                <p className="number" style = {{color: 'rgb(47, 115, 164)'}}>{user_hours} <span className="number-small"> hr/wk</span></p>
+                </div>
+                
+                
+                <p>How strong was the leadership?</p>
+                <div className = "sliderContainer">
                 <input className = "slider"
                     type="range" 
                     min="1" 
@@ -197,21 +218,78 @@ export default function ReviewPage({clubId}) {
                     step = "0.1"
                     value= {user_leadership}
                     onChange={(e) => set_user_leadership(Number(e.target.value))}
+                    style = {{
+                        background: fill('rgba(82, 50, 6, 1)', 1, 10, user_leadership),
+                        boxShadow:  `0 0 0 1px #adadad`
+                    }}
+                
                 />
-                 <p>How fun was this club /10?</p>
+                <p className="number" style = {{color: 'rgba(82, 50, 6, 1)'}}>{user_leadership} <span className="number-small">/10</span></p>
+                </div>
+                <p>How fun was this club?</p>
+                <div className = "sliderContainer">
+                <input className = "slider"
+                    type="range" 
+                    min="1" 
+                    max="10"
+                    step = "0.1" 
+                    value= {user_fun}
+                    onChange={(e) => set_user_fun(Number(e.target.value))}
+                    style = {{
+                        background: fill('rgba(255, 128, 0, 1)', 1, 10, user_fun),
+                        boxShadow:  `0 0 0 1px #adadad`
+                    }}
+                />
+                <p className="number" style = {{color: 'rgba(255, 128, 0, 1)'}}>{user_fun} <span className="number-small">/10</span></p>
+                </div>
+                <p>How good was the community?</p>
+                <div className = "sliderContainer">
+                <input className = "slider"
+                    type="range" 
+                    min="1" 
+                    max="10"
+                    step = "0.1"
+                    value= {user_community}
+                    onChange={(e) => set_user_community(Number(e.target.value))}
+                    style = {{
+                        background: fill('rgba(198, 165, 1, 0.85)', 1, 10, user_community),
+                        boxShadow:  `0 0 0 1px #adadad`
+                    }}
+                />
+                <p className="number" style = {{color: 'rgba(198, 165, 1, 0.85)'}}>{user_community} <span className="number-small">/10</span></p>
+                </div>
+                <p>Skill Growth Index</p>
+                <div className = "sliderContainer">
                 <input className = "slider"
                     type="range" 
                     min="1" 
                     max="10" 
-                    value= {user_fun}
-                    onChange={(e) => set_user_fun(Number(e.target.value))}
+                    step = "0.1"
+                    value= {user_growth}
+                    onChange={(e) => set_user_growth(Number(e.target.value))}
+                    style = {{
+                        background: fill('rgba(124, 124, 124, 0.85)', 1, 10, user_growth),
+                        boxShadow:  `0 0 0 1px #adadad`
+                    }}
                 />
+                <p className="number" style = {{color: 'rgba(124, 124, 124, 0.85)'}}>{user_growth} <span className="number-small">/10</span></p>
+                </div>
+                
                 
                 <button onClick={post_review} className="post">Post Review</button>
                 <p>{warning}</p>
             </div>
-
-            <p>this is where we'll see past reviews </p>
+            <div className = "vert-flex">
+            <div className = "hor-flex">
+                <h1 className="instruction-txt">Thanks for sharing, Milo!</h1>
+                <img className="raccoon" src={thanksImage} />
+            </div>
+            <div className="divider" />
+            <div className = "hor-flex">
+                <p className = "feedback-on">Feedback on {club?.club_name || 'club'}</p>
+            <img className="club-img-thanks" src ={club?.image_url}/>
+            </div>
+            </div>
             <div className='view-reviews'>
                 { 
                     reviews.map((review) => {
