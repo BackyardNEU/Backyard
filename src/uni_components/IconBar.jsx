@@ -1,5 +1,6 @@
 import React, {useState} from 'react'
 import { useEffect } from 'react'
+import { useRef } from 'react';
 import './IconBar.css'
 
 
@@ -15,6 +16,7 @@ export default function IconBar({ onFavoritesClick }) {
     ];
 
     const [active, setActive] = useState(null);
+    const scrollContainerRef = useRef(null);
 
     const handleClick = (idx) => {
         setActive(idx);
@@ -24,8 +26,22 @@ export default function IconBar({ onFavoritesClick }) {
         }
     };
 
+      
+    const handleWheel = (e) => {
+        // Prevent the default vertical scroll
+        e.preventDefault();
+        
+        // Scroll horizontally instead
+        if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollLeft += e.deltaY;
+        }
+    };
+
     return (
-        <div className="icon-bar">
+        <div className="icon-bar"
+            ref={scrollContainerRef}
+            onWheel={handleWheel}
+        >
             {icons.map((icon, idx) => (
                 <div
                     key={icon.name}
