@@ -14,7 +14,6 @@ html, body {
   justify-content: center;  /* horizontally center everything inside .App */
   align-items: flex-start;  /* keep content at top; change to center to center vertically */
   background-color: #f9f9f9;
-  overflow-x: hidden;
 }
 
 /* Keep the search layout big and wide */
