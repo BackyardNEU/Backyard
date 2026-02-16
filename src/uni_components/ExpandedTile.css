@@ -45,7 +45,7 @@
 
 .club-img-exp {
   background-color:#f7e077;
-  display: flex;
+  
   flex-shrink: 0;
   margin-bottom: 20px;
   border-radius: 5000px;
@@ -58,10 +58,10 @@
 .rectangle{
   
   gap: 1rem;
-  background-color: #F9F5eb;
+  background-color: #fbf1fb;
   z-index: 8000;
   border-radius: 20px;
-  align-content: center;
+  
 
   
 }
@@ -123,36 +123,43 @@
 .divider {
   width: 90%;
   height: 1px;
-  background-color: rgb(71, 71, 71);
+  background-color: rgb(205, 205, 205);
  
 }
 
-.content-col{
-  width: 100%;
-  padding-top: 1rem;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
+
 
 .text-flex{
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  height: 12.5vw;
-  max-height: 17vw;
+ 
   overflow: hidden;
-  flex:1;
+  
 
 }
 
+.divider-header {
+  font-family: 'Inclusive Sans', sans-serif;
+  line-height: normal;
+  font-style: normal;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  font-size: 50px;
+  color: black;
+  text-align: left ;
+}
 
+.content-col{
+  width: 100%;
+}
 
 
 @media (max-width: 699px)  {
-  
+  .text-flex{
+    margin-top: 10px;
+  }
   .expanded-card{
     width: 90vw;
     border-radius: clamp(12px, 5.5vw, 28px);
@@ -194,6 +201,7 @@
   display: flex;
   gap: 2rem;
   margin-bottom: 10px;
+  z-index: 8200;
 
 }
 
@@ -205,18 +213,35 @@
   color: white;
   border: none;
   border-radius: 90px;
+  z-index: 8200;
 }
 
-.rectangle{
-
+.rectangle_min{
+  gap: 1rem;
+  background-color: #fbf1fb;
+  z-index: 8000;
+  border-radius: 20px;
   width: 90vw;
   height: 89vw;
-  margin-top: -22px;
+  margin-top: -20px;
+  align-items: center;
+  
 
+}
+
+.content-col{
+  width: 100%;
+  
+  padding-left: 1rem;
+  padding-right: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 }
    
 @media (min-width: 700px) {
+
 .expanded-card {
   position: fixed;
   inset: 0;               
@@ -224,54 +249,89 @@
   width: 100vw;
   height: 100vh;
   background: rgb(252, 252, 252);
-  display: flex;
-  flex-direction: column;
   align-items: center;
   overflow-y: auto;
   z-index: 8000;   
 }
+.content-col {
+    display: flex;
+    flex-direction: row-reverse;      /* ← Image left, Text right */
+    align-items: center;      /* ← Vertically centers text to the circle */
+    justify-content: left;  /* ← Centers the group in the card */
+    width: 100%;
+    margin-top: 5vh;
+    gap: 3vw;                 /* ← Keeps text adjacent regardless of length */
+    position: relative;
+    margin-right: -5%;
+    margin-bottom: 50px;
+  }
 
+  .image-stack {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 28vw; 
+    height: 28vw;
+    max-width: 500px;
+    max-height: 500px;
+    flex-shrink: 0;           
+    z-index: 8200;
+    flex: 0 0 28vw; /* possibly remove */
+  }
 
-.club-img-exp {
-  background-color:#f7e077;
-  justify-content: flex-start;
-  align-items: center;
-  width: 25vw;
-  height: 25vw;
-  font-size: 5rem;
+  .club-img-exp {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;       /* ← Perfect circle */
+    background-color: #ffffff;
+    
+    border: 1px solid #000;
+    margin-bottom: 0;         /* ← Reset your previous margin */
+  }
 
-  
-}
+  .rectangle {
+    position: absolute;
+    /* Mathematically starts at the vertical center of the image */
+    top: 53%; 
+    left: -1%;
+    /* Horizontal centering + vertical start point */
+    
+    
+    width: 99vw;
+    height: 55%;
+    max-height: 250px;
+    background-color: #fbf1fb;
+    border-radius: 20px;
+    z-index: 8000;            /* ← Behind the image */
+  }
 
-.rectangle{
-  width: 95vw;
-  height:20vw;
-  
+  .text-flex {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 50vw;         /* ← Keeps text from running off-screen */
+    text-align: left;
+    z-index: 8200;
+  }
 
-}
+  .club-name-exp {
+    
+    font-size: clamp(2.5rem, 4.5vw, 5.5rem);
+    margin: 0;
+    line-height: 1.1;
+    white-space: normal;      /* ← Allows long names to wrap naturally */
+  }
 
-.content-row{
-  display: flex;
-  flex-direction: row-reverse;
-  align-items: center;
+  .club-tag1 {
+    font-size: clamp(1rem, 1.8vw, 1.6rem);
+    margin-top: 0.5rem;
+    margin-bottom: 0;
+  }
 
-}
-
-.text-flex{
-margin-top: 4rem;
-margin-left: 2rem;
-}
-
-.club-name-exp{
-font-size: clamp(2rem, 4vw, 5rem);
-  line-height: 1.2;
-  margin: 0 0 1rem 0;
-  
-}
-.club-tag1{
-  font-size: clamp(1rem, 2vw, 1.8rem);
-  margin:0;
-  opacity: 0.7;
-}
-
+  .club-description-exp {
+    margin-top: 15vh;        /* ← Pushes description below the image group */
+    text-align: center;
+    padding: 0 10%;
+  }
 }

@@ -5,7 +5,7 @@ import { useGlobalStore } from "../store";
 import thanksImage from "../assets/thanks.png"
 
 import "./ReviewPage.css"
-import { ReviewList } from './ReviewList';
+import ReviewList from "../review_components/ReviewList"; 
 
 export default function ReviewPage({clubId}) {
 
@@ -290,13 +290,7 @@ export default function ReviewPage({clubId}) {
             <img className="club-img-thanks" src ={club?.image_url}/>
             </div>
             </div>
-            <div className='view-reviews'>
-                { 
-                    reviews.map((review) => {
-                        return <ReviewList review={review} key={review.club_id}/>
-                    })
-                }
-            </div>
+            
         </div>
     );
 

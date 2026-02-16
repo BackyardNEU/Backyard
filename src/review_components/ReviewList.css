@@ -1,19 +1,41 @@
-.review-card {
-  background: #f9f9f9;
-  box-shadow: 1px 1px 2px #d3d3d3;
-  padding: 20px;
-  width: 35vw;
-
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 2.5rem;
-  min-width: 225px;
-  border-radius: 15px;
-  border: 1px solid rgb(162, 162, 162);
-  cursor: pointer;
-  position: relative;
-  z-index: 800;
-  transition: transform 0.6s ease;
-  z-index: 100;
+.review-item{
+    width: 100%
 }
+.range-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  align-self: flex-start;
+  gap: 10px;
+  width: 70vw;
+  margin-bottom: 8px;
+}
+
+.range-label {
+  width: 120px;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.range-bar-container {
+  width: 100%;
+  height: 23px;
+  background-color: #ffffff;
+  border-radius: 20px;
+  border: 2px solid white;
+  box-shadow:  0 0 0 1px #adadad;
+  overflow: hidden;
+}
+
+.range-bar-fill {
+  height: 100%;
+  
+  border-radius: 6px;
+}
+
+.range-value {
+  width: 10px;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
