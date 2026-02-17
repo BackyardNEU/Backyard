@@ -5,14 +5,27 @@ import ReviewPage from "../review_components/ReviewPage";
 import "./ExpandedTile.css";
 import ReviewList from "../review_components/ReviewList"; 
 import { supabase } from '../supabase';
+import logImage from '/src/assets/logImage.png';
 
 function ExpandedTile({club, onClose}){
     const [isOpen, setIsOpen] = useState(false);
     const [reviews, set_reviews] = useState([]);
+    const [isClicked, setIsClicked] = useState(false);
+    const [animating, setAnimating] = useState(false);
     const id  = club.id;
  
     const handleClick = () => {
-    setIsOpen(!isOpen);
+   setIsOpen(!isOpen); 
+    
+    // 2. Trigger the "Image" state and the "Pop" animation
+    setIsClicked(true);
+    setAnimating(true);
+
+    // 3. After the animation finishes (250ms), swap back to the button
+    setTimeout(() => {
+        setIsClicked(false);
+        setAnimating(false);
+    }, 250); 
     }
 
     useEffect(() => {
@@ -77,8 +90,11 @@ function ExpandedTile({club, onClose}){
                             })
                         }
         </div>
+        <div style = {{marginBottom: "30px"}}>
         <h3>Have you been in this club?</h3>
-        <button className = "review-btn" onClick = {handleClick}>{isOpen ? 'Share your experience': 'Share your experience'}</button>
+        <div>{isClicked ? ( <img src = {logImage} className = "log-btn" alt = "Clicked state" /> ) :( 
+        <button className={`review-btn ${animating ? 'pop' : ''}`} onClick = {handleClick}>Share your experience</button> )}</div>
+        </div>
         {isOpen && (
             <div>
             <ReviewPage clubId = {club.id}/>

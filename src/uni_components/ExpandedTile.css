@@ -40,7 +40,20 @@
   color: white;
   border: none;
   border-radius: 90px;
+  transition: transform 0.12s ease;
+  
+  
 
+}
+
+.review-btn.pop {
+  animation: review-pop 0.25s ease forwards;
+  
+}
+.log-btn{
+  width: 170px;
+  height: 40px;
+  
 }
 
 .club-img-exp {
@@ -154,7 +167,13 @@
 .content-col{
   width: 100%;
 }
-
+@keyframes review-pop {
+  0% { transform: scale(1); }
+  10% {transform: scale(1.1);}
+  20% {transform: scale(1.25);}
+  40% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
 
 @media (max-width: 699px)  {
   .text-flex{

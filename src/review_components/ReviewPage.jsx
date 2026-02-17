@@ -194,14 +194,14 @@ export default function ReviewPage({clubId}) {
                 <div className = "sliderContainer">
                 <input className = "slider"
                     type="range" 
-                    min="1" 
+                    min="0" 
                     max="12"
                     step = "0.2"
                     value= {user_hours}
                     id = "myRange"
                     onChange={(e) => set_user_hours(Number(e.target.value))}
                     style = {{
-                        background: fill('rgb(47, 115, 164)', 1, 12, user_hours),
+                        background: fill('rgb(47, 115, 164)', 0, 12, user_hours),
                         boxShadow:  `0 0 0 1px #adadad`
                     }}
                 />
@@ -213,13 +213,13 @@ export default function ReviewPage({clubId}) {
                 <div className = "sliderContainer">
                 <input className = "slider"
                     type="range" 
-                    min="1" 
+                    min="0" 
                     max="10"
                     step = "0.1"
                     value= {user_leadership}
                     onChange={(e) => set_user_leadership(Number(e.target.value))}
                     style = {{
-                        background: fill('rgba(82, 50, 6, 1)', 1, 10, user_leadership),
+                        background: fill('rgba(82, 50, 6, 1)', 0, 10, user_leadership),
                         boxShadow:  `0 0 0 1px #adadad`
                     }}
                 
@@ -230,13 +230,13 @@ export default function ReviewPage({clubId}) {
                 <div className = "sliderContainer">
                 <input className = "slider"
                     type="range" 
-                    min="1" 
+                    min="0" 
                     max="10"
                     step = "0.1" 
                     value= {user_fun}
                     onChange={(e) => set_user_fun(Number(e.target.value))}
                     style = {{
-                        background: fill('rgba(255, 128, 0, 1)', 1, 10, user_fun),
+                        background: fill('rgba(255, 128, 0, 1)', 0, 10, user_fun),
                         boxShadow:  `0 0 0 1px #adadad`
                     }}
                 />
@@ -246,13 +246,13 @@ export default function ReviewPage({clubId}) {
                 <div className = "sliderContainer">
                 <input className = "slider"
                     type="range" 
-                    min="1" 
+                    min="0" 
                     max="10"
                     step = "0.1"
                     value= {user_community}
                     onChange={(e) => set_user_community(Number(e.target.value))}
                     style = {{
-                        background: fill('rgba(198, 165, 1, 0.85)', 1, 10, user_community),
+                        background: fill('rgba(198, 165, 1, 0.85)', 0, 10, user_community),
                         boxShadow:  `0 0 0 1px #adadad`
                     }}
                 />
@@ -262,13 +262,13 @@ export default function ReviewPage({clubId}) {
                 <div className = "sliderContainer">
                 <input className = "slider"
                     type="range" 
-                    min="1" 
+                    min="0" 
                     max="10" 
                     step = "0.1"
                     value= {user_growth}
                     onChange={(e) => set_user_growth(Number(e.target.value))}
                     style = {{
-                        background: fill('rgba(124, 124, 124, 0.85)', 1, 10, user_growth),
+                        background: fill('rgba(124, 124, 124, 0.85)', 0, 10, user_growth),
                         boxShadow:  `0 0 0 1px #adadad`
                     }}
                 />

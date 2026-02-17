@@ -12,7 +12,11 @@ export default function IconBar({ onFavoritesClick }) {
         { name: "art", label: "Visual Arts" },
         { name: "robot", label: "Engineering" },
         { name: "code", label: "Comp Sci" },
-        { name: "tree", label: "Nature" }
+        { name: "tree", label: "Environment" },
+        { name: "cross", label: "Medicine"},
+        { name: "calc", label: "Math"},
+        { name: "guitar", label: "Music"},
+        { name: "capitol", label: "Law"},
     ];
 
     const [active, setActive] = useState(null);
