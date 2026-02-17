@@ -25,7 +25,7 @@ function ExpandedTile({club, onClose}){
     setTimeout(() => {
         setIsClicked(false);
         setAnimating(false);
-    }, 250); 
+    }, 350); 
     }
 
     useEffect(() => {
