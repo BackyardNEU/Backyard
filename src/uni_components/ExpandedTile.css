@@ -84,7 +84,7 @@
  
   margin-right: 5vh;
   align-self: flex-start;
-  color: rgb(60, 120, 35);
+  color: rgb(0, 62, 11);
   font-weight: 500;
   font-style: normal;
   letter-spacing: -1.2px;
@@ -235,6 +235,8 @@
 
 .rectangle_min{
   gap: 1rem;
+  display: flex;
+  align-self: center;
   background-color: var(--dominant-color);
   z-index: 8000;
   border-radius: 20px;
