@@ -37,7 +37,7 @@
   padding: 10px 20px;
   background-color: rgb(62, 42, 9);
   text-decoration: none;
-  color: white;
+  color: rgb(135, 135, 135);
   border: none;
   border-radius: 90px;
   transition: transform 0.12s ease;
@@ -64,14 +64,14 @@
   border-radius: 5000px;
   border: 1px solid;
   z-index: 8200;
-  border-color:#000000;
+  border-color:#909090;
   
 }
 
 .rectangle{
   
   gap: 1rem;
-  background-color: #fbf1fb;
+  
   z-index: 8000;
   border-radius: 20px;
   
@@ -202,10 +202,8 @@
   margin-bottom: 20px;
   
   font-size: 10rem;
-  border: 1px solid;
-  z-index: 8200;
-  border-color:#000000;
   
+  z-index: 8200;
 
   }
   
@@ -237,7 +235,7 @@
 
 .rectangle_min{
   gap: 1rem;
-  background-color: #fbf1fb;
+  background-color: var(--dominant-color);
   z-index: 8000;
   border-radius: 20px;
   width: 90vw;

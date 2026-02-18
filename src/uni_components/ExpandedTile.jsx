@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from "react";
+import React, {useState, useEffect, useRef} from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import ReviewPage from "../review_components/ReviewPage";
@@ -6,12 +6,15 @@ import "./ExpandedTile.css";
 import ReviewList from "../review_components/ReviewList"; 
 import { supabase } from '../supabase';
 import logImage from '/src/assets/logImage.png';
+import ColorThief from "colorthief";
 
 function ExpandedTile({club, onClose}){
     const [isOpen, setIsOpen] = useState(false);
     const [reviews, set_reviews] = useState([]);
     const [isClicked, setIsClicked] = useState(false);
     const [animating, setAnimating] = useState(false);
+    const [dominantColor, setDominantColor] = useState(null);
+    const imgRef = useRef(null);
     const id  = club.id;
  
     const handleClick = () => {
@@ -27,6 +30,41 @@ function ExpandedTile({club, onClose}){
         setAnimating(false);
     }, 350); 
     }
+
+    // colortheif
+
+    const getPastelColor = (r, g, b) => {
+        const factor = (r + (255 - r) * 0.85 >= 240 &&
+                        g + (255 - g) * 0.85 >= 240 &&
+                        b + (255 - b) * 0.85 >= 240) ? 0.5 : 0.85;
+
+        const pastelR = Math.round(r + (255 - r) * factor);
+        const pastelG = Math.round(g + (255 - g) * factor);
+        const pastelB = Math.round(b + (255 - b) * factor);
+
+        return `rgb(${pastelR}, ${pastelG}, ${pastelB})`;
+    };
+
+    
+    useEffect (() => {
+        const colorThief = new ColorThief();
+        const img = imgRef.current;
+
+        const getColor = () => {
+            const [r, g, b] = colorThief.getColor(img);
+            setDominantColor(getPastelColor(r,g,b));
+        };
+        if (img.complete) {
+            getColor();
+        } 
+        else {
+            img.addEventListener("load", getColor);
+            return () => img.removeEventListener("load", getColor);
+    }
+  }, [club.image_url]);
+
+
+    
 
     useEffect(() => {
             async function fetch_reviews() {
@@ -56,14 +94,29 @@ function ExpandedTile({club, onClose}){
         
         
             <div className="content-col">
-                <div className = "rectangle"></div>
+                <div className = "rectangle" style = {{backgroundColor: dominantColor}}>
+                    <img
+                        ref={imgRef}
+                        src={club.image_url}
+                        crossOrigin="anonymous"
+                        alt={club.name}
+                        style={{ display: "none" }}  
+                    />
+                </div>
                 <div className="text-flex">
                     <h2 className="club-name-exp">{club.club_name}</h2>
                     <h2 className="club-tag1">Web Dev • Introductory</h2>
                 </div>
                 
                 <div className ="image-stack">
-                        <div className = "rectangle_min">
+                        <div className = "rectangle_min" style={{ "--dominant-color": dominantColor }} >
+                        <img
+                        ref={imgRef}
+                        src={club.image_url}
+                        crossOrigin="anonymous"
+                        alt={club.name}
+                        style={{ display: "none" }}  
+                        />
                         <img className="club-img-exp" src={club.image_url} alt={club.club_name}/>
                         </div>
                 </div>
