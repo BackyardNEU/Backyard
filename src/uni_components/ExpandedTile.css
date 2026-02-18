@@ -37,7 +37,7 @@
   padding: 10px 20px;
   background-color: rgb(62, 42, 9);
   text-decoration: none;
-  color: rgb(135, 135, 135);
+  color: rgb(255, 255, 255);
   border: none;
   border-radius: 90px;
   transition: transform 0.12s ease;
@@ -178,6 +178,7 @@
 @media (max-width: 699px)  {
   .text-flex{
     margin-top: 10px;
+    padding-left: 0.2rem;
   }
   .expanded-card{
     width: 90vw;
@@ -191,16 +192,15 @@
   
   .club-img-exp {
   
-  width: 87vw;
-  height: 87vw;
+  width: 88vw;
+  height: 88vw;
  
   background-color:#f7e077;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-shrink: 0;
-  margin-bottom: 20px;
-  
+  transform: translateY(6%);
   font-size: 10rem;
   
   z-index: 8200;
@@ -209,6 +209,7 @@
   
   .club-name-exp {
     font-size: 3rem;
+    margin-bottom: 7px;
   }
   .club-tag1{
     font-size: clamp(32px,1rem);
@@ -240,9 +241,9 @@
   background-color: var(--dominant-color);
   z-index: 8000;
   border-radius: 20px;
-  width: 90vw;
-  height: 89vw;
-  margin-top: -20px;
+  width: 88vw;
+  height: 97vw;
+  transform: translateY(-13%);
   align-items: center;
   
 
@@ -250,9 +251,9 @@
 
 .content-col{
   width: 100%;
-  
-  padding-left: 1rem;
-  padding-right: 1rem;
+  padding-top: 0.4rem ;
+  padding-left: 0.4rem;
+  padding-right: 0.4rem;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
