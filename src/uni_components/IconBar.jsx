@@ -4,53 +4,36 @@ import { useRef } from 'react';
 import './IconBar.css'
 
 
-export default function IconBar({ onFavoritesClick }) {
+export default function IconBar({ onIconClick }) {
     const icons = [
-        { name: "heart", label: "Favorites" },
-        { name: "fsl", label: "FSL" },
-        { name: "soccer", label: "Intramurals" },
-        { name: "art", label: "Visual Arts" },
-        { name: "robot", label: "Engineering" },
-        { name: "code", label: "Comp Sci" },
-        { name: "tree", label: "Environment" },
-        { name: "cross", label: "Medicine"},
-        { name: "calc", label: "Math"},
-        { name: "guitar", label: "Music"},
-        { name: "capitol", label: "Law"},
+        { name: "heart", label: "Favorites", category: "favorites" },
+        { name: "fsl", label: "FSL", category: "fsl" },
+        { name: "soccer", label: "Intramurals", category: "intramural_sports" },
+        { name: "art", label: "Visual Arts", category: "visual_arts" },
+        { name: "robot", label: "Engineering", category: "engineering" },
+        { name: "code", label: "Comp Sci", category: "programming" },
+        { name: "tree", label: "Environment", category: "nature" },
+        { name: "cross", label: "Medicine", category: "medicine"},
+        { name: "calc", label: "Math", category: "math"},
+        { name: "guitar", label: "Music", category: "music"},
+        { name: "capitol", label: "Law", category: "law"},
     ];
 
     const [active, setActive] = useState(null);
-    const scrollContainerRef = useRef(null);
 
-    const handleClick = (idx) => {
-        setActive(idx);
+    const handleClick = (category) => {
+        setActive(category);
 
-        if (idx === 0) {
-            onFavoritesClick();
-        }
-    };
-
-      
-    const handleWheel = (e) => {
-        // Prevent the default vertical scroll
-        e.preventDefault();
-        
-        // Scroll horizontally instead
-        if (scrollContainerRef.current) {
-        scrollContainerRef.current.scrollLeft += e.deltaY;
-        }
+        onIconClick(category);
     };
 
     return (
-        <div className="icon-bar"
-            ref={scrollContainerRef}
-            onWheel={handleWheel}
-        >
-            {icons.map((icon, idx) => (
+        <div className="icon-bar">
+            {icons.map((icon) => (
                 <div
                     key={icon.name}
-                    className={`icon-container ${active === idx ? 'active' : ''}`}
-                    onClick={() => handleClick(idx)}
+                    className={`icon-container ${active === icon.category ? 'active' : ''}`}
+                    onClick={() => handleClick(icon.category)}
                 >
                     <img
                         src={'/src/assets/' + icon.name + '.png'}

@@ -14,6 +14,13 @@ function ExpandedTile({club, onClose}){
     const [animating, setAnimating] = useState(false);
     const id  = club.id;
  
+    //escape key will close tile
+    document.addEventListener('keydown', (e) => {
+        if (e.key === "Escape") {
+            onClose();    
+        }
+    });
+
     const handleClick = () => {
    setIsOpen(!isOpen); 
     
@@ -52,7 +59,7 @@ function ExpandedTile({club, onClose}){
            
         >
     
-        <button className = "close-btn" onClick= {onClose}>x</button>
+        <button className = "close-btn" onClick={onClose}>x</button>
         
         
             <div className="content-col">

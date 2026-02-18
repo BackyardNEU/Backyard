@@ -14,11 +14,12 @@ export const UniversityPage = () => {
   const { id } = useParams();
   const [university, setUniversity] = useState(null);
   const [results, setResults] = useState([]);
-  const [favActive, setFavActive] = useState(false);
   const [isDocked, setIsDocked] = useState(false);
+  const [allData, setAllData] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   //potentially consider adding another variable that maintains the old dataset prior to clicking on favorites
 
-
+  /*
   const fetchFavorites = async () => {
     const { data: userData, error: userError } = await supabase.auth.getUser();
     if (userError || !userData?.user) {
@@ -35,7 +36,7 @@ export const UniversityPage = () => {
         .eq('user_id', userId);
       setFavActive(true)
       if (error) console.error(error);
-      else { //setResults(data);
+      else {
         const newdata = results.filter(club => data.some(fav => fav.club_id === club.id)); //club is the rows from demo_club_data, fav is from user_favorites, final line checks to see where the two match (via id)
         setResults(newdata);
       }
@@ -53,7 +54,72 @@ export const UniversityPage = () => {
     }
 
   };
+  */
 
+  const fetchAllData = async () => {
+    const { data, error } = await supabase
+        .from('demo_club_data')
+        .select('*')
+    
+    if (error) console.error("Error retrieving initial data.", error);
+    else setAllData(data);
+    setResults(data)
+    console.log("All data: " + allData);
+  }
+
+  useEffect(() => {
+    fetchAllData;
+  });
+
+  const getClubsBasedOnCategory = async (newCategory) => {
+    console.log("Category recived from function: " + newCategory);
+    //special case if category is "favorites": depends on the user so must authenticate
+    if (newCategory === "favorites") {
+      console.log("If triggering");
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData?.user) {
+        console.error('Error getting user', userError);
+        return;
+      }
+
+      const userId = userData.user.id;
+
+      //begin data search for favorites
+      setSelectedCategory(newCategory);
+      const { data, error } = await supabase
+        .from('user_favorites')
+        .select('*')
+        .eq('user_id', userId);
+      if (error) console.error(error);
+      else {
+        const newdata = allData.filter(club => data.some(fav => fav.club_id === club.id)); //club is the rows from demo_club_data, fav is from user_favorites, final line checks to see where the two match (via id)
+        setResults(newdata);
+      }
+    }
+    //if the user clicks the same icon again, then reset the clubs to display the default
+    else if (newCategory === selectedCategory) {
+      console.log("Else if triggering");
+      fetchAllData();
+    }
+    //if user selects different icon, then display corresponding information
+    else {
+      console.log("Else triggering");
+      setSelectedCategory(newCategory); 
+      const {data, error} = await supabase
+        .from("demo_club_data")
+        .select("category")
+        .eq("category", newCategory);
+      if (error) console.error("Error loading club category", error);
+      else {
+        //problem is arising from stale useState - Look into how to fix
+        const newdata = allData.filter(club => data.some(category => category.category === club.category));
+        console.log("New data: " + newdata);
+        setResults(newdata);
+        console.log("Results: " + results);
+      }
+    }
+  }
+  
   useEffect(() => {
     async function fetchUniversity() {
       const { data, error } = await supabase
@@ -79,10 +145,10 @@ export const UniversityPage = () => {
     <div className="UniPage">
       <div className = "fixed-wrapper">
         <h1 className="raleway-uni">{university.uni_name}</h1>
-        <IconBar onFavoritesClick={fetchFavorites} />
+        <IconBar onIconClick={getClubsBasedOnCategory} />
         <UniSearchBar setResults={setResults} university={university.uni_name} />
       </div>
-     < ClubList className ="start" results={results} />
+     <ClubList className="start" results={results} />
     </div>
   );
 };
