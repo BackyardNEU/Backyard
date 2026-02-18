@@ -78,7 +78,7 @@
   position:absolute;
   width: 30px;
   height: 28px;
-   bottom: -45px;
+  bottom: -45px;
   right: 0;      
   cursor: pointer;
   z-index: 50;
@@ -115,7 +115,16 @@
 
 @media (max-width: 600px) and (min-width: 100px) {
   .club-card{
-    width: 75vw;
+    width: 65vw;
+
+  }
+  .club-img{
+    width: 60vw;
+    height:60vw;
+  }
+  .image-container{
+    width: 60vw;
+    height: 60vw;
   }
 }
 

@@ -2,8 +2,8 @@
   position:fixed;
   inset: 0;               /* ← fills viewport */
   margin: auto;           /* ← centers */
-  width: 100vw;
-  height: 80vh;
+  width: 90vw;
+  height: 95vh ;
 
   background: rgb(255, 255, 255);
 
