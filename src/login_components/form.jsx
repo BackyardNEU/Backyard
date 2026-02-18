@@ -2,13 +2,23 @@ import React from "react";
 import "./form.css";
 
 function Form(props){
-    // let clicked = true;
+  const handleLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+
+    if (error) console.error(error);
+  };
+  
     return (
         <form className = "input-field">
             <input type = "text" placeholder ="Prefered name"/>
             <input type = "text" placeholder="Email"/>
             <input type  = "password" placeholder="Password" />
-            <button type = "submit">{props.isRegistered ? "Sign up": "Register"}</button>
+            <button type = "submit" onClick={handleLogin}>{props.isRegistered ? "Sign up": "Register"}</button>
         </form>
     );
 }
