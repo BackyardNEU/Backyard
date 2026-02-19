@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { UniSearchBar } from './UniSearchBar';
@@ -19,44 +19,7 @@ export const UniversityPage = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   //potentially consider adding another variable that maintains the old dataset prior to clicking on favorites
 
-  /*
-  const fetchFavorites = async () => {
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    if (userError || !userData?.user) {
-      console.error('Error getting user', userError);
-      return;
-    }
-    const userId = userData.user.id;
-
-    if(!favActive) {
-      console.log("fav on ")
-      const { data, error } = await supabase
-        .from('user_favorites')
-        .select('*')
-        .eq('user_id', userId);
-      setFavActive(true)
-      if (error) console.error(error);
-      else {
-        const newdata = results.filter(club => data.some(fav => fav.club_id === club.id)); //club is the rows from demo_club_data, fav is from user_favorites, final line checks to see where the two match (via id)
-        setResults(newdata);
-      }
-    }
-    
-    else{
-      console.log("fav off")
-      const { data, error } = await supabase
-        .from('demo_club_data')
-        .select('*')
-
-      setFavActive(false)
-      if (error) console.error(error);
-      else setResults(data);
-    }
-
-  };
-  */
-
-  const fetchAllData = async () => {
+  const fetchAllData = useCallback(async () => {
     const { data, error } = await supabase
         .from('demo_club_data')
         .select('*')
@@ -65,11 +28,11 @@ export const UniversityPage = () => {
     else setAllData(data);
     setResults(data)
     console.log("All data: " + allData);
-  }
+  }, []);
 
   useEffect(() => {
-    fetchAllData;
-  });
+    fetchAllData();
+  }, [fetchAllData]);
 
   const getClubsBasedOnCategory = async (newCategory) => {
     console.log("Category recived from function: " + newCategory);
@@ -99,7 +62,8 @@ export const UniversityPage = () => {
     //if the user clicks the same icon again, then reset the clubs to display the default
     else if (newCategory === selectedCategory) {
       console.log("Else if triggering");
-      fetchAllData();
+      setSelectedCategory(null);
+      setResults(allData);
     }
     //if user selects different icon, then display corresponding information
     else {
