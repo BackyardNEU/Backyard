@@ -22,7 +22,12 @@ export default function IconBar({ onIconClick }) {
     const [active, setActive] = useState(null);
 
     const handleClick = (category) => {
-        setActive(category);
+        if (active === category) {
+            setActive(null);
+        }
+        else{
+            setActive(category);
+        }
 
         onIconClick(category);
     };
