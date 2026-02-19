@@ -39,3 +39,7 @@
   flex-shrink: 0;
 }
 
+.comment-title{
+    font-family: "inter";
+    font-weight: 400;
+}

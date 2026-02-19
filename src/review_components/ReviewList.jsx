@@ -10,6 +10,7 @@ export default function ReviewList({review}) {
                              {label: "Leadership", value: review.club_leadership, color: 'rgba(198, 165, 1, 0.85)', end: 10 },
                              {label: "Fun Index", value: review.club_fun, color: 'rgba(124, 124, 124, 0.85)', end: 10},
                              ]
+    
     return (
         <div className = "review-item">
         {stat_categories.map((cat) => {
@@ -31,8 +32,9 @@ export default function ReviewList({review}) {
                 </div>
             );
         })}
-        <p>{review.review_title}</p>
-    //             <p>{review.review_text}</p>
+        <p className = "divider-header">Comments</p>
+        <p className = "comment-title">{review.review_title}</p>
+      <p>{review.review_text}</p>
         </div>
     );
         }
