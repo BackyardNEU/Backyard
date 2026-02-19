@@ -36,8 +36,15 @@ export const UniversityPage = () => {
 
   const getClubsBasedOnCategory = async (newCategory) => {
     console.log("Category recived from function: " + newCategory);
+    //if the user clicks the same icon again, then reset the clubs to display the default
+    //this case also uses the least memory
+    if (newCategory === selectedCategory) {
+      console.log("Else if triggering");
+      setSelectedCategory(null);
+      setResults(allData);
+    }
     //special case if category is "favorites": depends on the user so must authenticate
-    if (newCategory === "favorites") {
+    else if (newCategory === "favorites") {
       console.log("If triggering");
       const { data: userData, error: userError } = await supabase.auth.getUser();
       if (userError || !userData?.user) {
@@ -59,12 +66,6 @@ export const UniversityPage = () => {
         setResults(newdata);
       }
     }
-    //if the user clicks the same icon again, then reset the clubs to display the default
-    else if (newCategory === selectedCategory) {
-      console.log("Else if triggering");
-      setSelectedCategory(null);
-      setResults(allData);
-    }
     //if user selects different icon, then display corresponding information
     else {
       console.log("Else triggering");
@@ -75,7 +76,6 @@ export const UniversityPage = () => {
         .eq("category", newCategory);
       if (error) console.error("Error loading club category", error);
       else {
-        //problem is arising from stale useState - Look into how to fix
         const newdata = allData.filter(club => data.some(category => category.category === club.category));
         console.log("New data: " + newdata);
         setResults(newdata);

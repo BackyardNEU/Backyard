@@ -14,15 +14,13 @@
     border: 1px solid #8a8a8a;
     box-shadow: 1px 1px 2px #d3d3d3;
     z-index: 10
-    
-    
 }
+
 .search-icon
 {
     fill: #000000;
 }
 input {
-    
     background-color: transparent;
     font-family: "Inter", sans-serif;
     border: none;
