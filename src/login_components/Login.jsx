@@ -16,3 +16,11 @@ function Login() {
 }
 
 export default Login;
+
+/*
+const { data, error } = await supabase.auth.signInWithPassword({
+  email: 'example@email.com',
+  password: 'example-password',
+})
+*/
+//use this as the "regular" sign in method 
