@@ -8,15 +8,35 @@ export default function IconBar({ onIconClick }) {
     const icons = [
         { name: "heart", label: "Favorites", category: "favorites" },
         { name: "fsl", label: "FSL", category: "fsl" },
+        
         { name: "soccer", label: "Intramurals", category: "intramural_sports" },
-        { name: "art", label: "Visual Arts", category: "visual_arts" },
-        { name: "robot", label: "Engineering", category: "engineering" },
+         { name: "tree", label: "Environment", category: "nature" },
+         {name: "books", label: "Literature", category: "lit" },
+        
+        {name: "dancer", label: "Performing", category: "performing" },
+        { name: "guitar", label: "Music", category: "music"},
+          { name: "art", label: "Visual Arts", category: "visual_arts" },
+        {name: "heart", label: "fun", category: "fun"},
+        {name: "beaker", label: "Science", category: "science"},
         { name: "code", label: "Comp Sci", category: "programming" },
-        { name: "tree", label: "Environment", category: "nature" },
+        { name: "robot", label: "Engineering", category: "engineering" },
         { name: "cross", label: "Medicine", category: "medicine"},
         { name: "calc", label: "Math", category: "math"},
-        { name: "guitar", label: "Music", category: "music"},
+        
         { name: "capitol", label: "Law", category: "law"},
+        
+        
+        
+         {name: "help", label: "Resources", category: "resources"},
+       
+        
+       
+        
+        
+        
+        
+       
+
     ];
 
     const [active, setActive] = useState(null);

@@ -195,7 +195,7 @@
   width: 88vw;
   height: 88vw;
  
-  background-color:#f7e077;
+  background-color:#ffffff;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -300,8 +300,8 @@
   }
 
   .club-img-exp {
-    width: 100%;
-    height: 100%;
+    width: 28vw;
+    height: 28vw;
     object-fit: cover;
     border-radius: 50%;       /* ← Perfect circle */
     background-color: #ffffff;
