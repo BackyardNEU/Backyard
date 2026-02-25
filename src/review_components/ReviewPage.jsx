@@ -36,6 +36,8 @@ export default function ReviewPage({clubId}) {
     const [user_community, set_user_community] = useState(0)
     const [user_growth, set_user_growth] = useState(0)
     const [club, setClub] = useState(null);
+    const [username, setUsername] = useState("");
+
 
     useEffect(() => {
         async function fetch_reviews() {
@@ -55,6 +57,13 @@ export default function ReviewPage({clubId}) {
 
     useEffect(() => {
     async function fetchClub() {
+
+        const {
+        data: { user }
+        } = await supabase.auth.getUser();
+
+        setUsername(user?.user_metadata?.full_name || user?.email || "User");
+        
         const { data, error } = await supabase
             .from('demo_club_data')
             .select('*')
@@ -281,7 +290,7 @@ export default function ReviewPage({clubId}) {
             </div>
             <div className = "vert-flex">
             <div className = "hor-flex">
-                <h1 className="instruction-txt">Thanks for sharing, Milo!</h1>
+                <h1 className="instruction-txt">Thanks for sharing, {username}!</h1>
                 <img className="raccoon" src={thanksImage} />
             </div>
             <div className="divider" />
