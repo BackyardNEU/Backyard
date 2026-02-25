@@ -1,5 +1,5 @@
 .UniPage {
-  background-color: #fffef1;
+  background-color: #f8f6f4;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -11,13 +11,19 @@
   color: rgb(0, 0, 0);
 }
 
+.header{
+  background-color: rgb(197, 213, 194);
+  width: 100%;
+  height: 150px;
+}
+
 .raleway-uni {
   
-  font-family: "Raleway", sans-serif;
+  font-family: "Quicksand", sans-serif;
   font-optical-sizing: auto;
-  font-weight: 210.9rem 1;
+  font-weight: 500;
   font-style: normal;
-  font-size: 12vwvh;
+
   color: rgb(0, 0, 0);
   /* 10vh*/
   margin-top: 0.5%;
@@ -34,7 +40,7 @@
   z-index: 999;
  
   
-  background: linear-gradient(to bottom, #fffef1 0%, #fffef1 75%, transparent 79%);
+  background: linear-gradient(to bottom, #f8f6f4 0%, #f8f6f4 77%, transparent 79%);
 }
 
 @media (max-width: 775px) {

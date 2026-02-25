@@ -107,8 +107,11 @@ export const UniversityPage = () => {
 
   return (
     <div className="UniPage">
+      
       <div className = "fixed-wrapper">
+        <div className = "header">
         <h1 className="raleway-uni">{university.uni_name}</h1>
+        </div>
         <IconBar onIconClick={getClubsBasedOnCategory} />
         <UniSearchBar setResults={setResults} university={university.uni_name} />
       </div>

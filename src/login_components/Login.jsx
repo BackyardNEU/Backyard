@@ -12,7 +12,7 @@ function Login() {
     if (error) console.error(error);
   };
 
-  return <button onClick={handleLogin}>sign in with Google</button>;
+  return <button onClick={handleLogin}>Sign in with Google</button>;
 }
 
 export default Login;

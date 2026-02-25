@@ -292,8 +292,8 @@
     align-items: center;
     width: 28vw; 
     height: 28vw;
-    max-width: 500px;
-    max-height: 500px;
+    max-width: 400px;
+    max-height: 400px;
     flex-shrink: 0;           
     z-index: 8200;
     flex: 0 0 28vw; /* possibly remove */
@@ -302,6 +302,8 @@
   .club-img-exp {
     width: 28vw;
     height: 28vw;
+    max-width: 430px;
+    max-height: 430px;
     object-fit: cover;
     border-radius: 50%;       /* ← Perfect circle */
     background-color: #ffffff;
