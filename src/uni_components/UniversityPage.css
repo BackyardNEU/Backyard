@@ -39,8 +39,8 @@
   width: 100%;
   z-index: 999;
  
-  
-  background: linear-gradient(to bottom, #f8f6f4 0%, #f8f6f4 77%, transparent 79%);
+  /* 0% 77% 79%*/
+  background: linear-gradient(to bottom, #f8f6f4 0, #f8f6f4 320px, transparent 335px);
 }
 
 @media (max-width: 775px) {
