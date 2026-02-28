@@ -3,7 +3,7 @@
 
     height: 3rem; 
     border-radius: 20px; 
-    background-color: #fbfbfb;;
+    background-color: #fbfbfb;
     padding: 0 10px;
 
     margin-top: 1%;
@@ -17,48 +17,62 @@
 
 }
 
+.input-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    margin-left: 10px; /* Space between the search icon and the text */
+}
+
 .search-icon
 {
     fill: #000000;
 }
-input {
-    background-color: transparent;
+.club-input-wrapper input {
+    background-color: transparent ;
+    border: none;
+     
+    outline: none;
     font-family: "Inter", sans-serif;
-    
+    width: 100%;
     height: 100%;
     font-size: 1.25rem;
-    width: 100%;
+    
     white-space: nowrap;
     overflow: hidden;
-    border-radius: 35px;
+    
     color: rgb(208, 81, 81);
     
 
 }
 
-input::placeholder {
-    color: rgb(208, 81,81);
-    opacity: 1;
-    border-radius: 25px;
-    border-right: 2px solid  rgb(208, 81, 81);
+.typewriter-placeholder {
+    position: absolute;
+    left: 0;
+    color: rgb(208, 81, 81);
+    font-family: "Inter", sans-serif;
+    font-size: 1.25rem;
+    
+    /* Crucial: lets the user click "through" the text into the input */
+    pointer-events: none; 
+    
+    /* The cursor now hugs the text! */
+    border-right: 2px solid rgb(208, 81, 81);
     animation: blink 0.7s infinite;
+    white-space: nowrap;
 }
 
 
-input:focus {
-    outline: none;
-}
 
-.search-icon {
-    color: rgb(0, 0, 0);
-}
 
 @keyframes blink {
     0%, 100% { border-color: transparent; }
     50% { border-color: rgb(208, 81, 81); }
 }
 @media (max-width: 549px) and (min-width: 300px) {
-  .club-input-wrapper-{
+  .club-input-wrapper{
     width: 90vw;
 
   }

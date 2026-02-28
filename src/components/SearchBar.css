@@ -20,12 +20,12 @@
   margin-left: 5.5rem; /* adjust this until it looks right */
 }
 
-.input-wrapper {
+.school-input-wrapper {
     
     width: 100%;
     height: 3rem; 
     border-radius: 20px; 
-    background-color: #fbfbfb;
+    background-color: transparent;
     padding: 0 10px;
 
     margin-top: 1%;
@@ -42,22 +42,22 @@
 
 }
 
-input {
+.school-input-wrapper input {
     background-color: transparent;
     border: none;
     height: 100%;
     font-size: 1.25rem;
-    width: 100%;
+    
     margin-left: 5px;
     color:rgb(219, 180, 74);
 }
 
-input::placeholder {
-    color: rgb(88, 88, 88);
+.school-input-wrapper input::placeholder {
+    color: rgb(37, 80, 122);
     opacity: 1;
 }
 
-input:focus {
+.school-input-wrapper input:focus {
     outline: none;
 }
 

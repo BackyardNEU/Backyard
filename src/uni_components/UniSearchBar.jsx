@@ -97,13 +97,25 @@ useEffect(() => {
   return (
     <div className="club-input-wrapper">
         <FaSearch className="search-icon" />
+        <div className="input-container">
+            
+            {/* The Custom Placeholder that shrink-wraps the text */}
+            {input.length === 0 && !isInteracted && (
+                <span className="typewriter-placeholder">
+                    {displayText}
+                </span>
+            )}
+        
+        
         <input
+            
             onClick={(handleClick)}
             type="text"
             value={input}
-            placeholder ={input.length === 0 ? displayText : ""}
+            
             onChange={(e) => setInput(e.target.value)}
         />
+    </div>
     </div>
   )
   
