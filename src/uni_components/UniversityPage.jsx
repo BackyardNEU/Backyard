@@ -26,7 +26,7 @@ export const UniversityPage = () => {
     
     if (error) console.error("Error retrieving initial data.", error);
     else setAllData(data);
-    setResults(data)
+    setResults(data);
     console.log("All data: " + allData);
   }, []);
 
@@ -63,7 +63,12 @@ export const UniversityPage = () => {
       if (error) console.error(error);
       else {
         const newdata = allData.filter(club => data.some(fav => fav.club_id === club.id)); //club is the rows from demo_club_data, fav is from user_favorites, final line checks to see where the two match (via id)
-        setResults(newdata);
+        if (newdata.length > 18) {
+          setResults(newdata);
+        }
+        else {
+          setResults(newdata);
+        }
       }
     }
     //if user selects different icon, then display corresponding information
@@ -78,7 +83,12 @@ export const UniversityPage = () => {
       else {
         const newdata = allData.filter(club => data.some(category => category.category === club.category));
         console.log("New data: " + newdata);
-        setResults(newdata);
+        if (newdata.length > 18) {
+          setResults(newdata);
+        }
+        else {
+          setResults(newdata);
+        }
         console.log("Results: " + results);
       }
     }
