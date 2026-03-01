@@ -36,7 +36,56 @@ export default function ReviewPage({clubId}) {
     const [user_community, set_user_community] = useState(0)
     const [user_growth, set_user_growth] = useState(0)
     const [club, setClub] = useState(null);
+    const [username, setUsername] = useState("");
 
+    
+        const [file, setFile] = useState(null);
+        const [uploading, setUploading] = useState(false);
+        const [fileUrl, setFileUrl] = useState("");
+
+        const handleFileChange = event => {
+            setFile(event.target.files[0]);
+        };
+
+        const handleUpload = async () => {
+            try {
+             setUploading(true);
+
+             if (!file) {
+                console.log("Please select a file to upload.")
+                return;
+             }
+
+             const fileExt = file.name.split(".").pop();
+             const fileName = `${Math.random()}.${fileExt}`
+             const filePath = `${fileName}`;
+
+            let { data, error } = await supabase.storage
+                .from('review_images')
+                .upload(filePath, file);
+
+            if (error) {
+                throw error;
+            }
+
+            const {data: url} = await supabase.storage
+            .from("review_images")
+            .getPublicUrl(filePath);
+            
+            setFileUrl(url.publicUrl);
+            alert("File uploaded successfully.");
+
+        } catch (error) {
+                alert("Error uploading file:" , error.message)
+
+            }
+        finally{
+            setUploading(false);
+        }
+
+       
+        }
+    
     useEffect(() => {
         async function fetch_reviews() {
             const {data, error} = await supabase
@@ -55,6 +104,13 @@ export default function ReviewPage({clubId}) {
 
     useEffect(() => {
     async function fetchClub() {
+
+        const {
+        data: { user }
+        } = await supabase.auth.getUser();
+
+        setUsername(user?.user_metadata?.full_name || user?.email || "User");
+        
         const { data, error } = await supabase
             .from('demo_club_data')
             .select('*')
@@ -124,7 +180,7 @@ export default function ReviewPage({clubId}) {
 
                 const { error } = await supabase
                     .from('reviews')
-                    .insert({club_id: id, user_id: user.id, review_text: user_review, review_title: user_title, review_tags: selectedTags, club_hours: user_hours, club_leadership: user_leadership, club_fun: user_fun, club_community: user_community, club_growth_index: user_growth})
+                    .insert({club_id: id, user_id: user.id, review_text: user_review, review_title: user_title, review_tags: selectedTags, club_hours: user_hours, club_leadership: user_leadership, club_fun: user_fun, club_community: user_community, club_growth_index: user_growth, review_image: fileUrl})
                     .select()
                 
                 if (error) {
@@ -161,6 +217,21 @@ export default function ReviewPage({clubId}) {
                     onChange={(e) => set_user_review(e.target.value)}
                     placeholder={`Tell other people about you experience in ${club?.club_name || 'this club'}...`}
                 />
+
+                <input
+                    type = "file"
+                    accept="image/*" 
+                    capture="environment"
+                    onChange = {handleFileChange}
+                    />
+                <button onClick = {handleUpload} disabled={uploading}>
+                    {uploading ? "Uploading..." : "Upload"}
+                </button>
+                {fileUrl && (
+                    <div>
+                        <p>File upload to: {fileUrl}</p>
+                    </div>
+                )}
 
                 </div>
             
@@ -281,7 +352,7 @@ export default function ReviewPage({clubId}) {
             </div>
             <div className = "vert-flex">
             <div className = "hor-flex">
-                <h1 className="instruction-txt">Thanks for sharing, Milo!</h1>
+                <h1 className="instruction-txt">Thanks for sharing, {username}!</h1>
                 <img className="raccoon" src={thanksImage} />
             </div>
             <div className="divider" />

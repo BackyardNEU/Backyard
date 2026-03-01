@@ -41,7 +41,7 @@ export const SearchBar = ({ setResults }) => {
   }
 
   return (
-    <div className="input-wrapper">
+    <div className="school-input-wrapper">
         <FaSearch className="search-icon" />
         <input
             placeholder="Search for your school"

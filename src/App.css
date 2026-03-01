@@ -18,7 +18,7 @@ html, body {
 
 /* Keep the search layout big and wide */
 .search-bar-container {
-  padding-top: -30vh;
+  
   width: 70%;
   max-width: 1200px;
   margin: 0 auto;
@@ -28,18 +28,30 @@ html, body {
   min-width: 200px;
 }
 
+.search-bar-container h2.ra {
+  font-family: 'Quicksand', sans-serif;
+  font-weight: 700;
+  letter-spacing: -1px; /* Makes "Backyard" look more like a custom logo */
+  font-size: 150px;
+  margin-top: 120px;
+}
+
 .welcome-text {
+  font-family: "Quicksand", sans-serif;
   text-align: center;
-  width: 100%;
+ 
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  font-size: 6rem; /* whatever you used before */
+  font-size: 120px;
+  
 }
 
 .raccoon-wrapper {
   display: flex;
   align-items: center;
+  
+  
 }
 
 .login-button {
@@ -64,5 +76,5 @@ html, body {
 .login-icon img{
   
   width: 70px;
-  height: 70px;
+  height: 120px;
 }

@@ -12,7 +12,15 @@ function Login() {
     if (error) console.error(error);
   };
 
-  return <button onClick={handleLogin}>sign in with Google</button>;
+  return <button onClick={handleLogin}>Sign in with Google</button>;
 }
 
 export default Login;
+
+/*
+const { data, error } = await supabase.auth.signInWithPassword({
+  email: 'example@email.com',
+  password: 'example-password',
+})
+*/
+//use this as the "regular" sign in method 

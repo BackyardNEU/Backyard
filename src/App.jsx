@@ -23,12 +23,12 @@ function App() {
           path="/"
           element={
             <div className="search-bar-container">
-             <h2 className="welcome-text">
+             <h2 className="ra">
               Back
               <span className="raccoon-wrapper">
               <img src="/raccoon.png" alt="raccoon" className="raccoon-icon" />
               </span>
-              <span className="come-text">     yard</span>
+              <span className="ra">     yard</span>
               </h2>
               <SearchBar setResults={setResults} />
               <SearchResultsList results={results} />

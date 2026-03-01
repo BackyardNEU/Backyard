@@ -33,6 +33,7 @@ export default function ReviewList({review}) {
             );
         })}
         <p className = "divider-header">Comments</p>
+        <img src={review.review_image} />
         <p className = "comment-title">{review.review_title}</p>
       <p>{review.review_text}</p>
         </div>
