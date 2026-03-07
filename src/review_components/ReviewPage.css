@@ -1,48 +1,35 @@
 .review-page {
-  position:fixed;
-  inset: 0;               /* ← fills viewport */
-  margin: auto;           /* ← centers */
+  position: fixed;
+  inset: 0;
+  margin: auto;
   width: 90vw;
-  height: 95vh ;
-
+  height: 95vh;
+  font-family: 'Inter', sans-serif; /* so slide titles and content don't inherit parent font (e.g. Josefin Sans) */
   background: rgb(255, 255, 255);
-
   display: flex;
   flex-direction: column;
   align-items: center;
-
   border: 3px solid rgb(185, 185, 185);
   border-radius: clamp(12px, 5.5vw, 28px);
-  box-shadow: 0 20px 80px rgba(0,0,0,0.4), 
-            0 0 0 9999px rgba(46, 46, 46, 0.65),
-            1px 1px 8px #adadad inset;
-            ;
-
-
+  box-shadow: 0 20px 80px rgba(0,0,0,0.4),
+    0 0 0 9999px rgba(46, 46, 46, 0.65),
+    1px 1px 8px #adadad inset;
   overflow-y: auto;
-
-  z-index: 9000;   
+  z-index: 9000;
 }
-.instruction-txt{
-  
-  font-family: 'Inter', sans-serif;
-  font-weight: 300;
-  line-height: normal;
-  font-style: normal;
-  position: relative;
 
-  font-size: 70px;
-  color: #000000;
-
-}
 .create-comment {
     display: flex;
     flex-direction: column;
-    column-gap: 0.5rem;
-    align-items: center;
+    gap: 1rem;
+    align-items: stretch;
+    justify-content: center;
     z-index: 9010;
-    width: 70vw;
-    height: 30vh;
+    width: 100%;
+    max-width:  min(75vw, 1200px);
+    padding: 1.5rem;
+    flex: 1 1 auto;
+    min-height: 0;
     border: 1px solid rgb(77, 77, 77);
     border-radius: clamp(12px, 5.5vw, 28px);
 }
@@ -102,15 +89,14 @@
     color: white;
 }
 .sliderContainer {
-    margin-top: 20px;
-    margin-bottom: 20px;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
     display: flex;
     flex-direction: row;
     align-items: center;
-    align-self: flex-start;
+    align-self: stretch;
     gap: 1rem;
-    width: 75%;
-    
+    max-width: 100%;
 }
 
 .sliderContainer p {
@@ -229,4 +215,181 @@ display: inline-block;
 
   font-size: 40px;
   color: #000000;
+}
+
+body {
+  margin: 0;
+  height: auto;
+  overflow-y: visible; 
+  
+}
+
+/* Slides Nav */
+.slides-nav {
+  z-index: 99;
+  position: fixed;
+  right: 2%;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  color: #fff; /* Changed to white so it shows over images */
+}
+
+.slides-nav__nav {
+  display: block;
+  font-size: 1em;
+  transform: rotate(90deg);
+  transform-origin: center;
+}
+
+.slides-nav button {
+  position: relative;
+  display: inline-block;
+  padding: 0.35em;
+  margin: 0;
+  font-family: "Space Mono", monospace;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+}
+
+.scroll-track {
+  height: 920%; /* 3 slides × 4 viewport heights each = more scroll before transition */
+  width: 100%;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.scroll-track--with-thanks {
+  height: 1100%; /* 3×4 slide zones + 2 for thanks section */
+}
+
+/* The Sticky Container - MUST be the same height as the popup (95vh) */
+.slides-wrapper {
+  position: sticky;
+  top: 0;
+  height: 95vh; /* This allows it to stick as you scroll the 400% track */
+  width: 100%;
+  overflow: hidden;
+}
+
+.slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%; /* Now fills the 95vh wrapper */
+  visibility: hidden;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.slide__content {
+  position: relative;
+  height: 88%;
+  width: 92%;
+  padding: clamp(1.5rem, 4vw, 2.5rem) 1.5rem 1.5rem 1.5rem;
+  padding-top: clamp(2rem, 5vw, 3rem);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.slide__figure {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  height: 100%;
+  width: 100%;
+}
+
+/* Slide body - fills remaining space, scrollable when needed */
+.slide__img {
+  position: relative;
+  margin-top: 5rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  padding: clamp(6rem, 14vw, 9rem) 0.5rem 0 0.5rem; /* space below header at all widths */
+  overflow-y: auto;
+  opacity: calc(1 - var(--scroll-out));
+}
+
+.slide__img > p {
+  margin: 0.5rem 0 0.25rem 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+}
+
+.slide__header {
+  position: absolute;
+  background-color: white;
+  width: 100%;
+  top: 0;
+  left: 0;
+  height: auto;
+  display: block;
+  z-index: 9;
+  margin: clamp(1.25rem, 3vw, 2rem) 0 clamp(4rem, 9vw, 8rem) 1.5rem;
+}
+
+/* 2. Make sure the title lines act as "masks" for the slide-up effect */
+.slide__title {
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-size: 70px;
+  line-height: normal;
+  font-weight: 700;
+  color: #111;
+  
+}
+
+.slide__title .title-line {
+  display: block;
+  overflow: hidden;
+  font-family: inherit; /* keep Inter from .slide__title */
+}
+
+/* 3. Title fade/slide – kept in sync with slide body fade */
+.slide__title .title-line span {
+  display: inline-block;
+  font-family: 'Inter', sans-serif; /* explicit so transformed text uses Inter */
+  /* As the slide fades out (scroll-out → 1), move the text up slightly */
+  transform: translate3d(0, calc(var(--scroll-out) * -40px), 0);
+  /* Fade text at the same rate as the image (.slide__img) */
+  opacity: calc(1 - var(--scroll-out));
+}
+
+/* 4. Second line uses the same timing so both lines fade together */
+.slide__title .title-line:nth-child(2) span {
+  transform: translate3d(0, calc(var(--scroll-out) * -40px), 0);
+}
+
+/* Tags slide: fill space with even spacing */
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-content: flex-start;
+  padding: 0.5rem 0;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.review-close-btn {
+  position: fixed;
+  top: 35px;
+  right: 65px;
+  z-index: 9900;
+  background: none;
+  border: none;
+  font-size: 3rem;
+  cursor: pointer;
+  line-height: 1;
 }

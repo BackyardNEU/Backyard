@@ -157,7 +157,7 @@ function ExpandedTile({club, onClose}){
         </div>
         {isOpen && (
             <div>
-            <ReviewPage clubId = {club.id}/>
+            <ReviewPage clubId={club.id} onClose={() => setIsOpen(false)}/>
             </div>)
 
         }

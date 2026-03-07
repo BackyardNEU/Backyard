@@ -1,5 +1,5 @@
 import { supabase } from '../supabase';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useGlobalStore } from "../store";
 import thanksImage from "../assets/thanks.png"
@@ -7,7 +7,7 @@ import thanksImage from "../assets/thanks.png"
 import "./ReviewPage.css"
 import ReviewList from "../review_components/ReviewList"; 
 
-export default function ReviewPage({clubId}) {
+export default function ReviewPage({clubId, onClose}) {
 
     //current problem: I need to include all other spellings and cases of swears
     const badWords = [
@@ -37,8 +37,62 @@ export default function ReviewPage({clubId}) {
     const [user_growth, set_user_growth] = useState(0)
     const [club, setClub] = useState(null);
     const [username, setUsername] = useState("");
+    const [reviewPosted, setReviewPosted] = useState(false);
 
-    
+
+    const scrollContainerRef = useRef(null);
+    const slidesRef = useRef([]);
+    const SLIDE_HEIGHT_MULTIPLIER = 4; /* scroll distance per slide (~comment-wrapper length before next fades in) */
+
+    const handleClose = () => {
+        if (onClose) {
+            onClose();
+        } else {
+            window.history.back();
+        }
+    };
+
+    const handleScroll = () => {
+        const container = scrollContainerRef.current;
+        if (!container) return;
+
+        const scrollY = container.scrollTop;
+        const containerHeight = container.clientHeight;
+        const slideHeight = containerHeight * SLIDE_HEIGHT_MULTIPLIER;
+
+        slidesRef.current.forEach((slide, index) => {
+            if (!slide) return;
+            
+            let progress = (scrollY - (index * slideHeight)) / slideHeight;
+
+            let scrollOut = Math.max(0, Math.min(1, progress));
+            let scrollIn = Math.max(0, Math.min(1, -progress));
+
+            slide.style.setProperty('--scroll-out', scrollOut);
+            slide.style.setProperty('--scroll-in', scrollIn);
+
+            // Active slide: fade out over its whole segment
+            if (progress >= 0 && progress <= 1) {
+              slide.style.zIndex = 10; 
+              slide.style.visibility = 'visible';
+            } 
+            // Incoming slide: only start to appear near the end of the previous fade
+            // (small overlap window for a more sequential feel)
+            else if (progress > -0.2 && progress < 0) {
+              slide.style.zIndex = 5;  
+              slide.style.visibility = 'visible';
+            } else {
+              slide.style.zIndex = -1; 
+              slide.style.visibility = 'hidden';
+            }
+        });
+    };
+
+    useEffect(() => {
+        handleScroll(); // Run once on mount to set initial positions
+        window.addEventListener('resize', handleScroll);
+        return () => window.removeEventListener('resize', handleScroll);
+    }, []);
         const [file, setFile] = useState(null);
         const [uploading, setUploading] = useState(false);
         const [fileUrl, setFileUrl] = useState("");
@@ -188,6 +242,7 @@ export default function ReviewPage({clubId}) {
                     setWarning(error.message || 'Failed to post review');
                     return;
                 }
+                setReviewPosted(true);
             }    
         }
         else {
@@ -198,69 +253,63 @@ export default function ReviewPage({clubId}) {
     const selectedCount = Object.values(user_tags).filter(Boolean).length;
     
     return (
-        <div className='review-page'>
+        <div className='review-page' ref={scrollContainerRef} onScroll={handleScroll}>
+             <button className="review-close-btn" onClick={handleClose}>
+            ×
+          </button>
+        <div className={`scroll-track ${reviewPosted ? 'scroll-track--with-thanks' : ''}`}>
+        <section className="slides-wrapper">
+        
             
 
-            <div className='create-review'>
-                <h1 className="instruction-txt">Leave a comment</h1>
-                <div className = 'create-comment'>
-               
-                <input 
-                    type="text"
-                    value={user_title}
-                    onChange={(e) => set_user_title(e.target.value)}
-                    placeholder="Comment title"
-                />
-                <input 
-                    type="text"
-                    value={user_review}
-                    onChange={(e) => set_user_review(e.target.value)}
-                    placeholder={`Tell other people about you experience in ${club?.club_name || 'this club'}...`}
-                />
-
-                <input
-                    type = "file"
-                    accept="image/*" 
-                    capture="environment"
-                    onChange = {handleFileChange}
-                    />
-                <button onClick = {handleUpload} disabled={uploading}>
-                    {uploading ? "Uploading..." : "Upload"}
-                </button>
-                {fileUrl && (
-                    <div>
-                        <p>File upload to: {fileUrl}</p>
+          
+               <section className="slide is-active" ref={el => slidesRef.current[0] = el}>
+                    <div className="slide__content">
+                        <header className="slide__header">
+                            <h1 className="slide__title">
+                                <span className="title-line"><span>Write a comment</span></span>
+                            </h1>
+                        </header>
+                        <div className="slide__img">
+                            <div className='create-comment'>
+                                <input type="text" value={user_title} onChange={(e) => set_user_title(e.target.value)} placeholder="Comment title" />
+                                <input type="text" value={user_review} onChange={(e) => set_user_review(e.target.value)} placeholder={`Experience in ${club?.club_name}...`} />
+                                <input type="file" accept="image/*" onChange={handleFileChange} />
+                                <button onClick={handleUpload} disabled={uploading}>{uploading ? "Uploading..." : "Upload"}</button>
+                            </div>
+                        </div>
                     </div>
-                )}
+                </section>
+                <section className="slide" ref={el => slidesRef.current[1] = el}>
+                    <div className="slide__content">
+                        <header className="slide__header">
+                            <h2 className="slide__title">
+                                <span className="title-line"><span>Choose Tags</span></span>
+                            </h2>
+                        </header>
+                        <div className="slide__img">
+                            <div className="tags-container">
+                                {Object.entries(user_tags).map(([key, value]) => (
+                                    <div key={key} className="tag-box">
+                                        <input id={key} type="checkbox" checked={value} onChange={() => toggleTag(key)} className="tag-checkbox" disabled={!value && selectedCount >= 3} />
+                                        <label className={`tags ${!value && selectedCount >= 3 ? 'tag-disabled' : ''}`} htmlFor={key}>{key}</label>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
-                </div>
-            
-                <h1 className="instruction-txt">Choose Tags</h1>
-                    
-                
-                {Object.entries(user_tags).map(([key, value]) => (
-                    
-                    <div key ={key} className = "tag-box">
-                        <input 
-                            id = {key}
-                            type = "checkbox"
-                            checked = {value}
-                            onChange = {() => toggleTag(key)}
-                            className = "tag-checkbox"
-                            disabled={!value && selectedCount >= 3}
-                        />
-                        <label 
-                            className={`tags ${!value && selectedCount >= 3 ? 'tag-disabled' : ''}`}
-                            htmlFor={key}
-                        >
-                            {key}
-                        </label>
-                    </div> 
-                ))}
-
-                <h1 className="instruction-txt">Give Users more data</h1>
-                
-                <p>How many hours per week do you spend in this club?</p>
+                <section className="slide" ref={el => slidesRef.current[2] = el}>
+                    <div className="slide__content">
+                        <header className="slide__header">
+                            <h2 className="slide__title">
+                                <span className="title-line"><span>Give users more data</span></span>
+                                
+                            </h2>
+                        </header>
+                        <div className="slide__img">
+                            <p>How many hours per week do you spend in this club?</p>
                
                 <div className = "sliderContainer">
                 <input className = "slider"
@@ -345,11 +394,21 @@ export default function ReviewPage({clubId}) {
                 />
                 <p className="number" style = {{color: 'rgba(124, 124, 124, 0.85)'}}>{user_growth} <span className="number-small">/10</span></p>
                 </div>
+                            <button onClick={post_review} className="post">Post Review</button>
+                            <p>{warning}</p>
+                        </div>
+                    </div>
+               
+
                 
                 
-                <button onClick={post_review} className="post">Post Review</button>
-                <p>{warning}</p>
-            </div>
+                
+                
+                
+            </section>
+        </section>
+        
+            {reviewPosted && (
             <div className = "vert-flex">
             <div className = "hor-flex">
                 <h1 className="instruction-txt">Thanks for sharing, {username}!</h1>
@@ -361,7 +420,8 @@ export default function ReviewPage({clubId}) {
             <img className="club-img-thanks" src ={club?.image_url}/>
             </div>
             </div>
-            
+            )}
+        </div>
         </div>
     );
 
