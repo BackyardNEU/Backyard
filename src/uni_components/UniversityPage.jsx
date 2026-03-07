@@ -120,7 +120,7 @@ export const UniversityPage = () => {
       
       <div className = "fixed-wrapper">
         <div className = "header">
-        <h1 className="raleway-uni">{university.uni_name}</h1>
+        <img className ="flag" src="/src/assets/northeastern_flag.png"/>
         </div>
         <IconBar onIconClick={getClubsBasedOnCategory} />
         <UniSearchBar setResults={setResults} university={university.uni_name} />

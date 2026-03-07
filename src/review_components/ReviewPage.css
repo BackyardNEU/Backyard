@@ -171,7 +171,8 @@ display: inline-block;
   text-decoration: none;
   color: white;
   border: none;
-  border-radius: 90px;   
+  border-radius: 90px;
+  transform: translateY(30px);
 }
 .vert-flex{
     display: flex;
@@ -385,7 +386,7 @@ body {
 .review-close-btn {
   position: fixed;
   top: 35px;
-  right: 65px;
+  right: 8vw;
   z-index: 9900;
   background: none;
   border: none;

@@ -50,3 +50,9 @@
     font-size: 12vw
   }
 }
+
+.flag{
+  margin-left: 20px;
+  height: 60px;
+  margin-top: 10px;
+}

@@ -394,9 +394,10 @@ export default function ReviewPage({clubId, onClose}) {
                 />
                 <p className="number" style = {{color: 'rgba(124, 124, 124, 0.85)'}}>{user_growth} <span className="number-small">/10</span></p>
                 </div>
-                            <button onClick={post_review} className="post">Post Review</button>
-                            <p>{warning}</p>
+                           
                         </div>
+                        <button onClick={post_review} className="post">Post Review</button>
+                        <p>{warning}</p>
                     </div>
                
 
