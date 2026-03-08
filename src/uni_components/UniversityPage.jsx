@@ -124,7 +124,7 @@ export const UniversityPage = () => {
       <video 
         src={`/src/assets/intro_screen.mp4`} 
         autoPlay 
-        loop 
+        
         muted 
         playsInline 
         style={{ 
