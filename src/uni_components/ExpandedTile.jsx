@@ -161,11 +161,6 @@ function ExpandedTile({club, onClose}){
             </div>)
 
         }
-        
-        
-        
-        
-
 
         </motion.div>
 

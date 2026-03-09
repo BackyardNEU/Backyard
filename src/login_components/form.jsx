@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import "./form.css";
 
 function Form(props){
@@ -12,7 +12,12 @@ function Form(props){
 
     if (error) console.error(error);
   };
-  
+
+  // useEffect(() => {
+  //   const form = document.querySelector(".input-field");
+  //   const inputs = form.querySelectorAll("input");
+
+
     return (
         <form className = "input-field">
             <input type = "text" placeholder ="Prefered name"/>
