@@ -76,22 +76,8 @@ export const UniversityPage = () => {
     else {
       console.log("Else triggering");
       setSelectedCategory(newCategory); 
-      const {data, error} = await supabase
-        .from("demo_club_data")
-        .select("category")
-        .eq("category", newCategory);
-      if (error) console.error("Error loading club category", error);
-      else {
-        const newdata = allData.filter(club => data.some(category => category.category === club.category));
-        console.log("New data: " + newdata);
-        if (newdata.length > 18) {
-          setResults(newdata);
-        }
-        else {
-          setResults(newdata);
-        }
-        console.log("Results: " + results);
-      }
+      const newdata = allData.filter(club => club.category === newCategory);
+      setResults(newdata);
     }
   }
   
