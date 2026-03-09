@@ -5,6 +5,7 @@ import { UniSearchBar } from './UniSearchBar';
 import IconBar from './IconBar';
 import './UniversityPage.css';
 import { ClubList } from './ClubList';
+
 <link 
   href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&family=Raleway:ital,wght@1,100..900&display=swap" 
   rel="stylesheet"
@@ -75,22 +76,8 @@ export const UniversityPage = () => {
     else {
       console.log("Else triggering");
       setSelectedCategory(newCategory); 
-      const {data, error} = await supabase
-        .from("demo_club_data")
-        .select("category")
-        .eq("category", newCategory);
-      if (error) console.error("Error loading club category", error);
-      else {
-        const newdata = allData.filter(club => data.some(category => category.category === club.category));
-        console.log("New data: " + newdata);
-        if (newdata.length > 18) {
-          setResults(newdata);
-        }
-        else {
-          setResults(newdata);
-        }
-        console.log("Results: " + results);
-      }
+      const newdata = allData.filter(club => club.category === newCategory);
+      setResults(newdata);
     }
   }
   
@@ -117,7 +104,22 @@ export const UniversityPage = () => {
 
   return (
     <div className="UniPage">
-      
+     
+    {/* 1. HERO VIDEO: The first thing they see */}
+    <div style={{ width: '100%', height: '100vh', overflow: 'hidden', zIndex: 1000}}>
+      <video 
+        src={`/src/assets/intro_screen.mp4`} 
+        autoPlay 
+        
+        muted 
+        playsInline 
+        style={{ 
+          width: '100%', 
+          height: '100%', 
+          objectFit: 'cover' // Fills the screen without stretching
+        }}
+      />
+    </div>
       <div className = "fixed-wrapper">
         <div className = "header">
         <img className ="flag" src="/src/assets/northeastern_flag.png"/>

@@ -68,31 +68,47 @@ useEffect(() => {
   
    
     useEffect(() => {
-    console.log("useEffect running, input =", input);
-
     async function getClubs() {
-      let query = supabase.from("demo_club_data").select("*").eq("school", university).limit(100); //next filter by school depending on the page we're on
-      console.log("Query before filters:", query);
-
       if (input.trim() !== "") {
-        query = query.ilike("club_name", `%${input}%`);
-        console.log("Filtering with ILIKE:", `%${input}%`);
+        // Full Text Search + Exact Match using our PostgreSQL RPC
+        const { data, error } = await supabase.rpc("search_clubs", {
+          search_query: input,
+          filter_school: university,
+        });
+
+        if (error) {
+          console.error("Error fetching clubs via RPC:", error);
+          return;
+        }
+
+        setClubs(data);
+        setResults(data);
+      } else {
+        // Default state: no input, fetch basic club list for the school
+        const { data, error } = await supabase
+          .from("demo_club_data")
+          .select("*")
+          .eq("school", university)
+          .limit(100);
+
+        if (error) {
+          console.error("Error fetching default clubs:", error);
+          return;
+        }
+
+        setClubs(data);
+        setResults(data);
       }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error("Error fetching clubs:", error);
-        return;
-      }
-
-      setClubs(data);
-      setResults(data);
     }
 
-    getClubs();
-  }, [input]); //whenever the user input changes, we want to re-run this effect
+    // Debounce the search: wait 300ms after the user stops typing before querying
+    const delayDebounceFn = setTimeout(() => {
+      getClubs();
+    }, 300);
 
+    // Cleanup function clears the timeout if the input changes before 300ms
+    return () => clearTimeout(delayDebounceFn);
+  }, [input, university, setResults]);
 
   return (
     <div className="club-input-wrapper">

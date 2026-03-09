@@ -1,5 +1,5 @@
 .UniPage {
-  background-color: #f4f8f8;
+  background-color: #ffffff;
   /*#f8f6f4*/
   display: flex;
   flex-direction: column;
@@ -33,17 +33,19 @@
 }
 
 .fixed-wrapper {
-  position: fixed;
+ top: 0; /* Tells it where to stick when you reach it */
+  position: sticky;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   align-items: center;
   width: 100%;
   z-index: 999;
- 
-  /* 0% 77% 79%*/
+  
+  /* Keep your gradient background */
   background: linear-gradient(to bottom, #f8f6f4 0, #f8f6f4 250px, transparent 265px);
 }
+
 
 @media (max-width: 775px) {
   .raleway-uni{

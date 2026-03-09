@@ -14,7 +14,7 @@ export default function ReviewList({review}) {
     return (
         <div className = "review-item">
         {stat_categories.map((cat) => {
-            const bar_percentage = ((cat.value - 1)/(cat.end -1)) *100;
+            const bar_percentage = ((cat.value)/(cat.end)) *100;
             return (
                 <div className = "range-row" key = {cat.label}>
                 <div className= "vert-flex">
