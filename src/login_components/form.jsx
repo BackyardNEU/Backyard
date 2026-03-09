@@ -1,7 +1,6 @@
 
 import React, { useState } from "react";
 import { supabase } from "../supabase";
-import React, { useEffect } from "react";
 import "./form.css";
 
 function Form({ isRegistered = false, onAuth }) {
