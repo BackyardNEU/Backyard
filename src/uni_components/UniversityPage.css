@@ -1,5 +1,5 @@
 .UniPage {
-  background-color: #f4ebe2;
+  background-color: #fbf2e5;
   /*#f8f6f4*/
   display: flex;
   flex-direction: column;
@@ -41,7 +41,7 @@
   height: 5rem;
   padding: 0 2rem; /* Add breathing room on sides */
   z-index: 999;
-  background-color: rgb(65, 80, 65);
+  background-color: rgb(93, 114, 93);
   box-sizing: border-box;
   box-shadow: 
     /* 1. Inset Shadow (Top) */
@@ -69,7 +69,7 @@
 }
 
 .signup-text {
-  color: rgb(250, 246, 238);
+  color: rgb(249, 240, 225);
   font-family: "Inter", sans-serif;
   cursor: pointer;
   white-space: nowrap;

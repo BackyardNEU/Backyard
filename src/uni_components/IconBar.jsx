@@ -9,19 +9,24 @@ export default function IconBar({ onIconClick }) {
         { name: "heart", label: "Favorites", category: "favorites" },
         { name: "fsl", label: "FSL", category: "fsl" },
         { name: "soccer", label: "Intramurals", category: "intramural_sports" },
+        { name: "people", label: "Affinity", category: "affiliation" },
          { name: "tree", label: "Environment", category: "nature" },
          {name: "books", label: "Literature", category: "lit" },
+         { name: "code", label: "Comp Sci", category: "programming" },
+         
         {name: "dancer", label: "Performing", category: "performing" },
         { name: "guitar", label: "Music", category: "music"},
         { name: "art", label: "Visual Arts", category: "visual_arts" },
-        {name: "heart", label: "fun", category: "fun"},
+       { name: "robot", label: "Engineering", category: "engineering" },
         {name: "beaker", label: "Science", category: "science"},
-        { name: "code", label: "Comp Sci", category: "programming" },
-        { name: "robot", label: "Engineering", category: "engineering" },
+         {name: "help", label: "Resources", category: "resources"},
+        {name: "briefcase", label: "Business", category: "business" },
+        
         { name: "cross", label: "Medicine", category: "medicine"},
         { name: "calc", label: "Math", category: "math"},
         { name: "capitol", label: "Law", category: "law"},
-         {name: "help", label: "Resources", category: "resources"},
+         {name: "heart", label: "fun", category: "fun"},
+        
        
         
        
