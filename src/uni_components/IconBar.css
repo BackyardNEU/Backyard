@@ -1,6 +1,6 @@
 .icon-bar{
   position: sticky;
-  top: 50rem; /* Adjust this to move it higher or lower from the edge */
+  top: 89%; /* Adjust this to move it higher or lower from the edge */
  
   
   width: 100%;
@@ -16,7 +16,6 @@
   border-radius: 15px;
   z-index: 1000;
   overflow: hidden;
-  
   background-color: #f4ebe2;
 }
 
