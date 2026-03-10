@@ -399,13 +399,6 @@ export default function ReviewPage({clubId, onClose}) {
                         <button onClick={post_review} className="post">Post Review</button>
                         <p>{warning}</p>
                     </div>
-               
-
-                
-                
-                
-                
-                
             </section>
         </section>
         
