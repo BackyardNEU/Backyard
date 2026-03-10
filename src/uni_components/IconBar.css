@@ -59,9 +59,10 @@
   width: 70px;       
   height: 70px;
   border-radius: 50%;
-  background-color: rgb(255, 166, 166);
+  background-color: rgb(183, 179, 177);
   z-index: 0; 
 }
+/*rgb(255, 166, 166)*/
 
 .icon-container img {
     transition: transform 0.9s ease;

@@ -54,7 +54,7 @@
 .typewriter-placeholder {
     position: absolute;
     left: 0;
-    color: rgb(208, 81, 81);
+    color: rgb(43, 37, 7);
     font-family: "Inter", sans-serif;
     font-size: 1.25rem;
     
@@ -67,7 +67,7 @@
 
 
     /* The cursor now hugs the text! */
-    border-right: 2px solid rgb(208, 81, 81);
+    border-right: 2px solid rgb(43, 37, 7);
     animation: blink 0.7s infinite;
     white-space: nowrap;
 }
@@ -77,5 +77,5 @@
 
 @keyframes blink {
     0%, 100% { border-color: transparent; }
-    50% { border-color: rgb(208, 81, 81); }
+    50% { border-color: rgb(43, 37, 7); }
 }
