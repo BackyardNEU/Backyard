@@ -1,5 +1,5 @@
 .UniPage {
-  background-color: #ffffff;
+  background-color: #f4ebe2;
   /*#f8f6f4*/
   display: flex;
   flex-direction: column;
@@ -12,11 +12,9 @@
   color: rgb(0, 0, 0);
 }
 
-.header{
-  background-color: #f8f6f4;
-  width: 100%;
-  height: 80px;
-}
+
+  /*background-color: #f8f6f4;*/
+  
 /*150px*/
 
 .raleway-uni {
@@ -33,17 +31,60 @@
 }
 
 .fixed-wrapper {
- top: 0; /* Tells it where to stick when you reach it */
   position: sticky;
+  top: 0;
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  flex-direction: row;
+  justify-content: space-between; /* Pushes items to far left, center, and far right */
   align-items: center;
   width: 100%;
+  height: 5rem;
+  padding: 0 2rem; /* Add breathing room on sides */
   z-index: 999;
+  background-color: rgb(65, 80, 65);
+  box-sizing: border-box;
+  box-shadow: 
+    /* 1. Inset Shadow (Top) */
+    
+    
+    /* 2. Outer Shadow (Bottom) */
+    0 15px 20px -10px rgba(0, 0, 0, 0.3);
+}
+
+/* Give the side sections equal width so the center stays centered */
+.header-section {
+  display: flex;
+  align-items: center;
+  flex: 1; /* This makes left, center, and right take equal base space */
+}
+
+.header-section.center {
+  justify-content: center;
+  flex: 2; /* Allows the search bar to take up more room than the sides */
+}
+
+.header-section.right {
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.signup-text {
+  color: rgb(250, 246, 238);
+  font-family: "Inter", sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* This creates a gap in your flex so the "fixed" login icon doesn't overlap text */
+.login-placeholder {
+  width: 3rem; /* Same width as your .login-icon */
+  height: 3rem;
   
-  /* Keep your gradient background */
-  background: linear-gradient(to bottom, #f8f6f4 0, #f8f6f4 250px, transparent 265px);
+}
+
+.flag {
+  height: 3rem; 
+  width: auto;
 }
 
 
@@ -53,8 +94,42 @@
   }
 }
 
-.flag{
-  margin-left: 20px;
-  height: 60px;
-  margin-top: 10px;
+
+
+@media (max-width: 450px) {
+  .fixed-wrapper {
+    /* Reduce side padding from 2rem to 0.5rem */
+    padding: 0 0.5rem; 
+    height: 4rem; /* Slightly shorter bar for more screen real estate */
+  }
+
+  .header-section.left {
+    /* Allow the flag to take up only as much space as it needs */
+    flex: 0 0.5 auto; 
+  }
+
+  .header-section.center {
+    /* Give the search bar maximum priority */
+    flex: 4; 
+    padding: 0 5px; /* Tiny buffer so it doesn't touch the flag */
+  }
+
+  .header-section.right {
+    /* Shrink the gap between "Sign Up" and the Login Icon */
+    flex: 0 1 auto;
+    gap: 0.4rem; 
+  }
+
+  .flag {
+    height: 2.2rem; /* Scale down the flag */
+  }
+
+  .signup-text {
+    font-size: 0.7rem; /* Smaller text to prevent wrapping */
+  }
+
+  .login-placeholder, .login-icon {
+    width: 2.5rem;  /* Scale down the icon size */
+    height: 2.5rem;
+  }
 }

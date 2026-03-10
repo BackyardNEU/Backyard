@@ -120,13 +120,25 @@ export const UniversityPage = () => {
         }}
       />
     </div>
-      <div className = "fixed-wrapper">
-        <div className = "header">
-        <img className ="flag" src="/src/assets/northeastern_flag.png"/>
-        </div>
-        <IconBar onIconClick={getClubsBasedOnCategory} />
-        <UniSearchBar setResults={setResults} university={university.uni_name} />
-      </div>
+      <div className="fixed-wrapper">
+  {/* Group 1: Left */}
+  <div className="header-section left">
+    <img className="flag" src="/src/assets/northeastern_flag.png" alt="flag" />
+  </div>
+
+  {/* Group 2: Center */}
+  <div className="header-section center">
+    <UniSearchBar setResults={setResults} university={university.uni_name} />
+  </div>
+
+  {/* Group 3: Right (This aligns with your global Login Icon) */}
+  <div className="header-section right">
+    <span className="signup-text">Sign Up</span>
+    {/* The Login Icon from App.jsx will hover over/beside this area */}
+    <div className="login-placeholder"></div> 
+  </div>
+</div>
+      <IconBar onIconClick={getClubsBasedOnCategory} />
      <ClubList className="start" results={results} />
     </div>
   );
