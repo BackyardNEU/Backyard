@@ -12,6 +12,7 @@ function LoginMorph({ open, setOpen }) {
   return (
     <AnimatePresence>
       {!open && (
+       
         <motion.button
           layoutId="login"
           className="login-icon"
@@ -19,6 +20,7 @@ function LoginMorph({ open, setOpen }) {
         >
           <img src="/raccoon_pfp.png" />
         </motion.button>
+ 
       )}
       {open && (
         <motion.div

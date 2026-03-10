@@ -1,17 +1,22 @@
 .icon-bar{
-  width: 80vw;
-  height: 100px;
+  position: sticky;
+  top: 88%; /* Adjust this to move it higher or lower from the edge */
+ 
+  
+  width: 100%;
+  height: 110px;
   /*background-color: #f4f4f5;*/
   display: flex;
   flex-direction: row;
-  justify-content: flex-start;
+  
   align-items: start;
   box-shadow: inset 0 0 3px 1px rgba(226, 226, 226, 0.15);
   padding: 0 0.5rem;
   box-sizing: border-box;
   border-radius: 15px;
-  z-index: 100;
+  z-index: 1000;
   overflow: hidden;
+  background-color: #f4ebe2;
 }
 
 .icon-bar::-webkit-scrollbar {
@@ -45,9 +50,10 @@
   width: 70px;       
   height: 70px;
   border-radius: 50%;
-  background-color: rgb(255, 166, 166);
+  background-color: rgb(183, 179, 177);
   z-index: 0; 
 }
+/*rgb(255, 166, 166)*/
 
 .icon-container img {
     transition: transform 0.9s ease;

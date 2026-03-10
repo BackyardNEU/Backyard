@@ -17,7 +17,6 @@ function Form({ isRegistered = false, onAuth }) {
       .from("profiles")
       .upsert([
         {
-          id: userId,
           username: username,
           email: emailVal,
           password: passwordVal,

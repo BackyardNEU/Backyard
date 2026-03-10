@@ -1,19 +1,21 @@
 .club-input-wrapper {
-    width: 80vw;
+    width: 100%;    
+    max-width: 1500px;
 
     height: 3rem; 
     border-radius: 20px; 
     background-color: #fbfbfb;
     padding: 0 10px;
 
-    margin-top: 1%;
-    margin-bottom: 5%;
+    
+    
 
     display: flex;
     align-items: center;
     border: 1px solid rgb(202, 200, 200);
     /*box-shadow: 1px 1px 2px #d3d3d3;*/
-    z-index: 10
+    z-index: 10;
+   
 
 }
 
@@ -23,6 +25,7 @@
     height: 100%;
     display: flex;
     align-items: center;
+    align-self: center;
     margin-left: 10px; /* Space between the search icon and the text */
 }
 
@@ -51,7 +54,7 @@
 .typewriter-placeholder {
     position: absolute;
     left: 0;
-    color: rgb(208, 81, 81);
+    color: rgb(43, 37, 7);
     font-family: "Inter", sans-serif;
     font-size: 1.25rem;
     
@@ -64,7 +67,7 @@
 
 
     /* The cursor now hugs the text! */
-    border-right: 2px solid rgb(208, 81, 81);
+    border-right: 2px solid rgb(43, 37, 7);
     animation: blink 0.7s infinite;
     white-space: nowrap;
 }
@@ -74,11 +77,5 @@
 
 @keyframes blink {
     0%, 100% { border-color: transparent; }
-    50% { border-color: rgb(208, 81, 81); }
-}
-@media (max-width: 549px) and (min-width: 300px) {
-  .club-input-wrapper{
-    width: 90vw;
-
-  }
+    50% { border-color: rgb(43, 37, 7); }
 }

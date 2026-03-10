@@ -54,27 +54,3 @@ html, body {
   
 }
 
-.login-button {
-  position: fixed;
-  top: 0;
-  right: 0;
-}
-
-.login-icon {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  border: none;
-  background: white;
-  cursor: pointer;
-  z-index: 1000;
-}
-
-.login-icon img{
-  
-  width: 70px;
-  height: 120px;
-}
