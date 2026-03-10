@@ -41,7 +41,7 @@
   height: 5rem;
   padding: 0 2rem; /* Add breathing room on sides */
   z-index: 999;
-  background-color: rgb(237, 236, 233);
+  background-color: rgb(48, 54, 48);
   box-sizing: border-box;
   box-shadow: 
     /* 1. Inset Shadow (Top) */
@@ -69,7 +69,7 @@
 }
 
 .signup-text {
-  color: black;
+  color: rgb(249, 240, 225);
   font-family: "Inter", sans-serif;
   cursor: pointer;
   white-space: nowrap;
