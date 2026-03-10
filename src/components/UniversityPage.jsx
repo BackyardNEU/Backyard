@@ -43,8 +43,6 @@ export const UniversityPage = () => {
     )
 }
 
-
-
 /*
     <div style={{ padding: '2rem',
     display: 'flex',
