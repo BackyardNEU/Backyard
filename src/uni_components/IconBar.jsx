@@ -26,15 +26,6 @@ export default function IconBar({ onIconClick }) {
         { name: "calc", label: "Math", category: "math"},
         { name: "capitol", label: "Law", category: "law"},
          {name: "heart", label: "fun", category: "fun"},
-        
-       
-        
-       
-        
-        
-        
-        
-       
 
     ];
 

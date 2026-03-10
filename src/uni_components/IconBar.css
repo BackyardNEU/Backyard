@@ -1,6 +1,6 @@
 .icon-bar{
   position: sticky;
-  top: 45.3rem; /* Adjust this to move it higher or lower from the edge */
+  top: 50rem; /* Adjust this to move it higher or lower from the edge */
  
   
   width: 100%;
@@ -18,9 +18,6 @@
   overflow: hidden;
   
   background-color: #f4ebe2;
-  
-  
-
 }
 
 .icon-bar::-webkit-scrollbar {

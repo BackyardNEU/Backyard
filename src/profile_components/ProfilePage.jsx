@@ -34,9 +34,9 @@ export const ProfilePAge = () => {
         <div className='spacer' />
         <h1 className='ProfileName'>Your Reviews</h1>
         {
-            reviews.map((review) => {
-                return 
-            })
+            // reviews.map((review) => {
+            //     return 
+            // })
         }
       </div>
     )
