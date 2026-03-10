@@ -5,15 +5,14 @@ import heartFull from '/src/assets/full_heart.png';
 import { supabase } from '../supabase';
 import { motion } from "framer-motion";
 import { useGlobalStore } from "../store";
+import { useClubData } from '../context/useClubData';
 
-
-export const ClubGrid = ({ result, onExpand, isExpanded}) => {
+export const ClubGrid = ({ result, onExpand }) => {
   const [liked, setLiked] = useState(false);
   const [animating, setAnimating] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const [startAngle, setStartAngle] = useState(0);
   let GlobalValue = useGlobalStore((state) => state.GlobalValue);
-  const cardRef = useRef(null);
+
+  const { invalidateFavoritesCache } = useClubData();
 
   useEffect(() => {
     if (result.favorite !== undefined) {
@@ -35,6 +34,10 @@ export const ClubGrid = ({ result, onExpand, isExpanded}) => {
         .insert({ club_id: result.id, user_id: userId });
 
       if (error) console.error("Error adding favorite:", error);
+      else {
+        console.log("NEW CLUB LIKED RESETTING FAVORITES CACHE");
+        invalidateFavoritesCache();
+      }
     } else {
       const { error } = await supabase
         .from("user_favorites")
@@ -42,6 +45,10 @@ export const ClubGrid = ({ result, onExpand, isExpanded}) => {
         .match({ club_id: result.id, user_id: userId });
 
       if (error) console.error("Error removing favorite:", error);
+      else {
+        console.log("NEW CLUB DISLIKED RESETTING FAVORITES CACHE");
+        invalidateFavoritesCache();
+      }
     }
   };
 

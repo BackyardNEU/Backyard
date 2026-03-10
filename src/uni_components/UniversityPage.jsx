@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { UniSearchBar } from './UniSearchBar';
 import IconBar from './IconBar';
 import './UniversityPage.css';
 import { ClubList } from './ClubList';
+import { useClubData } from '../context/useClubData';
 
 <link 
   href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&family=Raleway:ital,wght@1,100..900&display=swap" 
@@ -15,38 +16,29 @@ export const UniversityPage = () => {
   const { id } = useParams();
   const [university, setUniversity] = useState(null);
   const [results, setResults] = useState([]);
-  const [isDocked, setIsDocked] = useState(false);
-  const [allData, setAllData] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  //potentially consider adding another variable that maintains the old dataset prior to clicking on favorites
 
-  const fetchAllData = useCallback(async () => {
-    const { data, error } = await supabase
-        .from('demo_club_data')
-        .select('*')
-    
-    if (error) console.error("Error retrieving initial data.", error);
-    else setAllData(data);
-    setResults(data);
-    console.log("All data: " + allData);
-  }, []);
+  //grabs info we need for all club data
+  const {allData, favoritesCache, setFavoritesCache, loading} = useClubData();
 
   useEffect(() => {
-    fetchAllData();
-  }, [fetchAllData]);
+    console.log("favoritesCache changed:", favoritesCache);
+  }, [favoritesCache]);
+
+  useEffect(() => {
+    if (allData.length > 0) {
+      setResults(allData);
+    }
+  }, [allData]);
 
   const getClubsBasedOnCategory = async (newCategory) => {
-    console.log("Category recived from function: " + newCategory);
     //if the user clicks the same icon again, then reset the clubs to display the default
-    //this case also uses the least memory
     if (newCategory === selectedCategory) {
-      console.log("Else if triggering");
       setSelectedCategory(null);
       setResults(allData);
     }
     //special case if category is "favorites": depends on the user so must authenticate
     else if (newCategory === "favorites") {
-      console.log("If triggering");
       const { data: userData, error: userError } = await supabase.auth.getUser();
       if (userError || !userData?.user) {
         console.error('Error getting user', userError);
@@ -55,26 +47,37 @@ export const UniversityPage = () => {
 
       const userId = userData.user.id;
 
-      //begin data search for favorites
+      // two cases: 
+      // if favoritesCache is null, this indicates the user has added or subtracted a 
+      // favorited club -> cache was invalidated, so trigger supabase request to refresh
+      // cache
+      // if favoritesCache is not null, then the cache is valid, so diplsay favoritesCache
       setSelectedCategory(newCategory);
-      const { data, error } = await supabase
+      if (favoritesCache) {
+        console.log("favoritesCache valid using cache.");
+        setResults(favoritesCache);
+      }
+      //favoritesCache is null and therefore outdated -> request cache refresh
+      else {
+        console.log("favoritesCache invalid -> refreshing cache.");
+        const { data, error } = await supabase
         .from('user_favorites')
         .select('*')
         .eq('user_id', userId);
-      if (error) console.error(error);
-      else {
-        const newdata = allData.filter(club => data.some(fav => fav.club_id === club.id)); //club is the rows from demo_club_data, fav is from user_favorites, final line checks to see where the two match (via id)
-        if (newdata.length > 18) {
-          setResults(newdata);
-        }
+        if (error) console.error(error);
         else {
-          setResults(newdata);
+          console.log(data);
+          // since all the data is already stored in allData, we just filter from there
+          const filteredData = allData.filter(club => data.some(fav => fav.club_id === club.id))
+          setFavoritesCache(filteredData); //club is the rows from demo_club_data, fav is from user_favorites, final line checks to see where the two match (via id)
+          setResults(filteredData);
+          console.log("Refreshed cache: " + filteredData);
         }
       }
     }
     //if user selects different icon, then display corresponding information
     else {
-      console.log("Else triggering");
+      console.log("Other category selected");
       setSelectedCategory(newCategory); 
       const newdata = allData.filter(club => club.category === newCategory);
       setResults(newdata);
@@ -100,7 +103,7 @@ export const UniversityPage = () => {
     fetchUniversity();
   }, [id]);
 
-  if (!university) return <div>Loading...</div>;
+  if (loading || !university) return <div>Loading...</div>;
 
   return (
     <div className="UniPage">
