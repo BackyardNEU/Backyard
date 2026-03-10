@@ -52,7 +52,7 @@ useEffect(() => {
       } else {
         // Deleting: remove one character
         setDisplayText(currentPhrase.substring(0, displayText.length - 1));
-        setTypingSpeed(50); // Faster deleting
+        setTypingSpeed(40); // Faster deleting
 
         // If phrase is fully deleted
         if (displayText === "") {

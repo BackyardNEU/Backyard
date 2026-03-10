@@ -3,7 +3,7 @@
 }
 
 .club-card {
-  background: #fcfcfc;
+  background: #fffffc;
   
   padding: 20px;
   width: 30vw;
@@ -14,10 +14,15 @@
   gap: 0.5rem;
   min-width: 225px;
   border-radius: 15px;
-  border: 1px solid rgb(213, 213, 213);
+  border: 7px solid rgb(237, 236, 233);
   cursor: pointer;
   position: relative;
-  
+  box-shadow: 
+    /* 1. Inset Shadow (Top) */
+    inset 0 12px 10px -10px rgba(0, 0, 0, 0.5),
+    
+    /* 2. Outer Shadow (Bottom) */
+    0 15px 20px -10px rgba(0, 0, 0, 0.3);
   
   transition: transform 0.6s ease,
   border-color 0.3s ease;
@@ -36,7 +41,7 @@
   
   
   font-size: 2rem;
-  border: 1px solid rgb(214, 214, 214);
+  
 }
 
 
