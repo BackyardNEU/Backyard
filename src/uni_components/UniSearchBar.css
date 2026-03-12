@@ -2,21 +2,15 @@
     width: 100%;    
     max-width: 1500px;
 
-    height: 3rem; 
+    height: 2.5rem; 
     border-radius: 20px; 
     background-color: #fbfbfb;
     padding: 0 10px;
-
-    
-    
-
     display: flex;
     align-items: center;
     border: 1px solid rgb(202, 200, 200);
     /*box-shadow: 1px 1px 2px #d3d3d3;*/
     z-index: 10;
-   
-
 }
 
 .input-container {
@@ -57,7 +51,7 @@
     color: rgb(43, 37, 7);
     font-family: "Inter", sans-serif;
     font-size: 1.25rem;
-    
+    background-color: white;
     /* Crucial: lets the user click "through" the text into the input */
     pointer-events: none; 
     

@@ -76,6 +76,10 @@ useEffect(() => {
           filter_school: university,
         });
 
+        console.log("NL result sample:", data[0])
+
+        
+
         if (error) {
           console.error("Error fetching clubs via RPC:", error);
           return;
@@ -104,7 +108,7 @@ useEffect(() => {
     // Debounce the search: wait 300ms after the user stops typing before querying
     const delayDebounceFn = setTimeout(() => {
       getClubs();
-    }, 300);
+    }, 0);
 
     // Cleanup function clears the timeout if the input changes before 300ms
     return () => clearTimeout(delayDebounceFn);
@@ -128,6 +132,7 @@ useEffect(() => {
             onClick={(handleClick)}
             type="text"
             value={input}
+            placeholder='Ask Rac'
             
             onChange={(e) => setInput(e.target.value)}
         />

@@ -38,7 +38,7 @@
   justify-content: space-between; /* Pushes items to far left, center, and far right */
   align-items: center;
   width: 100%;
-  height: 5rem;
+  height: 4rem;
   padding: 0 2rem; /* Add breathing room on sides */
   z-index: 999;
   background-color: rgb(93, 114, 93);

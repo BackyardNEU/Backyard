@@ -1,10 +1,10 @@
 .icon-bar{
   position: sticky;
-  top: 88%; /* Adjust this to move it higher or lower from the edge */
+  top: 87%; /* Adjust this to move it higher or lower from the edge */
  
   
   width: 100%;
-  height: 110px;
+  height: 120px;
   /*background-color: #f4f4f5;*/
   display: flex;
   flex-direction: row;
