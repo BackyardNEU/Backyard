@@ -5,8 +5,8 @@
   min-width: 10px;
   width: 80vw;
   max-width: 20000;
-  margin: 0 auto 2rem auto;
-  
+  margin: 0 auto 0.5rem auto;
+  margin-bottom: 10%;
   align-items: center;
   justify-items:center;
   z-index: 100;
