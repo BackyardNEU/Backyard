@@ -114,7 +114,7 @@ export default function ReviewPage({clubId, onClose}) {
              const fileName = `${Math.random()}.${fileExt}`
              const filePath = `${fileName}`;
 
-            let { data, error } = await supabase.storage
+            let { error } = await supabase.storage
                 .from('review_images')
                 .upload(filePath, file);
 
@@ -133,7 +133,7 @@ export default function ReviewPage({clubId, onClose}) {
                 alert("Error uploading file:" , error.message)
 
             }
-        finally{
+        finally {
             setUploading(false);
         }
 

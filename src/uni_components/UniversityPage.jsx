@@ -19,12 +19,16 @@ export const UniversityPage = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   //grabs info we need for all club data
-  const {allData, favoritesCache, setFavoritesCache, loading} = useClubData();
+  const {allData, favoritesCache, loading} = useClubData();
 
+  // for testing to see if the cache is used correctly
+  /*
   useEffect(() => {
     console.log("favoritesCache changed:", favoritesCache);
   }, [favoritesCache]);
+  */
 
+  //sets initial data- prevents data from being set twice after render
   useEffect(() => {
     if (allData.length > 0) {
       setResults(allData);
@@ -37,44 +41,15 @@ export const UniversityPage = () => {
       setSelectedCategory(null);
       setResults(allData);
     }
+
     //special case if category is "favorites": depends on the user so must authenticate
     else if (newCategory === "favorites") {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError || !userData?.user) {
-        console.error('Error getting user', userError);
-        return;
-      }
+      setSelectedCategory("favorites");
 
-      const userId = userData.user.id;
-
-      // two cases: 
-      // if favoritesCache is null, this indicates the user has added or subtracted a 
-      // favorited club -> cache was invalidated, so trigger supabase request to refresh
-      // cache
-      // if favoritesCache is not null, then the cache is valid, so diplsay favoritesCache
-      setSelectedCategory(newCategory);
-      if (favoritesCache) {
-        console.log("favoritesCache valid using cache.");
-        setResults(favoritesCache);
-      }
-      //favoritesCache is null and therefore outdated -> request cache refresh
-      else {
-        console.log("favoritesCache invalid -> refreshing cache.");
-        const { data, error } = await supabase
-        .from('user_favorites')
-        .select('*')
-        .eq('user_id', userId);
-        if (error) console.error(error);
-        else {
-          console.log(data);
-          // since all the data is already stored in allData, we just filter from there
-          const filteredData = allData.filter(club => data.some(fav => fav.club_id === club.id))
-          setFavoritesCache(filteredData); //club is the rows from demo_club_data, fav is from user_favorites, final line checks to see where the two match (via id)
-          setResults(filteredData);
-          console.log("Refreshed cache: " + filteredData);
-        }
-      }
+      const favorites = allData.filter(club => favoritesCache.has(club.id));
+      setResults(favorites);
     }
+
     //if user selects different icon, then display corresponding information
     else {
       console.log("Other category selected");
@@ -84,6 +59,7 @@ export const UniversityPage = () => {
     }
   }
   
+  //grabs all the relevant unversity data
   useEffect(() => {
     async function fetchUniversity() {
       const { data, error } = await supabase

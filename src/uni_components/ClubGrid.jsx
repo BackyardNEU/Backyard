@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './ClubGrid.css';
 import heartEmpty from '/src/assets/empty_heart.png';
 import heartFull from '/src/assets/full_heart.png';
@@ -8,18 +8,28 @@ import { useGlobalStore } from "../store";
 import { useClubData } from '../context/useClubData';
 
 export const ClubGrid = ({ result, onExpand }) => {
-  const [liked, setLiked] = useState(false);
   const [animating, setAnimating] = useState(false);
   let GlobalValue = useGlobalStore((state) => state.GlobalValue);
 
-  const { invalidateFavoritesCache } = useClubData();
+  const { favoritesCache, invalidateFavoritesCache } = useClubData();
 
-  useEffect(() => {
-    if (result.favorite !== undefined) {
-      setLiked(result.favorite);
-    }
-  }, [result.favorite]);
+  // meant to determine if a particular card is liked or not, depending on if it 
+  // is found in the partulcar liked table or all false if the user is not logged
+  // in
+  let liked = favoritesCache?.has(result.id) ?? false;
 
+  /*
+    useEffect(() => {
+      if (result.favorite !== undefined) {
+        setLiked(result.favorite);
+      }
+    }, [result.favorite]);
+  */
+
+  // Current issue with this implementation: If the user favroites a club and 
+  // then refreshes the page, the like button does not show up as being liked 
+  // which might cause some confusion, because in order for them to remove the 
+  // club from favorites, they have to like and then unlike the club
   const updateFavorite = async (newLiked) => {
     const { data: userData, error: userError } = await supabase.auth.getUser();
     if (userError || !userData?.user) {
@@ -56,9 +66,8 @@ export const ClubGrid = ({ result, onExpand }) => {
     console.log("heart button clicked");
     e.stopPropagation();
     setAnimating(true);
-    const newLiked = !liked;
-    setLiked(newLiked);
-    await updateFavorite(newLiked);
+    liked = !liked;
+    await updateFavorite(liked);
     setTimeout(() => setAnimating(false), 250);
   };
 
@@ -72,10 +81,10 @@ export const ClubGrid = ({ result, onExpand }) => {
 
   return ( 
 
-      <motion.button 
-      className="club-card" 
+    <motion.button 
+      className = "club-card" 
       onClick = {onExpand}
-      transition={{ duration: 0.3 }}
+      transition = {{ duration: 0.3 }}
       layoutId = {`club-${result.id}`}
       whileHover = {{
         scale: 1.04,
@@ -86,19 +95,21 @@ export const ClubGrid = ({ result, onExpand }) => {
 >
       <div className = "flex-card">
         <div className = "image-container">
-        <img className="club-img" src ={result.image_url}/>
+        <img className = "club-img" src ={result.image_url}/>
         {GlobalValue ? <img
-          className={`heart-btn ${animating ? 'pop' : ''}`}
-          src={liked ? heartFull : heartEmpty}
-          onClick={handleHeartClick}
+          className = {`heart-btn ${animating ? 'pop' : ''}`}
+          src = {liked ? heartFull : heartEmpty}
+          onClick = {handleHeartClick}
         /> : null}
         </div>
-        <div className="club-name"> 
+        <div className = "club-name"> 
           {truncate(result.club_name)}
         </div>
-        <div className="club-info">
+        <div className = "club-info">
           <p>{result.email}</p>
-        </div></div>
-      </motion.button>
+        </div>
+      </div>
+    </motion.button>
+
 );
 };

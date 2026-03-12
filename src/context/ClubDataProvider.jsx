@@ -8,6 +8,7 @@ export const ClubDataProvider = ({ children }) => {
     const [favoritesCache, setFavoritesCache] = useState(null);
     const isFetching = useRef(false);
 
+    // initial fetching of data from supabase
     const fetchAllData = useCallback(async () => {
         if (isFetching.current) {
             console.log("Fetch already in progress, skipping.");
@@ -17,6 +18,7 @@ export const ClubDataProvider = ({ children }) => {
 
         console.log("Fetching data from Supabase: this should only occur once unless switchting to favorites tab.");
         setLoading(true);
+        // fetch data
         const { data, error } = await supabase
             .from('demo_club_data')
             .select('*');
@@ -27,11 +29,46 @@ export const ClubDataProvider = ({ children }) => {
             console.log("Success retrieving data");
             setAllData(data);
         }
+
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user) { // check if user is logged in/has an account
+            const { data: favData, error: favError } = await supabase
+                .from('user_favorites')
+                .select('club_id')
+                .eq('user_id', userData.user.id);
+
+            if (favError) {
+                console.error("Error retrieving favorites:", favError);
+            } else {
+                // use set for fast .has() lookups
+                setFavoritesCache(new Set(favData.map(fav => fav.club_id)));
+                console.log("Favorites loaded:", favData.length);
+            }
+        } else {
+            // empty Set if the user is not logged in
+            setFavoritesCache(new Set());
+        }
+
+        // all necessary data needed: loading stops
         setLoading(false);
     }, []);
 
-    const invalidateFavoritesCache = useCallback(() => {
-        setFavoritesCache(null);
+    // method to be called by favorite button handler function to update the favorites cache
+    const invalidateFavoritesCache = useCallback(async () => {
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user) {
+            const { data: favData, error } = await supabase
+                .from('user_favorites')
+                .select('club_id')
+                .eq('user_id', userData.user.id);
+
+            if (error) {
+                console.error("Error getting user info: " + error);
+            }
+            else {
+                setFavoritesCache(new Set(favData.map(fav => fav.club_id)));
+            }
+        }
     }, []);
 
     useEffect(() => {
