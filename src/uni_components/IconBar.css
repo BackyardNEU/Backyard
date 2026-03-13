@@ -4,18 +4,22 @@
  
   
   width: 100%;
+  max-width: 100%;
   height: 140px;
   /*background-color: #f4f4f5;*/
   display: flex;
   flex-direction: row;
-  
+
+  justify-content: flex-start; 
   align-items: start;
   
   padding: 0 0.5rem;
   box-sizing: border-box;
   border-radius: 15px;
   z-index: 1000;
-  overflow: hidden;
+
+  overflow-x: hidden;
+  flex-wrap: nowrap;
   background-color: #fffbf8;
   
 }
@@ -26,6 +30,8 @@
 
 
 .icon-container {
+
+  flex-shrink: 0;
   max-width: 110px;
   min-width: 110px;
   position: relative;

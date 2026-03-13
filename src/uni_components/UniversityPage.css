@@ -6,23 +6,26 @@
   align-items: center;
   justify-content: flex-start;
   min-height: 100vh;
-  min-width: 800px;
+
   width: 100%;
   box-sizing: border-box;
   color: rgb(0, 0, 0);
 }
-.content-with-background{
-        background-image: url(/src/assets/test_background.png);
-        background-size: cover;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        background-position: center;
-        
-}
+
 
   /*background-color: #f8f6f4;*/
   
 /*150px*/
+
+.content-with-background {
+  width: 100%;  /* add this */
+  background-image: url(/src/assets/test_background.png);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: center;
+  min-height: 100vh;
+}
 
 .raleway-uni {
   
