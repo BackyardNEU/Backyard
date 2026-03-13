@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
+import { useGlobalStore } from '../store'
 // import { Logout } from '../components/Logout'
 import './ProfilePage.css'
 
@@ -33,6 +34,22 @@ export const ProfilePage = () => {
 
     fetchReviews()
   }, [id])
+
+  const navigate = useNavigate();
+  const lastPath = useGlobalStore((state) => state.lastPath);
+
+  useEffect(() => {
+    const handleBack = (event) => {
+      // When users hit the browser back button on the profile page,
+      // send them back to where they were right before logging in.
+      if (lastPath && lastPath !== window.location.pathname) {
+        navigate(lastPath, { replace: true });
+      }
+    };
+
+    window.addEventListener('popstate', handleBack);
+    return () => window.removeEventListener('popstate', handleBack);
+  }, [lastPath, navigate]);
 
   return (
       <div className="ProfilePage">

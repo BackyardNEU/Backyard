@@ -5,6 +5,8 @@ import { UniSearchBar } from './UniSearchBar';
 import IconBar from './IconBar';
 import './UniversityPage.css';
 import { ClubList } from './ClubList';
+import { useGlobalStore } from "../store";
+import Logout from '../login_components/Logout';
 
 <link 
   href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&family=Raleway:ital,wght@1,100..900&display=swap" 
@@ -18,6 +20,8 @@ export const UniversityPage = () => {
   const [isDocked, setIsDocked] = useState(false);
   const [allData, setAllData] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  let GlobalValue = useGlobalStore((state) => state.GlobalValue);
+
   //potentially consider adding another variable that maintains the old dataset prior to clicking on favorites
 
   const fetchAllData = useCallback(async () => {
@@ -138,7 +142,7 @@ export const UniversityPage = () => {
 
   {/* Group 3: Right (This aligns with your global Login Icon) */}
   <div className="header-section right">
-    <span className="signup-text">Sign Up</span>
+    {/*<span className="signup-text">Sign Up</span>*/}
     {/* The Login Icon from App.jsx will hover over/beside this area */}
     <div className="login-placeholder"></div> 
   </div>
