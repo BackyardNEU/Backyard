@@ -4,19 +4,20 @@
  
   
   width: 100%;
-  height: 120px;
+  height: 140px;
   /*background-color: #f4f4f5;*/
   display: flex;
   flex-direction: row;
   
   align-items: start;
-  box-shadow: inset 0 0 3px 1px rgba(226, 226, 226, 0.15);
+  
   padding: 0 0.5rem;
   box-sizing: border-box;
   border-radius: 15px;
   z-index: 1000;
   overflow: hidden;
-  background-color: #f4ebe2;
+  background-color: #fffbf8;
+  
 }
 
 .icon-bar::-webkit-scrollbar {
@@ -50,7 +51,7 @@
   width: 70px;       
   height: 70px;
   border-radius: 50%;
-  background-color: rgb(183, 179, 177);
+  background-color: rgb(232, 225, 222);
   z-index: 0; 
 }
 /*rgb(255, 166, 166)*/
@@ -64,8 +65,8 @@ transform: scale(1.1);
 }
 
 .icon {
-    width: 52px;
-    height: 52px;
+    width: 55px;
+    height: 55px;
     object-fit: contain;
     cursor: pointer;
     z-index: 1;
@@ -74,7 +75,7 @@ transform: scale(1.1);
 .icon-label {
 margin-top: 14px;
 font-family: "Inter", sans-serif;
-font-size: 0.7rem;
+font-size: 0.9rem;
 color: #000000;
 }
 
