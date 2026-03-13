@@ -1,12 +1,13 @@
-import { Routes, Route } from 'react-router-dom'
-import { useState } from 'react'
-import './App.css'
-import { SearchBar } from './components/SearchBar'
-import { SearchResultsList } from './components/SearchResultsList'
-import { UniversityPage } from './uni_components/UniversityPage'
-import LoginMorph from "./login_components/LoginMorph"
-import ReviewPage from "./review_components/ReviewPage"
-import AuthListener from "./login_components/AuthListener"
+import { Routes, Route, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import './App.css';
+import { SearchBar } from './components/SearchBar';
+import { SearchResultsList } from './components/SearchResultsList';
+import { UniversityPage } from './uni_components/UniversityPage';
+import LoginMorph from "./login_components/LoginMorph";
+import ReviewPage from "./review_components/ReviewPage";
+import AuthListener from "./login_components/AuthListener";
+import { ProfilePage } from './profile_components/ProfilePage';
 import { ClubDataProvider } from './context/ClubDataProvider'
 
 function App() {
@@ -39,6 +40,7 @@ function App() {
           />
           <Route path="/university/:id" element={<UniversityPage />} />
           <Route path="/reviews/:id" element={<ReviewPage />} />
+           <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </div>
     </ClubDataProvider>
