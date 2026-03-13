@@ -37,7 +37,7 @@ export const ProfilePage = () => {
   return (
       <div className="ProfilePage">
         <div className='spacer' />
-        <h1 className='ProfileName'>Your Reviews</h1>
+        <h1 className='ProfileName'>Your Profile</h1>
       </div>
     )
 }
