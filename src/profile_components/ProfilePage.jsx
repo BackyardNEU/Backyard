@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../supabase'
+// import { Logout } from '../components/Logout'
 import './ProfilePage.css'
 
 //this is the landing page for our university club search, most of the info will go through here
@@ -37,11 +38,6 @@ export const ProfilePage = () => {
       <div className="ProfilePage">
         <div className='spacer' />
         <h1 className='ProfileName'>Your Reviews</h1>
-        {
-            // reviews.map((review) => {
-            //     return 
-            // })
-        }
       </div>
     )
 }
