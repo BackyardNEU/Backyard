@@ -67,7 +67,7 @@
   white-space: pre-wrap;
   word-break: break-word;
   width: 100%;
-  padding-right: 40px;
+  padding-right: 35px;
   box-sizing: border-box;
 }
   
@@ -77,10 +77,14 @@
   margin: 0;
   color: rgb(0, 0, 0);
   font-family: "Inter", sans-serif;
-  font-size: clamp(13px, 2.5cqi, 18px);
+  font-size: clamp(10px, 2.5cqi, 18px);
   
-  word-wrap: break-word;
-  overflow-wrap: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  box-sizing: border-box;
+
   text-align: left;
   font-weight: 400;
   font-style: italic;
