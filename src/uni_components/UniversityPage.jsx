@@ -122,14 +122,6 @@ export const UniversityPage = () => {
     </div>
     <div
       className="content-with-background"
-      style={{
-        backgroundImage: 'url(/src/assets/test_background.png)',
-        backgroundSize: 'cover',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed', // parallax-style sticky background
-        backgroundPosition: 'center',
-        minHeight: '100vh',
-      }}
     >
     <div className="fixed-wrapper">
 
