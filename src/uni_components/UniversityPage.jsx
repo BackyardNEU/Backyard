@@ -124,9 +124,11 @@ export const UniversityPage = () => {
         }}
       />
     </div>
-    <div
+  <div
       className="content-with-background"
-    >
+  >
+  <div className = "community-board">
+  {/*<div className = "community-board"*/}
     <div className="fixed-wrapper">
 
   {/* Group 1: Left */}
@@ -147,9 +149,13 @@ export const UniversityPage = () => {
     <div className="login-placeholder"></div> 
   </div>
 </div>
-    <IconBar onIconClick={getClubsBasedOnCategory} />
+    
+    
      <ClubList className="start" results={results} />
     </div>
+      <IconBar onIconClick={getClubsBasedOnCategory} />
+  </div>
+
   </div>
   );
 };

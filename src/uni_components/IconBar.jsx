@@ -43,6 +43,7 @@ export default function IconBar({ onIconClick }) {
     };
 
     return (
+   
         <div className="icon-bar">
             {icons.map((icon) => (
                 <div
@@ -59,5 +60,6 @@ export default function IconBar({ onIconClick }) {
                 </div>
             ))}
         </div>
+       
     );
 }

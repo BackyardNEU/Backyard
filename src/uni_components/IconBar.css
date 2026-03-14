@@ -1,26 +1,34 @@
 .icon-bar{
-  position: sticky;
-  top: 87%; /* Adjust this to move it higher or lower from the edge */
- 
-  
-  width: 100%;
+  position: relative;
+  /* Adjust this to move it higher or lower from the edge */
+  margin-top: -15px;
+  margin-bottom
+: 15px;
+  width: 90%;
   max-width: 100%;
   height: 140px;
   /*background-color: #f4f4f5;*/
   display: flex;
   flex-direction: row;
-
   justify-content: flex-start; 
   align-items: start;
-  
   padding: 0 0.5rem;
   box-sizing: border-box;
-  border-radius: 15px;
+ 
   z-index: 1000;
 
-  overflow-x: hidden;
   flex-wrap: nowrap;
-  background-color: #fffbf8;
+  overflow-x:  hidden;        /* was overflow-x: hidden — was clipping the border */
+  border-radius: 0;         
+
+
+  background-image: url(/src/assets/map_paper.png);
+  background-size: 100% 100%;;
+  background-repeat: no-repeat;
+  
+  background-attachment: scroll;
+  background-position: center;
+
   
 }
 
@@ -40,8 +48,8 @@
   justify-content: space-evenly;
   align-items: center;
   cursor: pointer;
-  margin-top: 10px;
-  margin-bottom: 10px; 
+  margin-top: 20px;
+  
   margin-left: 0px;
   margin-right: 0px;
   padding-left: 25px;
@@ -51,7 +59,7 @@
 .icon-container.active::before {
   content: '';
   position: absolute;
-  top: 40%;
+  top: 35%;
   left: 50%;
   transform: translate(-50%, -55%);
   width: 70px;       
@@ -71,8 +79,8 @@ transform: scale(1.1);
 }
 
 .icon {
-    width: 55px;
-    height: 55px;
+    width: 65px;
+    height: 65px;
     object-fit: contain;
     cursor: pointer;
     z-index: 1;
