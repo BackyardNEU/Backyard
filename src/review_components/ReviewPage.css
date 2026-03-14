@@ -316,7 +316,8 @@ body {
   flex-direction: column;
   flex: 1 1 auto;
   min-height: 0;
-  width: 100%;
+  width: 500px;
+  height: 100px;
   padding: clamp(6rem, 14vw, 9rem) 0.5rem 0 0.5rem; /* space below header at all widths */
   overflow-y: auto;
   opacity: calc(1 - var(--scroll-out));
