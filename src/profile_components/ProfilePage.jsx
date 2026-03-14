@@ -78,7 +78,7 @@ export const ProfilePage = () => {
           />
           <h1 className='ProfileName'>{profile?.username || user?.email || "User"}</h1>
         </div>
-        <h1 className='ProfileName'>Your Profile</h1>
+        <h1 className='ProfileName'>Your Profile (currently being worked on)</h1>
       </div>
     )
 }
