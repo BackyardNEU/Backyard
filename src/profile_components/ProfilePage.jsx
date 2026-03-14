@@ -12,28 +12,39 @@ import './ProfilePage.css'
 
 export const ProfilePage = () => {
   const { id } = useParams()
-  const [reviews, setReviews] = useState(null)
-  const user = supabase.auth.getUser();
-  const userId = user?.id;
+  const [user, setUser] = useState(null)
+  const [profile, setProfile] = useState(null)
 
-  //this'll be used for the second table when we're ready
-  useEffect(() => { 
-    async function fetchReviews() {
-      const { data, error } = await supabase
-        .from('reviews')
-        .select('*')
-        .eq('user_id', userId)
-
+  useEffect(() => {
+    async function loadUser() {
+      const { data, error } = await supabase.auth.getUser();
       if (error) {
-        console.error('Error fetching reviews:', error)
-        return
+        console.error('Error fetching user:', error);
+        return;
       }
 
-      setReviews(data)
+      const authUser = data?.user;
+      setUser(authUser);
+
+      if (!authUser) return;
+
+      // Fetch profile data (username/avatar) from your app table (e.g., `profiles`)
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('username, avatar_url')
+        .eq('id', authUser.id)
+        .single();
+
+      if (profileError) {
+        console.error('Error fetching profile data:', profileError);
+        return;
+      }
+
+      setProfile(profileData);
     }
 
-    fetchReviews()
-  }, [id])
+    loadUser();
+  }, []);
 
   const navigate = useNavigate();
   const lastPath = useGlobalStore((state) => state.lastPath);
@@ -54,6 +65,19 @@ export const ProfilePage = () => {
   return (
       <div className="ProfilePage">
         <div className='spacer' />
+        <div className='profile-header'>
+          <img
+            src={
+              profile?.avatar_url ||
+              user?.user_metadata?.avatar_url ||
+              user?.avatar_url ||
+              "/raccoon_pfp.png"
+            }
+            alt="Profile"
+            className="profile-image"
+          />
+          <h1 className='ProfileName'>{profile?.username || user?.email || "User"}</h1>
+        </div>
         <h1 className='ProfileName'>Your Profile</h1>
       </div>
     )
