@@ -4,10 +4,10 @@
 
 /* --- Small state: circular button --- */
 .login-icon {
+  top: 1rem;
   width: 2.9rem;
   height: 2.9rem;
   padding: 0;
-
   border-radius: 50%;
   border: 1px solid  rgb(175, 174, 174);
   cursor: pointer;
@@ -15,8 +15,8 @@
 
 .logged-in-controls {
   position: fixed;
-  top: 0.5rem;
-  right: 2rem;
+  top: 1rem;
+  right: 7rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -31,6 +31,7 @@
 }
 
 .logout-btn {
+  top: 1rem;
   height: 2.9rem;
   padding: 0 0.75rem;
   border-radius: 999px;

@@ -20,16 +20,11 @@
 
   gap: 0.5rem;
 
-  border-radius: 15px;
-  border: 7px solid rgb(237, 236, 233);
+  border-radius: 10px;
+  
   cursor: pointer;
   position: relative;
-  box-shadow: 
-    /* 1. Inset Shadow (Top) */
-    inset 0 12px 10px -10px rgba(0, 0, 0, 0.5),
-    
-    /* 2. Outer Shadow (Bottom) */
-    0 15px 20px -10px rgba(0, 0, 0, 0.3);
+  
   
   transition: transform 0.6s ease,
   border-color 0.3s ease;
@@ -172,11 +167,15 @@
 @media (min-width: 2000px) {
   .club-card {
     width: 16vw; 
+
+    max-width: 530px;
     
   }
   .image-container, .club-img {
     width: 14vw;
+    max-width: 450px;
     height: 14vw;
+    max-height: 450px;
     
   }
 }
