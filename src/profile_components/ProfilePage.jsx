@@ -36,7 +36,7 @@ export const ProfilePage = () => {
   return (
       <div className="ProfilePage">
         <div className='spacer' />
-        <h1 className='ProfileName'>Your Reviews</h1>
+        <h1 className='ProfileName'>Profile Page</h1>
         {
             // reviews.map((review) => {
             //     return 
