@@ -1,22 +1,35 @@
 .icon-bar{
-  position: sticky;
-  top: 87%; /* Adjust this to move it higher or lower from the edge */
- 
-  
-  width: 100%;
-  height: 120px;
+  position: relative;
+  /* Adjust this to move it higher or lower from the edge */
+  margin-top: -40px;
+  margin-bottom
+: 5px;
+  width: 92%;
+  max-width: 100%;
+  height: 140px;
   /*background-color: #f4f4f5;*/
   display: flex;
   flex-direction: row;
-  
+  justify-content: flex-start; 
   align-items: start;
-  box-shadow: inset 0 0 3px 1px rgba(226, 226, 226, 0.15);
   padding: 0 0.5rem;
   box-sizing: border-box;
-  border-radius: 15px;
-  z-index: 1000;
-  overflow: hidden;
-  background-color: #f4ebe2;
+ 
+  z-index: 10;
+
+  flex-wrap: nowrap;
+  overflow-x:  hidden;        /* was overflow-x: hidden — was clipping the border */
+  border-radius: 0;         
+
+
+  background-image: url(/src/assets/map_paper.png);
+  background-size: 103% 100%;;
+  background-repeat: no-repeat;
+  
+  background-attachment: scroll;
+  background-position: center;
+
+  
 }
 
 .icon-bar::-webkit-scrollbar {
@@ -25,6 +38,8 @@
 
 
 .icon-container {
+  
+  flex-shrink: 0;
   max-width: 110px;
   min-width: 110px;
   position: relative;
@@ -33,8 +48,8 @@
   justify-content: space-evenly;
   align-items: center;
   cursor: pointer;
-  margin-top: 10px;
-  margin-bottom: 10px; 
+  margin-top: 20px;
+  
   margin-left: 0px;
   margin-right: 0px;
   padding-left: 25px;
@@ -44,13 +59,13 @@
 .icon-container.active::before {
   content: '';
   position: absolute;
-  top: 40%;
+  top: 35%;
   left: 50%;
   transform: translate(-50%, -55%);
   width: 70px;       
   height: 70px;
   border-radius: 50%;
-  background-color: rgb(183, 179, 177);
+  background-color: rgb(232, 225, 222);
   z-index: 0; 
 }
 /*rgb(255, 166, 166)*/
@@ -64,8 +79,8 @@ transform: scale(1.1);
 }
 
 .icon {
-    width: 52px;
-    height: 52px;
+    width: 60px;
+    height: 60px;
     object-fit: contain;
     cursor: pointer;
     z-index: 1;
@@ -74,7 +89,7 @@ transform: scale(1.1);
 .icon-label {
 margin-top: 14px;
 font-family: "Inter", sans-serif;
-font-size: 0.7rem;
+font-size: 0.9rem;
 color: #000000;
 }
 

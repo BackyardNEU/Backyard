@@ -1,5 +1,5 @@
-import { Routes, Route, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import './App.css';
 import { SearchBar } from './components/SearchBar';
 import { SearchResultsList } from './components/SearchResultsList';
@@ -13,14 +13,21 @@ import { ClubDataProvider } from './context/ClubDataProvider'
 function App() {
   const [results, setResults] = useState([])
   const [loginOpen, setLoginOpen] = useState(false);
-  //research why /:id doesn't work for da code
+  const location = useLocation();
+
+  useEffect(() => {
+    // Close the login modal whenever navigation occurs (back/forward or route changes).
+    setLoginOpen(false);
+  }, [location]);
+
+  // research why /:id doesn't work for da code
   return (
-    //Club data provider allows the cached supabase data to be used anywhere throughout these components
+    // Club data provider allows the cached supabase data to be used anywhere throughout these components
     <ClubDataProvider>
       <div className="App">
-          <AuthListener/>
+          <AuthListener />
           <LoginMorph open={loginOpen} setOpen={setLoginOpen} />
-        
+
         <Routes>
           <Route
             path="/"

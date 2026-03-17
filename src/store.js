@@ -4,8 +4,10 @@ import { create } from "zustand";
 //data from google authentification
 export const useGlobalStore = create((set) => ({
   globalValue: false,
+  lastPath: "/",
 
   setGlobalValue: (newValue) => set({ GlobalValue: newValue }),
+  setLastPath: (path) => set({ lastPath: path }),
 }));
 
 /*

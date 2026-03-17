@@ -1,21 +1,74 @@
 .UniPage {
-  background-color: #fbf2e5;
+  
   /*#f8f6f4*/
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   min-height: 100vh;
-  min-width: 800px;
+
   width: 100%;
   box-sizing: border-box;
   color: rgb(0, 0, 0);
 }
 
+.community-board {
+  
+  background-image: url(/src/assets/community_board.png);
+  z-index: 50;
+  background-size: stretch;
+  background-repeat: repeat;
+  
+  background-attachment: scroll;
+  background-position: center;
+  margin: 0 auto;
+  width: 90%;
+  margin: 4rem auto 4rem auto; 
+  margin: 4rem auto 3rem auto; 
+
+  height: 90vh;
+  height: 85vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  /* Scroll styling */
+  scrollbar-width: thin;
+  scrollbar-color: rgb(181, 152, 113) transparent;
+
+  border: 12px solid #9b826a;
+
+}
+.community-board::-webkit-scrollbar {
+  width: 6px;
+}
+.community-board::-webkit-scrollbar-track {
+  background: transparent;
+}
+.community-board::-webkit-scrollbar-thumb {
+  background-color: rgb(181, 152, 113);
+  border-radius: 10px;
+}
+
+
+
 
   /*background-color: #f8f6f4;*/
   
 /*150px*/
+
+.content-with-background {
+  width: 100%;  /* add this */
+  background-image: url(/src/assets/test_background.png);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  
+}
 
 .raleway-uni {
   
@@ -34,20 +87,19 @@
   position: sticky;
   top: 0;
   display: flex;
+  
+  background-color: rgb(62, 52, 35);
   flex-direction: row;
   justify-content: space-between; /* Pushes items to far left, center, and far right */
   align-items: center;
   width: 100%;
-  height: 4rem;
+  height: 5.5rem;
   padding: 0 2rem; /* Add breathing room on sides */
   z-index: 999;
-  background-color: rgb(93, 114, 93);
+  border-bottom: 12px solid #9b826a;
   box-sizing: border-box;
-  box-shadow: 
-    /* 1. Inset Shadow (Top) */
-    
-    
-    /* 2. Outer Shadow (Bottom) */
+  margin-bottom: 1rem;
+  box-shadow:
     0 15px 20px -10px rgba(0, 0, 0, 0.3);
 }
 
@@ -83,7 +135,7 @@
 }
 
 .flag {
-  height: 3rem; 
+  height: 4rem; 
   width: auto;
 }
 
@@ -105,9 +157,8 @@
 
   .header-section.left {
     /* Allow the flag to take up only as much space as it needs */
-    flex: 0 0.5 auto; 
+    flex: 1 1 auto; 
   }
-
   .header-section.center {
     /* Give the search bar maximum priority */
     flex: 4; 

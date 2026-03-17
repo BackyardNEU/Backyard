@@ -1,0 +1,1 @@
+//the friends list that pops up when you want to search for a friend

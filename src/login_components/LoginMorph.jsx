@@ -20,23 +20,17 @@ function LoginMorph({ open, setOpen }) {
 
   return (
     <AnimatePresence>
-      {!open && GlobalValue && (
-        <motion.button
-          layoutId="login"
-          className="login-icon"
-          onClick={handleProfileClick}
-        >
-          <img src="/raccoon_pfp.png" alt="Profile" />
-        </motion.button>
-      )}
-      {!open && !GlobalValue && (
-        <motion.button
-          layoutId="login"
-          className="login-icon"
-          onClick={() => setOpen(true)}
-        >
-          <img src="/raccoon_pfp.png" alt="Login" />
-        </motion.button>
+      {!open && (
+        <div className="logged-in-controls">
+          {GlobalValue && <Logout />}
+          <motion.button
+            layoutId="login"
+            className="login-icon"
+            onClick={GlobalValue ? handleProfileClick : () => setOpen(true)}
+          >
+            <img src="/raccoon_pfp.png" alt={GlobalValue ? "Profile" : "Login"} />
+          </motion.button>
+        </div>
       )}
       {open && (
         <motion.div
