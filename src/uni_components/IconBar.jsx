@@ -29,7 +29,18 @@ export default function IconBar({ onIconClick }) {
 
     ];
 
+    const barRef = useRef(null);
     const [active, setActive] = useState(null);
+
+    useEffect(() => {
+        const el = barRef.current;
+        const handler = (e) => {
+            e.preventDefault();
+            el.scrollLeft += e.deltaY || e.deltaX;
+        };
+        el.addEventListener('wheel', handler, { passive: false });
+        return () => el.removeEventListener('wheel', handler);
+    }, []);
 
     const handleClick = (category) => {
         if (active === category) {
@@ -44,7 +55,7 @@ export default function IconBar({ onIconClick }) {
 
     return (
    
-        <div className="icon-bar">
+        <div className="icon-bar" ref={barRef}>
             {icons.map((icon) => (
                 <div
                     key={icon.name}
