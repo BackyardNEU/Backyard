@@ -52,3 +52,52 @@
     margin-top: 12px;
     margin-bottom: 10px;
 }
+
+.mosaic-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-auto-rows: 150px;
+    gap: 8px;
+    margin: 20px 0;
+}
+
+.mosaic-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.mosaic-item:hover {
+    transform: scale(1.02);
+    z-index: 10;
+}
+
+.mosaic-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Different size variations */
+.grid-item-large {
+    grid-column: span 2;
+    grid-row: span 2;
+}
+
+.grid-item-wide {
+    grid-column: span 2;
+    grid-row: span 1;
+}
+
+.grid-item-tall {
+    grid-column: span 1;
+    grid-row: span 2;
+}
+
+.grid-item-normal {
+    grid-column: span 1;
+    grid-row: span 1;
+}

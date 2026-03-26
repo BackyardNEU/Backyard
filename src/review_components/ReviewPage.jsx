@@ -93,52 +93,81 @@ export default function ReviewPage({clubId, onClose}) {
         window.addEventListener('resize', handleScroll);
         return () => window.removeEventListener('resize', handleScroll);
     }, []);
-        const [file, setFile] = useState(null);
-        const [uploading, setUploading] = useState(false);
-        const [fileUrl, setFileUrl] = useState("");
+        const [selectedFiles, setSelectedFiles] = useState([]);
+const [imagePreviews, setImagePreviews] = useState([]);
+const [uploading, setUploading] = useState(false);
+const [uploadedUrls, setUploadedUrls] = useState([]);
 
-        const handleFileChange = event => {
-            setFile(event.target.files[0]);
-        };
+    const handleFileChange = (event) => {
+    const files = Array.from(event.target.files);
+    
+    // Limit to 10 images total
+    const remainingSlots = 10 - selectedFiles.length;
+    const filesToAdd = files.slice(0, remainingSlots);
+    
+    if (files.length > remainingSlots) {
+        setWarning(`Maximum 10 images allowed. Only adding ${remainingSlots} images.`);
+    }
+    
+    // Update selected files
+    setSelectedFiles(prev => [...prev, ...filesToAdd]);
+    
+    // Create preview URLs
+    const newPreviews = filesToAdd.map(file => URL.createObjectURL(file));
+    setImagePreviews(prev => [...prev, ...newPreviews]);
+};
 
-        const handleUpload = async () => {
-            try {
-             setUploading(true);
+        
+const removeImage = (index) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    
+    // Revoke the URL to free memory
+    URL.revokeObjectURL(imagePreviews[index]);
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+};
+       
+    const handleUpload = async () => {
+    if (selectedFiles.length === 0) {
+        setWarning("Please select at least one image");
+        return;
+    }
+    
+    try {
+        setUploading(true);
+        const urls = [];
+        
+        for (const file of selectedFiles) {
+            const fileExt = file.name.split(".").pop();
+            const fileName = `${Math.random()}.${fileExt}`;
+            const filePath = `${fileName}`;
 
-             if (!file) {
-                console.log("Please select a file to upload.")
-                return;
-             }
-
-             const fileExt = file.name.split(".").pop();
-             const fileName = `${Math.random()}.${fileExt}`
-             const filePath = `${fileName}`;
-
-            let { error } = await supabase.storage
+            const { error } = await supabase.storage
                 .from('review_images')
                 .upload(filePath, file);
 
-            if (error) {
-                throw error;
-            }
+            if (error) throw error;
 
-            const {data: url} = await supabase.storage
-            .from("review_images")
-            .getPublicUrl(filePath);
+            const { data: urlData } = await supabase.storage
+                .from("review_images")
+                .getPublicUrl(filePath);
             
-            setFileUrl(url.publicUrl);
-            alert("File uploaded successfully.");
-
-        } catch (error) {
-                alert("Error uploading file:" , error.message)
-
-            }
-        finally {
-            setUploading(false);
+            urls.push(urlData.publicUrl);
         }
-
-       
-        }
+        
+        setUploadedUrls(urls);
+        alert(`${urls.length} file(s) uploaded successfully.`);
+        
+        // Clear previews after upload
+        imagePreviews.forEach(preview => URL.revokeObjectURL(preview));
+        setSelectedFiles([]);
+        setImagePreviews([]);
+        
+    } catch (error) {
+        alert("Error uploading files: " + error.message);
+    } finally {
+        setUploading(false);
+    }
+};
     
     useEffect(() => {
         async function fetch_reviews() {
@@ -234,7 +263,7 @@ export default function ReviewPage({clubId, onClose}) {
 
                 const { error } = await supabase
                     .from('reviews')
-                    .insert({club_id: id, user_id: user.id, review_text: user_review, review_title: user_title, review_tags: selectedTags, club_hours: user_hours, club_leadership: user_leadership, club_fun: user_fun, club_community: user_community, club_growth_index: user_growth, review_image: fileUrl})
+                    .insert({club_id: id, user_id: user.id, review_text: user_review, review_title: user_title, review_tags: selectedTags, club_hours: user_hours, club_leadership: user_leadership, club_fun: user_fun, club_community: user_community, club_growth_index: user_growth, review_images: uploadedUrls})
                     .select()
                 
                 if (error) {
@@ -274,8 +303,33 @@ export default function ReviewPage({clubId, onClose}) {
                             <div className='create-comment'>
                                 <input type="text" value={user_title} onChange={(e) => set_user_title(e.target.value)} placeholder="Comment title" />
                                 <input type="text" value={user_review} onChange={(e) => set_user_review(e.target.value)} placeholder={`Experience in ${club?.club_name}...`} />
-                                <input type="file" accept="image/*" onChange={handleFileChange} />
-                                <button onClick={handleUpload} disabled={uploading}>{uploading ? "Uploading..." : "Upload"}</button>
+                                <input type="file" accept="image/*" multiple onChange={handleFileChange} disabled={selectedFiles.length >= 10} />
+                                 <p>{selectedFiles.length}/10 images selected</p>
+        
+        {/* Image previews */}
+        {imagePreviews.length > 0 && (
+            <div className="image-previews">
+                {imagePreviews.map((preview, index) => (
+                    <div key={index} className="preview-item">
+                        <img src={preview} alt={`Preview ${index + 1}`} />
+                        <button 
+                            type="button"
+                            className="remove-btn" 
+                            onClick={() => removeImage(index)}
+                        >
+                            ×
+                        </button>
+                    </div>
+                ))}
+            </div>
+        )}
+        
+        <button 
+            onClick={handleUpload} 
+            disabled={uploading || selectedFiles.length === 0}
+        >
+            {uploading ? "Uploading..." : `Upload ${selectedFiles.length} image(s)`}
+        </button>
                             </div>
                         </div>
                     </div>
