@@ -7,6 +7,7 @@ import ReviewList from "../review_components/ReviewList";
 import { supabase } from '../supabase';
 import logImage from '/src/assets/logImage.png';
 import ColorThief from "colorthief";
+import StatsCard from '/src/review_components/StatsCard.jsx'; 
 
 function ExpandedTile({club, onClose}){
     const [isOpen, setIsOpen] = useState(false);

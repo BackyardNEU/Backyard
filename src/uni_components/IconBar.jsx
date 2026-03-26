@@ -32,6 +32,7 @@ export default function IconBar({ onIconClick }) {
     const barRef = useRef(null);
     const [active, setActive] = useState(null);
 
+    // Script for scrolling. Adds an event listener upon each page load to the icon bar and wait for any type of scoll (from a wheel or trackpad)
     useEffect(() => {
         const el = barRef.current;
         const handler = (e) => {

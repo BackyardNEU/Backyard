@@ -1,7 +1,7 @@
 import React from 'react';
 import "./ReviewList.css"
 
-export default function ReviewList({ stats_array }) {
+export default function StatsCard({ stats_array }) {
 
 const calculateAverages = (reviewsArray) => {
     if (!reviewsArray || reviewsArray.length === 0) return null;
