@@ -1,5 +1,8 @@
 .review-item{
-    width: 100%
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
 }
 .range-row {
   display: flex;
@@ -100,4 +103,10 @@
 .grid-item-normal {
     grid-column: span 1;
     grid-row: span 1;
+}
+
+.view-reviews {
+    width: 100%;
+    padding: 0 5%;
+    box-sizing: border-box;
 }

@@ -7,7 +7,7 @@ import ReviewList from "../review_components/ReviewList";
 import { supabase } from '../supabase';
 import logImage from '/src/assets/logImage.png';
 import ColorThief from "colorthief";
-import StatsCard from '/src/review_components/StatsCard.jsx'; 
+
 
 function ExpandedTile({club, onClose}){
     const [isOpen, setIsOpen] = useState(false);
@@ -154,12 +154,11 @@ function ExpandedTile({club, onClose}){
         </div>
         <p className= "club-description-exp">{club.club_description}</p>
         <div className="content-col">
-            <div className = "divider"></div>
-        </div>
-        <div className='view-reviews'>
-            { /* <p className = "divider-header">Stats</p> This causing issues for some reason where it takes up the whole page*/} 
-            <StatsCard stats_array={club_stats}/>
-        </div>
+    <div className="divider"></div>
+</div>
+<div className="view-reviews">
+    <ReviewList reviews={reviews} club_stats={club_stats} club={club} />
+</div>
         <div style = {{marginBottom: "30px"}}>
             <h3>Have you been in this club?</h3>
             <div>{isClicked ? ( <img src = {logImage} className = "log-btn" alt = "Clicked state" /> ) :( 
