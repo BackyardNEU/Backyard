@@ -24,8 +24,6 @@
 }
 
 .login-icon img {
-  width: 500px;
-  height: 200px;
   width: 50px;
   height: 50px;
   object-fit: cover;

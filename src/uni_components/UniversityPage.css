@@ -23,10 +23,8 @@
   background-position: center;
   margin: 0 auto;
   width: 90%;
-  margin: 4rem auto 4rem auto; 
   margin: 4rem auto 3rem auto; 
 
-  height: 90vh;
   height: 85vh;
   overflow-y: auto;
   overflow-x: hidden;
