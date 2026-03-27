@@ -4,7 +4,7 @@
   margin: auto;           
   width: 44vw;
   height: 95vh;
-
+  overflow: hidden;
   background: rgb(252, 252, 252);
 
   display: flex;

@@ -54,21 +54,16 @@ export const ClubDataProvider = ({ children }) => {
     }, []);
 
     // method to be called by favorite button handler function to update the favorites cache
-    const invalidateFavoritesCache = useCallback(async () => {
-        const { data: userData } = await supabase.auth.getUser();
-        if (userData?.user) {
-            const { data: favData, error } = await supabase
-                .from('user_favorites')
-                .select('club_id')
-                .eq('user_id', userData.user.id);
-
-            if (error) {
-                console.error("Error getting user info: " + error);
+    const invalidateFavoritesCache = useCallback(async (clubId, isAdding) => {
+        setFavoritesCache(prev => {
+            const next = new Set(prev);
+            if (isAdding) {
+                next.add(clubId);
+            } else {
+                next.delete(clubId);
             }
-            else {
-                setFavoritesCache(new Set(favData.map(fav => fav.club_id)));
-            }
-        }
+            return next;
+        });
     }, []);
 
     useEffect(() => {

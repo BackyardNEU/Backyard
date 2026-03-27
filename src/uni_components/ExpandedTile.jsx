@@ -20,14 +20,16 @@ function ExpandedTile({club, onClose}){
     const id  = club.id;
  
     //escape key will close tile
-    document.addEventListener('keydown', (e) => {
-        if (e.key === "Escape") {
-            onClose();    
-        }
-    });
+    useEffect(() => {
+        const handler = (e) => {
+            if (e.key === "Escape") onClose();
+        };
+        document.addEventListener('keydown', handler);
+        return () => document.removeEventListener('keydown', handler);
+    }, [onClose]);
 
     const handleClick = () => {
-   setIsOpen(!isOpen); 
+    setIsOpen(!isOpen); 
     
     // 2. Trigger the "Image" state and the "Pop" animation
     setIsClicked(true);
@@ -69,8 +71,8 @@ function ExpandedTile({club, onClose}){
         else {
             img.addEventListener("load", getColor);
             return () => img.removeEventListener("load", getColor);
-    }
-  }, [club.image_url]);
+        }
+    }, [club.image_url]);
 
     useEffect(() => {
             async function fetch_reviews() {
@@ -89,16 +91,22 @@ function ExpandedTile({club, onClose}){
         }, [id])
 
     useEffect(() => {
-        async function fetch_stats() {
-            const { data, error } = await supabase.rpc('get_average');
+        async function fetch_stats(clubId) {
+            const { data, error } = await supabase.rpc('get_averages', { p_club_id: clubId });
             if (error) {
-                console.error("Error fetching stats: " + error);
-            }
-            else {
+                console.error("Error fetching stats:", error);
+            } else {
+                console.log("Fetched club stats!:", data);
                 setClubStats(data[0]);
             }
         }
-        fetch_stats();
+        console.log(id + " type is: " + typeof id);
+        fetch_stats(id);
+    }, [id]);
+
+    useEffect(() => {
+        console.log("ExpandedTile MOUNTED");
+        return () => console.log("ExpandedTile UNMOUNTED");
     }, []);
 
     return (
@@ -141,27 +149,22 @@ function ExpandedTile({club, onClose}){
             </div>
 
         <div className ="club-tag2">
-        <div className = "tag">Beginner</div>
-        <div className = "tag">Hands On</div>
-        <div className = "tag">Good Mentors</div>
+            <div className = "tag">Beginner</div>
+            <div className = "tag">Hands On</div>
+            <div className = "tag">Good Mentors</div>
         </div>
         <p className= "club-description-exp">{club.club_description}</p>
         <div className="content-col">
-        <div className = "divider"></div>
+            <div className = "divider"></div>
         </div>
         <div className='view-reviews'>
-        <p className = "divider-header">Stats</p>
-        <StatsCard stats_array={club_stats}/>
-                        {
-                            reviews.map((review) => {
-                                return <ReviewList review={review} key={review.club_id}/>
-                            })
-                        }
+            { /* <p className = "divider-header">Stats</p> This causing issues for some reason where it takes up the whole page*/} 
+            <StatsCard stats_array={club_stats}/>
         </div>
         <div style = {{marginBottom: "30px"}}>
-        <h3>Have you been in this club?</h3>
-        <div>{isClicked ? ( <img src = {logImage} className = "log-btn" alt = "Clicked state" /> ) :( 
-        <button className={`review-btn ${animating ? 'pop' : ''}`} onClick = {handleClick}>Share your experience</button> )}</div>
+            <h3>Have you been in this club?</h3>
+            <div>{isClicked ? ( <img src = {logImage} className = "log-btn" alt = "Clicked state" /> ) :( 
+            <button className={`review-btn ${animating ? 'pop' : ''}`} onClick = {handleClick}>Share your experience</button> )}</div>
         </div>
         {isOpen && (
             <div>
@@ -170,7 +173,6 @@ function ExpandedTile({club, onClose}){
 
         }
         </motion.div>
-
     );
 }
 

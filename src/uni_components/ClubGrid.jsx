@@ -18,14 +18,6 @@ export const ClubGrid = ({ result, onExpand }) => {
   // in
   let liked = favoritesCache?.has(result.id) ?? false;
 
-  /*
-    useEffect(() => {
-      if (result.favorite !== undefined) {
-        setLiked(result.favorite);
-      }
-    }, [result.favorite]);
-  */
-
   // Current issue with this implementation: If the user favroites a club and 
   // then refreshes the page, the like button does not show up as being liked 
   // which might cause some confusion, because in order for them to remove the 
@@ -46,7 +38,7 @@ export const ClubGrid = ({ result, onExpand }) => {
       if (error) console.error("Error adding favorite:", error);
       else {
         console.log("NEW CLUB LIKED RESETTING FAVORITES CACHE");
-        invalidateFavoritesCache();
+        invalidateFavoritesCache(result.id, true);
       }
     } else {
       const { error } = await supabase
@@ -57,7 +49,7 @@ export const ClubGrid = ({ result, onExpand }) => {
       if (error) console.error("Error removing favorite:", error);
       else {
         console.log("NEW CLUB DISLIKED RESETTING FAVORITES CACHE");
-        invalidateFavoritesCache();
+        invalidateFavoritesCache(result.id, false);
       }
     }
   };
