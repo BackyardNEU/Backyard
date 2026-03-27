@@ -15,10 +15,10 @@ function ExpandedTile({club, onClose}){
     const [isClicked, setIsClicked] = useState(false);
     const [animating, setAnimating] = useState(false);
     const [dominantColor, setDominantColor] = useState(null);
+    const [club_stats, setClubStats] = useState(null);
     const imgRef = useRef(null);
     const id  = club.id;
  
-<<<<<<< HEAD
     //escape key will close tile
     useEffect(() => {
         const handler = (e) => {
@@ -28,8 +28,6 @@ function ExpandedTile({club, onClose}){
         return () => document.removeEventListener('keydown', handler);
     }, [onClose]);
 
-=======
->>>>>>> 5a5ab41f25dbb3e1211c780c5d45e5ba1ddc1085
     const handleClick = () => {
     setIsOpen(!isOpen); 
     
@@ -76,9 +74,6 @@ function ExpandedTile({club, onClose}){
         }
     }, [club.image_url]);
 
-
-    
-
     useEffect(() => {
             async function fetch_reviews() {
                 const {data, error} = await supabase
@@ -94,7 +89,6 @@ function ExpandedTile({club, onClose}){
             }
             fetch_reviews();
         }, [id])
-<<<<<<< HEAD
 
     useEffect(() => {
         async function fetch_stats(clubId) {
@@ -106,7 +100,6 @@ function ExpandedTile({club, onClose}){
                 setClubStats(data[0]);
             }
         }
-        console.log(id + " type is: " + typeof id);
         fetch_stats(id);
     }, [id]);
 
@@ -115,20 +108,15 @@ function ExpandedTile({club, onClose}){
         return () => console.log("ExpandedTile UNMOUNTED");
     }, []);
 
-=======
->>>>>>> 5a5ab41f25dbb3e1211c780c5d45e5ba1ddc1085
     return (
 
 
         <motion.div
             layoutId = {`club-${club.id}`}
             className = "expanded-card"
-           
         >
     
-        <button className = "close-btn" onClick= {onClose}>x</button>
-        
-        
+        <button className = "close-btn" onClick={onClose}>x</button>
             <div className="content-col">
                 <div className = "rectangle" style = {{backgroundColor: dominantColor}}>
                     <img
@@ -140,7 +128,7 @@ function ExpandedTile({club, onClose}){
                     />
                 </div>
                 <div className="text-flex">
-                    <h2 className="club-name-exp" style={{ "--dominant-color": dominantColor}}>{club.club_name}</h2>
+                    <h2 className="club-name-exp">{club.club_name}</h2>
                     <h2 className="club-tag1">Web Dev • Introductory</h2>
                 </div>
                 
@@ -158,10 +146,7 @@ function ExpandedTile({club, onClose}){
                 </div>
             
             </div>
-            
-        
-        
-        
+
         <div className ="club-tag2">
             <div className = "tag">Beginner</div>
             <div className = "tag">Hands On</div>
@@ -171,19 +156,9 @@ function ExpandedTile({club, onClose}){
         <div className="content-col">
             <div className = "divider"></div>
         </div>
-<<<<<<< HEAD
         <div className='view-reviews'>
             { /* <p className = "divider-header">Stats</p> This causing issues for some reason where it takes up the whole page*/} 
             <StatsCard stats_array={club_stats}/>
-=======
-        <p className = "divider-header">Stats</p>
-        <div className='view-reviews'>
-                        { 
-                            reviews.map((review) => {
-                                return <ReviewList review={review} key={review.club_id}/>
-                            })
-                        }
->>>>>>> 5a5ab41f25dbb3e1211c780c5d45e5ba1ddc1085
         </div>
         <div style = {{marginBottom: "30px"}}>
             <h3>Have you been in this club?</h3>
@@ -192,16 +167,10 @@ function ExpandedTile({club, onClose}){
         </div>
         {isOpen && (
             <div>
-            <ReviewPage clubId = {club.id}/>
+            <ReviewPage clubId={club.id} onClose={() => setIsOpen(false)}/>
             </div>)
 
         }
-        
-        
-        
-        
-
-
         </motion.div>
     );
 }
