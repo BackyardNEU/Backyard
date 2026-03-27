@@ -140,11 +140,11 @@
 
 
 .divider {
-  width: 90%;
+
   height: 1px;
   background-color: rgb(205, 205, 205);
-  margin-top: 10px;
-  margin-bottom: 30px;
+  margin-top: 50px;
+
  
 }
 
@@ -170,7 +170,7 @@
   color: black;
   text-align: left ;
 
-    margin-bottom: 16px;
+    margin-bottom: 30px;
 }
 
 .content-col{
@@ -268,6 +268,10 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+}
+.divider{
+  width: 88vw;
+  margin-left:-1% ;
 }
 }
    
@@ -370,4 +374,8 @@
     .view-reviews{
        padding: 0 2%;
   }
+  .divider{
+  width: 98vw;
+  margin-left:-1% ;
+}
 }
