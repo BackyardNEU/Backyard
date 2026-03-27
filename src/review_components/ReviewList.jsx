@@ -1,44 +1,40 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import "./ReviewList.css";
 import StatsCard from "./StatsCard.jsx";
 
 export default function ReviewList({ reviews, club_stats, club }) {
-    const [imageAspectRatios, setImageAspectRatios] = useState({});
+    const [scrollIndex, setScrollIndex] = useState(0);
+    const [expandedImage, setExpandedImage] = useState(null);
+    const [expandedReview, setExpandedReview] = useState(null);
+    const galleryRef = useRef(null);
 
+    const scrollLeft = () => setScrollIndex((prev) => Math.max(prev - 1, 0));
+    const scrollRight = () => setScrollIndex((prev) => Math.min(prev + 1, reviews.length - 1));
+
+    // Close lightbox on escape
     useEffect(() => {
-        const allImages = reviews.flatMap((r, ri) =>
-            (r.review_images || []).map((src, ii) => ({ key: `${ri}-${ii}`, src }))
-        );
-        if (allImages.length === 0) return;
-
-        const loadRatios = async () => {
-            const entries = await Promise.all(
-                allImages.map(({ key, src }) =>
-                    new Promise((resolve) => {
-                        const img = new Image();
-                        img.onload = () => resolve([key, img.width / img.height]);
-                        img.onerror = () => resolve([key, 1]);
-                        img.src = src;
-                    })
-                )
-            );
-            setImageAspectRatios(Object.fromEntries(entries));
+        const handler = (e) => {
+            if (e.key === "Escape") {
+                setExpandedImage(null);
+                setExpandedReview(null);
+            }
         };
-        loadRatios();
-    }, [reviews]);
+        document.addEventListener("keydown", handler);
+        return () => document.removeEventListener("keydown", handler);
+    }, []);
 
-    const getGridClass = (aspectRatio, index, total) => {
-        if (!aspectRatio) return 'grid-item-normal';
-        if (total === 1) return 'grid-item-large';
-        if (aspectRatio > 1.5) return 'grid-item-wide';
-        if (aspectRatio < 0.7) return 'grid-item-tall';
-        if (aspectRatio >= 0.9 && aspectRatio <= 1.1) {
-            if (index % 5 === 0 && total > 3) return 'grid-item-large';
-            return 'grid-item-normal';
+    // Scroll gallery into position
+    useEffect(() => {
+        if (!galleryRef.current) return;
+        const card = galleryRef.current.children[scrollIndex];
+        if (card) {
+            card.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
         }
-        if (aspectRatio > 1.1 && aspectRatio <= 1.5) return 'grid-item-wide';
-        if (aspectRatio >= 0.7 && aspectRatio < 0.9) return 'grid-item-tall';
-        return 'grid-item-normal';
+    }, [scrollIndex]);
+
+    const handleImageClick = (imageSrc, review) => {
+        setExpandedImage(imageSrc);
+        setExpandedReview(review);
     };
 
     return (
@@ -48,34 +44,107 @@ export default function ReviewList({ reviews, club_stats, club }) {
             <StatsCard stats_array={club_stats} />
 
             {/* ---- Comments ---- */}
-             <div className="divider"></div>
+            <div className="divider"></div>
             <p className="divider-header">Comments</p>
-            {reviews.length > 0 ? (
-                reviews.map((review, ri) => (
-                    <div key={review.id} className="single-review">
-                        <p className="comment-title">{review.review_title}</p>
-                        <p>{review.review_text}</p>
 
-                        {review.review_images && review.review_images.length > 0 && (
-                            <div className="mosaic-gallery">
-                                {review.review_images.map((image, ii) => (
-                                    <div
-                                        className={`mosaic-item ${getGridClass(
-                                            imageAspectRatios[`${ri}-${ii}`],
-                                            ii,
-                                            review.review_images.length
-                                        )}`}
-                                        key={ii}
-                                    >
-                                        <img src={image} alt={`Review image ${ii + 1}`} />
-                                    </div>
-                                ))}
+            {reviews.length > 0 ? (
+                <div className="gallery-wrapper">
+                    <button
+                        className="gallery-arrow gallery-arrow-left"
+                        onClick={scrollLeft}
+                        disabled={scrollIndex === 0}
+                    >
+                        &#8249;
+                    </button>
+
+                    <div className="gallery-track" ref={galleryRef}>
+                        {reviews.map((review, ri) => (
+                            <div key={review.id} className="gallery-card">
+                                {/* Image side */}
+                                <div className="gallery-artwork">
+                                    {review.review_images && review.review_images.length > 0 ? (
+                                        <img
+                                            src={review.review_images[0]}
+                                            alt={review.review_title}
+                                            className="artwork-img"
+                                            onClick={() => handleImageClick(review.review_images[0], review)}
+                                        />
+                                    ) : (
+                                        <div className="artwork-placeholder">
+                                            <span>No image</span>
+                                        </div>
+                                    )}
+
+                                    {/* Thumbnail strip for multiple images */}
+                                    {review.review_images && review.review_images.length > 1 && (
+                                        <div className="artwork-thumbnails">
+                                            {review.review_images.map((img, ii) => (
+                                                <img
+                                                    key={ii}
+                                                    src={img}
+                                                    alt={`Thumbnail ${ii + 1}`}
+                                                    className="artwork-thumb"
+                                                    onClick={() => handleImageClick(img, review)}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Museum label side */}
+                                <div className="museum-label">
+                                    <h3 className="museum-label-title">{review.review_title}</h3>
+                                    <div className="museum-label-line"></div>
+                                    <p className="museum-label-text">{review.review_text}</p>
+                                </div>
                             </div>
-                        )}
+                        ))}
                     </div>
-                ))
+
+                    <button
+                        className="gallery-arrow gallery-arrow-right"
+                        onClick={scrollRight}
+                        disabled={scrollIndex >= reviews.length - 1}
+                    >
+                        &#8250;
+                    </button>
+                </div>
             ) : (
                 <p className="empty-text">No reviews yet — be the first!</p>
+            )}
+
+            {/* ---- Lightbox ---- */}
+            {expandedImage && expandedReview && (
+                <div className="lightbox-overlay" onClick={() => { setExpandedImage(null); setExpandedReview(null); }}>
+                    <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
+                        <button className="lightbox-close" onClick={() => { setExpandedImage(null); setExpandedReview(null); }}>
+                            &times;
+                        </button>
+                        <div className="lightbox-image-container">
+                            <img src={expandedImage} alt={expandedReview.review_title} className="lightbox-img" />
+
+                            {/* Image nav if multiple */}
+                            {expandedReview.review_images && expandedReview.review_images.length > 1 && (
+                                <div className="lightbox-thumbs">
+                                    {expandedReview.review_images.map((img, i) => (
+                                        <img
+                                            key={i}
+                                            src={img}
+                                            alt={`Thumb ${i + 1}`}
+                                            className={`lightbox-thumb ${img === expandedImage ? 'active' : ''}`}
+                                            onClick={() => setExpandedImage(img)}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <div className="lightbox-label">
+                            <h3 className="museum-label-title">{expandedReview.review_title}</h3>
+                            <div className="museum-label-line"></div>
+                            <p className="museum-label-text">{expandedReview.review_text}</p>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* ---- Contact ---- */}

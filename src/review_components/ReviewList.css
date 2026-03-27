@@ -105,8 +105,296 @@
     grid-row: span 1;
 }
 
-.view-reviews {
+/* ===== Gallery Wrapper ===== */
+.gallery-wrapper {
+    position: relative;
     width: 100%;
-    padding: 0 5%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.gallery-track {
+    display: flex;
+    gap: 32px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 16px 0;
+    width: 100%;
+}
+
+.gallery-track::-webkit-scrollbar {
+    display: none;
+}
+
+/* ===== Gallery Card (one review) ===== */
+.gallery-card {
+    display: flex;
+    flex-direction: row;
+    min-width: 100%;
+    scroll-snap-align: start;
+    gap: 24px;
+    background: #fafafa;
+    border-radius: 4px;
+    padding: 20px;
     box-sizing: border-box;
+}
+
+/* ===== Artwork Side ===== */
+.gallery-artwork {
+    flex: 1.2;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+}
+
+.artwork-img {
+    width: 100%;
+    max-height: 350px;
+    object-fit: cover;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: filter 0.3s ease;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.artwork-img:hover {
+    filter: brightness(0.95);
+}
+
+.artwork-placeholder {
+    width: 100%;
+    height: 200px;
+    background: #eee;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #aaa;
+    font-size: 14px;
+    font-style: italic;
+}
+
+.artwork-thumbnails {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.artwork-thumbnails::-webkit-scrollbar {
+    display: none;
+}
+
+.artwork-thumb {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 2px;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+    border: 1px solid #ddd;
+}
+
+.artwork-thumb:hover {
+    opacity: 1;
+}
+
+/* ===== Museum Label Side ===== */
+.museum-label {
+    flex: 0.8;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 8px 0;
+    min-width: 0;
+}
+
+.museum-label-title {
+    font-family: "EB Garamond", "Georgia", serif;
+    font-size: 1.3rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    margin: 0 0 8px 0;
+    color: #1a1a1a;
+}
+
+.museum-label-line {
+    width: 40px;
+    height: 1px;
+    background-color: #1a1a1a;
+    margin-bottom: 12px;
+}
+
+.museum-label-text {
+    font-family: "Inter", sans-serif;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: #4a4a4a;
+    margin: 0;
+}
+
+/* ===== Arrow Buttons ===== */
+.gallery-arrow {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid #ccc;
+    background: white;
+    font-size: 1.4rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    transition: background 0.2s ease, border-color 0.2s ease;
+    z-index: 2;
+}
+
+.gallery-arrow:hover:not(:disabled) {
+    background: #f0f0f0;
+    border-color: #999;
+}
+
+.gallery-arrow:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+/* ===== Lightbox ===== */
+.lightbox-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+}
+
+.lightbox-content {
+    display: flex;
+    flex-direction: row;
+    max-width: 90vw;
+    max-height: 85vh;
+    gap: 32px;
+    position: relative;
+}
+
+.lightbox-close {
+    position: absolute;
+    top: -30px;
+    right: 0;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    z-index: 10000;
+}
+
+.lightbox-image-container {
+    flex: 1.5;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+}
+
+.lightbox-img {
+    width: 100%;
+    max-height: 75vh;
+    object-fit: contain;
+    border-radius: 2px;
+}
+
+.lightbox-thumbs {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.lightbox-thumb {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 2px;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+    border: 2px solid transparent;
+}
+
+.lightbox-thumb:hover {
+    opacity: 0.8;
+}
+
+.lightbox-thumb.active {
+    opacity: 1;
+    border-color: white;
+}
+
+.lightbox-label {
+    flex: 0.5;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: white;
+    min-width: 200px;
+    max-width: 300px;
+}
+
+.lightbox-label .museum-label-title {
+    color: white;
+}
+
+.lightbox-label .museum-label-line {
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+.lightbox-label .museum-label-text {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 699px) {
+    .gallery-card {
+        flex-direction: column;
+        min-width: 100%;
+    }
+
+    .gallery-arrow {
+        display: none;
+    }
+
+    .lightbox-content {
+        flex-direction: column;
+        padding: 16px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .lightbox-label {
+        max-width: 100%;
+        min-width: 0;
+    }
+}
+
+/* ===== Desktop: multiple visible ===== */
+@media (min-width: 1100px) {
+    .gallery-card {
+        min-width: calc(50% - 16px);
+    }
+}
+
+@media (min-width: 1600px) {
+    .gallery-card {
+        min-width: calc(33.33% - 22px);
+    }
 }

@@ -76,7 +76,7 @@ function CountUp({ target, animate, delay }) {
         }
 
         const timeout = setTimeout(() => {
-            const duration = 1000;
+            const duration = 800;
             const start = performance.now();
 
             const tick = (now) => {
