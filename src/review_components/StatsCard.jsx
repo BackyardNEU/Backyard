@@ -44,7 +44,7 @@ export default function StatsCard({ stats_array }) {
                         <div className="vert-flex">
                             <p className="number" style={{ color: cat.color }}>
                                 <CountUp target={cat.value} animate={animated} delay={index * 120} />
-                                <span className="number-small">{cat.unit}</span>
+                                <span className="number-small"> {cat.unit}</span>
                             </p>
                             <span className="range-label">{cat.label}</span>
                         </div>
