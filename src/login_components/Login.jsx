@@ -15,7 +15,7 @@ function Login() {
       options: {
         // Send users directly to the profile page after successful sign-in
         redirectTo: `${window.location.origin}/profile`,
-      },
+      },  
     });
 
     if (error) console.error(error);
@@ -23,6 +23,7 @@ function Login() {
 
   return <button onClick={handleLogin}>Sign in with Google</button>;
 }
+//change final line to sign up link page
 
 export default Login;
 

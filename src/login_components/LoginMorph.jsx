@@ -1,6 +1,6 @@
 
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Login from "./Login";
 import Logout from "./Logout";
 import Form from "./form";
 import "./LoginMorph.css";
@@ -12,8 +12,14 @@ import { useNavigate } from "react-router-dom";
 function LoginMorph({ open, setOpen }) {
   let GlobalValue = useGlobalStore((state) => state.GlobalValue);
   const navigate = useNavigate();
+  const [isSignUp, setIsSignUp] = useState(false);
 
   const handleProfileClick = () => {
+    setOpen(false);
+    navigate("/profile");
+  };
+
+  const handleAuth = () => {
     setOpen(false);
     navigate("/profile");
   };
@@ -41,9 +47,15 @@ function LoginMorph({ open, setOpen }) {
             ×
           </button>
           <img className="raccoon" src="/raccoon_pfp.png" />
-          <h2>Welcome</h2>
-          <Form isRegistered={true} />
-          {!GlobalValue ? <Login /> : <Logout />}
+          <h2>{isSignUp ? "Sign Up" : "Login"}</h2>
+          <Form isSignUp={isSignUp} onAuth={handleAuth} />
+          <button
+            className="toggle-auth-btn"
+            type="button"
+            onClick={() => setIsSignUp((prev) => !prev)}
+          >
+            {isSignUp ? "Already have an account? Login" : "Don't have an account? Sign up"}
+          </button>
         </motion.div>
       )}
     </AnimatePresence>

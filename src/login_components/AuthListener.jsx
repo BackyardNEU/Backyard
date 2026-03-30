@@ -5,17 +5,36 @@ import { useGlobalStore } from "../store";
 //this listener runs asynchronusly (idk how to spell that word) from the login function. Whenever our login itself has an issue, it could screw up the data behind whether a user is logged in, so instead we
 //have this listener to always check whether or not the user is logged in with google auth, or that the user's "session" is still active
 
+// Ensure a profiles row exists for the authenticated user
+async function ensureProfile(user) {
+  if (!user) return;
+  const meta = user.user_metadata || {};
+  const { error } = await supabase
+    .from("profiles")
+    .upsert(
+      {
+        id: user.id,
+        username: meta.full_name || meta.name || "",
+        email: user.email,
+      },
+      { onConflict: ["id"] }
+    );
+  if (error) console.error("Profile upsert failed:", error.message);
+}
+
 function AuthListener() {
   const setGlobalValue = useGlobalStore((state) => state.setGlobalValue);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setGlobalValue(!!data.session);
+      if (data.session?.user) ensureProfile(data.session.user);
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setGlobalValue(!!session);
+        if (session?.user) ensureProfile(session.user);
       }
     );
 

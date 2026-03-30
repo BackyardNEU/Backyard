@@ -92,3 +92,18 @@
   line-height: 1;
 }
 
+/* --- Toggle auth mode link --- */
+.toggle-auth-btn {
+  background: none;
+  border: none;
+  color: #555;
+  cursor: pointer;
+  font-size: 0.95rem;
+  margin: 0.75rem 0 1.5rem;
+  text-decoration: underline;
+}
+
+.toggle-auth-btn:hover {
+  color: #000;
+}
+
