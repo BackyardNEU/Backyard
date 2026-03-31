@@ -18,10 +18,7 @@ export const ClubGrid = ({ result, onExpand }) => {
   // in
   let liked = favoritesCache?.has(result.id) ?? false;
 
-  // Current issue with this implementation: If the user favroites a club and 
-  // then refreshes the page, the like button does not show up as being liked 
-  // which might cause some confusion, because in order for them to remove the 
-  // club from favorites, they have to like and then unlike the club
+  //if a user likes a club, refresh cache and add this favorite to it
   const updateFavorite = async (newLiked) => {
     const { data: userData, error: userError } = await supabase.auth.getUser();
     if (userError || !userData?.user) {
