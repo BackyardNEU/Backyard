@@ -16,15 +16,18 @@ function Form({ isSignUp = false, onAuth }) {
     setLoading(true);
     try {
       if (isSignUp) {
-        // Sign up — store username in user metadata so AuthListener can
-        // create the profile row once the session is confirmed
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: { data: { full_name: name } },
         });
         if (signUpError) throw signUpError;
-        if (onAuth) onAuth();
+
+        if (signUpData?.session) {
+          if (onAuth) onAuth();
+        } else {
+          setError("Check your email to confirm your account before logging in.");
+        }
       } else {
         // Login
         const { error: signInError } = await supabase.auth.signInWithPassword({
