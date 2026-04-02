@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { UniSearchBar } from './UniSearchBar';
@@ -7,6 +7,7 @@ import './UniversityPage.css';
 import { ClubList } from './ClubList';
 import { useGlobalStore } from "../store";
 import Logout from '../login_components/Logout';
+import { useClubData } from '../context/useClubData';
 
 <link 
   href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&family=Raleway:ital,wght@1,100..900&display=swap" 
@@ -17,29 +18,15 @@ export const UniversityPage = () => {
   const { id } = useParams();
   const [university, setUniversity] = useState(null);
   const [results, setResults] = useState([]);
-  const [isDocked, setIsDocked] = useState(false);
-  const [allData, setAllData] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   let GlobalValue = useGlobalStore((state) => state.GlobalValue);
-
-  //potentially consider adding another variable that maintains the old dataset prior to clicking on favorites
-
-  const fetchAllData = useCallback(async () => {
-    const { data, error } = await supabase
-        .from('demo_club_data')
-        .select('*')
-    
-    if (error) console.error("Error retrieving initial data.", error);
-    else setAllData(data);
-    setResults(data);
-    console.log("All data: " + allData);
-  }, []);
+  const { allData, favoritesCache } = useClubData();
 
   useEffect(() => {
-    fetchAllData();
-  }, [fetchAllData]);
+    if (!selectedCategory) setResults(allData);
+  }, [allData]);
 
-  const getClubsBasedOnCategory = async (newCategory) => {
+  const getClubsBasedOnCategory = (newCategory) => {
     console.log("Category recived from function: " + newCategory);
     //if the user clicks the same icon again, then reset the clubs to display the default
     //this case also uses the least memory
@@ -48,33 +35,12 @@ export const UniversityPage = () => {
       setSelectedCategory(null);
       setResults(allData);
     }
-    //special case if category is "favorites": depends on the user so must authenticate
+    //special case if category is "favorites": use cached favorites
     else if (newCategory === "favorites") {
       console.log("If triggering");
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError || !userData?.user) {
-        console.error('Error getting user', userError);
-        return;
-      }
-
-      const userId = userData.user.id;
-
-      //begin data search for favorites
       setSelectedCategory(newCategory);
-      const { data, error } = await supabase
-        .from('user_favorites')
-        .select('*')
-        .eq('user_id', userId);
-      if (error) console.error(error);
-      else {
-        const newdata = allData.filter(club => data.some(fav => fav.club_id === club.id)); //club is the rows from demo_club_data, fav is from user_favorites, final line checks to see where the two match (via id)
-        if (newdata.length > 18) {
-          setResults(newdata);
-        }
-        else {
-          setResults(newdata);
-        }
-      }
+      const newdata = allData.filter(club => favoritesCache?.has(club.id));
+      setResults(newdata);
     }
     //if user selects different icon, then display corresponding information
     else {
