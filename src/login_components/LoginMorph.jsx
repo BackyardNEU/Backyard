@@ -1,11 +1,12 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Logout from "./Logout";
 import Form from "./form";
 import "./LoginMorph.css";
 import { useGlobalStore } from "../store";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../supabase";
 
 
 
@@ -13,6 +14,20 @@ function LoginMorph({ open, setOpen }) {
   let GlobalValue = useGlobalStore((state) => state.GlobalValue);
   const navigate = useNavigate();
   const [isSignUp, setIsSignUp] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(null);
+
+  useEffect(() => {
+    if (!GlobalValue) { setAvatarUrl(null); return; }
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data?.user) return;
+      supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', data.user.id)
+        .single()
+        .then(({ data: profile }) => setAvatarUrl(profile?.avatar_url));
+    });
+  }, [GlobalValue]);
 
   const handleProfileClick = () => {
     setOpen(false);
@@ -34,7 +49,7 @@ function LoginMorph({ open, setOpen }) {
             className="login-icon"
             onClick={GlobalValue ? handleProfileClick : () => setOpen(true)}
           >
-            <img src="/raccoon_pfp.png" alt={GlobalValue ? "Profile" : "Login"} />
+            <img src={avatarUrl || "/raccoon_pfp.png"} alt={GlobalValue ? "Profile" : "Login"} />
           </motion.button>
         </div>
       )}

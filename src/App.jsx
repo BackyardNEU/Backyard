@@ -58,7 +58,7 @@ function App() {
           />
           <Route path="/university/:id" element={<UniversityPage />} />
           <Route path="/reviews/:id" element={<ReviewPage />} />
-           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </div>
     </ClubDataProvider>
