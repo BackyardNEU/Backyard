@@ -4,6 +4,8 @@ import { supabase } from '../supabase'
 import { useGlobalStore } from '../store'
 // import { Logout } from '../components/Logout'
 import './ProfilePage.css'
+import imageCompression from 'browser-image-compression'
+
 
 //this is the landing page for our university club search, most of the info will go through here
 
@@ -14,6 +16,21 @@ export const ProfilePage = () => {
   const { id } = useParams()
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
+  const [status, setStatus]     = useState('idle')
+  const [preview, setPreview]   = useState(null)
+  const [imageUrl, setImageUrl] = useState(null)
+  //const inputRef = useRef(null)
+
+  const BUCKET = 'profile_images'
+  const TABLE  = 'profiles'
+  const URL_COL = 'avatar_url'
+
+  const COMPRESSION_OPTIONS = {
+    maxSizeMB: 0.2,
+    maxWidthOrHeight: 400,
+    useWebWorker: true,
+    fileType: 'image/webp',
+  }
 
   useEffect(() => {
     async function loadUser() {
@@ -66,9 +83,45 @@ export const ProfilePage = () => {
     const file = event.target.files[0];
     if (!file) return; //eventually add error checker to see if file is an image and not too big
     else {
-      
+      setPreview(URL.createObjectURL(file))
+      //compresses the image
+      try {
+        setStatus('compressing')
+        const compressed = await imageCompression(file, COMPRESSION_OPTIONS)
+
+        setStatus('uploading')
+        const fileName = `${user.id}.webp`
+
+        const { error: uploadError } = await supabase.storage
+          .from(BUCKET)
+          .upload(fileName, compressed, {
+            upsert: true,
+            contentType: 'image/webp',
+          });
+        
+        if (uploadError) { throw uploadError}
+
+        const { data } = supabase.storage
+          .from(BUCKET)
+          .getPublicUrl(fileName)
+
+
+        const {error: updateError} = await supabase
+          .from(TABLE)
+          .update({ [URL_COL]: data.publicUrl })
+          .eq('id', user.id)
+
+        if (updateError) { throw updateError }
+        setProfile(prev => ({ ...prev, [URL_COL]: data.publicUrl }))
+        setImageUrl(data.publicUrl)
+        setStatus('success')
+    }
+    catch (error) {
+      console.error('Error uploading avatar:', error);
+      setStatus('error');
     }
   }
+}
 
   return (
       <div className="ProfilePage">
@@ -76,10 +129,7 @@ export const ProfilePage = () => {
         <div className='profile-header'>
           <img
             src={
-              profile?.avatar_url ||
-              user?.user_metadata?.avatar_url ||
-              user?.avatar_url ||
-              "/raccoon_pfp.png"
+              preview || imageUrl || profile?.avatar_url || "/raccoon_pfp.png"
             }
             alt="Profile"
             className="profile-image"
@@ -93,6 +143,6 @@ export const ProfilePage = () => {
         <h1 className='ProfileName'>Your Profile (currently being worked on)</h1>
       </div>
     )
-}
+  }
 
 export default ProfilePage
