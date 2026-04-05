@@ -129,7 +129,7 @@ export const ProfilePage = () => {
         <div className='profile-header'>
           <img
             src={
-              preview || imageUrl || profile?.avatar_url || "/raccoon_pfp.png"
+              profile?.avatar_url || "/raccoon_pfp.png"
             }
             alt="Profile"
             className="profile-image"
@@ -138,7 +138,7 @@ export const ProfilePage = () => {
           <button onClick={() => document.getElementById('avatar-upload').click()}>
             Change Photo
           </button>
-          <h1 className='ProfileName'>{profile?.username || user?.email || "User"}</h1>
+          <h1 className='ProfileName'>{profile?.username}</h1>
         </div>
         <h1 className='ProfileName'>Your Profile (currently being worked on)</h1>
       </div>
