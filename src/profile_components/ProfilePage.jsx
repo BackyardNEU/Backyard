@@ -62,6 +62,14 @@ export const ProfilePage = () => {
     return () => window.removeEventListener('popstate', handleBack);
   }, [lastPath, navigate]);
 
+  async function handleAvatarUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return; //eventually add error checker to see if file is an image and not too big
+    else {
+      
+    }
+  }
+
   return (
       <div className="ProfilePage">
         <div className='spacer' />
@@ -76,6 +84,10 @@ export const ProfilePage = () => {
             alt="Profile"
             className="profile-image"
           />
+          <input type="file" accept="image/*" id="avatar-upload" hidden onChange={handleAvatarUpload} />
+          <button onClick={() => document.getElementById('avatar-upload').click()}>
+            Change Photo
+          </button>
           <h1 className='ProfileName'>{profile?.username || user?.email || "User"}</h1>
         </div>
         <h1 className='ProfileName'>Your Profile (currently being worked on)</h1>
