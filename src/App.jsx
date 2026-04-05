@@ -32,17 +32,28 @@ function App() {
           <Route
             path="/"
             element={
+              <>
+              <div style={{ width: '100%', height: '100vh', overflow: 'hidden', zIndex: 1000}}>
+      <video 
+        src={`/src/assets/intro_screen.mp4`} 
+        autoPlay 
+        
+        muted 
+        playsInline 
+        style={{ 
+          width: '100%', 
+          height: '100%', 
+          objectFit: 'cover' // Fills the screen without stretching
+        }}
+      />
+    </div>
               <div className="search-bar-container">
-              <h2 className="ra">
-                Back
-                <span className="raccoon-wrapper">
-                <img src="/raccoon.png" alt="raccoon" className="raccoon-icon" />
-                </span>
-                <span className="ra">     yard</span>
-                </h2>
+             
                 <SearchBar setResults={setResults} />
                 <SearchResultsList results={results} />
               </div>
+            
+            </>
             }
           />
           <Route path="/university/:id" element={<UniversityPage />} />

@@ -1,153 +1,241 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import "./ReviewList.css";
 import StatsCard from "./StatsCard.jsx";
+import { UpvoteWidget } from "./UpvoteWidget";
+import { supabase } from "../supabase";
 
+/**
+ * Determine the comment type based on available data.
+ */
+function getCommentType(review) {
+    const hasImages = review.review_images && review.review_images.length > 0;
+    const hasText = review.review_text && review.review_text.trim().length > 0;
+    if (hasImages && hasText) return 'normal';
+    if (hasImages && !hasText) return 'image_only';
+    return 'text_only';
+}
+
+/** Format date to "'YY M D" */
+function formatDate(dateStr) {
+    try {
+        const d = new Date(dateStr);
+        return `'${String(d.getFullYear()).slice(-2)} ${d.getMonth() + 1} ${d.getDate()}`;
+    } catch { return ''; }
+}
+
+/* ============================================================
+   Image with fallback
+   ============================================================ */
+function Img({ src, alt, className, onClick }) {
+    const [failed, setFailed] = useState(false);
+    if (failed || !src) {
+        return <div className={`rl-img-placeholder ${className || ''}`}>No image</div>;
+    }
+    return (
+        <img
+            src={src}
+            alt={alt || ''}
+            className={className}
+            onClick={onClick}
+            onError={() => setFailed(true)}
+        />
+    );
+}
+
+/* ============================================================
+   Comment Card  (rendered in the grid)
+   ============================================================ */
+function CommentCard({ comment, type, userVote, onVote, onClick }) {
+    if (type === 'normal') {
+        return (
+            <div className="rl-card rl-card--normal" onClick={onClick}>
+                <div className="rl-card__image-wrap">
+                    <Img src={comment.review_images[0]} alt={comment.review_title} className="rl-card__image" />
+                    {comment.created_at && <span className="rl-card__date">{formatDate(comment.created_at)}</span>}
+                </div>
+                <div className="rl-card__body">
+                    <h4 className="rl-card__title">{comment.review_title}</h4>
+                    <p className="rl-card__text">{comment.review_text}</p>
+                    <div className="rl-card__vote">
+                        <UpvoteWidget score={comment._liveScore} userVote={userVote} onVote={onVote} variant="stacked" />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (type === 'text_only') {
+        return (
+            <div className="rl-card rl-card--text" onClick={onClick}>
+                <div className="rl-card__text-header">
+                    <h4 className="rl-card__title">{comment.review_title}</h4>
+                    {comment.created_at && <span className="rl-card__date-inline">{formatDate(comment.created_at)}</span>}
+                </div>
+                <p className="rl-card__text rl-card__text--long">{comment.review_text}</p>
+                <div className="rl-card__vote">
+                    <UpvoteWidget score={comment._liveScore} userVote={userVote} onVote={onVote} variant="stacked" />
+                </div>
+            </div>
+        );
+    }
+
+    // image_only
+    return (
+        <div className="rl-card rl-card--imgonly" onClick={onClick}>
+            <div className="rl-card__image-wrap">
+                <Img src={comment.review_images[0]} alt="Review image" className="rl-card__image" />
+                {comment.created_at && <span className="rl-card__date">{formatDate(comment.created_at)}</span>}
+            </div>
+            <div className="rl-card__vote rl-card__vote--end">
+                <UpvoteWidget score={comment._liveScore} userVote={userVote} onVote={onVote} variant="pill" />
+            </div>
+        </div>
+    );
+}
+
+/* ============================================================
+   Fullscreen Lightbox
+   ============================================================ */
+function Lightbox({ comment, type, userVote, onVote, onClose }) {
+    // Close on Escape
+    useEffect(() => {
+        const h = (e) => { if (e.key === 'Escape') onClose(); };
+        document.addEventListener('keydown', h);
+        return () => document.removeEventListener('keydown', h);
+    }, [onClose]);
+
+    return (
+        <div className="rl-lightbox" onClick={onClose}>
+            <div className="rl-lightbox__inner" onClick={(e) => e.stopPropagation()}>
+                <button className="rl-lightbox__close" onClick={onClose}>&times;</button>
+
+                {type === 'normal' && (
+                    <>
+                        <div className="rl-lightbox__img-col">
+                            <Img src={comment.review_images[0]} alt={comment.review_title} className="rl-lightbox__img" />
+                        </div>
+                        <div className="rl-lightbox__label">
+                            <h3 className="rl-lightbox__title">{comment.review_title}</h3>
+                            {comment.created_at && <span className="rl-lightbox__date">{formatDate(comment.created_at)}</span>}
+                            <div className="rl-lightbox__line"></div>
+                            <p className="rl-lightbox__text">{comment.review_text}</p>
+                            <div className="rl-lightbox__vote">
+                                <UpvoteWidget score={comment._liveScore} userVote={userVote} onVote={onVote} variant="pill" theme="dark" />
+                            </div>
+                        </div>
+                    </>
+                )}
+
+                {type === 'text_only' && (
+                    <div className="rl-lightbox__text-full">
+                        <h3 className="rl-lightbox__title rl-lightbox__title--big">{comment.review_title}</h3>
+                        {comment.created_at && <span className="rl-lightbox__date">{formatDate(comment.created_at)}</span>}
+                        <div className="rl-lightbox__line"></div>
+                        <p className="rl-lightbox__text">{comment.review_text}</p>
+                        <div className="rl-lightbox__vote">
+                            <UpvoteWidget score={comment._liveScore} userVote={userVote} onVote={onVote} variant="pill" theme="dark" />
+                        </div>
+                    </div>
+                )}
+
+                {type === 'image_only' && (
+                    <div className="rl-lightbox__img-col rl-lightbox__img-col--solo">
+                        <Img src={comment.review_images[0]} alt="Review image" className="rl-lightbox__img" />
+                        <div className="rl-lightbox__vote rl-lightbox__vote--overlay">
+                            <UpvoteWidget score={comment._liveScore} userVote={userVote} onVote={onVote} variant="pill" theme="dark" />
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+/* ============================================================
+   ReviewList  (main export)
+   ============================================================ */
 export default function ReviewList({ reviews, club_stats, club }) {
-    const [scrollIndex, setScrollIndex] = useState(0);
-    const [expandedImage, setExpandedImage] = useState(null);
-    const [expandedReview, setExpandedReview] = useState(null);
-    const galleryRef = useRef(null);
+    const [selectedId, setSelectedId] = useState(null);
+    const [userVotes, setUserVotes] = useState({});
+    const [reviewScores, setReviewScores] = useState({});
 
-    const scrollLeft = () => setScrollIndex((prev) => Math.max(prev - 1, 0));
-    const scrollRight = () => setScrollIndex((prev) => Math.min(prev + 1, reviews.length - 1));
-
-    // Close lightbox on escape
     useEffect(() => {
-        const handler = (e) => {
-            if (e.key === "Escape") {
-                setExpandedImage(null);
-                setExpandedReview(null);
+        const s = {};
+        reviews.forEach((r) => { s[r.id] = r.upvote ?? 0; });
+        setReviewScores(s);
+    }, [reviews]);
+
+    const handleVote = useCallback(async (id, direction) => {
+        const currentVote = userVotes[id] || 0;
+        const newVote = currentVote === direction ? 0 : direction;
+        const voteDelta = newVote - currentVote;
+        const oldScore = reviewScores[id] ?? 0;
+        const newScore = oldScore + voteDelta;
+
+        setUserVotes((prev) => ({ ...prev, [id]: newVote }));
+        setReviewScores((prev) => ({ ...prev, [id]: newScore }));
+
+        try {
+            const { error } = await supabase
+                .from('reviews')
+                .update({ upvote: newScore })
+                .eq('id', id);
+
+            if (error) {
+                console.error('Supabase upvote error:', error);
+                setUserVotes((prev) => ({ ...prev, [id]: currentVote }));
+                setReviewScores((prev) => ({ ...prev, [id]: oldScore }));
             }
-        };
-        document.addEventListener("keydown", handler);
-        return () => document.removeEventListener("keydown", handler);
-    }, []);
-
-    // Scroll gallery into position
-    useEffect(() => {
-        if (!galleryRef.current) return;
-        const card = galleryRef.current.children[scrollIndex];
-        if (card) {
-            card.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
+        } catch (err) {
+            console.error('Upvote network error:', err);
+            setUserVotes((prev) => ({ ...prev, [id]: currentVote }));
+            setReviewScores((prev) => ({ ...prev, [id]: oldScore }));
         }
-    }, [scrollIndex]);
+    }, [userVotes, reviewScores]);
 
-    const handleImageClick = (imageSrc, review) => {
-        setExpandedImage(imageSrc);
-        setExpandedReview(review);
-    };
+    // Attach live score to each review for rendering
+    const enriched = reviews.map((r) => ({ ...r, _liveScore: reviewScores[r.id] ?? r.upvote ?? 0 }));
+    const selectedReview = enriched.find((r) => r.id === selectedId);
+    const selectedType = selectedReview ? getCommentType(selectedReview) : null;
 
     return (
         <div className="review-item">
-            {/* ---- Stats ---- */}
             <p className="divider-header">Stats</p>
             <StatsCard stats_array={club_stats} />
 
-            {/* ---- Comments ---- */}
             <div className="divider"></div>
             <p className="divider-header">Comments</p>
 
-            {reviews.length > 0 ? (
-                <div className="gallery-wrapper">
-                    <button
-                        className="gallery-arrow gallery-arrow-left"
-                        onClick={scrollLeft}
-                        disabled={scrollIndex === 0}
-                    >
-                        &#8249;
-                    </button>
-
-                    <div className="gallery-track" ref={galleryRef}>
-                        {reviews.map((review, ri) => (
-                            <div key={review.id} className="gallery-card">
-                                {/* Image side */}
-                                <div className="gallery-artwork">
-                                    {review.review_images && review.review_images.length > 0 ? (
-                                        <img
-                                            src={review.review_images[0]}
-                                            alt={review.review_title}
-                                            className="artwork-img"
-                                            onClick={() => handleImageClick(review.review_images[0], review)}
-                                        />
-                                    ) : (
-                                        <div className="artwork-placeholder">
-                                            <span>No image</span>
-                                        </div>
-                                    )}
-
-                                    {/* Thumbnail strip for multiple images */}
-                                    {review.review_images && review.review_images.length > 1 && (
-                                        <div className="artwork-thumbnails">
-                                            {review.review_images.map((img, ii) => (
-                                                <img
-                                                    key={ii}
-                                                    src={img}
-                                                    alt={`Thumbnail ${ii + 1}`}
-                                                    className="artwork-thumb"
-                                                    onClick={() => handleImageClick(img, review)}
-                                                />
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Museum label side */}
-                                <div className="museum-label">
-                                    <h3 className="museum-label-title">{review.review_title}</h3>
-                                    <div className="museum-label-line"></div>
-                                    <p className="museum-label-text">{review.review_text}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <button
-                        className="gallery-arrow gallery-arrow-right"
-                        onClick={scrollRight}
-                        disabled={scrollIndex >= reviews.length - 1}
-                    >
-                        &#8250;
-                    </button>
+            {enriched.length > 0 ? (
+                <div className="rl-grid">
+                    {enriched.map((review) => {
+                        const type = getCommentType(review);
+                        return (
+                            <CommentCard
+                                key={review.id}
+                                comment={review}
+                                type={type}
+                                userVote={userVotes[review.id] || 0}
+                                onVote={(val) => handleVote(review.id, val)}
+                                onClick={() => setSelectedId(review.id)}
+                            />
+                        );
+                    })}
                 </div>
             ) : (
                 <p className="empty-text">No reviews yet — be the first!</p>
             )}
 
-            {/* ---- Lightbox ---- */}
-            {expandedImage && expandedReview && (
-                <div className="lightbox-overlay" onClick={() => { setExpandedImage(null); setExpandedReview(null); }}>
-                    <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
-                        <button className="lightbox-close" onClick={() => { setExpandedImage(null); setExpandedReview(null); }}>
-                            &times;
-                        </button>
-                        <div className="lightbox-image-container">
-                            <img src={expandedImage} alt={expandedReview.review_title} className="lightbox-img" />
-
-                            {/* Image nav if multiple */}
-                            {expandedReview.review_images && expandedReview.review_images.length > 1 && (
-                                <div className="lightbox-thumbs">
-                                    {expandedReview.review_images.map((img, i) => (
-                                        <img
-                                            key={i}
-                                            src={img}
-                                            alt={`Thumb ${i + 1}`}
-                                            className={`lightbox-thumb ${img === expandedImage ? 'active' : ''}`}
-                                            onClick={() => setExpandedImage(img)}
-                                        />
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                        <div className="lightbox-label">
-                            <h3 className="museum-label-title">{expandedReview.review_title}</h3>
-                            <div className="museum-label-line"></div>
-                            <p className="museum-label-text">{expandedReview.review_text}</p>
-                        </div>
-                    </div>
-                </div>
+            {selectedReview && (
+                <Lightbox
+                    comment={selectedReview}
+                    type={selectedType}
+                    userVote={userVotes[selectedReview.id] || 0}
+                    onVote={(val) => handleVote(selectedReview.id, val)}
+                    onClose={() => setSelectedId(null)}
+                />
             )}
 
-            {/* ---- Contact ---- */}
             <div className="divider"></div>
             <p className="divider-header">Contact</p>
             <p>{club.contact_email || "No contact info available."}</p>
