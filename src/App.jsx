@@ -32,28 +32,40 @@ function App() {
           <Route
             path="/"
             element={
-              <>
-              <div style={{ width: '100%', height: '100vh', overflow: 'hidden', zIndex: 1000}}>
-      <video 
-        src={`/src/assets/intro_screen.mp4`} 
-        autoPlay 
-        
-        muted 
-        playsInline 
-        style={{ 
-          width: '100%', 
-          height: '100%', 
-          objectFit: 'cover' // Fills the screen without stretching
-        }}
-      />
-    </div>
-              <div className="search-bar-container">
-             
-                <SearchBar setResults={setResults} />
-                <SearchResultsList results={results} />
-              </div>
-            
-            </>
+              
+            <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+  {/* Responsive Video Container */}
+  <div style={{ 
+    width: '100%', 
+    marginTop: '70px',
+    maxWidth: '1400px',
+    marginLeft: 'auto',  // Centers the box
+    marginRight: 'auto', // Centers the box
+    aspectRatio: '16 / 9', // Maintains shape on all screens
+    maxHeight: '70vh',     // Prevents it from being too tall on huge monitors
+    overflow: 'hidden',
+    zIndex: 1000 
+  }}>
+    <video 
+      src={`/src/assets/intro_screen.mp4`} 
+      autoPlay 
+      muted 
+      playsInline 
+      loop
+      style={{ 
+        width: '100%', 
+        height: '100%', 
+        objectFit: 'cover' // Ensures no black bars, fills the container
+      }}
+    />
+  </div>
+
+  {/* Search Bar Container */}
+  <div className="search-bar-container" style={{ width: '100%', padding: '1rem' }}>
+    <SearchBar setResults={setResults} />
+    <SearchResultsList results={results} />
+  </div>
+</div>
             }
           />
           <Route path="/university/:id" element={<UniversityPage />} />
