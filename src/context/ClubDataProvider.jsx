@@ -6,6 +6,7 @@ export const ClubDataProvider = ({ children }) => {
     const [allData, setAllData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [favoritesCache, setFavoritesCache] = useState(null);
+    const [userId, setUserId] = useState(null);
     const isFetching = useRef(false);
 
     // initial fetching of data from supabase
@@ -43,6 +44,9 @@ export const ClubDataProvider = ({ children }) => {
                 // use set for fast .has() lookups
                 setFavoritesCache(new Set(favData.map(fav => fav.club_id)));
                 console.log("Favorites loaded:", favData.length);
+
+                //setUserID
+                setUserId(userData.user.id);
             }
         } else {
             // empty Set if the user is not logged in
