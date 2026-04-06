@@ -138,6 +138,37 @@
   text-align: center;
 }
 
+.membership-btn {
+  padding: 10px 30px;
+  font-size: 15px;
+  font-family: "Josefin Sans", sans-serif;
+  text-decoration: none;
+  color: white;
+  border: none;
+  border-radius: 90px;
+  cursor: pointer;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  transition: transform 0.12s ease, background-color 0.2s ease;
+}
+
+.membership-btn:hover {
+  transform: scale(1.05);
+}
+
+.membership-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.membership-btn.join {
+  background-color: rgb(0, 62, 11);
+}
+
+.membership-btn.leave {
+  background-color: rgb(120, 30, 30);
+}
+
 
 .divider {
 
