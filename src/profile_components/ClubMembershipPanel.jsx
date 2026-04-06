@@ -64,6 +64,12 @@ export const ClubMembershipPanel = ({ userId }) => {
             club={expandedClub}
             key={expandedClub.id}
             onClose={() => setExpandedClub(null)}
+            onMembershipChange={(clubId, joined) => {
+              if (!joined) {
+                setMemberClubs((prev) => prev.filter((c) => c.id !== clubId));
+                setExpandedClub(null);
+              }
+            }}
           />
         )}
       </AnimatePresence>

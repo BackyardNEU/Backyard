@@ -9,7 +9,7 @@ import logImage from '/src/assets/logImage.png';
 import ColorThief from "colorthief";
 
 
-function ExpandedTile({club, onClose}){
+function ExpandedTile({club, onClose, onMembershipChange}){
     const [isOpen, setIsOpen] = useState(false);
     const [reviews, set_reviews] = useState([]);
     const [isClicked, setIsClicked] = useState(false);
@@ -151,7 +151,9 @@ function ExpandedTile({club, onClose}){
         if (error) {
             console.error('Error updating membership:', error);
         } else {
+            const wasJoined = isMember;
             setIsMember(!isMember);
+            if (onMembershipChange) onMembershipChange(club.id, !wasJoined);
         }
         setMemberLoading(false);
     }
