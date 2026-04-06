@@ -75,21 +75,6 @@ export const UniversityPage = () => {
   return (
     <div className="UniPage">
      
-    {/* 1. HERO VIDEO: The first thing they see */}
-    <div style={{ width: '100%', height: '100vh', overflow: 'hidden', zIndex: 1000}}>
-      <video 
-        src={`/src/assets/intro_screen.mp4`} 
-        autoPlay 
-        
-        muted 
-        playsInline 
-        style={{ 
-          width: '100%', 
-          height: '100%', 
-          objectFit: 'cover' // Fills the screen without stretching
-        }}
-      />
-    </div>
   <div
       className="content-with-background"
   >

@@ -59,11 +59,11 @@
   position: absolute;
   top: 35%;
   left: 50%;
-  transform: translate(-50%, -55%);
-  width: 70px;       
-  height: 70px;
+  transform: translate(-50%, -62%);
+  width: 80px;       
+  height: 80px;
   border-radius: 50%;
-  background-color: rgb(232, 225, 222);
+  background-color: rgb(199, 211, 193);
   z-index: 0; 
 }
 /*rgb(255, 166, 166)*/
