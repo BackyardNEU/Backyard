@@ -90,6 +90,7 @@ export const UniversityPage = () => {
   return (
     <div className="UniPage">
      
+<<<<<<< HEAD
     {/* 1. HERO VIDEO: The first thing they see */}
     <div style={{ width: '100%', height: '100vh', overflow: 'hidden', zIndex: 1000}}>
       <video 
@@ -110,6 +111,14 @@ export const UniversityPage = () => {
       <div className = "community-board">
           {/*<div className = "community-board"*/}
             <div className="fixed-wrapper">
+=======
+  <div
+      className="content-with-background"
+  >
+  <div className = "community-board">
+  {/*<div className = "community-board"*/}
+    <div className="fixed-wrapper">
+>>>>>>> afacbe64400bb3136512882e5be6331323bb27b2
 
               {/* Group 1: Left */}
 

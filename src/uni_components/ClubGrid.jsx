@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { useGlobalStore } from "../store";
 import { useClubData } from '../context/useClubData';
 
-export const ClubGrid = ({ result, onExpand }) => {
+export const ClubGrid = ({ result, onExpand, hideHeart }) => {
   const [animating, setAnimating] = useState(false);
   let GlobalValue = useGlobalStore((state) => state.GlobalValue);
 
@@ -85,7 +85,7 @@ export const ClubGrid = ({ result, onExpand }) => {
       <div className = "flex-card">
         <div className = "image-container">
         <img className = "club-img" src={result.image_url || "/raccoon_pfp.png"}/>
-        {GlobalValue ? <img
+        {!hideHeart && GlobalValue ? <img
           className = {`heart-btn ${animating ? 'pop' : ''}`}
           src = {liked ? heartFull : heartEmpty}
           onClick = {handleHeartClick}

@@ -9,13 +9,16 @@ import logImage from '/src/assets/logImage.png';
 import ColorThief from "colorthief";
 
 
-function ExpandedTile({club, onClose}){
+function ExpandedTile({club, onClose, onMembershipChange}){
     const [isOpen, setIsOpen] = useState(false);
     const [reviews, set_reviews] = useState([]);
     const [isClicked, setIsClicked] = useState(false);
     const [animating, setAnimating] = useState(false);
     const [dominantColor, setDominantColor] = useState(null);
     const [club_stats, setClubStats] = useState(null);
+    const [user, setUser] = useState(null);
+    const [isMember, setIsMember] = useState(false);
+    const [memberLoading, setMemberLoading] = useState(false);
     const imgRef = useRef(null);
     const id  = club.id;
  
@@ -104,6 +107,58 @@ function ExpandedTile({club, onClose}){
     }, [id]);
 
     useEffect(() => {
+        async function checkMembership() {
+            const { data: { user: authUser } } = await supabase.auth.getUser();
+            if (!authUser) { setUser(null); return; }
+            setUser(authUser);
+
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('member_list')
+                .eq('id', authUser.id)
+                .single();
+
+            if (error) { console.error('Error fetching membership:', error); return; }
+            const list = profile?.member_list || [];
+            setIsMember(list.includes(club.id));
+        }
+        checkMembership();
+    }, [club.id]);
+
+    async function handleMembership() {
+        if (!user || memberLoading) return;
+        setMemberLoading(true);
+
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('member_list')
+            .eq('id', user.id)
+            .single();
+
+        let list = profile?.member_list || [];
+
+        if (isMember) {
+            list = list.filter((cid) => cid !== club.id);
+        } else {
+            list = [...list, club.id];
+        }
+
+        const { error } = await supabase
+            .from('profiles')
+            .update({ member_list: list })
+            .eq('id', user.id);
+
+        if (error) {
+            console.error('Error updating membership:', error);
+        } else {
+            const wasJoined = isMember;
+            setIsMember(!isMember);
+            if (onMembershipChange) onMembershipChange(club.id, !wasJoined);
+        }
+        setMemberLoading(false);
+    }
+
+    useEffect(() => {
         console.log("ExpandedTile MOUNTED");
         return () => console.log("ExpandedTile UNMOUNTED");
     }, []);
@@ -153,6 +208,15 @@ function ExpandedTile({club, onClose}){
             <div className = "tag">Good Mentors</div>
         </div>
         <p className= "club-description-exp">{club.club_description}</p>
+        {user && (
+            <button
+                className={`membership-btn ${isMember ? 'leave' : 'join'}`}
+                onClick={handleMembership}
+                disabled={memberLoading}
+            >
+                {memberLoading ? '...' : isMember ? 'Leave Club' : 'Join Club'}
+            </button>
+        )}
         <div className="content-col">
     <div className="divider"></div>
 </div>
