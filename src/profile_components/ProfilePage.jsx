@@ -5,6 +5,7 @@ import { useGlobalStore } from '../store'
 // import { Logout } from '../components/Logout'
 import './ProfilePage.css'
 import imageCompression from 'browser-image-compression'
+import { ClubMembershipPanel } from './ClubMembershipPanel'
 
 
 //this is the landing page for our university club search, most of the info will go through here
@@ -140,7 +141,7 @@ export const ProfilePage = () => {
           </button>
           <h1 className='ProfileName'>{profile?.username}</h1>
         </div>
-        <h1 className='ProfileName'>Your Profile (currently being worked on)</h1>
+        {user && <ClubMembershipPanel userId={user.id} />}
       </div>
     )
   }

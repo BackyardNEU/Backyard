@@ -1,0 +1,54 @@
+.membership-panel {
+  width: 100%;
+  margin-top: 30px;
+}
+
+.membership-heading {
+  font-family: "Josefin Sans", sans-serif;
+  font-weight: 500;
+  color: rgb(0, 0, 0);
+  font-size: 1.3rem;
+  margin-bottom: 12px;
+  padding-left: 4px;
+}
+
+.membership-scroll {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
+}
+
+.membership-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.membership-scroll::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.membership-card-wrapper {
+  flex: 0 0 auto;
+  width: 220px;
+}
+
+.membership-card-wrapper .club-card {
+  width: 100%;
+}
+
+.membership-card-wrapper .image-container,
+.membership-card-wrapper .club-img {
+  width: 180px;
+  height: 180px;
+}
+
+.membership-empty {
+  color: #888;
+  font-style: italic;
+  font-size: 0.95rem;
+}
