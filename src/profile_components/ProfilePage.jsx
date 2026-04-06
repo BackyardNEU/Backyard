@@ -129,7 +129,7 @@ export const ProfilePage = () => {
         <div className='profile-header'>
           <img
             src={
-              profile?.avatar_url || "/raccoon_pfp.png"
+              profile?.avatar_url
             }
             alt="Profile"
             className="profile-image"
