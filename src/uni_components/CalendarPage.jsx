@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useClubData } from '../context/useClubData';
 import { CalendarList } from './CalendarList';
-import { IconBar } from './IconBar';
-import { getClubsBasedOnCategory } from './UniversityPage';
 import { supabase } from '../supabase';
 import './CalendarPage.css';
 
@@ -27,6 +25,8 @@ export const CalendarPage = () => {
         date: ''
     });
 
+    const [ warning, setWarning ] = useState("");
+
     // first: we need to check and see if the user has any clubs
     useEffect(() => {
         // check if user is logged in and if they have no favorites -> They need to log in or get favorites
@@ -41,7 +41,7 @@ export const CalendarPage = () => {
 
     useEffect(() => {
         // make sure user is logged in, they have favorites, and that the weeklyEventsCache isnt null (otherwise there is data in there)
-        if (!userId || userFavorites === 0 || weeklyEventsCache !== null) {
+        if (!userId || userFavorites.size === 0 || weeklyEventsCache !== null) {
             return;
         }
         // fetch the events using the 
@@ -64,41 +64,120 @@ export const CalendarPage = () => {
         setShowForm(true);
     }
 
+    // meant to reflect a change in the fields in the react state
     const handleChange = (e) => {
         const { name, value } = e.target;
         setNewEvent(prev => ({ ...prev, [name]: value}));
     }
 
+    function validateDate() {
+        const { date, startTime, endTime } = newEvent;
+
+        if (!date || !startTime || !endTime) {
+            setWarning("Please fill in all date and time fields.");
+            return false;
+        }
+
+        const startDateTime = new Date(date + "T" + startTime + ":00");
+        const endDateTime   = new Date(date + "T" + endTime   + ":00");
+
+        if (isNaN(startDateTime) || isNaN(endDateTime)) {
+            setWarning("Invalid date or time format.");
+            return false;
+        }
+
+        // get current time
+        const now = new Date();
+
+        if (startDateTime < now) {
+            setWarning("Invalid date. Event cannot begin or end in the past.");
+            return false;
+        }
+
+        if (startDateTime >= endDateTime) {
+            setWarning("Start time must be before end time.");
+            return false;
+        }
+
+        // Event cannot last more than 12 hours- Date objects are weird in that the substraction operation subtracts the difference in milliseconds, so we need to
+        // adjust the comparison number
+        if (endDateTime - startDateTime > 12 * 60 * 60 * 1000) {
+            setWarning("Event cannot last more than 12 hours.");
+            return false;
+        }
+
+        console.log("Date validated.");
+        setWarning("");
+        return true;
+    }
+
+    function validateInfo() {
+        const { clubId, clubName, description } = newEvent;
+
+        if (!clubId || !clubName || !description) {
+            setWarning("Missing event info. Please fill out the required information.");
+            return false;
+        }
+
+        console.log("Info validated.");
+        setWarning("");
+        return true;
+    }
+
+    // insert new event into event table
+    // idea for the future: array for the demo_club_data table where an approved account for listing events will have their userId added to the list. This will make it
+    // so the id of the club in the table and name can be determined from the unique uuid of the approved club account.
     async function handleSubmit() {
+        if (!validateDate() || !validateInfo()) return;
+
+        const adjustedStart = newEvent.date + "T" + newEvent.startTime + ":00"; 
+        const adjustedEnd = newEvent.date + "T" + newEvent.endTime + ":00";
+
         const { error } = await supabase
             .from('club_events')
             .insert({
                 id_of_club: newEvent.clubId,
-                title: newEvent.clubName,
-                
+                club_name: newEvent.clubName,
+                event_description: newEvent.description,
+                start_time: adjustedStart,
+                end_time: adjustedEnd
             });
+        if (error){
+             console.error("There was an issue adding your event:", error);
+             console.error("code:", error.code, "message:", error.message, "details:", error.details, "hint:", error.hint);
+             console.log(newEvent);
+        }
+        else {
+            console.log("Success adding event!");
+            setShowForm(false);
+            setWeeklyEventsCache(null);
+            setNewEvent({
+                clubId: '', clubName: '', description: '', startTime: '', endTime: '', date: ''
+            });
+        }
     }
   
-    //Note2self: when I implement the club field inputting interface, I need to replace the club name field with the club's id when they are logged in
+    //Note2self: when I implement the club field inputting interface, I need to replace the club name field with the club's id when they are logged into 
+    //verified account
     return (
         <div>
             <div>
-                <button onClick={addEvent()}/>
+                <button onClick={addEvent} className="calendar-button">Click to add an event</button>
                 {showForm && (
                     <div>
-                        <label>Copy and paste id *temp* <input type="text" value={newEvent.clubId} placeholder="id of club for now" name="clubId" /></label>
-                        <label>Name of club: <input type="text" value={newEvent.clubName} placeholder="Club name" name="clubName" onChange={handleChange}/></label>
-                        <label>Event Description: <input type="text" value={newEvent.description} placeholder="Description" name="description" onChange={handleChange}/></label>
-                        <label>Start time: <input type="time" value={newEvent.startTime} placeholder="Start time" name="startTime" onChange={handleChange}/></label>
-                        <label>End time: <input type="time" value={newEvent.endTime} placeholder="End time" name="endTime" onChange={handleChange}/></label>
-                        <label>Date: <input type="date" value={newEvent.date} placeholder="yyyy-mm-dd" name="date" onChange={handleChange}/></label>
-                        <button onClick={() => setShowForm(false)}>Cancel</button>
+                        <label>Copy and paste id *temp* <input type="text" value={newEvent.clubId} placeholder="id of club for now" name="clubId" onChange={handleChange} required /></label>
+                        <label>Name of club: <input type="text" value={newEvent.clubName} placeholder="Club name" name="clubName" onChange={handleChange} required /></label>
+                        <label>Event Description: <input type="text" value={newEvent.description} placeholder="Description" name="description" onChange={handleChange} required /></label>
+                        <label>Start time: <input type="time" value={newEvent.startTime} placeholder="Start time" name="startTime" onChange={handleChange} required /></label>
+                        <label>End time: <input type="time" value={newEvent.endTime} placeholder="End time" name="endTime" onChange={handleChange} required /></label>
+                        <label>Date: <input type="date" value={newEvent.date} placeholder="yyyy-mm-dd" name="date" onChange={handleChange} required /></label>
+                        <p>{warning}</p>
+                        <button onClick={() => { setShowForm(false); setWarning(""); }}>Cancel</button>
                         <button onClick={handleSubmit}>Save</button>
                     </div>
                 )}
                 <CalendarList events={weeklyEventsCache ?? []} />
             </div>
-            <IconBar onIconClick={getClubsBasedOnCategory} />
         </div>
     );
 };

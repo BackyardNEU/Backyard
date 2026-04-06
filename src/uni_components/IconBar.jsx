@@ -25,8 +25,8 @@ export default function IconBar({ onIconClick }) {
         { name: "cross", label: "Medicine", category: "medicine"},
         { name: "calc", label: "Math", category: "math"},
         { name: "capitol", label: "Law", category: "law"},
-         {name: "heart", label: "fun", category: "fun"},
-
+         {name: "heart", label: "Fun", category: "fun"},
+        {name: "calendar", label: "Calendar", category: "calendar"}
     ];
 
     const barRef = useRef(null);

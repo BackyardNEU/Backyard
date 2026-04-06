@@ -16,24 +16,24 @@ export const ClubList = ({ results }) => {
   return (
     <>
     <AnimatePresence>
-    <div className="clubs-list">
-      {results.map((club) => (
+      <div className="clubs-list">
+        {results.map((club) => (
 
-        <ClubGrid 
-          key={club.id} 
-          result={club} 
-          isExpanded={expandedClub?.id === club.id}
-          onExpand={() => setExpandedClub(club)}
-        />
-      ))}
-    </div>
-  
-    {expandedClub && (
-      <ExpandedTile
-        club = {expandedClub}
-        key = {expandedClub.id}
-        onClose={() => setExpandedClub(null)}
-    />)}
+          <ClubGrid 
+            key={club.id} 
+            result={club} 
+            isExpanded={expandedClub?.id === club.id}
+            onExpand={() => setExpandedClub(club)}
+          />
+        ))}
+      </div>
+    
+      {expandedClub && (
+        <ExpandedTile
+          club = {expandedClub}
+          key = {expandedClub.id}
+          onClose={() => setExpandedClub(null)}
+      />)}
     </AnimatePresence>
     </>
   );

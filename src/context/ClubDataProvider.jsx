@@ -45,7 +45,7 @@ export const ClubDataProvider = ({ children }) => {
                 setFavoritesCache(new Set(favData.map(fav => fav.club_id)));
                 console.log("Favorites loaded:", favData.length);
 
-                //setUserID
+                //setUserID for use later
                 setUserId(userData.user.id);
             }
         } else {

@@ -8,6 +8,7 @@ import { ClubList } from './ClubList';
 import { useGlobalStore } from "../store";
 import Logout from '../login_components/Logout';
 import { useClubData } from '../context/useClubData';
+import { CalendarPage } from './CalendarPage';
 
 <link 
   href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&family=Raleway:ital,wght@1,100..900&display=swap" 
@@ -20,6 +21,8 @@ export const UniversityPage = () => {
   const [results, setResults] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   let GlobalValue = useGlobalStore((state) => state.GlobalValue);
+  const [ showCalendar, setShowCalendar ] = useState(false);
+
   const { allData, favoritesCache } = useClubData();
 
   useEffect(() => {
@@ -31,9 +34,21 @@ export const UniversityPage = () => {
     //if the user clicks the same icon again, then reset the clubs to display the default
     //this case also uses the least memory
     if (newCategory === selectedCategory) {
-      console.log("Else if triggering");
+      console.log("Same category clicked- defaulting");
+      setShowCalendar(false);
       setSelectedCategory(null);
       setResults(allData);
+    }
+    else if (newCategory === "calendar") {
+      if (showCalendar) {
+        setShowCalendar(false);
+        setSelectedCategory(null);
+      }
+      else {
+        setShowCalendar(true);
+        setSelectedCategory("calendar");
+      }
+      return;
     }
     //special case if category is "favorites": use cached favorites
     else if (newCategory === "favorites") {
@@ -89,40 +104,39 @@ export const UniversityPage = () => {
           objectFit: 'cover' // Fills the screen without stretching
         }}
       />
+
     </div>
-  <div
-      className="content-with-background"
-  >
-  <div className = "community-board">
-  {/*<div className = "community-board"*/}
-    <div className="fixed-wrapper">
+    <div className="content-with-background">
+      <div className = "community-board">
+          {/*<div className = "community-board"*/}
+            <div className="fixed-wrapper">
 
-  {/* Group 1: Left */}
+              {/* Group 1: Left */}
 
-  <div className="header-section left">
-  <img className="flag" src="/src/assets/northeastern_flag.png" alt="flag" />
-  </div>
+              <div className="header-section left">
+                <img className="flag" src="/src/assets/northeastern_flag.png" alt="flag" />
+              </div>
 
-  {/* Group 2: Center */}
-  <div className="header-section center">
-    <UniSearchBar setResults={setResults} university={university.uni_name} />
-  </div>
+              {/* Group 2: Center */}
 
-  {/* Group 3: Right (This aligns with your global Login Icon) */}
-  <div className="header-section right">
-    {/*<span className="signup-text">Sign Up</span>*/}
-    {/* The Login Icon from App.jsx will hover over/beside this area */}
-    <div className="login-placeholder"></div> 
-  </div>
-</div>
-    
-    
-     <ClubList className="start" results={results} />
+              <div className="header-section center">
+                <UniSearchBar setResults={setResults} university={university.uni_name} />
+              </div>
+
+              {/* Group 3: Right (This aligns with your global Login Icon) */}
+
+              <div className="header-section right">
+                {/*<span className="signup-text">Sign Up</span>*/}
+                {/* The Login Icon from App.jsx will hover over/beside this area */}
+                <div className="login-placeholder"></div>
+              </div>
+
+            </div>
+          {showCalendar ? <CalendarPage /> : <ClubList className="start" results={results} />}
+        </div>
+        <IconBar onIconClick={getClubsBasedOnCategory} />
+      </div>
     </div>
-      <IconBar onIconClick={getClubsBasedOnCategory} />
-  </div>
-
-  </div>
-  );
+  ); 
 };
 
