@@ -80,6 +80,7 @@ export const ClubDataProvider = ({ children }) => {
             allData,
             loading,
             favoritesCache,
+            userId,
             setFavoritesCache,
             invalidateFavoritesCache,
             refetch: fetchAllData

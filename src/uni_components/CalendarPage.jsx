@@ -127,6 +127,7 @@ export const CalendarPage = () => {
     // insert new event into event table
     // idea for the future: array for the demo_club_data table where an approved account for listing events will have their userId added to the list. This will make it
     // so the id of the club in the table and name can be determined from the unique uuid of the approved club account.
+    // ALSO: One day: implement a draggable interface to show how long your event will last (kinda like when2meet)
     async function handleSubmit() {
         if (!validateDate() || !validateInfo()) return;
 
