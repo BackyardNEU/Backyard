@@ -16,7 +16,7 @@
 .logged-in-controls {
   position: fixed;
   top: 1rem;
-  right: 7rem;
+  right: 1rem;
   display: flex;
   align-items: center;
   gap: 1rem;
