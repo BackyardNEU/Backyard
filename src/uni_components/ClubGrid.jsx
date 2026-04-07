@@ -6,6 +6,7 @@ import { supabase } from '../supabase';
 import { motion } from "framer-motion";
 import { useGlobalStore } from "../store";
 import { useClubData } from '../context/useClubData';
+import paperTexture from '/src/assets/white-paper-texture.jpg';  
 
 export const ClubGrid = ({ result, onExpand, hideHeart }) => {
   const [animating, setAnimating] = useState(false);
