@@ -72,12 +72,12 @@
 
 
 .club-name {
-  font-family: "Bebas Neue", sans-serif;
-  font-weight: 400;
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-weight: 550;
   text-align: left;
   position: relative;
   line-height: 1.05;
-  color: #2c4630;
+  color: #000000;
   margin-top: 15px;
   font-style: normal;
   
@@ -94,7 +94,7 @@
 .club-info{
   margin: 0;
   color: rgb(0, 0, 0);
-  font-family: "Inter", sans-serif;
+  font-family: "Be Vietnam Pro", sans-serif;
   font-size: clamp(10px, 2.5cqi, 18px);
   
   white-space: nowrap;

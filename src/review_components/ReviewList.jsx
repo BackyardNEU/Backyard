@@ -42,21 +42,66 @@ function Img({ src, alt, className, onClick }) {
     );
 }
 
+function getImages(comment) {
+    if (Array.isArray(comment.review_images) && comment.review_images.length > 0) {
+        return comment.review_images;
+    }
+    if (comment.review_image) {
+        return [comment.review_image];
+    }
+    return [];
+}
+
+function ImageCarousel({ images, alt, className }) {
+    const [index, setIndex] = useState(0);
+    const total = images.length;
+    if (!total) {
+        return <div className={`rl-img-placeholder ${className || ''}`}>No image</div>;
+    }
+
+    const goPrev = (e) => {
+        e.stopPropagation();
+        setIndex((prev) => (prev - 1 + total) % total);
+    };
+    const goNext = (e) => {
+        e.stopPropagation();
+        setIndex((prev) => (prev + 1) % total);
+    };
+
+    return (
+        <div className={`rl-carousel ${className || ''}`}>
+            <Img src={images[index]} alt={alt} className="rl-carousel__img" />
+            {total > 1 && (
+                <>
+                    <button className="rl-carousel__nav rl-carousel__nav--left" onClick={goPrev} aria-label="Previous photo">‹</button>
+                    <button className="rl-carousel__nav rl-carousel__nav--right" onClick={goNext} aria-label="Next photo">›</button>
+                    <div className="rl-carousel__dots">
+                        {images.map((_, i) => (
+                            <span key={i} className={`rl-carousel__dot ${i === index ? 'is-active' : ''}`} />
+                        ))}
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
+
 /* ============================================================
    Comment Card  (rendered in the grid)
    ============================================================ */
 function CommentCard({ comment, type, userVote, onVote, onClick }) {
+    const images = getImages(comment);
     if (type === 'normal') {
         return (
             <div className="rl-card rl-card--normal" onClick={onClick}>
                 <div className="rl-card__image-wrap">
-                    <Img src={comment.review_images[0]} alt={comment.review_title} className="rl-card__image" />
+                    <ImageCarousel images={images} alt={comment.review_title} className="rl-card__image" />
                     {comment.created_at && <span className="rl-card__date">{formatDate(comment.created_at)}</span>}
                 </div>
                 <div className="rl-card__body">
                     <h4 className="rl-card__title">{comment.review_title}</h4>
                     <p className="rl-card__text">{comment.review_text}</p>
-                    <div className="rl-card__vote">
+                    <div className="rl-card__footer">
                         <UpvoteWidget score={comment._liveScore} userVote={userVote} onVote={onVote} variant="stacked" />
                     </div>
                 </div>
@@ -72,7 +117,7 @@ function CommentCard({ comment, type, userVote, onVote, onClick }) {
                     {comment.created_at && <span className="rl-card__date-inline">{formatDate(comment.created_at)}</span>}
                 </div>
                 <p className="rl-card__text rl-card__text--long">{comment.review_text}</p>
-                <div className="rl-card__vote">
+                <div className="rl-card__footer">
                     <UpvoteWidget score={comment._liveScore} userVote={userVote} onVote={onVote} variant="stacked" />
                 </div>
             </div>
@@ -83,7 +128,7 @@ function CommentCard({ comment, type, userVote, onVote, onClick }) {
     return (
         <div className="rl-card rl-card--imgonly" onClick={onClick}>
             <div className="rl-card__image-wrap">
-                <Img src={comment.review_images[0]} alt="Review image" className="rl-card__image" />
+                <ImageCarousel images={images} alt="Review image" className="rl-card__image" />
                 {comment.created_at && <span className="rl-card__date">{formatDate(comment.created_at)}</span>}
             </div>
             <div className="rl-card__vote rl-card__vote--end">
@@ -97,6 +142,7 @@ function CommentCard({ comment, type, userVote, onVote, onClick }) {
    Fullscreen Lightbox
    ============================================================ */
 function Lightbox({ comment, type, userVote, onVote, onClose }) {
+    const images = getImages(comment);
     // Close on Escape
     useEffect(() => {
         const h = (e) => { if (e.key === 'Escape') onClose(); };
@@ -112,7 +158,7 @@ function Lightbox({ comment, type, userVote, onVote, onClose }) {
                 {type === 'normal' && (
                     <>
                         <div className="rl-lightbox__img-col">
-                            <Img src={comment.review_images[0]} alt={comment.review_title} className="rl-lightbox__img" />
+                            <ImageCarousel images={images} alt={comment.review_title} className="rl-lightbox__img" />
                         </div>
                         <div className="rl-lightbox__label">
                             <h3 className="rl-lightbox__title">{comment.review_title}</h3>
@@ -140,7 +186,7 @@ function Lightbox({ comment, type, userVote, onVote, onClose }) {
 
                 {type === 'image_only' && (
                     <div className="rl-lightbox__img-col rl-lightbox__img-col--solo">
-                        <Img src={comment.review_images[0]} alt="Review image" className="rl-lightbox__img" />
+                        <ImageCarousel images={images} alt="Review image" className="rl-lightbox__img" />
                         <div className="rl-lightbox__vote rl-lightbox__vote--overlay">
                             <UpvoteWidget score={comment._liveScore} userVote={userVote} onVote={onVote} variant="pill" theme="dark" />
                         </div>
@@ -163,15 +209,18 @@ export default function ReviewList({ reviews, club_stats, club }) {
         const s = {};
         reviews.forEach((r) => { s[r.id] = r.upvote ?? 0; });
         setReviewScores(s);
+        // If the list refreshes, clear local vote highlights (prevents stale UI)
+        setUserVotes({});
     }, [reviews]);
 
     const handleVote = useCallback(async (id, direction) => {
         const currentVote = userVotes[id] || 0;
-        const newVote = currentVote === direction ? 0 : direction;
+        const newVote = currentVote === direction ? 0 : direction; // toggle same direction off
         const voteDelta = newVote - currentVote;
         const oldScore = reviewScores[id] ?? 0;
         const newScore = oldScore + voteDelta;
 
+        // optimistic UI
         setUserVotes((prev) => ({ ...prev, [id]: newVote }));
         setReviewScores((prev) => ({ ...prev, [id]: newScore }));
 
@@ -193,8 +242,8 @@ export default function ReviewList({ reviews, club_stats, club }) {
         }
     }, [userVotes, reviewScores]);
 
-    // Attach live score to each review for rendering
-    const enriched = reviews.map((r) => ({ ...r, _liveScore: reviewScores[r.id] ?? r.upvote ?? 0 }));
+    // Attach live score to each review for rendering (score already includes vote deltas)
+    const enriched = reviews.map((r) => ({ ...r, _liveScore: reviewScores[r.id] ?? (r.upvote ?? 0) }));
     const selectedReview = enriched.find((r) => r.id === selectedId);
     const selectedType = selectedReview ? getCommentType(selectedReview) : null;
 

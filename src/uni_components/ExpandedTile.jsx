@@ -11,6 +11,7 @@ import ColorThief from "colorthief";
 
 function ExpandedTile({club, onClose, onMembershipChange}){
     const [isOpen, setIsOpen] = useState(false);
+    const [isClosing, setIsClosing] = useState(false);
     const [reviews, set_reviews] = useState([]);
     const [isClicked, setIsClicked] = useState(false);
     const [animating, setAnimating] = useState(false);
@@ -21,15 +22,22 @@ function ExpandedTile({club, onClose, onMembershipChange}){
     const [memberLoading, setMemberLoading] = useState(false);
     const imgRef = useRef(null);
     const id  = club.id;
- 
+    
+    
+
     //escape key will close tile
     useEffect(() => {
         const handler = (e) => {
-            if (e.key === "Escape") onClose();
+            if (e.key === "Escape") handleClose();
         };
         document.addEventListener('keydown', handler);
         return () => document.removeEventListener('keydown', handler);
     }, [onClose]);
+
+    const handleClose = () => {
+        setIsClosing(true);
+        onClose();
+    };
 
     const handleClick = () => {
     setIsOpen(!isOpen); 
@@ -169,9 +177,19 @@ function ExpandedTile({club, onClose, onMembershipChange}){
         <motion.div
             layoutId = {`club-${club.id}`}
             className = "expanded-card"
+            whileHover={{}} 
+    // THIS kills the lag by ignoring the mouse during the closing morph
+    style={{ pointerEvents: isClosing ? "none" : "auto" }}
+    // The "Smoothing" - use a snappy spring
+    transition={{
+        type: "spring",
+        stiffness: 400,
+        damping: 30
+    }}
+            
         >
     
-        <button className = "close-btn" onClick={onClose}>x</button>
+        <button className = "close-btn" onClick={handleClose}>x</button>
             <div className="content-col">
                 <div className = "rectangle" style = {{backgroundColor: dominantColor}}>
                     <img

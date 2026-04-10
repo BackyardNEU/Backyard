@@ -204,7 +204,7 @@ export default function ReviewPage({clubId, onClose}) {
         const { data: { user } } = await supabase.auth.getUser();
 
         if (GlobalValue) {
-            if(user_review && user_title) {
+            if((user_review && user_title) || uploadedUrls.length > 0)  {
                 for(let i=0; i < badWords.length; i++) {
                     const regex = new RegExp(badWords[i], 'gi');
                     if(regex.test(user_review) || regex.test(user_title)){

@@ -8,12 +8,13 @@ import { useGlobalStore } from "../store";
 import { useClubData } from '../context/useClubData';
 import paperTexture from '/src/assets/white-paper-texture.jpg';  
 
+
 export const ClubGrid = ({ result, onExpand, hideHeart }) => {
   const [animating, setAnimating] = useState(false);
   let GlobalValue = useGlobalStore((state) => state.GlobalValue);
 
   const { favoritesCache, invalidateFavoritesCache } = useClubData();
-
+  const [isExpanding, setIsExpanding] = useState(false);
   // meant to determine if a particular card is liked or not, depending on if it 
   // is found in the partulcar liked table or all false if the user is not logged
   // in
@@ -61,7 +62,10 @@ export const ClubGrid = ({ result, onExpand, hideHeart }) => {
     setTimeout(() => setAnimating(false), 250);
   };
 
-
+  const handleExpand = () => {
+      setIsExpanding(true); // Strip the hover effect immediately
+      onExpand();     
+  };
   const truncate = (text, wordLimit = 5) => {
     if (!text) return "";
     const words = String(text).split(/\s+/).filter(Boolean);
@@ -73,15 +77,19 @@ export const ClubGrid = ({ result, onExpand, hideHeart }) => {
 
     <motion.button 
       className = "club-card" 
-      onClick = {onExpand}
-      transition = {{ duration: 0.3 }}
+      onClick = {handleExpand}
+     
       layoutId = {`club-${result.id}`}
-      whileHover = {{
-        scale: 1.04,
-        transition: {duration: 0.1},
-        borderColor: '#eeeeeeff',
-        boxShadow: '0 8px 20px rgba(171, 171, 171, 0.25)'
-      }}
+     whileHover={isExpanding ? {} : { scale: 1.02 }}
+    style={{ pointerEvents: isExpanding ? "none" : "auto" }}
+    // Match the spring transition from ExpandedTile
+    transition={{
+        type: "spring",
+        stiffness: 400,
+        damping: 30
+    }}
+      // 5. Recommended: prevent extra clicks while morphing
+     
 >
       <div className = "flex-card">
         <div className = "image-container">

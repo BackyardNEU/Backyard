@@ -43,9 +43,9 @@
 
 /* Big instruction titles */
 .instruction-txt {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Be Vietnam Pro', sans-serif;
   font-size: clamp(4rem, 6vw, 7rem);
-  font-weight: 290;
+  font-weight: 300;
   color: #111;
   margin-bottom: 3rem;
   line-height: 1.1;
@@ -75,8 +75,8 @@
   padding: 1rem;
   color: #BC3B03;
   border-radius: 8px;
-  font-family: 'Inter', sans-serif;
-  
+  font-family: 'Be Vietnam Pro', sans-serif;
+
 }
 
 .create-comment input[type="text"]:focus {

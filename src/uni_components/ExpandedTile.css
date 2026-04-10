@@ -2,8 +2,8 @@
   position: fixed;
   inset: 0;               
   margin: auto;           
-  width: 44vw;
-  height: 95vh;
+
+  height: 100%;
   overflow: hidden;
   background: transparent;
   display: flex;
@@ -19,12 +19,12 @@
   inset: 0;
   margin: auto;
   width: 44vw;
-  height: 95vh;
+  height: 100%;
   background-image: url('/src/assets/white-paper-texture.jpg');
-  background-size: 90% 10%;
+  background-size: 100% 100%;
   background-repeat: repeat;
   background-position: 0 0;
-  filter: brightness(1.29) contrast(0.98);
+  filter: brightness(1.28) contrast(0.98);
   z-index: -1;
 }
 
@@ -115,21 +115,22 @@
 }
 
 .club-name-exp{
-  font-family: "Josefin Sans", sans-serif;
+  font-family: "Be Vietnam Pro", sans-serif;
   margin-right: 5vh;
   align-self: flex-start;
-  color: rgb(0, 62, 11);
-  font-weight: 500;
+  color: rgb(44, 27, 43);
+  font-weight: 550;
   font-style: normal;
   letter-spacing: -1.2px;
-  font-size: max(80px,4.5vw);
+  font-size: max(90px,4.5vw);
   z-index: 8200;
 }
 
 .club-tag1 {
-  font-family: "Josefin Sans", sans-serif;
-  font-weight: 500;
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-weight: 400;
   align-self: flex-start;
+  font-size: 2rem;
   z-index: 8200;
   margin-bottom: 30px;
   gap: 1rem;
@@ -165,7 +166,7 @@
 .membership-btn {
   padding: 10px 30px;
   font-size: 15px;
-  font-family: "Josefin Sans", sans-serif;
+  font-family: "Be Vietnam Pro", sans-serif;
   text-decoration: none;
   color: white;
   border: none;
@@ -207,7 +208,7 @@
 }
 
 .divider-header {
-  font-family: 'Inclusive Sans', sans-serif;
+  font-family: 'Be Vietnam Pro', sans-serif;
   line-height: normal;
   font-style: normal;
   position: relative;
@@ -235,24 +236,24 @@
     padding-left: 0.2rem;
   }
   .expanded-card{
-    width: 90vw;
-    border-radius: clamp(12px, 5.5vw, 28px);
+    width: 100%;
+   
     box-shadow: 0 20px 80px rgba(0,0,0,0.4), 
             0 0 0 9999px rgba(46, 46, 46, 0.65),
             1px 1px 8px #adadad inset;
   }
   
   .expanded-card::before {
-    width: 90vw;
-    border-radius: clamp(12px, 5.5vw, 28px);
+    width: 100%;
+    
   }
   
   .view-reviews{
        padding: 0 3%;
   }
   .club-img-exp {
-    width: 88vw;
-    height: 88vw;
+    width: 96vw;
+    height: 96vw;
     background-color:#ffffff;
     display: flex;
     justify-content: center;
@@ -264,11 +265,12 @@
   }
   
   .club-name-exp {
-    font-size: 3rem;
+    font-size: 4rem;
+    line-height: 95%;
     margin-bottom: 7px;
   }
   .club-tag1{
-    font-size: clamp(32px,1rem);
+    font-size: 2rem;
   }
   .club-tag2 {
     font-size: 0.5rem;
@@ -296,8 +298,8 @@
     background-color: var(--dominant-color);
     z-index: 8000;
     border-radius: 20px;
-    width: 88vw;
-    height: 97vw;
+    width: 98vw;
+    height: 110vw;
     transform: translateY(-13%);
     align-items: center;
     position: relative;
@@ -426,14 +428,19 @@
   }
 
   .club-name-exp {
-    font-size: clamp(2.5rem, 4.5vw, 5.5rem);
+    font-size: clamp(4rem, 5vw, 5.9rem);
     margin: 0;
     line-height: 1.1;
     white-space: normal;
+    display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2; /* Limits text to 2 lines */
+  overflow: hidden;
+  text-overflow: ellipsis;
   }
 
   .club-tag1 {
-    font-size: clamp(1rem, 1.8vw, 1.6rem);
+    font-size: 1.75rem;
     margin-top: 0.5rem;
     margin-bottom: 0;
   }

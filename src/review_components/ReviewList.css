@@ -37,8 +37,8 @@
    ============================================================ */
 .rl-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
     width: 100%;
     padding: 12px 0;
 }
@@ -49,7 +49,7 @@
 .rl-card {
     position: relative;
     cursor: pointer;
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
     transition: box-shadow 0.2s ease, transform 0.15s ease;
 }
@@ -63,22 +63,23 @@
 .rl-card--normal {
     display: flex;
     flex-direction: column;
-    background: #fff;
+   
 }
 
 .rl-card__image-wrap {
     position: relative;
     width: 100%;
-    aspect-ratio: 3 / 2;
+    aspect-ratio: 4 / 3;
     overflow: hidden;
-    background: #f0f0f0;
-    border-radius: 2px;
+    
+    border-radius: 6px;
+    border: 1px solid #d7d7d7;
 }
 
 .rl-card__image {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     display: block;
     transition: transform 0.3s ease;
 }
@@ -102,11 +103,11 @@
 .rl-card__body {
     position: relative;
     border: 1px solid #949494;
-    border-radius: 8px;
-    padding: 12px 14px;
-    margin-top: 6px;
-    background: #fff;
-    min-height: 80px;
+    border-radius: 12px;
+    padding: 16px 16px 12px 16px;
+    margin-top: 10px;
+   
+    min-height: 190px;
     display: flex;
     flex-direction: column;
     transition: border-color 0.2s ease;
@@ -118,31 +119,36 @@
 
 .rl-card__title {
     font-family: 'Inclusive Sans', sans-serif;
-    font-size: 13px;
+    font-size: 18px;
     font-weight: 700;
-    margin: 0 0 4px 0;
+    margin: 0 0 8px 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .rl-card__text {
-    font-family: 'Quicksand', sans-serif;
-    font-size: 11px;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 15px;
     color: #555;
-    line-height: 1.4;
+    line-height: 1.55;
     margin: 0;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 4;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    padding-right: 32px;
+    padding-right: 0;
+}
+
+.rl-card__footer {
+    margin-top: auto;
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 12px;
 }
 
 .rl-card__vote {
-    position: absolute;
-    right: 8px;
-    bottom: 8px;
+    position: static;
 }
 
 .rl-card__vote--end {
@@ -156,11 +162,11 @@
 .rl-card--text {
     display: flex;
     flex-direction: column;
-    background: #fff;
+    
     border: 1px solid #949494;
-    border-radius: 8px;
-    padding: 14px;
-    min-height: 200px;
+    border-radius: 12px;
+    padding: 18px;
+    min-height: 280px;
     transition: border-color 0.2s ease;
 }
 
@@ -178,15 +184,15 @@
 
 .rl-card__date-inline {
     font-family: monospace;
-    font-size: 10px;
+    font-size: 12px;
     color: #999;
     white-space: nowrap;
     flex-shrink: 0;
 }
 
 .rl-card__text--long {
-    -webkit-line-clamp: 6;
-    padding-bottom: 40px;
+    -webkit-line-clamp: 8;
+    padding-bottom: 0;
     flex: 1;
 }
 
@@ -205,11 +211,67 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #eee;
+    background: #fff;
     color: #aaa;
-    font-size: 13px;
+    font-size: 14px;
     font-style: italic;
-    border-radius: 2px;
+    border-radius: 6px;
+}
+
+.rl-carousel {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+}
+
+.rl-carousel__img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #fff;
+}
+
+.rl-carousel__nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    background: rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+    font-size: 22px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+}
+
+.rl-carousel__nav--left { left: 8px; }
+.rl-carousel__nav--right { right: 8px; }
+
+.rl-carousel__dots {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    z-index: 3;
+}
+
+.rl-carousel__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.28);
+}
+
+.rl-carousel__dot.is-active {
+    background: rgba(0,0,0,0.72);
 }
 
 /* ============================================================
@@ -239,6 +301,7 @@
     max-height: 85vh;
     gap: 32px;
     position: relative;
+    align-items: stretch;
 }
 
 .rl-lightbox__close {
@@ -275,9 +338,11 @@
 
 .rl-lightbox__img {
     width: 100%;
-    max-height: 75vh;
+    max-height: 85vh;
+    height: 100%;
     object-fit: contain;
     border-radius: 2px;
+    background: #fff;
 }
 
 /* Label column */
@@ -292,10 +357,10 @@
 }
 
 .rl-lightbox__title {
-    font-family: 'EB Garamond', 'Georgia', serif;
+    font-family: 'Inclusive Sans', sans-serif;
     font-size: 1.3rem;
-    font-weight: 500;
-    letter-spacing: 0.5px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
     margin: 0 0 4px 0;
     color: #fff;
 }
@@ -319,7 +384,7 @@
 }
 
 .rl-lightbox__text {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Quicksand', sans-serif;
     font-size: 0.85rem;
     line-height: 1.7;
     color: rgba(255,255,255,0.8);
@@ -363,6 +428,22 @@
 
 /* ---- Mobile ---- */
 @media (max-width: 699px) {
+    .rl-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .rl-card__title {
+        font-size: 16px;
+    }
+
+    .rl-card__text {
+        font-size: 14px;
+    }
+
+    .rl-card__body {
+        min-height: 170px;
+    }
+
     .rl-lightbox {
         padding: 16px;
     }
