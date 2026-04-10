@@ -7,6 +7,7 @@ export const ClubDataProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [favoritesCache, setFavoritesCache] = useState(null);
     const [userId, setUserId] = useState(null);
+    const [friendMembershipMap, setFriendMembershipMap] = useState(new Map());
     const isFetching = useRef(false);
 
     // initial fetching of data from supabase
@@ -48,9 +49,43 @@ export const ClubDataProvider = ({ children }) => {
                 //setUserID for use later
                 setUserId(userData.user.id);
             }
+
+            // fetch friend memberships for avatar display on club cards
+            const { data: profileData, error: profileError } = await supabase
+                .from('profiles')
+                .select('friend_list')
+                .eq('id', userData.user.id)
+                .single();
+
+            const friendList = profileData?.friend_list || [];
+            if (!profileError && friendList.length > 0) {
+                const { data: friendProfiles, error: friendError } = await supabase
+                    .from('profiles')
+                    .select('id, username, avatar_url, member_list')
+                    .in('id', friendList);
+
+                if (!friendError && friendProfiles) {
+                    const map = new Map();
+                    for (const friend of friendProfiles) {
+                        const clubs = friend.member_list || [];
+                        for (const clubId of clubs) {
+                            if (!map.has(clubId)) map.set(clubId, []);
+                            map.get(clubId).push({
+                                id: friend.id,
+                                username: friend.username,
+                                avatar_url: friend.avatar_url,
+                            });
+                        }
+                    }
+                    setFriendMembershipMap(map);
+                }
+            } else {
+                setFriendMembershipMap(new Map());
+            }
         } else {
             // empty Set if the user is not logged in
             setFavoritesCache(new Set());
+            setFriendMembershipMap(new Map());
         }
 
         // all necessary data needed: loading stops
@@ -81,6 +116,7 @@ export const ClubDataProvider = ({ children }) => {
             loading,
             favoritesCache,
             userId,
+            friendMembershipMap,
             setFavoritesCache,
             invalidateFavoritesCache,
             refetch: fetchAllData

@@ -6,6 +6,7 @@ import { useGlobalStore } from '../store'
 import './ProfilePage.css'
 import imageCompression from 'browser-image-compression'
 import { ClubMembershipPanel } from './ClubMembershipPanel'
+import { FriendDiscoveryList } from './FriendDiscoveryList'
 
 
 //this is the landing page for our university club search, most of the info will go through here
@@ -17,6 +18,7 @@ export const ProfilePage = () => {
   const { id } = useParams()
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
+  const [activeTab, setActiveTab] = useState('clubs')
   const [status, setStatus]     = useState('idle')
   const [preview, setPreview]   = useState(null)
   const [imageUrl, setImageUrl] = useState(null)
@@ -141,7 +143,26 @@ export const ProfilePage = () => {
           </button>
           <h1 className='ProfileName'>{profile?.username}</h1>
         </div>
-        {user && <ClubMembershipPanel userId={user.id} />}
+        {user && (
+          <>
+            <div className="profile-tabs">
+              <button
+                className={`profile-tab ${activeTab === 'clubs' ? 'active' : ''}`}
+                onClick={() => setActiveTab('clubs')}
+              >
+                Clubs
+              </button>
+              <button
+                className={`profile-tab ${activeTab === 'friends' ? 'active' : ''}`}
+                onClick={() => setActiveTab('friends')}
+              >
+                Friends
+              </button>
+            </div>
+            {activeTab === 'clubs' && <ClubMembershipPanel userId={user.id} />}
+            {activeTab === 'friends' && <FriendDiscoveryList userId={user.id} />}
+          </>
+        )}
       </div>
     )
   }

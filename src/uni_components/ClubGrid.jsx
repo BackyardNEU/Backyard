@@ -13,12 +13,14 @@ export const ClubGrid = ({ result, onExpand, hideHeart }) => {
   const [animating, setAnimating] = useState(false);
   let GlobalValue = useGlobalStore((state) => state.GlobalValue);
 
-  const { favoritesCache, invalidateFavoritesCache } = useClubData();
-  const [isExpanding, setIsExpanding] = useState(false);
+  const { favoritesCache, invalidateFavoritesCache, friendMembershipMap } = useClubData();
+
   // meant to determine if a particular card is liked or not, depending on if it 
   // is found in the partulcar liked table or all false if the user is not logged
   // in
   let liked = favoritesCache?.has(result.id) ?? false;
+
+  const friendsInClub = friendMembershipMap?.get(result.id) || [];
 
   //if a user likes a club, refresh cache and add this favorite to it
   const updateFavorite = async (newLiked) => {
@@ -80,14 +82,7 @@ export const ClubGrid = ({ result, onExpand, hideHeart }) => {
       onClick = {handleExpand}
      
       layoutId = {`club-${result.id}`}
-     whileHover={isExpanding ? {} : { scale: 1.02 }}
-    style={{ pointerEvents: isExpanding ? "none" : "auto" }}
-    // Match the spring transition from ExpandedTile
-    transition={{
-        type: "spring",
-        stiffness: 400,
-        damping: 30
-    }}
+    
       // 5. Recommended: prevent extra clicks while morphing
      
 >
@@ -100,6 +95,23 @@ export const ClubGrid = ({ result, onExpand, hideHeart }) => {
           onClick = {handleHeartClick}
         /> : null}
         </div>
+        {GlobalValue && friendsInClub.length > 0 && (
+          <div className="friend-avatars">
+            {friendsInClub.slice(0, 3).map((friend) => (
+              <img
+                key={friend.id}
+                className="friend-avatar-img"
+                src={friend.avatar_url || "/raccoon_pfp.png"}
+                alt={friend.username}
+              />
+            ))}
+            {friendsInClub.length > 3 && (
+              <span className="friend-avatar-overflow">
+                +{friendsInClub.length - 3}
+              </span>
+            )}
+          </div>
+        )}
         <div className = "club-name"> 
           {truncate(result.club_name)}
         </div>

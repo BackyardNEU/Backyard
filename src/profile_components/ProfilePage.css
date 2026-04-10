@@ -1,3 +1,14 @@
+.ProfilePage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
 .profile-header {
   position: absolute;
   left: 0;
@@ -8,4 +19,38 @@
   height: 120px;
   border-radius: 50%;
   object-fit: cover;
+}
+
+.profile-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid #ddd;
+  margin-top: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.profile-tab {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 12px 0;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-family: "Josefin Sans", sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #888;
+  cursor: pointer;
+  text-align: center;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.profile-tab:hover {
+  color: #333;
+}
+
+.profile-tab.active {
+  color: rgb(0, 62, 11);
+  border-bottom-color: rgb(0, 62, 11);
 }
