@@ -202,3 +202,34 @@
     
   }
 }
+
+/* --- Friend avatar stack on club cards --- */
+.friend-avatars {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.friend-avatar-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  object-fit: cover;
+  margin-left: -8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.friend-avatar-img:first-child {
+  margin-left: 0;
+}
+
+.friend-avatar-overflow {
+  margin-left: 4px;
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #2c4630;
+  white-space: nowrap;
+}
