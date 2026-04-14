@@ -70,14 +70,13 @@
   mix-blend-mode: multiply;  /* Blends with texture background */
 }
 
-
 .club-name {
-  font-family: "Be Vietnam Pro", sans-serif;
-  font-weight: 550;
+  font-family: "Bebas Neue", "Be Vietnam Pro", sans-serif;
+  font-weight: 400;
   text-align: left;
   position: relative;
   line-height: 1.05;
-  color: #000000;
+  color: #29241d;
   margin-top: 15px;
   font-style: normal;
   
@@ -131,15 +130,6 @@
   width:100%
 }
 
-.image-container {
-  position: relative;
-  width: 25vw;
-  min-width: 185px;
-  height: 25vw;
-  min-height: 185px;
-
-}
-
 .heart-btn.pop {
   animation: heart-pop 0.25s ease forwards;
 }
@@ -150,14 +140,12 @@
   100% { transform: scale(1); }
 }
 
-/* --- MOBILE: 1 Column (Container is wider here for readability) --- */
+/* --- MOBILE: 1 Column — cards take ~80% of screen (container set via Tailwind in ClubList) --- */
 @media (max-width: 649px) {
-  .club-card {
-    width: 65vw; /* Fits inside the 75vw container */
-  }
-  .image-container, .club-img {
-    width: 55vw;
-    height: 55vw;
+  .image-container {
+    width: 85%;
+    aspect-ratio: 1;
+    height: auto;
   }
 }
 

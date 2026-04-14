@@ -1,15 +1,100 @@
 .UniPage {
-  
-  /*#f8f6f4*/
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  min-height: 100vh;
-
+  position: relative;
   width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
   box-sizing: border-box;
   color: rgb(0, 0, 0);
+  --uni-content-width: 75%;
+}
+
+.uni-background-layer {
+  position: fixed;
+  inset: 0;
+  background-image: url(/src/assets/ghibili_background.jpg);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+}
+
+.uni-plant-layer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 25vw;
+  height: 33.333vh;
+  object-fit: cover;
+  z-index: 15;
+  pointer-events: none;
+  opacity: 0.98;
+  transform: scaleX(-1);
+}
+
+.uni-layout {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: 20vh 10vh 60vh 10vh;
+}
+
+.uni-header-spacer {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 0.6rem;
+}
+
+.uni-header-logo {
+  width: min(56vw, 620px);
+  max-width: 86vw;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+}
+
+.uni-search-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 1rem;
+  
+}
+
+.uni-search-shell {
+  width: var(--uni-content-width);
+}
+
+.uni-club-stage {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.uni-club-viewport {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 0 2rem 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.uni-club-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.uni-icon-row {
+  display: flex;
+  justify-content: center;
+  align-items: end;
+  padding: 0 0 0.4rem 0;
 }
 
 .community-board {
@@ -54,19 +139,6 @@
   
 /*150px*/
 
-.content-with-background {
-  width: 100%;  /* add this */
-  
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  background-position: center;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  
-}
 
 .raleway-uni {
   
@@ -81,104 +153,44 @@
   margin-bottom: 12px;
 }
 
-.fixed-wrapper {
-  position: sticky;
-  top: 0;
-  display: flex;
-  
-  background-color: rgb(62, 52, 35);
-  flex-direction: row;
-  justify-content: space-between; /* Pushes items to far left, center, and far right */
-  align-items: center;
-  width: 100%;
-  height: 5.5rem;
-  padding: 0 2rem; /* Add breathing room on sides */
-  z-index: 999;
-  border-bottom: 12px solid #9b826a;
-  box-sizing: border-box;
-  margin-bottom: 1rem;
-  box-shadow:
-    0 15px 20px -10px rgba(0, 0, 0, 0.3);
-}
+@media (max-width: 900px) {
+  .uni-layout {
+    grid-template-rows: 18vh 11vh 61vh 10vh;
+  }
 
-/* Give the side sections equal width so the center stays centered */
-.header-section {
-  display: flex;
-  align-items: center;
-  flex: 1; /* This makes left, center, and right take equal base space */
-}
-
-.header-section.center {
-  justify-content: center;
-  flex: 2; /* Allows the search bar to take up more room than the sides */
-}
-
-.header-section.right {
-  justify-content: flex-end;
-  gap: 1rem;
-}
-
-.signup-text {
-  color: rgb(249, 240, 225);
-  font-family: "Inter", sans-serif;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-/* This creates a gap in your flex so the "fixed" login icon doesn't overlap text */
-.login-placeholder {
-  width: 3rem; /* Same width as your .login-icon */
-  height: 3rem;
-  
-}
-
-.flag {
-  height: 4rem; 
-  width: auto;
-}
-
-
-@media (max-width: 775px) {
-  .raleway-uni{
-    font-size: 12vw
+  .uni-header-logo {
+    width: min(62vw, 520px);
   }
 }
 
-
-
-@media (max-width: 450px) {
-  .fixed-wrapper {
-    /* Reduce side padding from 2rem to 0.5rem */
-    padding: 0 0.5rem; 
-    height: 4rem; /* Slightly shorter bar for more screen real estate */
+@media (max-width: 649px) {
+  .UniPage {
+    --uni-content-width: 84%;
   }
 
-  .header-section.left {
-    /* Allow the flag to take up only as much space as it needs */
-    flex: 1 1 auto; 
-  }
-  .header-section.center {
-    /* Give the search bar maximum priority */
-    flex: 4; 
-    padding: 0 5px; /* Tiny buffer so it doesn't touch the flag */
+  .uni-layout {
+    grid-template-rows: 16vh 12vh 62vh 10vh;
   }
 
-  .header-section.right {
-    /* Shrink the gap between "Sign Up" and the Login Icon */
-    flex: 0 1 auto;
-    gap: 0.4rem; 
+  .uni-header-logo {
+    width: min(72vw, 420px);
   }
 
-  .flag {
-    height: 2.2rem; /* Scale down the flag */
+  .uni-search-row {
+    padding: 0 0.75rem;
   }
 
-  .signup-text {
-    font-size: 0.7rem; /* Smaller text to prevent wrapping */
-  }
+}
 
-  .login-placeholder, .login-icon {
-    width: 2.5rem;  /* Scale down the icon size */
-    height: 2.5rem;
+@media (min-width: 650px) {
+  .UniPage {
+    --uni-content-width: 82%;
   }
 }
+
+@media (min-width: 1100px) {
+  .UniPage {
+    --uni-content-width: 86%;
+  }
+}
+

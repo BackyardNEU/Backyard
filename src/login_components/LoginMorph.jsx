@@ -5,7 +5,7 @@ import Logout from "./Logout";
 import Form from "./form";
 import "./LoginMorph.css";
 import { useGlobalStore } from "../store";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../supabase";
 
 
@@ -13,8 +13,32 @@ import { supabase } from "../supabase";
 function LoginMorph({ open, setOpen }) {
   let GlobalValue = useGlobalStore((state) => state.GlobalValue);
   const navigate = useNavigate();
+  const location = useLocation();
   const [isSignUp, setIsSignUp] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const categories = [
+    { label: "Calendar", category: "calendar" },
+    { label: "Favorites", category: "favorites" },
+    { label: "FSL", category: "fsl" },
+    { label: "Intramurals", category: "intramural_sports" },
+    { label: "Affinity", category: "affiliation" },
+    { label: "Environment", category: "nature" },
+    { label: "Literature", category: "lit" },
+    { label: "Comp Sci", category: "programming" },
+    { label: "Performing", category: "performing" },
+    { label: "Music", category: "music" },
+    { label: "Visual Arts", category: "visual_arts" },
+    { label: "Engineering", category: "engineering" },
+    { label: "Science", category: "science" },
+    { label: "Resources", category: "resources" },
+    { label: "Business", category: "business" },
+    { label: "Medicine", category: "medicine" },
+    { label: "Math", category: "math" },
+    { label: "Law", category: "law" },
+    { label: "Fun", category: "fun" },
+  ];
 
   useEffect(() => {
     if (!GlobalValue) { setAvatarUrl(null); return; }
@@ -39,10 +63,43 @@ function LoginMorph({ open, setOpen }) {
     navigate("/profile");
   };
 
+  const handleCategorySelect = (category) => {
+    window.dispatchEvent(
+      new CustomEvent("backyard-category-select", { detail: { category } })
+    );
+    setMenuOpen(false);
+  };
+
   return (
     <AnimatePresence>
       {!open && (
         <div className="logged-in-controls">
+          {location.pathname.startsWith("/university/") && (
+            <div className="hamburger-menu-wrapper">
+              <button
+                className="hamburger-btn"
+                type="button"
+                aria-label="Open club categories"
+                onClick={() => setMenuOpen((prev) => !prev)}
+              >
+                ☰
+              </button>
+              {menuOpen && (
+                <div className="hamburger-dropdown">
+                  {categories.map((item) => (
+                    <button
+                      key={item.category}
+                      type="button"
+                      className="hamburger-item"
+                      onClick={() => handleCategorySelect(item.category)}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           {GlobalValue && <Logout />}
           <motion.button
             layoutId="login"
