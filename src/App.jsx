@@ -53,9 +53,12 @@ function App() {
       playsInline 
       loop
       style={{ 
-        width: '100%', 
+        width: '90vw',
+        maxWidth: '1100px',
         height: '100%', 
-        objectFit: 'cover' // Ensures no black bars, fills the container
+        objectFit: 'cover', // Ensures no black bars, fills the container
+        display: 'block',
+    margin: '-10px auto' 
       }}
     />
   </div>

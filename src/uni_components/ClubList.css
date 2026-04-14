@@ -4,11 +4,12 @@
   gap: 30px;
   min-width: 10px;
   width: var(--uni-content-width, 75%);
-  margin: 100vh auto 0 auto;
-  padding-bottom: 12vh;
+  margin: 0% auto 0 auto;
+  
   justify-content:center;
   justify-items: center;
   z-index: 0;
+
 }
 
 body::-webkit-scrollbar {

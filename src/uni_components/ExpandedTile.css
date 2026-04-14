@@ -56,9 +56,7 @@
   transition: transform 0.12s ease;
 }
 
-.review-btn.pop {
-  animation: review-pop 0.25s ease forwards;
-}
+
 
 .log-btn{
   width: 170px;
@@ -433,10 +431,10 @@
     line-height: 1.1;
     white-space: normal;
     display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2; /* Limits text to 2 lines */
-  overflow: hidden;
-  text-overflow: ellipsis;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2; /* Limits text to 2 lines */
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .club-tag1 {

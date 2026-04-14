@@ -3,7 +3,7 @@
     height: 3rem;
     border-radius: 24px;
     background-color: rgba(251, 251, 251, 0.94);
-    padding: 0 14px;
+    padding: 0 15px;
     display: flex;
     align-items: center;
     border: 1px solid rgb(202, 200, 200);
@@ -60,14 +60,14 @@
 
     /* The cursor now hugs the text! */
     border-right: 2px solid rgb(43, 37, 7);
-    animation: blink 0.7s infinite;
+    animation: blinks 0.7s infinite;
     white-space: nowrap;
 }
 
 
 
 
-@keyframes blink {
+@keyframes blinks {
     0%, 100% { border-color: transparent; }
     50% { border-color: rgb(43, 37, 7); }
 }

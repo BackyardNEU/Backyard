@@ -36,7 +36,7 @@
   z-index: 2;
   min-height: 100vh;
   display: grid;
-  grid-template-rows: 20vh 10vh 60vh 10vh;
+  grid-template-rows: 17vh 6vh 70vh ;
 }
 
 .uni-header-spacer {
@@ -97,40 +97,6 @@
   padding: 0 0 0.4rem 0;
 }
 
-.community-board {
-  
-  background-image: url(/src/assets/community_board.png);
-  z-index: 50;
-  background-size: stretch;
-  background-repeat: repeat;
-  
-  background-attachment: scroll;
-  background-position: center;
-  margin: 0 auto;
-  width: 90%;
-  margin: 5rem auto 0 auto; 
-
-  height: 80vh;
-  overflow-y: auto;
-  overflow-x: hidden;
-
-  /* Scroll styling */
-  scrollbar-width: thin;
-  scrollbar-color: rgb(181, 152, 113) transparent;
-
-  border: 12px solid #9b826a;
-
-}
-.community-board::-webkit-scrollbar {
-  width: 6px;
-}
-.community-board::-webkit-scrollbar-track {
-  background: transparent;
-}
-.community-board::-webkit-scrollbar-thumb {
-  background-color: rgb(181, 152, 113);
-  border-radius: 10px;
-}
 
 
 
@@ -155,7 +121,7 @@
 
 @media (max-width: 900px) {
   .uni-layout {
-    grid-template-rows: 18vh 11vh 61vh 10vh;
+    grid-template-rows: 16vh 5.5vh 76vh;
   }
 
   .uni-header-logo {
@@ -169,7 +135,7 @@
   }
 
   .uni-layout {
-    grid-template-rows: 16vh 12vh 62vh 10vh;
+    grid-template-rows: 11vh 6vh 76vh;
   }
 
   .uni-header-logo {

@@ -244,7 +244,7 @@ function ExpandedTile({club, onClose, onMembershipChange}){
         <div style = {{marginBottom: "30px"}}>
             <h3>Have you been in this club?</h3>
             <div>{isClicked ? ( <img src = {logImage} className = "log-btn" alt = "Clicked state" /> ) :( 
-            <button className={`review-btn ${animating ? 'pop' : ''}`} onClick = {handleClick}>Share your experience</button> )}</div>
+            <button className={`review-btn`} onClick = {handleClick}>Share your experience</button> )}</div>
         </div>
         {isOpen && (
             <div>
