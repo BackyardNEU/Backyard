@@ -5,7 +5,8 @@ import { supabase } from '../supabase';
 import './CalendarPage.css';
 
 export const CalendarPage = () => {
-    const { userFavorites, userId } = useClubData();
+    // grab relevant data from global context
+    const { favoritesCache, userId } = useClubData();
 
     // null means no reqeust was ever made -> request. Empty list implies no favorited clubs have events going on this week.
     const [ weeklyEventsCache, setWeeklyEventsCache ] = useState(null);
@@ -30,18 +31,18 @@ export const CalendarPage = () => {
     // first: we need to check and see if the user has any clubs
     useEffect(() => {
         // check if user is logged in and if they have no favorites -> They need to log in or get favorites
-        if (!userId || userFavorites.size === 0) {
+        if (!userId || favoritesCache.size === 0) {
             return; //TODO: Render only a div if the user is logged in (only logged in users can use this page)
         }
         // If the user has no favorites, display a message in the warning div and pass an empty array to the CalendarList component
         else {
             setWeeklyEventsCache(null); // reset so the next block re-fetches
         }
-    }, [userFavorites]); // if userFavorites changes, then we set weeklyEventsCache to null to refresh it
+    }, [favoritesCache]); // if userFavorites changes, then we set weeklyEventsCache to null to refresh it
 
     useEffect(() => {
         // make sure user is logged in, they have favorites, and that the weeklyEventsCache isnt null (otherwise there is data in there)
-        if (!userId || userFavorites.size === 0 || weeklyEventsCache !== null) {
+        if (!userId || favoritesCache.size === 0 || weeklyEventsCache !== null) {
             return;
         }
         // fetch the events using the 
@@ -58,11 +59,6 @@ export const CalendarPage = () => {
         }
         fetchEvents();
     }, [userId, weeklyEventsCache]);
-
-    // allow for events to be added (deletion/alteration will come later)
-    function addEvent() {
-        setShowForm(true);
-    }
 
     // meant to reflect a change in the fields in the react state
     const handleChange = (e) => {
@@ -161,24 +157,28 @@ export const CalendarPage = () => {
     //Note2self: when I implement the club field inputting interface, I need to replace the club name field with the club's id when they are logged into 
     //verified account
     return (
-        <div>
-            <div>
-                <button onClick={addEvent} className="calendar-button">Click to add an event</button>
-                {showForm && (
+        <>
+            <div className="whole-calendar-page">
+                {!showForm && (                                                                                                                                   
+                    <button onClick={() => { setShowForm(true); }} className="calendar-button">Click to add an event</button>
+                )}
+                {showForm && (  
                     <div>
-                        <label>Copy and paste id *temp* <input type="text" value={newEvent.clubId} placeholder="id of club for now" name="clubId" onChange={handleChange} required /></label>
-                        <label>Name of club: <input type="text" value={newEvent.clubName} placeholder="Club name" name="clubName" onChange={handleChange} required /></label>
-                        <label>Event Description: <input type="text" value={newEvent.description} placeholder="Description" name="description" onChange={handleChange} required /></label>
-                        <label>Start time: <input type="time" value={newEvent.startTime} placeholder="Start time" name="startTime" onChange={handleChange} required /></label>
-                        <label>End time: <input type="time" value={newEvent.endTime} placeholder="End time" name="endTime" onChange={handleChange} required /></label>
-                        <label>Date: <input type="date" value={newEvent.date} placeholder="yyyy-mm-dd" name="date" onChange={handleChange} required /></label>
-                        <p>{warning}</p>
-                        <button onClick={() => { setShowForm(false); setWarning(""); }}>Cancel</button>
-                        <button onClick={handleSubmit}>Save</button>
+                        <div>
+                            <label>Copy and paste id *temp* <input type="text" value={newEvent.clubId} placeholder="id of club for now" name="clubId" onChange={handleChange} required /></label>
+                            <label>Name of club: <input type="text" value={newEvent.clubName} placeholder="Club name" name="clubName" onChange={handleChange} required /></label>
+                            <label>Event Description: <input type="text" value={newEvent.description} placeholder="Description" name="description" onChange={handleChange} required /></label>
+                            <label>Start time: <input type="time" value={newEvent.startTime} placeholder="Start time" name="startTime" onChange={handleChange} required /></label>
+                            <label>End time: <input type="time" value={newEvent.endTime} placeholder="End time" name="endTime" onChange={handleChange} required /></label>
+                            <label>Date: <input type="date" value={newEvent.date} placeholder="yyyy-mm-dd" name="date" onChange={handleChange} required /></label>
+                            <p>{warning}</p>
+                            <button onClick={() => { setShowForm(false); setWarning(""); }} class="calendar-button">Cancel</button>
+                            <button onClick={handleSubmit} class="calendar-button">Save</button>
+                        </div>
                     </div>
                 )}
                 <CalendarList events={weeklyEventsCache ?? []} />
             </div>
-        </div>
+        </>
     );
 };

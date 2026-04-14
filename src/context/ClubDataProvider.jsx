@@ -44,7 +44,7 @@ export const ClubDataProvider = ({ children }) => {
             } else {
                 // use set for fast .has() lookups
                 setFavoritesCache(new Set(favData.map(fav => fav.club_id)));
-                console.log("Favorites loaded:", favData.length);
+                console.log("Favorites loaded: " + favoritesCache, favData.length);
 
                 //setUserID for use later
                 setUserId(userData.user.id);

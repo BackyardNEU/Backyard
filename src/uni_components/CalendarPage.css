@@ -1,3 +1,8 @@
+.whole-calendar-page {
+    border: 2px solid red;
+    padding: 10px;
+}
+
 .calendar-button {
     background: white;
     border: 1px solid black;

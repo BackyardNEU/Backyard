@@ -1,4 +1,30 @@
-.calendar-list {
-    background: white;
-    
+/* The div that holds all of the days together */
+.calendar-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    border: 2px solid green;
+}
+
+/* Each day of the calendar. This is the parent component that holds most of the children eleemnts below this */ 
+.calendar-day {
+    border: 2px solid black;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 5px;
+}
+
+/* Special styling for the current day of the week (like the actual name of the day itself) */
+.day-title {
+    font-size: 30px;
+}
+
+
+/* Wraps the current month title */
+.current-month {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    border: 2px solid green;
 }
