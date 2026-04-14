@@ -81,7 +81,7 @@ export const SearchBar = () => {
         className="hat-icon"
         onClick={() => { setShowDropdown(prev => !prev); inputRef.current?.focus(); }}
       />
-      <FaSearch className="search-icon" />
+     
       <input
         ref={inputRef}
         placeholder="Search for your school"

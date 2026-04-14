@@ -65,7 +65,7 @@
     top: 100%;
     left: -1px;
     right: -1px;
-    background-color: #ffffff;
+    background-color: #f9f9f9;
     border: 0.7px solid #4c4c4c;
     border-top: none;
     border-bottom-left-radius: 20px;
@@ -84,7 +84,7 @@
     cursor: pointer;
     font-size: 0.95rem;
     color: #222;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid #f9f9f9;
     transition: background-color 0.1s ease;
 }
 
@@ -94,7 +94,7 @@
 
 .school-dropdown-item--active,
 .school-dropdown-item:hover {
-    background-color: #f0f4ff;
+    background-color: #ededed;
 }
 
 .suggestion-icon {
@@ -120,7 +120,7 @@
     font-size: 1.25rem;
     
     margin-left: 5px;
-    color:rgb(219, 180, 74);
+    color: rgb(65, 84, 108);
 }
 
 .school-input-wrapper input::placeholder {
