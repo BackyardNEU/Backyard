@@ -2,7 +2,6 @@ import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import './App.css';
 import { SearchBar } from './components/SearchBar';
-import { SearchResultsList } from './components/SearchResultsList';
 import { UniversityPage } from './uni_components/UniversityPage';
 import LoginMorph from "./login_components/LoginMorph";
 import ReviewPage from "./review_components/ReviewPage";
@@ -11,7 +10,6 @@ import { ProfilePage } from './profile_components/ProfilePage';
 import { ClubDataProvider } from './context/ClubDataProvider'
 
 function App() {
-  const [results, setResults] = useState([])
   const [loginOpen, setLoginOpen] = useState(false);
   const location = useLocation();
 
@@ -65,8 +63,7 @@ function App() {
 
   {/* Search Bar Container */}
   <div className="search-bar-container" style={{ width: '100%', padding: '1rem' }}>
-    <SearchBar setResults={setResults} />
-    <SearchResultsList results={results} />
+    <SearchBar />
   </div>
 </div>
             }
