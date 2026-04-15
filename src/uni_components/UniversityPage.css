@@ -33,10 +33,10 @@
 
 .uni-layout {
   position: relative;
-  z-index: 2;
+
   min-height: 100vh;
   display: grid;
-  grid-template-rows: 17vh 6vh 70vh ;
+  grid-template-rows: 20vh 6vh 70vh ;
 }
 
 .uni-header-spacer {
@@ -45,6 +45,16 @@
   align-items: center;
   justify-content: center;
   padding-top: 0.6rem;
+}
+
+.uni-neu-flag {
+  position: fixed;
+  top: 1%;
+  left: 1%;
+  height: 15%;
+  width: auto;
+  pointer-events: none;
+  z-index: 10;
 }
 
 .uni-header-logo {

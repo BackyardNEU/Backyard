@@ -14,7 +14,7 @@
   container-type: inline-size;
   gap: 0.5rem;
   
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   transition: transform 0.6s ease, border-color 0.3s ease;
   z-index: 100;
@@ -106,6 +106,23 @@
   font-weight: 400;
   font-style: italic;
   letter-spacing: 0.9px;
+}
+
+.pin {
+  position: absolute;
+  top: 6px;
+  width: 15px;
+  height: 15px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.pin-left {
+  left: 6px;
+}
+
+.pin-right {
+  right: 6px;
 }
 
 .heart-btn {

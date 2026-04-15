@@ -10,8 +10,9 @@ import { CalendarPage } from './CalendarPage';
 
 // Import your images
 import ghibliBackground from '/src/assets/ghibili_background.jpg';
-import ghibliPlant from '/src/assets/ghibliPlant.png'; 
+import ghibliPlant from '/src/assets/ghibliPlant.png';
 import headerLogo from '/src/assets/header_logo.png';
+import neuFlag from '/src/assets/neu_flag.png';
 
 export const UniversityPage = () => {
   const { id } = useParams();
@@ -105,6 +106,7 @@ export const UniversityPage = () => {
   return (
     <div className="UniPage">
       <div className="uni-background-layer" />
+      <img src={neuFlag} alt="" className="uni-neu-flag" />
       <img
         src={ghibliPlant}
         alt=""

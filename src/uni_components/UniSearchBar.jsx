@@ -3,9 +3,33 @@ import { supabase } from '../supabase'
 import {FaSearch} from 'react-icons/fa'
 import './UniSearchBar.css'
 
+const CATEGORIES = [
+  { label: "Calendar", category: "calendar" },
+  { label: "Favorites", category: "favorites" },
+  { label: "FSL", category: "fsl" },
+  { label: "Intramurals", category: "intramural_sports" },
+  { label: "Affinity", category: "affiliation" },
+  { label: "Environment", category: "nature" },
+  { label: "Literature", category: "lit" },
+  { label: "Comp Sci", category: "programming" },
+  { label: "Performing", category: "performing" },
+  { label: "Music", category: "music" },
+  { label: "Visual Arts", category: "visual_arts" },
+  { label: "Engineering", category: "engineering" },
+  { label: "Science", category: "science" },
+  { label: "Resources", category: "resources" },
+  { label: "Business", category: "business" },
+  { label: "Medicine", category: "medicine" },
+  { label: "Math", category: "math" },
+  { label: "Law", category: "law" },
+  { label: "Fun", category: "fun" },
+];
+
 export const UniSearchBar = ({ setResults, university}) => {
 
   const [input, setInput] = useState("")
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [activeCategory, setActiveCategory] = useState(null)
   const [clubs, setClubs] = useState([]) 
   const [displayText, setDisplayText] = useState("")
   
@@ -22,6 +46,14 @@ export const UniSearchBar = ({ setResults, university}) => {
                     "Show me clubs for foodies"
                   ];
   
+
+  const handleCategorySelect = (category) => {
+    setActiveCategory(prev => prev === category ? null : category);
+    window.dispatchEvent(
+      new CustomEvent("backyard-category-select", { detail: { category } })
+    );
+    setMenuOpen(false);
+  };
 
   const handleClick = () => {
     setIsInteracted(true);
@@ -116,7 +148,33 @@ useEffect(() => {
 
   return (
     <div className="club-input-wrapper">
-        <FaSearch className="search-icon" />
+        <div className="hamburger-wrapper">
+          <button
+  className={`uni-hamburger-btn ${activeCategory ? 'active' : ''}`}
+  type="button"
+  onClick={() => setMenuOpen(prev => !prev)}
+  aria-label="Open club categories"
+>
+  {activeCategory
+    ? CATEGORIES.find(c => c.category === activeCategory)?.label
+    : "Categories"}
+</button>
+          {menuOpen && (
+            <div className="uni-hamburger-dropdown">
+              {CATEGORIES.map(({ label, category }) => (
+                <button
+                  key={category}
+                  type="button"
+                  className="uni-hamburger-item"
+                  onClick={() => handleCategorySelect(category)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+    
         <div className="input-container">
             
             {/* The Custom Placeholder that shrink-wraps the text */}

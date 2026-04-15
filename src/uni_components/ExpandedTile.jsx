@@ -73,15 +73,28 @@ function ExpandedTile({club, onClose, onMembershipChange}){
         const img = imgRef.current;
 
         const getColor = () => {
-            const [r, g, b] = colorThief.getColor(img);
-            setDominantColor(getPastelColor(r,g,b));
+            try {
+                const [r, g, b] = colorThief.getColor(img);
+                setDominantColor(getPastelColor(r, g, b));
+            } catch {
+                setDominantColor('rgb(211, 211, 211)');
+            }
         };
+
+        if (!img || !img.src) {
+            setDominantColor('rgb(211, 211, 211)');
+            return;
+        }
+
         if (img.complete) {
             getColor();
-        } 
-        else {
+        } else {
             img.addEventListener("load", getColor);
-            return () => img.removeEventListener("load", getColor);
+            img.addEventListener("error", () => setDominantColor('rgb(211, 211, 211)'));
+            return () => {
+                img.removeEventListener("load", getColor);
+                img.removeEventListener("error", () => setDominantColor('rgb(211, 211, 211)'));
+            };
         }
     }, [club.image_url]);
 

@@ -25,6 +25,77 @@
 {
     fill: #000000;
 }
+
+.hamburger-wrapper {
+  position: relative;
+  flex-shrink: 0;
+  margin-right: 6px;
+}
+
+.uni-hamburger-btn {
+  height: 2rem;
+  min-width: 2rem;
+  padding: 0 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgb(202, 200, 200);
+  
+  /* Default: Grey */
+  color: #666;
+  background: #e5e5e5;
+  
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Active state: Blue with white text */
+.uni-hamburger-btn.active {
+  background: rgb(44, 33, 18);
+  color: white;
+  border-color: rgb(44, 33, 18);
+}
+
+.uni-hamburger-btn:hover {
+  background: #d0d0d0;
+}
+
+.uni-hamburger-btn.active:hover {
+  background: rgb(110, 104, 93);
+}
+
+.uni-hamburger-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: min(72vw, 220px);
+  max-height: 58vh;
+  overflow-y: auto;
+  background: rgba(251, 251, 251, 0.97);
+  border: 1px solid #d6d6d6;
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+  padding: 0.45rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  z-index: 500;
+}
+
+.uni-hamburger-item {
+  border: none;
+  background: transparent;
+  text-align: left;
+  border-radius: 10px;
+  padding: 0.62rem 0.7rem;
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.uni-hamburger-item:hover {
+  background: #f2f2f2;
+}
 .club-input-wrapper input {
     background-color: transparent ;
     border: none;

@@ -6,7 +6,8 @@ import { supabase } from '../supabase';
 import { motion } from "framer-motion";
 import { useGlobalStore } from "../store";
 import { useClubData } from '../context/useClubData';
-import paperTexture from '/src/assets/white-paper-texture.jpg';  
+import paperTexture from '/src/assets/white-paper-texture.jpg';
+import posterPin from '/src/assets/poster_pin.png';
 
 
 export const ClubGrid = ({ result, onExpand, hideHeart }) => {
@@ -65,8 +66,7 @@ export const ClubGrid = ({ result, onExpand, hideHeart }) => {
   };
 
   const handleExpand = () => {
-      setIsExpanding(true); // Strip the hover effect immediately
-      onExpand();     
+      onExpand();
   };
   const truncate = (text, wordLimit = 5) => {
     if (!text) return "";
@@ -77,15 +77,13 @@ export const ClubGrid = ({ result, onExpand, hideHeart }) => {
 
   return ( 
 
-    <motion.button 
-      className = "club-card" 
+    <motion.button
+      className = "club-card"
       onClick = {handleExpand}
-     
       layoutId = {`club-${result.id}`}
-    
-      // 5. Recommended: prevent extra clicks while morphing
-     
 >
+      <img src={posterPin} alt="" className="pin pin-left" />
+      <img src={posterPin} alt="" className="pin pin-right" />
       <div className = "flex-card">
         <div className = "image-container">
         <img className = "club-img" src={result.image_url || "/raccoon_pfp.png"}/>

@@ -2,7 +2,8 @@
   position: fixed;
   inset: 0;               
   margin: auto;           
-
+ width: 44vw;  /* Add this */
+  background: rgb(252, 252, 252);  
   height: 100%;
   overflow: hidden;
   background: transparent;
@@ -11,6 +12,7 @@
   align-items: center;
   overflow-y: auto;
   z-index: 8000;   
+  
 }
 
 .expanded-card::before {
