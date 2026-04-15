@@ -297,13 +297,7 @@
   width: 100%;
 }
 
-.thanks-title {
-  font-size: clamp(2.5rem, 5vw, 4rem);
-  font-weight: 700;
-  color: #111;
-  margin: 0;
-  line-height: 1.2;
-}
+
 
 .raccoon {
   width: clamp(80px, 10vw, 120px);
