@@ -34,6 +34,7 @@
 
 .uni-hamburger-btn {
   height: 2rem;
+  font-family: "Barlow", sans-serif;
   min-width: 2rem;
   padding: 0 0.5rem;
   border-radius: 999px;
@@ -88,7 +89,7 @@
   text-align: left;
   border-radius: 10px;
   padding: 0.62rem 0.7rem;
-  font-family: "Be Vietnam Pro", sans-serif;
+  font-family: "Barlow", sans-serif;
   font-size: 0.95rem;
   cursor: pointer;
 }
@@ -101,7 +102,7 @@
     border: none;
      
     outline: none;
-    font-family: "Be Vietnam Pro", sans-serif;
+    font-family: "Barlow", sans-serif;
     width: 100%;
     height: 100%;
     font-size: clamp(1rem, 2vw, 1.25rem);
@@ -118,7 +119,7 @@
     position: absolute;
     left: 0;
     color: rgb(43, 37, 7);
-    font-family: "Be Vietnam Pro", sans-serif;
+    font-family: "Barlow", sans-serif;
     font-size: clamp(1rem, 2vw, 1.25rem);
     background-color: white;
     /* Crucial: lets the user click "through" the text into the input */

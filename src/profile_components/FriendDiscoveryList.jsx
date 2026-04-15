@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabase';
-import { FaSearch } from 'react-icons/fa';
+import { FaSearch, FaTimes } from 'react-icons/fa';
 import './FriendDiscoveryList.css';
 
 export const FriendDiscoveryList = ({ userId }) => {
@@ -9,8 +9,8 @@ export const FriendDiscoveryList = ({ userId }) => {
   const [searchInput, setSearchInput] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [addingId, setAddingId] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
-  // Fetch the current user's friend list and resolve profiles
   const fetchFriends = useCallback(async () => {
     if (!userId) return;
 
@@ -50,7 +50,6 @@ export const FriendDiscoveryList = ({ userId }) => {
     fetchFriends();
   }, [fetchFriends]);
 
-  // Search profiles by username
   useEffect(() => {
     if (!searchInput.trim()) {
       setSearchResults([]);
@@ -76,7 +75,6 @@ export const FriendDiscoveryList = ({ userId }) => {
     searchUsers();
   }, [searchInput, userId]);
 
-  // Add a friend
   async function handleAddFriend(friendId) {
     if (addingId) return;
     setAddingId(friendId);
@@ -105,13 +103,11 @@ export const FriendDiscoveryList = ({ userId }) => {
       console.error('Error adding friend:', error);
     } else {
       setFriendIds(list);
-      // Re-fetch to update the friends display
       await fetchFriends();
     }
     setAddingId(null);
   }
 
-  // Remove a friend
   async function handleRemoveFriend(friendId) {
     if (addingId) return;
     setAddingId(friendId);
@@ -139,71 +135,117 @@ export const FriendDiscoveryList = ({ userId }) => {
     setAddingId(null);
   }
 
+  function openModal() {
+    setSearchInput('');
+    setSearchResults([]);
+    setModalOpen(true);
+  }
+
+  function closeModal() {
+    setSearchInput('');
+    setSearchResults([]);
+    setModalOpen(false);
+  }
+
   return (
     <div className="friends-panel">
-      {/* Search bar */}
-      <div className="friend-search-wrapper">
-        <FaSearch className="friend-search-icon" />
-        <input
-          placeholder="Search for a friend"
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-        />
+      {/* Clean friend cards + Find More button */}
+      <div className="friends-scroll">
+        {friends.map((friend) => (
+          <div className="friend-card" key={friend.id}>
+            <img
+              className="friend-avatar"
+              src={friend.avatar_url || '/raccoon_pfp.png'}
+              alt={friend.username}
+            />
+            <span className="friend-card-name">{friend.username}</span>
+          </div>
+        ))}
+        <button className="find-friends-card" onClick={openModal}>
+          <span className="find-friends-plus">+</span>
+          <span className="find-friends-label">
+            {friends.length === 0 ? 'Find Friends' : 'Find More'}
+          </span>
+        </button>
       </div>
 
-      {/* Search results dropdown */}
-      {searchResults.length > 0 && (
-        <div className="friend-search-results">
-          {searchResults.map((person) => {
-            const alreadyFriend = friendIds.includes(person.id);
-            return (
-              <div className="friend-search-result" key={person.id}>
-                <img
-                  className="friend-avatar-sm"
-                  src={person.avatar_url || '/raccoon_pfp.png'}
-                  alt={person.username}
-                />
-                <span className="friend-result-name">{person.username}</span>
-                {alreadyFriend ? (
-                  <span className="friend-already-tag">Added</span>
-                ) : (
-                  <button
-                    className="friend-add-btn"
-                    onClick={() => handleAddFriend(person.id)}
-                    disabled={addingId === person.id}
-                  >
-                    {addingId === person.id ? '...' : 'Add Friend'}
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Friends list */}
-      <h2 className="friends-heading">Friendships</h2>
-      {friends.length === 0 ? (
-        <p className="friends-empty">No friends added yet.</p>
-      ) : (
-        <div className="friends-scroll">
-          {friends.map((friend) => (
-            <div className="friend-card" key={friend.id}>
-              <img
-                className="friend-avatar"
-                src={friend.avatar_url || '/raccoon_pfp.png'}
-                alt={friend.username}
-              />
-              <span className="friend-card-name">{friend.username}</span>
-              <button
-                className="friend-remove-btn"
-                onClick={() => handleRemoveFriend(friend.id)}
-                disabled={addingId === friend.id}
-              >
-                {addingId === friend.id ? '...' : 'Remove'}
+      {/* Modal */}
+      {modalOpen && (
+        <div className="friends-modal-overlay" onClick={closeModal}>
+          <div className="friends-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="friends-modal-header">
+              <h3 className="friends-modal-title">Manage Friends</h3>
+              <button className="friends-modal-close" onClick={closeModal}>
+                <FaTimes />
               </button>
             </div>
-          ))}
+
+            {/* Search */}
+            <div className="friend-search-wrapper">
+              <FaSearch className="friend-search-icon" />
+              <input
+                placeholder="Search for a friend"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                autoFocus
+              />
+            </div>
+
+            {searchResults.length > 0 && (
+              <div className="friend-search-results">
+                {searchResults.map((person) => {
+                  const alreadyFriend = friendIds.includes(person.id);
+                  return (
+                    <div className="friend-search-result" key={person.id}>
+                      <img
+                        className="friend-avatar-sm"
+                        src={person.avatar_url || '/raccoon_pfp.png'}
+                        alt={person.username}
+                      />
+                      <span className="friend-result-name">{person.username}</span>
+                      {alreadyFriend ? (
+                        <span className="friend-already-tag">Added</span>
+                      ) : (
+                        <button
+                          className="friend-add-btn"
+                          onClick={() => handleAddFriend(person.id)}
+                          disabled={addingId === person.id}
+                        >
+                          {addingId === person.id ? '...' : 'Add Friend'}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Current friends with remove */}
+            <div className="friends-modal-section-title">Current Friends</div>
+            {friends.length === 0 ? (
+              <p className="friends-empty">No friends added yet.</p>
+            ) : (
+              <div className="friends-modal-list">
+                {friends.map((friend) => (
+                  <div className="friend-modal-row" key={friend.id}>
+                    <img
+                      className="friend-avatar-sm"
+                      src={friend.avatar_url || '/raccoon_pfp.png'}
+                      alt={friend.username}
+                    />
+                    <span className="friend-result-name">{friend.username}</span>
+                    <button
+                      className="friend-remove-btn"
+                      onClick={() => handleRemoveFriend(friend.id)}
+                      disabled={addingId === friend.id}
+                    >
+                      {addingId === friend.id ? '...' : 'Remove'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

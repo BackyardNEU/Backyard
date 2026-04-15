@@ -27,17 +27,17 @@
     border-radius: 20px;
     background-color: transparent;
     padding: 0 10px;
-    margin-top: 1%;
+    margin-top: -1%;
     display: flex;
     align-items: center;
     border: 0.7px solid #4c4c4c;
-
+    margin-top: -5%;
     z-index: 10;
 }
 
 .hat-icon {
     fill: rgb(85, 85, 85);
-    
+    border: 0.5px solid grey; 
     background-color: rgb(227, 227, 227);
     
     border-radius: 50%;
@@ -118,12 +118,13 @@
     border: none;
     height: 100%;
     font-size: 1.25rem;
-    
+    font-family: "Barlow", sans-serif;
     margin-left: 5px;
     color: rgb(65, 84, 108);
 }
 
 .school-input-wrapper input::placeholder {
+    font-family: "Barlow", sans-serif;
     color: rgb(174, 194, 214);
     opacity: 1;
 }

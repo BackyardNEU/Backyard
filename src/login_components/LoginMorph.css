@@ -9,7 +9,7 @@
   height: 2.9rem;
   padding: 0;
   border-radius: 50%;
-  border: 1px solid  rgb(175, 174, 174);
+
   cursor: pointer;
 }
 
@@ -21,7 +21,7 @@
   align-items: center;
   gap: 1rem;
   z-index: 20;
-  color: rgb(255, 242, 211);
+  color: rgb(61, 55, 43);
 }
 
 .hamburger-menu-wrapper {

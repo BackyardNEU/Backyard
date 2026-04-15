@@ -10,7 +10,7 @@ import paperTexture from '/src/assets/white-paper-texture.jpg';
 import posterPin from '/src/assets/poster_pin.png';
 
 
-export const ClubGrid = ({ result, onExpand, hideHeart }) => {
+export const ClubGrid = ({ result, onExpand, hideHeart, hidePins }) => {
   const [animating, setAnimating] = useState(false);
   let GlobalValue = useGlobalStore((state) => state.GlobalValue);
 
@@ -82,8 +82,8 @@ export const ClubGrid = ({ result, onExpand, hideHeart }) => {
       onClick = {handleExpand}
       layoutId = {`club-${result.id}`}
 >
-      <img src={posterPin} alt="" className="pin pin-left" />
-      <img src={posterPin} alt="" className="pin pin-right" />
+      {!hidePins && <img src={posterPin} alt="" className="pin pin-left" />}
+      {!hidePins && <img src={posterPin} alt="" className="pin pin-right" />}
       <div className = "flex-card">
         <div className = "image-container">
         <img className = "club-img" src={result.image_url || "/raccoon_pfp.png"}/>

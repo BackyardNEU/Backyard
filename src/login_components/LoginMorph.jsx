@@ -5,7 +5,7 @@ import Logout from "./Logout";
 import Form from "./form";
 import "./LoginMorph.css";
 import { useGlobalStore } from "../store";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../supabase";
 
 
@@ -13,6 +13,8 @@ import { supabase } from "../supabase";
 function LoginMorph({ open, setOpen }) {
   let GlobalValue = useGlobalStore((state) => state.GlobalValue);
   const navigate = useNavigate();
+  const location = useLocation();
+  const isProfilePage = location.pathname === '/profile';
 const [isSignUp, setIsSignUp] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(null);
 
@@ -41,9 +43,9 @@ const [isSignUp, setIsSignUp] = useState(false);
 
   return (
     <AnimatePresence>
-      {!open && (
+      {!open && !isProfilePage && (
         <div className="logged-in-controls">
-{GlobalValue && <Logout />}
+          {GlobalValue && <Logout />}
           <motion.button
             layoutId="login"
             className="login-icon"

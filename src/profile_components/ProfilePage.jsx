@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 import { useGlobalStore } from '../store'
-// import { Logout } from '../components/Logout'
 import './ProfilePage.css'
 import imageCompression from 'browser-image-compression'
 import { ClubMembershipPanel } from './ClubMembershipPanel'
@@ -18,7 +17,6 @@ export const ProfilePage = () => {
   const { id } = useParams()
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
-  const [activeTab, setActiveTab] = useState('clubs')
   const [status, setStatus]     = useState('idle')
   const [preview, setPreview]   = useState(null)
   const [imageUrl, setImageUrl] = useState(null)
@@ -130,37 +128,34 @@ export const ProfilePage = () => {
       <div className="ProfilePage">
         <div className='spacer' />
         <div className='profile-header'>
-          <img
-            src={
-              profile?.avatar_url
-            }
-            alt="Profile"
-            className="profile-image"
-          />
+          <label htmlFor="avatar-upload" className="profile-photo-btn">
+            <img
+              src={preview || profile?.avatar_url}
+              alt="Profile"
+              className="profile-image"
+            />
+          </label>
           <input type="file" accept="image/*" id="avatar-upload" hidden onChange={handleAvatarUpload} />
-          <button onClick={() => document.getElementById('avatar-upload').click()}>
-            Change Photo
+          <h1 className='ProfileName'>Hello, {profile?.username}</h1>
+          <button
+            className="profile-close-btn"
+            onClick={() => navigate(lastPath && lastPath !== '/profile' ? lastPath : '/')}
+            aria-label="Close profile"
+          >
+            ×
           </button>
-          <h1 className='ProfileName'>{profile?.username}</h1>
         </div>
+        <hr className="profile-divider" />
         {user && (
           <>
-            <div className="profile-tabs">
-              <button
-                className={`profile-tab ${activeTab === 'clubs' ? 'active' : ''}`}
-                onClick={() => setActiveTab('clubs')}
-              >
-                Clubs
-              </button>
-              <button
-                className={`profile-tab ${activeTab === 'friends' ? 'active' : ''}`}
-                onClick={() => setActiveTab('friends')}
-              >
-                Friends
-              </button>
+            <div className="profile-section">
+              <h2 className="profile-divider-header">Clubs</h2>
+              <ClubMembershipPanel userId={user.id} />
             </div>
-            {activeTab === 'clubs' && <ClubMembershipPanel userId={user.id} />}
-            {activeTab === 'friends' && <FriendDiscoveryList userId={user.id} />}
+            <div className="profile-section">
+              <h2 className="profile-divider-header">Friends</h2>
+              <FriendDiscoveryList userId={user.id} />
+            </div>
           </>
         )}
       </div>

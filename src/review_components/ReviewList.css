@@ -27,7 +27,7 @@
 
 /* Stats bar rows */
 .range-row { display: flex; flex-direction: column; align-items: flex-start; align-self: flex-start; gap: 10px; width: 70vw; margin-bottom: 8px; }
-.range-label { width: 120px; font-size: 14px; flex-shrink: 0; }
+.range-label { width: 120px; font-family: "Barlow Condensed", sans-serif; font-size: 1rem; flex-shrink: 0; text-transform: uppercase; }
 .range-bar-container { width: 100%; height: 23px; ; border-radius: 20px; border: 2px solid none; box-shadow: 0 0 0 1px #adadad; overflow: hidden; }
 .range-bar-fill { height: 100%; border-radius: 6px; }
 .range-value { width: 10px; font-size: 14px; flex-shrink: 0; }
@@ -118,9 +118,9 @@
 }
 
 .rl-card__title {
-    font-family: 'Inclusive Sans', sans-serif;
-    font-size: 18px;
-    font-weight: 700;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 500;
     margin: 0 0 8px 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -128,7 +128,7 @@
 }
 
 .rl-card__text {
-    font-family: 'Be Vietnam Pro', sans-serif;
+    font-family: 'Barlow', sans-serif;
     font-size: 15px;
     color: #555;
     line-height: 1.55;
@@ -183,7 +183,7 @@
 }
 
 .rl-card__date-inline {
-    font-family: monospace;
+    font-family: "Barlow", sans-serif;
     font-size: 12px;
     color: #999;
     white-space: nowrap;
@@ -357,9 +357,9 @@
 }
 
 .rl-lightbox__title {
-    font-family: 'Inclusive Sans', sans-serif;
+    font-family: 'Barlow Condensed', sans-serif;
     font-size: 1.3rem;
-    font-weight: 700;
+    font-weight: 500;
     letter-spacing: 0.2px;
     margin: 0 0 4px 0;
     color: #fff;
@@ -370,7 +370,7 @@
 }
 
 .rl-lightbox__date {
-    font-family: monospace;
+    font-family: "barlow", sans-serif;
     font-size: 11px;
     color: #ff9d00;
     margin-bottom: 8px;
@@ -384,7 +384,7 @@
 }
 
 .rl-lightbox__text {
-    font-family: 'Quicksand', sans-serif;
+    font-family: 'Barlow', sans-serif;
     font-size: 0.85rem;
     line-height: 1.7;
     color: rgba(255,255,255,0.8);

@@ -33,16 +33,13 @@ function App() {
               
             <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
   {/* Responsive Video Container */}
-  <div style={{ 
-    width: '100%', 
-    marginTop: '70px',
-    maxWidth: '1400px',
-    marginLeft: 'auto',  // Centers the box
-    marginRight: 'auto', // Centers the box
-    aspectRatio: '16 / 9', // Maintains shape on all screens
-    maxHeight: '70vh',     // Prevents it from being too tall on huge monitors
+  <div style={{
+    width: '100%',
+    marginTop: '-40px',
+    maxWidth: '1000px',
+    marginLeft: 'auto',
+    marginRight: 'auto',
     overflow: 'hidden',
-    zIndex: 1000 
   }}>
     <video 
       src={`/src/assets/intro_screen.mp4`} 
@@ -51,12 +48,13 @@ function App() {
       playsInline 
       loop
       style={{ 
-        width: '90vw',
+        width: '90%',
         maxWidth: '1100px',
-        height: '100%', 
+        height: 'auto',
         objectFit: 'cover', // Ensures no black bars, fills the container
         display: 'block',
-    margin: '-10px auto' 
+        zIndex: 1,
+
       }}
     />
   </div>

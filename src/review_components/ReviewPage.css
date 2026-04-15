@@ -6,7 +6,7 @@
   max-width: 1800px;
   min-width: 380px;
   height: 95vh;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Barlow Condensed', sans-serif;
   background: rgb(255, 255, 255);
   border: 3px solid rgb(185, 185, 185);
   border-radius: clamp(12px, 5.5vw, 28px);
@@ -43,7 +43,7 @@
 
 /* Big instruction titles */
 .instruction-txt {
-  font-family: 'Be Vietnam Pro', sans-serif;
+  font-family: 'Barlow', sans-serif;
   font-size: clamp(4rem, 6vw, 7rem);
   font-weight: 300;
   color: #111;
@@ -75,7 +75,7 @@
   padding: 1rem;
   color: #BC3B03;
   border-radius: 8px;
-  font-family: 'Be Vietnam Pro', sans-serif;
+  font-family: 'Barlow Condensed', sans-serif;
 
 }
 
@@ -223,7 +223,8 @@
 }
 
 .number {
-  font-family: 'Inclusive Sans', sans-serif;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 500;
   line-height: 1.2;
   font-style: normal;
   position: relative;
@@ -232,6 +233,7 @@
 }
 
 .number-small {
+  font-family: "Barlow", sans-serif;
   font-size: 20px;
 }
 

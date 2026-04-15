@@ -37,16 +37,14 @@ export const ClubMembershipPanel = ({ userId }) => {
   if (!memberClubs.length) {
     return (
       <div className="membership-panel">
-        <h2 className="membership-heading">Membership</h2>
+      
         <p className="membership-empty">You haven't joined any clubs yet.</p>
       </div>
     );
   }
 
   return (
-    <div className="membership-panel">
-      <h2 className="membership-heading">Membership</h2>
-      <AnimatePresence>
+    <div className="membership-panel">    <AnimatePresence>
         <div className="membership-scroll">
           {memberClubs.map((club) => (
             <div className="membership-card-wrapper" key={club.id}>
@@ -54,6 +52,7 @@ export const ClubMembershipPanel = ({ userId }) => {
                 result={club}
                 onExpand={() => setExpandedClub(club)}
                 hideHeart
+                hidePins
               />
             </div>
           ))}

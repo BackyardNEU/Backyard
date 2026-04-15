@@ -1,56 +1,123 @@
+@font-face {
+  font-family: 'Organik';
+  src: url('/src/fonts/Organik.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
 .ProfilePage {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   width: 100%;
   max-width: 800px;
   margin: 0 auto;
   padding: 0 20px;
   box-sizing: border-box;
+  
 }
 
 .profile-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  padding: 16px 0 12px;
+}
+
+.profile-photo-btn {
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.profile-photo-btn::after {
+  content: 'change photo';
   position: absolute;
-  left: 0;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-family: "Barlow", sans-serif;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.profile-photo-btn:hover::after {
+  opacity: 1;
 }
 
 .profile-image {
-  width: 120px;
-  height: 120px;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
   object-fit: cover;
+  display: block;
 }
 
-.profile-tabs {
-  display: flex;
-  gap: 0;
-  border-bottom: 1px solid #ddd;
-  margin-top: 24px;
-  width: 100%;
-  box-sizing: border-box;
+.ProfileName {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: clamp(2.8rem, 8vw, 5rem);
+  font-weight: 400;
+  margin: 0;
+  color: #494949;
+  letter-spacing: 0.04em;
 }
 
-.profile-tab {
-  flex: 1 1 0;
-  min-width: 0;
-  padding: 12px 0;
+.profile-close-btn {
+  position: fixed;
+  top: 0.5rem;
+  right: 1rem;
+  z-index: 20;
   background: none;
   border: none;
-  border-bottom: 3px solid transparent;
-  font-family: "Josefin Sans", sans-serif;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #888;
+  font-size: 2rem;
+  line-height: 1;
+  color: #999;
   cursor: pointer;
-  text-align: center;
-  transition: color 0.2s ease, border-color 0.2s ease;
+  padding: 4px 6px;
+  transition: color 0.15s ease;
 }
 
-.profile-tab:hover {
-  color: #333;
+.profile-close-btn:hover {
+  color: #222;
 }
 
-.profile-tab.active {
-  color: rgb(0, 62, 11);
-  border-bottom-color: rgb(0, 62, 11);
+.profile-divider {
+  width: 100%;
+  border: none;
+  border-top: 1px solid #ddd;
+  margin: 0 0 8px;
+}
+
+.profile-section {
+  width: 100%;
+  margin-top: 32px;
+}
+
+.profile-divider-header {
+  font-family: 'Barlow', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  font-style: normal;
+  line-height: normal;
+  
+  letter-spacing: 0.08em;
+  color: rgb(82, 82, 82);
+  text-align: left;
+  margin: 0 0 12px;
+}
+
+.profile-divider-line {
+  height: 1px;
+  background-color: rgb(205, 205, 205);
+  margin-bottom: 20px;
 }

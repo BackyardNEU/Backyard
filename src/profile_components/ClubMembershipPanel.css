@@ -4,8 +4,8 @@
 }
 
 .membership-heading {
-  font-family: "Be Vietnam Pro", sans-serif;
-  font-weight: 500;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 300;
   color: rgb(0, 0, 0);
   font-size: 1.3rem;
   margin-bottom: 12px;
@@ -34,17 +34,35 @@
 
 .membership-card-wrapper {
   flex: 0 0 auto;
-  width: 220px;
+  width: 320px;
 }
 
 .membership-card-wrapper .club-card {
   width: 100%;
+  background: transparent;
+  box-shadow: none;
+  border: 1px solid #ccc;
+  border-radius: 15px;
+  background-color: rgb(255, 255, 255);
+}
+
+.membership-card-wrapper .club-card::before,
+.membership-card-wrapper .image-container::before {
+  display: none;
+}
+
+.membership-card-wrapper .club-img {
+  mix-blend-mode: normal;
 }
 
 .membership-card-wrapper .image-container,
 .membership-card-wrapper .club-img {
-  width: 180px;
-  height: 180px;
+  width: 280px;
+  height: 280px;
+}
+
+.membership-card-wrapper .club-name {
+  max-width: 280px;
 }
 
 .membership-empty {
