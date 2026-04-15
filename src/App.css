@@ -4,6 +4,7 @@ html, body {
   width: 100%;
   min-height: 100%;
   box-sizing: border-box;
+  font-family: "Barlow", sans-serif;
 }
 
 /* make the viewport root a flex container so children are centered */
