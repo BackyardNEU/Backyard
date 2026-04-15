@@ -36,7 +36,7 @@ function App() {
   <div style={{
     width: '100%',
     marginTop: '-40px',
-    maxWidth: '1000px',
+    maxWidth: '1100px',
     marginLeft: 'auto',
     marginRight: 'auto',
     overflow: 'hidden',

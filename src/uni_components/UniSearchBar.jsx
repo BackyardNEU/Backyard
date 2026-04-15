@@ -23,6 +23,7 @@ const CATEGORIES = [
   { label: "Math", category: "math" },
   { label: "Law", category: "law" },
   { label: "Fun", category: "fun" },
+  { label: "Service", category: "service" },
 ];
 
 export const UniSearchBar = ({ setResults, university}) => {

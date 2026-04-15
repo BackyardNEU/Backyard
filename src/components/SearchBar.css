@@ -22,7 +22,8 @@
 
 .school-input-wrapper {
     position: relative;
-    width: 100%;
+    width: 90%;
+    max-width: 1100px;
     height: 3rem;
     border-radius: 20px;
     background-color: transparent;
