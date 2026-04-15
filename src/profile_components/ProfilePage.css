@@ -63,6 +63,19 @@
   display: block;
 }
 
+@keyframes name-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+    letter-spacing: 0.18em;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    letter-spacing: 0.04em;
+  }
+}
+
 .ProfileName {
   font-family: "Bebas Neue", sans-serif;
   font-size: clamp(2.8rem, 8vw, 5rem);
@@ -70,6 +83,7 @@
   margin: 0;
   color: #494949;
   letter-spacing: 0.04em;
+  animation: name-reveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .profile-close-btn {
