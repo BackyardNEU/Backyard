@@ -61,12 +61,14 @@ export const UniversityPage = () => {
       return;
     } else if (newCategory === "favorites") {
       console.log("If triggering");
+      setShowCalendar(false);
       setSelectedCategory(newCategory);
       const newdata = allData.filter(club => favoritesCache?.has(club.id));
       setResults(newdata);
     } else {
       console.log("Else triggering");
-      setSelectedCategory(newCategory); 
+      setShowCalendar(false);
+      setSelectedCategory(newCategory);
       const newdata = allData.filter(club => club.category === newCategory);
       setResults(newdata);
     }

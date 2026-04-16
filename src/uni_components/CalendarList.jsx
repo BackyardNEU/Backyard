@@ -25,7 +25,7 @@ export const CalendarList = ({ events }) => {
     // use the date-fns component here
     return (
         <div>
-            <h1 className="current-month">{format(today, 'MMMM - yyyy')}</h1>
+            <h1 className="current-month">{format(today, 'MMMM')}</h1>
             <div className="calendar-container">
                 {days.map((day) => (
                     <div key={day.date.toISOString()} className={`calendar-day${day.isToday ? ' today' : ''}`}>
