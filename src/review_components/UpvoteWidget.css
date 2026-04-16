@@ -62,9 +62,7 @@
   color: #000;
 }
 
-.uv--light .uv__btn:hover {
-  background: #f3f3f3;
-}
+
 
 .uv--light .uv__btn--active {
   background: #000;

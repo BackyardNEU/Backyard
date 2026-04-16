@@ -54,10 +54,7 @@
     transition: box-shadow 0.2s ease, transform 0.15s ease;
 }
 
-.rl-card:hover {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
-    transform: translateY(-2px);
-}
+
 
 /* ---- Normal (image + text) ---- */
 .rl-card--normal {
