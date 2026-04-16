@@ -3,6 +3,7 @@ import "./ReviewList.css";
 import StatsCard from "./StatsCard.jsx";
 import { UpvoteWidget } from "./UpvoteWidget";
 import { supabase } from "../supabase";
+import { useClubData } from "../context/useClubData";
 
 /**
  * Determine the comment type based on available data.
@@ -204,18 +205,35 @@ export default function ReviewList({ reviews, club_stats, club }) {
     const [selectedId, setSelectedId] = useState(null);
     const [userVotes, setUserVotes] = useState({});
     const [reviewScores, setReviewScores] = useState({});
+    const { userId } = useClubData();
 
     useEffect(() => {
         const s = {};
-        reviews.forEach((r) => { s[r.id] = r.upvote ?? 0; });
+        reviews.forEach((r) => { s[r.id] = r.upvotes ?? 0; });
         setReviewScores(s);
-        // If the list refreshes, clear local vote highlights (prevents stale UI)
-        setUserVotes({});
-    }, [reviews]);
+
+        if (!userId || reviews.length === 0) {
+            setUserVotes({});
+            return;
+        }
+
+        const reviewIds = reviews.map(r => r.id);
+        supabase
+            .from('user_votes')
+            .select('review_id, vote')
+            .eq('user_id', userId)
+            .in('review_id', reviewIds)
+            .then(({ data, error }) => {
+                if (error) { console.error('Error fetching user votes:', error); return; }
+                const votes = {};
+                data.forEach(v => { votes[v.review_id] = v.vote; });
+                setUserVotes(votes);
+            });
+    }, [reviews, userId]);
 
     const handleVote = useCallback(async (id, direction) => {
         const currentVote = userVotes[id] || 0;
-        const newVote = currentVote === direction ? 0 : direction; // toggle same direction off
+        const newVote = currentVote === direction ? 0 : direction;
         const voteDelta = newVote - currentVote;
         const oldScore = reviewScores[id] ?? 0;
         const newScore = oldScore + voteDelta;
@@ -225,25 +243,34 @@ export default function ReviewList({ reviews, club_stats, club }) {
         setReviewScores((prev) => ({ ...prev, [id]: newScore }));
 
         try {
-            const { error } = await supabase
+            const { error: scoreError } = await supabase
                 .from('reviews')
                 .update({ upvotes: newScore })
                 .eq('id', id);
+            if (scoreError) throw scoreError;
 
-            if (error) {
-                console.error('Supabase upvote error:', error);
-                setUserVotes((prev) => ({ ...prev, [id]: currentVote }));
-                setReviewScores((prev) => ({ ...prev, [id]: oldScore }));
+            if (newVote === 0) {
+                const { error: voteError } = await supabase
+                    .from('user_votes')
+                    .delete()
+                    .eq('user_id', userId)
+                    .eq('review_id', id);
+                if (voteError) throw voteError;
+            } else {
+                const { error: voteError } = await supabase
+                    .from('user_votes')
+                    .upsert({ user_id: userId, review_id: id, vote: newVote });
+                if (voteError) throw voteError;
             }
         } catch (err) {
-            console.error('Upvote network error:', err);
+            console.error('Vote error:', err);
             setUserVotes((prev) => ({ ...prev, [id]: currentVote }));
             setReviewScores((prev) => ({ ...prev, [id]: oldScore }));
         }
-    }, [userVotes, reviewScores]);
+    }, [userVotes, reviewScores, userId]);
 
-    // Attach live score to each review for rendering (score already includes vote deltas)
-    const enriched = reviews.map((r) => ({ ...r, _liveScore: reviewScores[r.id] ?? (r.upvote ?? 0) }));
+    // Attach live score to each review for rendering
+    const enriched = reviews.map((r) => ({ ...r, _liveScore: reviewScores[r.id] ?? (r.upvotes ?? 0) }));
     const selectedReview = enriched.find((r) => r.id === selectedId);
     const selectedType = selectedReview ? getCommentType(selectedReview) : null;
 

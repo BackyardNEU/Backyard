@@ -6,7 +6,6 @@ import thanksImage from "../assets/thanks.png"
 import ThanksPage from './ThanksPage';
 
 import "./ReviewPage.css"
-import ReviewList from "../review_components/ReviewList"; 
 
 export default function ReviewPage({clubId, onClose}) {
 

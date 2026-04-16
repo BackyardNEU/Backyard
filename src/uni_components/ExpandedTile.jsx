@@ -109,6 +109,7 @@ function ExpandedTile({club, onClose, onMembershipChange}){
                     console.error('Error fetching reviews:', error);
                     return;
                 }
+                console.log("Incoming data: ", data[0].id, typeof data[0].id);
                 set_reviews(data);
             }
             fetch_reviews();
