@@ -191,7 +191,7 @@ function ExpandedTile({club, onClose, onMembershipChange}){
         <motion.div
             layoutId = {`club-${club.id}`}
             className = "expanded-card"
-            whileHover={{}} 
+            
     // THIS kills the lag by ignoring the mouse during the closing morph
     style={{ pointerEvents: isClosing ? "none" : "auto" }}
     // The "Smoothing" - use a snappy spring

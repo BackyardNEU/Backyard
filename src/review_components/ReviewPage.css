@@ -228,13 +228,13 @@
   line-height: 1.2;
   font-style: normal;
   position: relative;
-  font-size: 50px;
+  font-size: 4rem;
   white-space: pre-wrap;
 }
 
 .number-small {
   font-family: "Barlow", sans-serif;
-  font-size: 20px;
+  font-size: 1.3rem;
 }
 
 .post {
