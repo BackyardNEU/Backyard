@@ -8,6 +8,7 @@ export const ClubDataProvider = ({ children }) => {
     const [favoritesCache, setFavoritesCache] = useState(null);
     const [userId, setUserId] = useState(null);
     const [friendMembershipMap, setFriendMembershipMap] = useState(new Map());
+    const [clubTopTags, setClubTopTags] = useState(new Map());
     const isFetching = useRef(false);
 
     // initial fetching of data from supabase
@@ -30,6 +31,27 @@ export const ClubDataProvider = ({ children }) => {
         else {
             console.log("Success retrieving data");
             setAllData(data);
+        }
+
+        // Fetch review tags and compute top 2 per club
+        const { data: reviewTags, error: tagsError } = await supabase
+            .from('reviews')
+            .select('club_id, review_tags');
+        if (!tagsError && reviewTags) {
+            const tagCounts = {};
+            for (const review of reviewTags) {
+                if (!review.review_tags || !Array.isArray(review.review_tags)) continue;
+                if (!tagCounts[review.club_id]) tagCounts[review.club_id] = {};
+                for (const tag of review.review_tags) {
+                    tagCounts[review.club_id][tag] = (tagCounts[review.club_id][tag] || 0) + 1;
+                }
+            }
+            const topTagsMap = new Map();
+            for (const [clubId, counts] of Object.entries(tagCounts)) {
+                const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+                topTagsMap.set(clubId, sorted.slice(0, 2).map(([tag]) => tag));
+            }
+            setClubTopTags(topTagsMap);
         }
 
         const { data: userData } = await supabase.auth.getUser();
@@ -117,6 +139,7 @@ export const ClubDataProvider = ({ children }) => {
             favoritesCache,
             userId,
             friendMembershipMap,
+            clubTopTags,
             setFavoritesCache,
             invalidateFavoritesCache,
             refetch: fetchAllData
