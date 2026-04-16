@@ -45,7 +45,7 @@ export const CalendarList = ({ events }) => {
                                         <span>time </span>
                                         <span  className="club-info">{format(parseISO(event.start_time), 'h:mm a')} - {format(parseISO(event.end_time), 'h:mm a')}</span>
                                     </div>
-                                     <p>interested <span className="club-info"> Milo</span></p>
+                                     <p>interested <span className="club-info">Milo</span></p>
                                 </div>                                                                                                                            
                             ))                                                                                                                                  
                         )}                                                                                                                                        

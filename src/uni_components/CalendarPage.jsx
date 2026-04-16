@@ -172,7 +172,7 @@ export const CalendarPage = () => {
                             <label>End time: <input type="time" value={newEvent.endTime} placeholder="End time" name="endTime" onChange={handleChange} required /></label>
                             <label>Date: <input type="date" value={newEvent.date} placeholder="yyyy-mm-dd" name="date" onChange={handleChange} required /></label>
                             <p>{warning}</p>
-                            <button onClick={() => { setShowForm(false); setWarning(""); }} class="calendar-button">Cancel</button>
+                            <button onClick={() => { setShowForm(false); setWarning(""); }} className="calendar-button">Cancel</button>
                             <button onClick={handleSubmit} class="calendar-button">Save</button>
                         </div>
                     </div>
