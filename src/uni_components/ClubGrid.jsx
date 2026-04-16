@@ -115,7 +115,7 @@ export const ClubGrid = ({ result, onExpand, hideHeart, hidePins }) => {
         </div>
         <div className = "club-info">
 
-          <p>Adventure <span style={{marginLeft: '.5rem'}}>Drama</span></p>
+          <p>Tag1 <span style={{marginLeft: '.5rem'}}>tag2</span></p>
         </div>
       </div>
     </motion.button>
