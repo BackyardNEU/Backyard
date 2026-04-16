@@ -227,7 +227,7 @@ export default function ReviewList({ reviews, club_stats, club }) {
         try {
             const { error } = await supabase
                 .from('reviews')
-                .update({ upvote: newScore })
+                .update({ upvotes: newScore })
                 .eq('id', id);
 
             if (error) {
