@@ -191,7 +191,7 @@ useEffect(() => {
             onClick={(handleClick)}
             type="text"
             value={input}
-            placeholder='Ask Rac'
+            
             
             onChange={(e) => setInput(e.target.value)}
         />
