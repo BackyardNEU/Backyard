@@ -114,7 +114,8 @@ export const ClubGrid = ({ result, onExpand, hideHeart, hidePins }) => {
           {truncate(result.club_name)}
         </div>
         <div className = "club-info">
-          <p>{result.email}</p>
+
+          <p>Adventure <span style={{marginLeft: '.5rem'}}>Drama</span></p>
         </div>
       </div>
     </motion.button>
