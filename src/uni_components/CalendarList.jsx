@@ -4,6 +4,13 @@ import './CalendarList.css';
 
 //events will be the array of club events happening that match a user's favorited clubs. If empty, no events will be displayed and a special message will appear.
 export const CalendarList = ({ events }) => {
+
+    /*
+    function handleRSVP() {
+
+    }
+    */
+   // <button onClick={handleRSVP}>I'm going!</button>
     const today = startOfDay(new Date());
                                                                                                                                                     
     const days = Array.from({ length: 7 }, (_, i) => {                                                                                              
