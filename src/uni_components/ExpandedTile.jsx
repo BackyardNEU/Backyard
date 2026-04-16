@@ -5,6 +5,7 @@ import ReviewPage from "../review_components/ReviewPage";
 import "./ExpandedTile.css";
 import ReviewList from "../review_components/ReviewList"; 
 import { supabase } from '../supabase';
+import { useClubData } from '../context/useClubData';
 import logImage from '/src/assets/logImage.png';
 import ColorThief from "colorthief";
 
@@ -21,6 +22,8 @@ function ExpandedTile({club, onClose, onMembershipChange}){
     const [isMember, setIsMember] = useState(false);
     const [memberLoading, setMemberLoading] = useState(false);
     const imgRef = useRef(null);
+    const { clubTopTags } = useClubData();
+    const topTags = clubTopTags?.get(club.id) || [];
     const id  = club.id;
     
     
@@ -191,7 +194,7 @@ function ExpandedTile({club, onClose, onMembershipChange}){
         <motion.div
             layoutId = {`club-${club.id}`}
             className = "expanded-card"
-            whileHover={{}} 
+            
     // THIS kills the lag by ignoring the mouse during the closing morph
     style={{ pointerEvents: isClosing ? "none" : "auto" }}
     // The "Smoothing" - use a snappy spring
@@ -216,7 +219,7 @@ function ExpandedTile({club, onClose, onMembershipChange}){
                 </div>
                 <div className="text-flex">
                     <h2 className="club-name-exp">{club.club_name}</h2>
-                    <h2 className="club-tag1">Web Dev • Introductory</h2>
+                    {topTags.length > 0 && <h2 className="club-tag1">{topTags.join(' • ')}</h2>}
                 </div>
                 
                 <div className ="image-stack">
@@ -234,11 +237,11 @@ function ExpandedTile({club, onClose, onMembershipChange}){
             
             </div>
 
+        {topTags.length > 0 && (
         <div className ="club-tag2">
-            <div className = "tag">Beginner</div>
-            <div className = "tag">Hands On</div>
-            <div className = "tag">Good Mentors</div>
+            {topTags.map((tag) => (<div key={tag} className="tag">{tag}</div>))}
         </div>
+        )}
         <p className= "club-description-exp">{club.club_description}</p>
         {user && (
             <button

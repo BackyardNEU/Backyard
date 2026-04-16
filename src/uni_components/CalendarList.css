@@ -4,14 +4,16 @@
     flex-direction: row;
     justify-content: space-evenly;
     border: 2px solid green;
+    overflow-x: auto;
 }
 
-/* Each day of the calendar. This is the parent component that holds most of the children eleemnts below this */ 
+/* Each day of the calendar. This is the parent component that holds most of the children eleemnts below this */
 .calendar-day {
     border: 2px solid black;
     display: flex;
     flex-direction: column;
-    flex: 1;
+    flex: 0 0 350px;
+    min-width: 300px;
     padding: 5px;
 }
 

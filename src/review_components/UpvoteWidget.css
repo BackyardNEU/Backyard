@@ -22,7 +22,7 @@
 }
 
 .uv--light {
-  background: #fff;
+  
   color: #000;
 }
 
@@ -96,7 +96,8 @@
 }
 
 .uv__score {
-  font-size: 11px;
+  font-size: 1rem;
+  font-family: 'barlow condensed';
   font-style: italic;
   font-weight: 600;
   line-height: 1;

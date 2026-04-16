@@ -44,12 +44,15 @@ export const CalendarList = ({ events }) => {
                         ) : (                                                                                                                                    
                             day.events.map(event => (
                                 <div key={event.id} className="calendar-event">
-                                    <img src={event.image_url}></img>
-                                    <div>{event.club_name}</div>
-                                    <div>{event.event_description}</div>                                                                                                           
+                                    <img className="club-img" src={event.image_url}></img>
+                                    <div className ="club-name">{event.club_name}</div>
+                                    <div className ="event-description"><p>about<span  className="club-info">{event.event_description}</span></p></div>
+
                                     <div>
-                                        <span>{format(parseISO(event.start_time), 'h:mm a')} - {format(parseISO(event.end_time), 'h:mm a')}</span>
+                                        <span>time </span>
+                                        <span  className="club-info">{format(parseISO(event.start_time), 'h:mm a')} - {format(parseISO(event.end_time), 'h:mm a')}</span>
                                     </div>
+                                     <p>interested <span className="club-info">Milo</span></p>
                                 </div>                                                                                                                            
                             ))                                                                                                                                  
                         )}                                                                                                                                        
