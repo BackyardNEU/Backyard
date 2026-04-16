@@ -26,7 +26,7 @@ const CATEGORIES = [
   { label: "Service", category: "service" },
 ];
 
-export const UniSearchBar = ({ setResults, university}) => {
+export const UniSearchBar = ({ setResults, setShowCalendar, university }) => {
 
   const [input, setInput] = useState("")
   const [menuOpen, setMenuOpen] = useState(false)
@@ -66,9 +66,6 @@ useEffect(() => {
       return;
     }
 
-   
-
-
     const handleTyping = () => {
       const currentPhrase = examplePhrases[phraseIndex];
       
@@ -102,22 +99,18 @@ useEffect(() => {
    
     useEffect(() => {
     async function getClubs() {
+      setShowCalendar(false);
       if (input.trim() !== "") {
         // Full Text Search + Exact Match using our PostgreSQL RPC
         const { data, error } = await supabase.rpc("search_clubs", {
           search_query: input,
           filter_school: university,
         });
-
         console.log("NL result sample:", data[0])
-
-        
-
         if (error) {
           console.error("Error fetching clubs via RPC:", error);
           return;
         }
-
         setClubs(data);
         setResults(data);
       } else {

@@ -16,10 +16,13 @@
 }
 
 /* Special styling for the current day of the week (like the actual name of the day itself) */
-.day-title {
+.day-title-number {
     font-size: 30px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: baseline;
 }
-
 
 /* Wraps the current month title */
 .current-month {
@@ -27,4 +30,30 @@
     flex-direction: row;
     justify-content: center;
     border: 2px solid green;
+}
+
+.current-month {
+    font-size: 60px;
+}
+
+.calendar-event {
+    position: relative;
+    padding: 8px;
+    border-radius: 2px;
+    box-shadow: 8px 5px 8px rgba(0, 0, 0, 0.22);
+    margin-bottom: 6px;
+    z-index: 0;
+}
+
+.calendar-event::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url('/src/assets/white-paper-texture.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: inherit;
+    filter: brightness(1.25) contrast(0.9);
+    z-index: -1;
 }

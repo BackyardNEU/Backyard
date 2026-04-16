@@ -122,7 +122,7 @@ export const UniversityPage = () => {
 
         <div className="uni-search-row">
           <div className="uni-search-shell">
-            <UniSearchBar setResults={setResults} university={university.uni_name} />
+            <UniSearchBar setResults={setResults} setShowCalendar={setShowCalendar} university={university.uni_name} />
           </div>
         </div>
 

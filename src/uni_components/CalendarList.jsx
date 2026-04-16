@@ -29,17 +29,20 @@ export const CalendarList = ({ events }) => {
             <div className="calendar-container">
                 {days.map((day) => (
                     <div key={day.date.toISOString()} className={`calendar-day${day.isToday ? ' today' : ''}`}>
-                        <span className="day-title">{day.label}</span>                                                                                                                  
-                        <span>{day.sublabel}</span>
+                        <div className="day-title-number">
+                            <span>{day.label}</span><span>{day.sublabel}</span>
+                        </div>
                         {day.events.length === 0 ? (                                                                                                              
                             <p>No events</p>                                                                                                                      
                         ) : (                                                                                                                                    
                             day.events.map(event => (
-                                <div key={event.id}>
-                                    <img></img>
+                                <div key={event.id} className="calendar-event">
+                                    <img src={event.image_url}></img>
                                     <div>{event.club_name}</div>
                                     <div>{event.event_description}</div>                                                                                                           
-                                    <span>{format(parseISO(event.start_time), 'h:mm a')} - {format(parseISO(event.end_time), 'h:mm a')}</span>
+                                    <div>
+                                        <span>{format(parseISO(event.start_time), 'h:mm a')} - {format(parseISO(event.end_time), 'h:mm a')}</span>
+                                    </div>
                                 </div>                                                                                                                            
                             ))                                                                                                                                  
                         )}                                                                                                                                        
