@@ -208,9 +208,13 @@ export default function ReviewList({ reviews, club_stats, club }) {
     const { userId } = useClubData();
 
     useEffect(() => {
-        const s = {};
-        reviews.forEach((r) => { s[r.id] = r.upvotes ?? 0; });
-        setReviewScores(s);
+        setReviewScores(prev => {
+            const next = { ...prev };
+            reviews.forEach(r => {
+                if (!(r.id in next)) next[r.id] = r.upvotes ?? 0;
+            });
+            return next;
+        });
 
         if (!userId || reviews.length === 0) {
             setUserVotes({});
