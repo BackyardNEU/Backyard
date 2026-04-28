@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useCallback } from 'react';
 import { startOfDay, addDays, format, isSameDay, parseISO } from 'date-fns';
 import './CalendarList.css';
 
@@ -11,6 +11,22 @@ export const CalendarList = ({ events }) => {
     }
     */
    // <button onClick={handleRSVP}>I'm going!</button>
+    const containerRef = useRef(null);
+
+    const handleWheel = useCallback((e) => {
+        e.preventDefault();
+        containerRef.current.scrollLeft += e.deltaY;
+        containerRef.current.scrollLeft += e.deltaX;
+    }, []);
+
+    const handleMouseEnter = () => {
+        containerRef.current.addEventListener('wheel', handleWheel, { passive: false });
+    };
+
+    const handleMouseLeave = () => {
+        containerRef.current.removeEventListener('wheel', handleWheel);
+    };
+
     const today = startOfDay(new Date());
                                                                                                                                                     
     const days = Array.from({ length: 7 }, (_, i) => {                                                                                              
@@ -33,7 +49,12 @@ export const CalendarList = ({ events }) => {
     return (
         <div>
             <h1 className="current-month">{format(today, 'MMMM')}</h1>
-            <div className="calendar-container">
+            <div
+                    className="calendar-container"
+                    ref={containerRef}
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}
+                >
                 {days.map((day) => (
                     <div key={day.date.toISOString()} className={`calendar-day${day.isToday ? ' today' : ''}`}>
                         <div className="day-title-number">

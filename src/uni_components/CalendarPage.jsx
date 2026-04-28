@@ -158,8 +158,7 @@ export const CalendarPage = () => {
     //verified account
     return (
         <>
-            <div className="whole-calendar-page">
-                {!showForm && (                                                                                                                                   
+            {!showForm && (                                                                                                                                   
                     <button onClick={() => { setShowForm(true); }} className="calendar-button">Click to add an event</button>
                 )}
                 {showForm && (  
@@ -177,6 +176,7 @@ export const CalendarPage = () => {
                         </div>
                     </div>
                 )}
+            <div className="whole-calendar-page">
                 <CalendarList events={weeklyEventsCache ?? []} />
             </div>
         </>

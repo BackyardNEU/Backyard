@@ -3,13 +3,11 @@
     display: flex;
     flex-direction: row;
     justify-content: space-evenly;
-    border: 2px solid green;
     overflow-x: auto;
 }
 
 /* Each day of the calendar. This is the parent component that holds most of the children eleemnts below this */
 .calendar-day {
-    border: 2px solid black;
     display: flex;
     flex-direction: column;
     flex: 0 0 350px;
@@ -31,7 +29,6 @@
     display: flex;
     flex-direction: row;
     justify-content: center;
-    border: 2px solid green;
 }
 
 .current-month {
@@ -41,6 +38,7 @@
 .calendar-event {
     position: relative;
     padding: 8px;
+    margin: 10px;
     border-radius: 2px;
     box-shadow: 8px 5px 8px rgba(0, 0, 0, 0.22);
     margin-bottom: 6px;
@@ -60,3 +58,6 @@
     z-index: -1;
 }
 
+.calendar-container {
+    overflow: hidden;
+}
