@@ -49,7 +49,7 @@ export const ProfilePage = () => {
       // Fetch profile data (username/avatar) from your app table (e.g., `profiles`)
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('username, avatar_url')
+        .select('username, avatar_url, biography')
         .eq('id', authUser.id)
         .single();
 
@@ -124,6 +124,8 @@ export const ProfilePage = () => {
   }
 }
 
+  const profileDescription = profile?.biography ?? ''
+
   return (
       <div className="ProfilePage">
         <div className='spacer' />
@@ -136,7 +138,10 @@ export const ProfilePage = () => {
             />
           </label>
           <input type="file" accept="image/*" id="avatar-upload" hidden onChange={handleAvatarUpload} />
-          <h1 className='ProfileName'>Hello, {profile?.username}</h1>
+          <div className="profile-copy">
+            <h1 className='ProfileName'>Hello, {profile?.username}</h1>
+            <p className="user-description">{profileDescription}</p>
+          </div>
           <button
             className="profile-close-btn"
             onClick={() => navigate(lastPath && lastPath !== '/profile' ? lastPath : '/')}
