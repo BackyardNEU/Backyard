@@ -1,10 +1,10 @@
 import React, {useState, useEffect} from 'react'
 import { supabase } from '../supabase'
 import {FaSearch} from 'react-icons/fa'
+import {FaCalendarAlt} from 'react-icons/fa'
 import './UniSearchBar.css'
 
 const CATEGORIES = [
-  { label: "Calendar", category: "calendar" },
   { label: "Favorites", category: "favorites" },
   { label: "FSL", category: "fsl" },
   { label: "Intramurals", category: "intramural_sports" },
@@ -142,6 +142,38 @@ useEffect(() => {
 
   return (
     <div className="club-input-wrapper">
+      <icon className="search-icon"><FaSearch /></icon>
+
+        <div className="input-container">
+
+            {/* The Custom Placeholder that shrink-wraps the text */}
+            {input.length === 0 && !isInteracted && (
+                <span className="typewriter-placeholder">
+                    {displayText}
+                </span>
+            )}
+
+
+        <input
+
+            onClick={(handleClick)}
+            type="text"
+            value={input}
+
+
+            onChange={(e) => setInput(e.target.value)}
+        />
+    </div>
+
+        <button
+          className="uni-calendar-btn"
+          type="button"
+          onClick={() => setShowCalendar(prev => !prev)}
+          aria-label="Toggle calendar"
+        >
+          <FaCalendarAlt />
+        </button>
+
         <div className="hamburger-wrapper">
           <button
   className={`uni-hamburger-btn ${activeCategory ? 'active' : ''}`}
@@ -168,27 +200,6 @@ useEffect(() => {
             </div>
           )}
         </div>
-    
-        <div className="input-container">
-            
-            {/* The Custom Placeholder that shrink-wraps the text */}
-            {input.length === 0 && !isInteracted && (
-                <span className="typewriter-placeholder">
-                    {displayText}
-                </span>
-            )}
-        
-        
-        <input
-            
-            onClick={(handleClick)}
-            type="text"
-            value={input}
-            
-            
-            onChange={(e) => setInput(e.target.value)}
-        />
-    </div>
     </div>
   )
   
