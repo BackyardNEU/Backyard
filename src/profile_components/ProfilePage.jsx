@@ -149,7 +149,7 @@ export const ProfilePage = () => {
         {user && (
           <>
             <div className="profile-section">
-              <h2 className="profile-divider-header">Clubs</h2>
+              <h2 className="profile-divider-header">Clubs You've Joined</h2>
               <ClubMembershipPanel userId={user.id} />
             </div>
             <div className="profile-section">
