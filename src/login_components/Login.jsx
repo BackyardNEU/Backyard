@@ -13,8 +13,8 @@ function Login() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        // Send users directly to the profile page after successful sign-in
-        redirectTo: `${window.location.origin}/profile`,
+        // Route through callback gate to enforce setup checks for all auth returns.
+        redirectTo: `${window.location.origin}/auth/callback`,
       },  
     });
 

@@ -101,6 +101,25 @@
   line-height: 1.35;
 }
 
+.profile-setup-btn {
+  margin-top: 8px;
+  border: 1px solid #7a7a7a;
+  background: #f7f7f7;
+  color: #404040;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.profile-setup-btn:hover {
+  background: #ebebeb;
+  color: #1f1f1f;
+}
+
 .profile-close-btn {
   position: fixed;
   top: 0.5rem;

@@ -7,7 +7,6 @@ import imageCompression from 'browser-image-compression'
 import { ClubMembershipPanel } from './ClubMembershipPanel'
 import { FriendDiscoveryList } from './FriendDiscoveryList'
 
-
 //this is the landing page for our university club search, most of the info will go through here
 
 //at the moment, the user should have the ability to log out form the profile page.
@@ -15,6 +14,7 @@ import { FriendDiscoveryList } from './FriendDiscoveryList'
 
 export const ProfilePage = () => {
   const { id } = useParams()
+  const navigate = useNavigate();
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [status, setStatus]     = useState('idle')
@@ -49,7 +49,7 @@ export const ProfilePage = () => {
       // Fetch profile data (username/avatar) from your app table (e.g., `profiles`)
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('username, avatar_url, biography')
+        .select('*')
         .eq('id', authUser.id)
         .single();
 
@@ -62,9 +62,8 @@ export const ProfilePage = () => {
     }
 
     loadUser();
-  }, []);
+  }, [navigate]);
 
-  const navigate = useNavigate();
   const lastPath = useGlobalStore((state) => state.lastPath);
 
   useEffect(() => {
@@ -141,6 +140,13 @@ export const ProfilePage = () => {
           <div className="profile-copy">
             <h1 className='ProfileName'>Hello, {profile?.username}</h1>
             <p className="user-description">{profileDescription}</p>
+            <button
+              type="button"
+              className="profile-setup-btn"
+              onClick={() => navigate('/profile-setup')}
+            >
+              Setup profile
+            </button>
           </div>
           <button
             className="profile-close-btn"
