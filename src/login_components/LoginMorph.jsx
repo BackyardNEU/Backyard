@@ -36,9 +36,13 @@ const [isSignUp, setIsSignUp] = useState(false);
     navigate("/profile");
   };
 
-  const handleAuth = () => {
+  const handleAuth = (flow) => {
     setOpen(false);
-    navigate("/profile");
+    if (flow === 'signup') {
+      navigate('/profile-setup');
+      return;
+    }
+    navigate('/profile');
   };
 
   return (

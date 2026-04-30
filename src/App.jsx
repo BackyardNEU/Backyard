@@ -6,6 +6,8 @@ import { UniversityPage } from './uni_components/UniversityPage';
 import LoginMorph from "./login_components/LoginMorph";
 import ReviewPage from "./review_components/ReviewPage";
 import AuthListener from "./login_components/AuthListener";
+import AuthCallbackPage from './login_components/AuthCallbackPage';
+import ProfileSetupPage from './profile_components/ProfileSetupPage';
 import { ProfilePage } from './profile_components/ProfilePage';
 import { ClubDataProvider } from './context/ClubDataProvider'
 
@@ -68,7 +70,10 @@ function App() {
           />
           <Route path="/university/:id" element={<UniversityPage />} />
           <Route path="/reviews/:id" element={<ReviewPage />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile/setup" element={<ProfileSetupPage />} />
+          <Route path="/profile-setup" element={<ProfileSetupPage />} />
         </Routes>
       </div>
     </ClubDataProvider>

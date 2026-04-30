@@ -19,12 +19,15 @@ function Form({ isSignUp = false, onAuth }) {
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { full_name: name } },
+          options: {
+            data: { full_name: name },
+            emailRedirectTo: `${window.location.origin}/auth/callback?flow=signup`,
+          },
         });
         if (signUpError) throw signUpError;
 
         if (signUpData?.session) {
-          if (onAuth) onAuth();
+          if (onAuth) onAuth('signup');
         } else {
           setError("Check your email to confirm your account before logging in.");
         }
@@ -35,7 +38,7 @@ function Form({ isSignUp = false, onAuth }) {
           password,
         });
         if (signInError) throw signInError;
-        if (onAuth) onAuth();
+        if (onAuth) onAuth('signin');
       }
     } catch (err) {
       setError(err.message || "Authentication failed");
