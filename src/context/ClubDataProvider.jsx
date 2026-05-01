@@ -1,17 +1,38 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useReducer, useEffect, useCallback, useRef, useMemo } from 'react';
 import { ClubDataContext } from './ClubDataContext';
 import { supabase } from '../supabase';
 
+const initialState = {
+    allData: [],
+    loading: true,
+    favoritesCache: null,
+    userId: null,
+    friendMembershipMap: new Map(),
+    clubTopTags: new Map(),
+};
+
+function reducer(state, action) {
+    switch (action.type) {
+        case 'FETCH_COMPLETE':
+            return { ...state, ...action.payload, loading: false };
+        case 'SET_FAVORITES': {
+            const next = new Set(state.favoritesCache);
+            if (action.isAdding) {
+                next.add(action.clubId);
+            } else {
+                next.delete(action.clubId);
+            }
+            return { ...state, favoritesCache: next };
+        }
+        default:
+            return state;
+    }
+}
+
 export const ClubDataProvider = ({ children }) => {
-    const [allData, setAllData] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [favoritesCache, setFavoritesCache] = useState(null);
-    const [userId, setUserId] = useState(null);
-    const [friendMembershipMap, setFriendMembershipMap] = useState(new Map());
-    const [clubTopTags, setClubTopTags] = useState(new Map());
+    const [state, dispatch] = useReducer(reducer, initialState);
     const isFetching = useRef(false);
 
-    // initial fetching of data from supabase
     const fetchAllData = useCallback(async () => {
         if (isFetching.current) {
             console.log("Fetch already in progress, skipping.");
@@ -20,17 +41,23 @@ export const ClubDataProvider = ({ children }) => {
         isFetching.current = true;
 
         console.log("Fetching data from Supabase: this should only occur once unless switchting to favorites tab.");
-        setLoading(true);
-        // fetch data
+
+        // collect all results before touching state
+        let newAllData = [];
+        let newClubTopTags = new Map();
+        let newFavoritesCache = new Set();
+        let newUserId = null;
+        let newFriendMembershipMap = new Map();
+
+        // fetch club data
         const { data, error } = await supabase
             .from('demo_club_data')
             .select('*');
         if (error) {
             console.error("Error retrieving data: " + error);
-        }
-        else {
+        } else {
             console.log("Success retrieving data");
-            setAllData(data);
+            newAllData = data;
         }
 
         // Fetch review tags and compute top 2 per club
@@ -46,16 +73,14 @@ export const ClubDataProvider = ({ children }) => {
                     tagCounts[review.club_id][tag] = (tagCounts[review.club_id][tag] || 0) + 1;
                 }
             }
-            const topTagsMap = new Map();
             for (const [clubId, counts] of Object.entries(tagCounts)) {
                 const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-                topTagsMap.set(clubId, sorted.slice(0, 2).map(([tag]) => tag));
+                newClubTopTags.set(clubId, sorted.slice(0, 2).map(([tag]) => tag));
             }
-            setClubTopTags(topTagsMap);
         }
 
         const { data: userData } = await supabase.auth.getUser();
-        if (userData?.user) { // check if user is logged in/has an account
+        if (userData?.user) {
             const { data: favData, error: favError } = await supabase
                 .from('user_favorites')
                 .select('club_id')
@@ -64,12 +89,9 @@ export const ClubDataProvider = ({ children }) => {
             if (favError) {
                 console.error("Error retrieving favorites:", favError);
             } else {
-                // use set for fast .has() lookups
-                setFavoritesCache(new Set(favData.map(fav => fav.club_id)));
-                console.log("Favorites loaded: " + favoritesCache, favData.length);
-
-                //setUserID for use later
-                setUserId(userData.user.id);
+                newFavoritesCache = new Set(favData.map(fav => fav.club_id));
+                console.log("Favorites loaded:", favData.length);
+                newUserId = userData.user.id;
             }
 
             // fetch friend memberships for avatar display on club cards
@@ -87,63 +109,56 @@ export const ClubDataProvider = ({ children }) => {
                     .in('id', friendList);
 
                 if (!friendError && friendProfiles) {
-                    const map = new Map();
                     for (const friend of friendProfiles) {
                         const clubs = friend.member_list || [];
                         for (const clubId of clubs) {
-                            if (!map.has(clubId)) map.set(clubId, []);
-                            map.get(clubId).push({
+                            if (!newFriendMembershipMap.has(clubId)) newFriendMembershipMap.set(clubId, []);
+                            newFriendMembershipMap.get(clubId).push({
                                 id: friend.id,
                                 username: friend.username,
                                 avatar_url: friend.avatar_url,
                             });
                         }
                     }
-                    setFriendMembershipMap(map);
                 }
-            } else {
-                setFriendMembershipMap(new Map());
             }
-        } else {
-            // empty Set if the user is not logged in
-            setFavoritesCache(new Set());
-            setFriendMembershipMap(new Map());
         }
 
-        // all necessary data needed: loading stops
-        setLoading(false);
+        // single dispatch — one render
+        dispatch({
+            type: 'FETCH_COMPLETE',
+            payload: {
+                allData: newAllData,
+                clubTopTags: newClubTopTags,
+                favoritesCache: newFavoritesCache,
+                userId: newUserId,
+                friendMembershipMap: newFriendMembershipMap,
+            }
+        });
     }, []);
 
-    // method to be called by favorite button handler function to update the favorites cache
-    const invalidateFavoritesCache = useCallback(async (clubId, isAdding) => {
-        setFavoritesCache(prev => {
-            const next = new Set(prev);
-            if (isAdding) {
-                next.add(clubId);
-            } else {
-                next.delete(clubId);
-            }
-            return next;
-        });
+    // called by favorite button handlers — single dispatch, one render
+    const invalidateFavoritesCache = useCallback((clubId, isAdding) => {
+        dispatch({ type: 'SET_FAVORITES', clubId, isAdding });
     }, []);
 
     useEffect(() => {
         fetchAllData();
     }, [fetchAllData]);
 
-    // return the context
+    const contextValue = useMemo(() => ({
+        allData: state.allData,
+        loading: state.loading,
+        favoritesCache: state.favoritesCache,
+        userId: state.userId,
+        friendMembershipMap: state.friendMembershipMap,
+        clubTopTags: state.clubTopTags,
+        invalidateFavoritesCache,
+        refetch: fetchAllData
+    }), [state, invalidateFavoritesCache, fetchAllData]);
+
     return (
-        <ClubDataContext.Provider value={{
-            allData,
-            loading,
-            favoritesCache,
-            userId,
-            friendMembershipMap,
-            clubTopTags,
-            setFavoritesCache,
-            invalidateFavoritesCache,
-            refetch: fetchAllData
-        }}>
+        <ClubDataContext.Provider value={contextValue}>
             {children}
         </ClubDataContext.Provider>
     );

@@ -81,7 +81,7 @@ export const ClubGrid = ({ result, onExpand, hideHeart, hidePins }) => {
     <motion.button
       className = "club-card"
       onClick = {handleExpand}
-      layoutId = {`club-${result.id}`}
+      layoutId={`club-${result.id}`}
 >
       {!hidePins && <img src={posterPin} alt="" className="pin pin-left" />}
       {!hidePins && <img src={posterPin} alt="" className="pin pin-right" />}

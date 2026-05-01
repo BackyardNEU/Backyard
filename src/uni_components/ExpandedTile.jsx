@@ -188,22 +188,18 @@ function ExpandedTile({club, onClose, onMembershipChange}){
         return () => console.log("ExpandedTile UNMOUNTED");
     }, []);
 
+    console.log("ExpandedTile RENDER", club.id);
+
     return (
-
-
         <motion.div
-            layoutId = {`club-${club.id}`}
+            layoutId={`club-${club.id}`}
             className = "expanded-card"
-            
-    // THIS kills the lag by ignoring the mouse during the closing morph
-    style={{ pointerEvents: isClosing ? "none" : "auto" }}
-    // The "Smoothing" - use a snappy spring
-    transition={{
-        type: "spring",
-        stiffness: 400,
-        damping: 30
-    }}
-            
+            style={{ pointerEvents: isClosing ? "none" : "auto" }}
+            transition={{
+                type: "spring",
+                stiffness: 400,
+                damping: 30
+            }}
         >
     
         <button className = "close-btn" onClick={handleClose}>x</button>
@@ -273,5 +269,5 @@ function ExpandedTile({club, onClose, onMembershipChange}){
     );
 }
 
-export default ExpandedTile;
+export default React.memo(ExpandedTile);
 
