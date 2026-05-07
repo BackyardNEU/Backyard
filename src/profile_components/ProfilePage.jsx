@@ -6,6 +6,7 @@ import './ProfilePage.css'
 import imageCompression from 'browser-image-compression'
 import { ClubMembershipPanel } from './ClubMembershipPanel'
 import { FriendDiscoveryList } from './FriendDiscoveryList'
+import { PolaroidCards } from './PolaroidCards'
 
 //this is the landing page for our university club search, most of the info will go through here
 
@@ -162,6 +163,10 @@ export const ProfilePage = () => {
             <div className="profile-section">
               <h2 className="profile-divider-header">Clubs You've Joined</h2>
               <ClubMembershipPanel userId={user.id} />
+            </div>
+            <div className="profile-section">
+              <h2 className="profile-divider-header">Your Photos</h2>
+              <PolaroidCards photos={profile?.photos || []} />
             </div>
             <div className="profile-section">
               <h2 className="profile-divider-header">Friends</h2>

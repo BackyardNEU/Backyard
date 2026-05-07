@@ -55,6 +55,7 @@
   width: auto;
   pointer-events: none;
   z-index: 10;
+  border: 1px solid seagreen;
 }
 
 .uni-header-logo {
@@ -135,7 +136,7 @@
   }
 
   .uni-header-logo {
-    width: min(62vw, 520px);
+    width: min(50vw, 520px);
   }
 }
 
@@ -143,17 +144,30 @@
   .UniPage {
     --uni-content-width: 84%;
   }
-
+  .uni-neu-flag{
+    height: 7%;
+  }
+  
   .uni-layout {
     grid-template-rows: 11vh 6vh 76vh;
   }
-
+  .uni-header-spacer {
+    padding: 0 0.55rem;
+   
+  }
   .uni-header-logo {
-    width: min(72vw, 420px);
+    width: min(40%, 420px);
+    border: 1px solid seagreen
   }
 
   .uni-search-row {
     padding: 0 0.75rem;
+  }
+  .uni-plant-layer{
+    width: 42vw;
+    height: auto;
+    top: 0;
+    right: 0;
   }
 
 }

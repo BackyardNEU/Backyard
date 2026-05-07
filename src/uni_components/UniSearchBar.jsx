@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react'
 import { supabase } from '../supabase'
 import {FaSearch} from 'react-icons/fa'
-import {FaCalendarAlt} from 'react-icons/fa'
+import { AiFillCalendar } from "react-icons/ai";
 import './UniSearchBar.css'
 
 const CATEGORIES = [
@@ -171,7 +171,7 @@ useEffect(() => {
           onClick={() => setShowCalendar(prev => !prev)}
           aria-label="Toggle calendar"
         >
-          <FaCalendarAlt />
+          <AiFillCalendar />
         </button>
 
         <div className="hamburger-wrapper">
