@@ -79,13 +79,26 @@
   color: #a8a29e;
 }
 
-/* GRID */
+/* HORIZONTAL SCROLL */
 
 .card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  gap: 2rem;
-  justify-items: center;
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
+}
+
+.card-grid::-webkit-scrollbar {
+  height: 6px;
+}
+
+.card-grid::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
 }
 
 /* CARD */
@@ -93,8 +106,9 @@
 .polaroid-card {
   position: relative;
 
-  width: 360px;
-  height: 480px;
+  flex: 0 0 auto;
+  width: 320px;
+  height: 426px;
 
   display: flex;
   flex-direction: column;
