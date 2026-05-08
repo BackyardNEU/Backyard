@@ -18,9 +18,15 @@ const ProfileSetupPage = () => {
     const [showDropdown, setShowDropdown] = useState(false)
     const [error, setError] = useState(null)
 
+    const [existingPhotos, setExistingPhotos] = useState([])
+    const [selectedPhotoFiles, setSelectedPhotoFiles] = useState([])
+    const [photoPreviews, setPhotoPreviews] = useState([])
+
     const BUCKET = 'profile_images'
+    const PHOTO_BUCKET = 'profile_photos'
     const TABLE = 'profiles'
     const URL_COL = 'avatar_url'
+    const MAX_PHOTOS = 10
 
     const COMPRESSION_OPTIONS = {
         maxSizeMB: 0.2,
@@ -35,7 +41,7 @@ const ProfileSetupPage = () => {
             uni.uni_name.toLowerCase().includes(schoolInput.toLowerCase())
         )
     }, [schoolInput, universities])
-    
+
     useEffect(() => {
         async function loadProfile() {
             setLoading(true);
@@ -65,6 +71,7 @@ const ProfileSetupPage = () => {
 
                 setBiography(profileData?.biography || '');
                 setAvatarPreview(profileData?.avatar_url || null);
+                setExistingPhotos(Array.isArray(profileData?.photos) ? profileData.photos : []);
 
                 const loadedSchoolName = profileData?.school_name || profileData?.school || '';
                 const loadedSchoolId = profileData?.school_id || null;
@@ -90,9 +97,15 @@ const ProfileSetupPage = () => {
                 setLoading(false);
             }
         }
-    
+
         loadProfile();
     }, []);
+
+    useEffect(() => {
+        return () => {
+            photoPreviews.forEach((url) => URL.revokeObjectURL(url));
+        };
+    }, [photoPreviews]);
 
     const handleAvatarChange = (event) => {
         const file = event.target.files?.[0];
@@ -101,10 +114,65 @@ const ProfileSetupPage = () => {
         setAvatarPreview(URL.createObjectURL(file));
     };
 
+    const handlePhotoChange = (event) => {
+        const files = Array.from(event.target.files || []);
+        const totalCurrent = existingPhotos.length + selectedPhotoFiles.length;
+        const remainingSlots = MAX_PHOTOS - totalCurrent;
+
+        if (remainingSlots <= 0) {
+            setError(`You can have at most ${MAX_PHOTOS} photos.`);
+            event.target.value = '';
+            return;
+        }
+
+        const filesToAdd = files.slice(0, remainingSlots);
+        if (files.length > remainingSlots) {
+            setError(`Only added ${remainingSlots} photo(s). Max ${MAX_PHOTOS} total.`);
+        }
+
+        setSelectedPhotoFiles((prev) => [...prev, ...filesToAdd]);
+        setPhotoPreviews((prev) => [
+            ...prev,
+            ...filesToAdd.map((file) => URL.createObjectURL(file)),
+        ]);
+        event.target.value = '';
+    };
+
+    const removeExistingPhoto = (index) => {
+        setExistingPhotos((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    const removeNewPhoto = (index) => {
+        URL.revokeObjectURL(photoPreviews[index]);
+        setSelectedPhotoFiles((prev) => prev.filter((_, i) => i !== index));
+        setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
+    };
+
     const handleSchoolSelect = (university) => {
         setSelectedUniversity(university);
         setSchoolInput(university.uni_name);
         setShowDropdown(false);
+    };
+
+    const uploadNewPhotos = async () => {
+        const urls = [];
+        for (const file of selectedPhotoFiles) {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from(PHOTO_BUCKET)
+                .upload(fileName, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data: urlData } = supabase.storage
+                .from(PHOTO_BUCKET)
+                .getPublicUrl(fileName);
+
+            urls.push(urlData.publicUrl);
+        }
+        return urls;
     };
 
     const handleSubmit = async (event) => {
@@ -142,11 +210,15 @@ const ProfileSetupPage = () => {
                 avatarUrl = data.publicUrl;
             }
 
+            const newPhotoUrls = await uploadNewPhotos();
+            const allPhotos = [...existingPhotos, ...newPhotoUrls];
+
             const payload = {
                 [URL_COL]: avatarUrl,
                 biography: biography.trim(),
                 school_id: selectedUniversity.id,
                 school_name: selectedUniversity.uni_name,
+                photos: allPhotos,
             };
 
             let { error: updateError } = await supabase
@@ -161,6 +233,7 @@ const ProfileSetupPage = () => {
                         [URL_COL]: avatarUrl,
                         biography: biography.trim(),
                         school: selectedUniversity.uni_name,
+                        photos: allPhotos,
                     })
                     .eq('id', user.id);
                 updateError = fallbackError;
@@ -180,6 +253,8 @@ const ProfileSetupPage = () => {
     if (loading) {
         return <div className="profile-setup-page">Loading profile setup...</div>;
     }
+
+    const totalPhotos = existingPhotos.length + selectedPhotoFiles.length;
 
     return (
         <div className='profile-setup-page'>
@@ -214,6 +289,50 @@ const ProfileSetupPage = () => {
                     placeholder="Tell people a little about yourself"
                     rows={5}
                 />
+
+                <label className="setup-field-label" htmlFor="photo-input">
+                    photos ({totalPhotos}/{MAX_PHOTOS})
+                </label>
+                <input
+                    id="photo-input"
+                    className="setup-photo-input"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handlePhotoChange}
+                    disabled={totalPhotos >= MAX_PHOTOS}
+                />
+
+                {(existingPhotos.length > 0 || photoPreviews.length > 0) && (
+                    <div className="setup-photo-previews">
+                        {existingPhotos.map((url, index) => (
+                            <div key={`existing-${url}`} className="setup-photo-item">
+                                <img src={url} alt={`Photo ${index + 1}`} />
+                                <button
+                                    type="button"
+                                    className="setup-photo-remove"
+                                    onClick={() => removeExistingPhoto(index)}
+                                    aria-label="Remove photo"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        ))}
+                        {photoPreviews.map((preview, index) => (
+                            <div key={`new-${index}`} className="setup-photo-item">
+                                <img src={preview} alt={`New photo ${index + 1}`} />
+                                <button
+                                    type="button"
+                                    className="setup-photo-remove"
+                                    onClick={() => removeNewPhoto(index)}
+                                    aria-label="Remove photo"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
 
                 <label className="setup-field-label" htmlFor="school-input">choose school</label>
                 <div className="setup-school-wrap">
