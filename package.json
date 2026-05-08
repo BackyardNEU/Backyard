@@ -7,13 +7,16 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:server": "node --watch server/index.js",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:server\""
   },
   "dependencies": {
     "@react-oauth/google": "^0.12.2",
     "@supabase/supabase-js": "^2.101.1",
     "browser-image-compression": "^2.0.2",
     "colorthief": "^2.6.0",
+    "concurrently": "^9.2.1",
     "cors": "^2.8.6",
     "date-fns": "^4.1.0",
     "dotenv": "^17.4.2",
