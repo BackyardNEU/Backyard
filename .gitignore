@@ -22,3 +22,4 @@ __pycache__
 
 # Claude settings
 .claude/settings.local.json
+.claude/CLAUDE.md
