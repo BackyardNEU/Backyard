@@ -1,5 +1,5 @@
-import React, {useState, useEffect} from 'react'
-import { supabase } from '../supabase'
+﻿import React, {useState, useEffect} from 'react'
+import { supabase } from '../lib/supabase'
 import {FaSearch} from 'react-icons/fa'
 import { AiFillCalendar } from "react-icons/ai";
 import './UniSearchBar.css'

@@ -1,10 +1,10 @@
-import React, {useState, useEffect, useRef} from "react";
+﻿import React, {useState, useEffect, useRef} from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import ReviewPage from "../review_components/ReviewPage";
 import "./ExpandedTile.css";
 import ReviewList from "../review_components/ReviewList"; 
-import { supabase } from '../supabase';
+import { supabase } from '../lib/supabase';
 import { useClubData } from '../context/useClubData';
 import logImage from '/src/assets/logImage.png';
 import ColorThief from "colorthief";

@@ -25,7 +25,6 @@
     "gapi-script": "^1.2.0",
     "lucide-react": "^1.8.0",
     "motion": "^12.38.0",
-    "node.js": "^0.0.1-security",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-helmet": "^6.1.0",

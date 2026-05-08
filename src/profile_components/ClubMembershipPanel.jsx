@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabase';
+﻿import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import { useClubData } from '../context/useClubData';
 import { ClubGrid } from '../uni_components/ClubGrid';
 import ExpandedTile from '../uni_components/ExpandedTile';

@@ -1,7 +1,7 @@
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+﻿import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import './App.css';
-import { SearchBar } from './components/SearchBar';
+import { SearchBar } from './home_components/SearchBar';
 import { UniversityPage } from './uni_components/UniversityPage';
 import LoginMorph from "./login_components/LoginMorph";
 import ReviewPage from "./review_components/ReviewPage";

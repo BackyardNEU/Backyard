@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react'
+﻿import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import imageCompression from 'browser-image-compression'
-import { supabase } from '../supabase'
+import { supabase } from '../lib/supabase'
 import './ProfileSetupPage.css'
 
 const ProfileSetupPage = () => {

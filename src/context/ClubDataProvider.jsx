@@ -1,6 +1,6 @@
-import React, { useReducer, useEffect, useCallback, useRef, useMemo } from 'react';
+﻿import React, { useReducer, useEffect, useCallback, useRef, useMemo } from 'react';
 import { ClubDataContext } from './ClubDataContext';
-import { supabase } from '../supabase';
+import { supabase } from '../lib/supabase';
 
 const initialState = {
     allData: [],

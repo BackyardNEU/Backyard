@@ -1,12 +1,12 @@
-
+﻿
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Logout from "./Logout";
 import Form from "./form";
 import "./LoginMorph.css";
-import { useGlobalStore } from "../store";
+import { useGlobalStore } from "../lib/store";
 import { useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "../supabase";
+import { supabase } from "../lib/supabase";
 
 
 

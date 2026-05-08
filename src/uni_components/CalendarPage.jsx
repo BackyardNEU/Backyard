@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useClubData } from '../context/useClubData';
 import { CalendarList } from './CalendarList';
-import { supabase } from '../supabase';
+import { supabase } from '../lib/supabase';
 import './CalendarPage.css';
 
 export const CalendarPage = () => {

@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import "./ReviewList.css";
 import StatsCard from "./StatsCard.jsx";
 import { UpvoteWidget } from "./UpvoteWidget";
-import { supabase } from "../supabase";
+import { supabase } from "../lib/supabase";
 import { useClubData } from "../context/useClubData";
 
 /**

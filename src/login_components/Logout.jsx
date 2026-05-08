@@ -1,6 +1,6 @@
-import { supabase } from "../supabase";
+﻿import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
-import { useGlobalStore } from "../store";
+import { useGlobalStore } from "../lib/store";
 
 function Logout() {
   const navigate = useNavigate();
