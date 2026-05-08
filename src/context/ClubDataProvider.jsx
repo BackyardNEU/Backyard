@@ -8,7 +8,8 @@ const initialState = {
     favoritesCache: null,
     userId: null,
     friendMembershipMap: new Map(),
-    clubTopTags: new Map(),
+    friendsArray: [],
+    clubTopTags: new Map()
 };
 
 function reducer(state, action) {
@@ -48,6 +49,7 @@ export const ClubDataProvider = ({ children }) => {
         let newFavoritesCache = new Set();
         let newUserId = null;
         let newFriendMembershipMap = new Map();
+        let newFriendsArray = [];
 
         // fetch club data
         const { data, error } = await supabase
@@ -109,6 +111,11 @@ export const ClubDataProvider = ({ children }) => {
                     .in('id', friendList);
 
                 if (!friendError && friendProfiles) {
+                    newFriendsArray = friendProfiles.map(f => ({
+                        id: f.id,
+                        username: f.username,
+                        avatar_url: f.avatar_url,
+                    }));
                     for (const friend of friendProfiles) {
                         const clubs = friend.member_list || [];
                         for (const clubId of clubs) {
@@ -133,6 +140,7 @@ export const ClubDataProvider = ({ children }) => {
                 favoritesCache: newFavoritesCache,
                 userId: newUserId,
                 friendMembershipMap: newFriendMembershipMap,
+                friendsArray: newFriendsArray,
             }
         });
     }, []);
@@ -152,6 +160,7 @@ export const ClubDataProvider = ({ children }) => {
         favoritesCache: state.favoritesCache,
         userId: state.userId,
         friendMembershipMap: state.friendMembershipMap,
+        friendsArray: state.friendsArray,
         clubTopTags: state.clubTopTags,
         invalidateFavoritesCache,
         refetch: fetchAllData

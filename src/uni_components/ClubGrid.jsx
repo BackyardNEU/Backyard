@@ -67,7 +67,7 @@ export const ClubGrid = ({ result, onExpand, hideHeart, hidePins }) => {
   };
 
   const handleExpand = () => {
-      onExpand();
+      onExpand(result);
   };
   const truncate = (text, wordLimit = 5) => {
     if (!text) return "";
@@ -121,6 +121,7 @@ export const ClubGrid = ({ result, onExpand, hideHeart, hidePins }) => {
         </div>
       </div>
     </motion.button>
-
 );
 };
+
+export default React.memo(ClubGrid);

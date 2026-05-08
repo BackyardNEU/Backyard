@@ -23,19 +23,19 @@ export const ClubList = ({ results }) => {
           <ClubGrid
             key={club.id}
             result={club}
-            onExpand={() => setExpandedClub(club)}
+            onExpand={setExpandedClub}
           />
         ))}
-      </div>
-    </AnimatePresence>
+        </div>
 
-    {expandedClub && (
-      <ExpandedTile
-        club={expandedClub}
-        key={expandedClub.id}
-        onClose={handleClose}
-      />
-    )}
+        {expandedClub && (
+          <ExpandedTile
+            club={expandedClub}
+            key={expandedClub.id}
+            onClose={handleClose}
+          />
+        )}
+    </AnimatePresence>
     </>
   );
 };

@@ -6,10 +6,12 @@ import './CalendarPage.css';
 
 export const CalendarPage = () => {
     // grab relevant data from global context
-    const { favoritesCache, userId } = useClubData();
+    const { favoritesCache, userId, friendsArray } = useClubData();
 
     // null means no reqeust was ever made -> request. Empty list implies no favorited clubs have events going on this week.
     const [ weeklyEventsCache, setWeeklyEventsCache ] = useState(null);
+    const [ myRsvpSet, setMyRsvpSet ] = useState(new Set());
+    const [ friendRsvpMap, setFriendRsvpMap ] = useState(new Map());
 
     // conditional render for form element
     const [ showForm, setShowForm ] = useState(false);
@@ -52,10 +54,38 @@ export const CalendarPage = () => {
             });
             if (error) {
                 console.error("There was an issue retrieving the events: " + error);
+                return;
             }
-            else {
-                setWeeklyEventsCache(data);
+            setWeeklyEventsCache(data);
+
+            if (!data || data.length === 0) return;
+
+            const eventIds = data.map(e => e.id);
+            const { data: rsvpData, error: rsvpError } = await supabase
+                .from('event_rsvps')
+                .select('user_id, event_id')
+                .in('event_id', eventIds);
+
+            if (rsvpError) {
+                console.error("There was an issue retrieving RSVPs: " + rsvpError);
+                return;
             }
+
+            const newMyRsvpSet = new Set(
+                rsvpData.filter(r => r.user_id === userId).map(r => r.event_id)
+            );
+            setMyRsvpSet(newMyRsvpSet);
+
+            const friendIdSet = new Set(friendsArray.map(f => f.id));
+            const friendProfileMap = new Map(friendsArray.map(f => [f.id, f]));
+            const newFriendRsvpMap = new Map();
+            for (const rsvp of rsvpData) {
+                if (friendIdSet.has(rsvp.user_id)) {
+                    if (!newFriendRsvpMap.has(rsvp.event_id)) newFriendRsvpMap.set(rsvp.event_id, []);
+                    newFriendRsvpMap.get(rsvp.event_id).push(friendProfileMap.get(rsvp.user_id));
+                }
+            }
+            setFriendRsvpMap(newFriendRsvpMap);
         }
         fetchEvents();
     }, [userId, weeklyEventsCache]);
@@ -154,7 +184,19 @@ export const CalendarPage = () => {
         }
     }
   
-    //Note2self: when I implement the club field inputting interface, I need to replace the club name field with the club's id when they are logged into 
+    async function handleRSVP(eventId, isCurrentlyGoing) {
+        if (!userId) return;
+        if (isCurrentlyGoing) {
+            await supabase.from('event_rsvps').delete()
+                .eq('user_id', userId).eq('event_id', eventId);
+            setMyRsvpSet(prev => { const next = new Set(prev); next.delete(eventId); return next; });
+        } else {
+            await supabase.from('event_rsvps').insert({ user_id: userId, event_id: eventId });
+            setMyRsvpSet(prev => new Set([...prev, eventId]));
+        }
+    }
+
+    //Note2self: when I implement the club field inputting interface, I need to replace the club name field with the club's id when they are logged into
     //verified account
     return (
         <>
@@ -177,7 +219,12 @@ export const CalendarPage = () => {
                     </div>
                 )}
             <div className="whole-calendar-page">
-                <CalendarList events={weeklyEventsCache ?? []} />
+                <CalendarList
+                    events={weeklyEventsCache ?? []}
+                    myRsvpSet={myRsvpSet}
+                    friendRsvpMap={friendRsvpMap}
+                    onRsvp={handleRSVP}
+                />
             </div>
         </>
     );

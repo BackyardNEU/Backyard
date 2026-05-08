@@ -3,14 +3,7 @@ import { startOfDay, addDays, format, isSameDay, parseISO } from 'date-fns';
 import './CalendarList.css';
 
 //events will be the array of club events happening that match a user's favorited clubs. If empty, no events will be displayed and a special message will appear.
-export const CalendarList = ({ events }) => {
-
-    /*
-    function handleRSVP() {
-
-    }
-    */
-   // <button onClick={handleRSVP}>I'm going!</button>
+export const CalendarList = ({ events, myRsvpSet, friendRsvpMap, onRsvp }) => {
     const containerRef = useRef(null);
 
     const handleWheel = useCallback((e) => {
@@ -71,9 +64,28 @@ export const CalendarList = ({ events }) => {
 
                                     <div>
                                         <span>time </span>
-                                        <span  className="club-info">{format(parseISO(event.start_time), 'h:mm a')} - {format(parseISO(event.end_time), 'h:mm a')}</span>
+                                        <span className="club-info">{format(parseISO(event.start_time), 'h:mm a')} - {format(parseISO(event.end_time), 'h:mm a')}</span>
                                     </div>
-                                     <p>interested <span className="club-info">Milo</span></p>
+                                    <button
+                                        className="rsvp-button"
+                                        onClick={() => onRsvp(event.id, myRsvpSet.has(event.id))}
+                                    >
+                                        {myRsvpSet.has(event.id) ? "Going ✓" : "I'm going"}
+                                    </button>
+                                    {(() => {
+                                        const friends = friendRsvpMap.get(event.id);
+                                        if (!friends || friends.length === 0) return null;
+                                        const first = friends[0].username;
+                                        const rest = friends.length - 1;
+                                        return (
+                                            <p className="friend-rsvp-callout">
+                                                {rest === 0
+                                                    ? `${first} is going`
+                                                    : `${first} and ${rest} ${rest === 1 ? 'other' : 'others'} you know are going`
+                                                }
+                                            </p>
+                                        );
+                                    })()}
                                 </div>                                                                                                                            
                             ))                                                                                                                                  
                         )}                                                                                                                                        
