@@ -8,7 +8,6 @@ export const CalendarList = ({ events, myRsvpSet, friendRsvpMap, onRsvp }) => {
 
     const handleWheel = useCallback((e) => {
         e.preventDefault();
-        containerRef.current.scrollLeft += e.deltaY;
         containerRef.current.scrollLeft += e.deltaX;
     }, []);
 
@@ -58,7 +57,6 @@ export const CalendarList = ({ events, myRsvpSet, friendRsvpMap, onRsvp }) => {
                         ) : (                                                                                                                                    
                             day.events.map(event => (
                                 <div key={event.id} className="calendar-event">
-                                    { console.log("event id: " + event.id) }
                                     <img className="club-img" src={event.image_url}></img>
                                     <div className ="club-name">{event.club_name}</div>
                                     <div className ="event-description"><p>about<span  className="club-info">{event.event_description}</span></p></div>

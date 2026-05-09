@@ -47,7 +47,7 @@ export const CalendarPage = () => {
         if (!userId || favoritesCache.size === 0 || weeklyEventsCache !== null) {
             return;
         }
-        // fetch the events using the 
+        // fetch the events using an SQL query for the next 7 days
         const fetchEvents = async () => {
             const { data, error } = await supabase.rpc('get_weekly_events', {
                 p_user_id: userId
@@ -58,15 +58,15 @@ export const CalendarPage = () => {
             }
             setWeeklyEventsCache(data);
 
+            // no events = nothing
             if (!data || data.length === 0) return;
 
-            console.log(data[0]);
+            const eventIds = data.map(e => e.id);
 
-            const eventIds = data.map(e => e.id_of_club);
-
+            // this is all of the events that a particular user will see based on their favorited clubs
             const { data: rsvpData, error: rsvpError } = await supabase
                 .from('attendees')
-                .select('user_id, event_id')
+                .select('event_id, user_id')
                 .in('event_id', eventIds);
 
             if (rsvpError) {
@@ -83,6 +83,7 @@ export const CalendarPage = () => {
             const friendProfileMap = new Map(friendsArray.map(f => [f.id, f]));
             const newFriendRsvpMap = new Map();
             for (const rsvp of rsvpData) {
+                console.log("RSVP ELEMENT: " + rsvp);
                 if (friendIdSet.has(rsvp.user_id)) {
                     if (!newFriendRsvpMap.has(rsvp.event_id)) newFriendRsvpMap.set(rsvp.event_id, []);
                     newFriendRsvpMap.get(rsvp.event_id).push(friendProfileMap.get(rsvp.user_id));
@@ -218,7 +219,7 @@ export const CalendarPage = () => {
                             <label>Date: <input type="date" value={newEvent.date} placeholder="yyyy-mm-dd" name="date" onChange={handleChange} required /></label>
                             <p>{warning}</p>
                             <button onClick={() => { setShowForm(false); setWarning(""); }} className="calendar-button">Cancel</button>
-                            <button onClick={handleSubmit} class="calendar-button">Save</button>
+                            <button onClick={handleSubmit} className="calendar-button">Save</button>
                         </div>
                     </div>
                 )}
