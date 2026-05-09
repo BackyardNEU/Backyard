@@ -60,9 +60,12 @@ export const CalendarPage = () => {
 
             if (!data || data.length === 0) return;
 
-            const eventIds = data.map(e => e.id);
+            console.log(data[0]);
+
+            const eventIds = data.map(e => e.id_of_club);
+
             const { data: rsvpData, error: rsvpError } = await supabase
-                .from('event_rsvps')
+                .from('attendees')
                 .select('user_id, event_id')
                 .in('event_id', eventIds);
 
@@ -187,11 +190,12 @@ export const CalendarPage = () => {
     async function handleRSVP(eventId, isCurrentlyGoing) {
         if (!userId) return;
         if (isCurrentlyGoing) {
-            await supabase.from('event_rsvps').delete()
+            await supabase.from('attendees').delete()
                 .eq('user_id', userId).eq('event_id', eventId);
             setMyRsvpSet(prev => { const next = new Set(prev); next.delete(eventId); return next; });
         } else {
-            await supabase.from('event_rsvps').insert({ user_id: userId, event_id: eventId });
+            const { error } = await supabase.from('attendees').insert({ event_id: eventId, user_id: userId });
+            if (error) console.error("Error inserting RSVP: " + JSON.stringify(error));
             setMyRsvpSet(prev => new Set([...prev, eventId]));
         }
     }

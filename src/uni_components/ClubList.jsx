@@ -7,12 +7,10 @@ import { AnimatePresence, motion } from "framer-motion";
 export const ClubList = ({ results }) => {
   const [expandedClub, setExpandedClub] = useState(null);
   const handleClose = useCallback(() => setExpandedClub(null), []);
- 
   
   if ( !results || results.length === 0) {
     return <p>No clubs found.</p>;
   }
-
 
   return (
     <>
