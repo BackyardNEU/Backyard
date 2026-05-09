@@ -1,6 +1,7 @@
 ﻿import React, { useReducer, useEffect, useCallback, useRef, useMemo } from 'react';
 import { ClubDataContext } from './ClubDataContext';
 import { supabase } from '../lib/supabase';
+import { apiFetch } from '../lib/api';
 
 const initialState = {
     allData: [],
@@ -51,16 +52,14 @@ export const ClubDataProvider = ({ children }) => {
         let newFriendMembershipMap = new Map();
         let newFriendsArray = [];
 
-        // fetch club data
-        const { data, error } = await supabase
-            .from('demo_club_data')
-            .select('*');
-        if (error) {
-            console.error("Error retrieving data: " + error);
-        } else {
-            console.log("Success retrieving data");
-            newAllData = data;
+        try {
+            allData = await apiFetch('/clubs');
+            console.log("succesful fetching from server");
         }
+        catch (err) {
+            console.error("Error fetching from server: " + err);
+        }
+
 
         // Fetch review tags and compute top 2 per club
         const { data: reviewTags, error: tagsError } = await supabase
