@@ -80,6 +80,10 @@ export const ClubDataProvider = ({ children }) => {
             }
         }
 
+        try {
+            allTags = await apiFetch('/tags');
+        }
+
         const { data: userData } = await supabase.auth.getUser();
         if (userData?.user) {
             const { data: favData, error: favError } = await supabase
