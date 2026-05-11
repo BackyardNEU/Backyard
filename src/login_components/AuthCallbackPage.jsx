@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+﻿import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { supabase } from '../supabase';
+import { supabase } from '../lib/supabase';
 
 export default function AuthCallbackPage() {
   const location = useLocation();

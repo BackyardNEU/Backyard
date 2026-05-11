@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { supabase } from '../supabase';
+import { supabase } from '../lib/supabase';
 import { UniSearchBar } from './UniSearchBar';
 import './UniversityPage.css';
 import { ClubList } from './ClubList';
-import { useGlobalStore } from "../store";
+import { useGlobalStore } from "../lib/store";
 import { useClubData } from '../context/useClubData';
 import { CalendarPage } from './CalendarPage';
 

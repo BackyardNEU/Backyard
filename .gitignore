@@ -1,2 +1,25 @@
+# Dependencies
 node_modules
+
+# Secrets
 .env
+.env.local
+
+# Build output
+dist
+.vite
+
+# Editor / OS
+.DS_Store
+
+# Logs
+*.log
+
+# Python (scraper/)
+__pycache__
+.mypy_cache
+*.pyc
+
+# Claude settings
+.claude/settings.local.json
+.claude/CLAUDE.md

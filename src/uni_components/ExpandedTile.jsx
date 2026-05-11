@@ -1,16 +1,17 @@
-import React, {useState, useEffect, useRef} from "react";
+﻿import React, {useState, useEffect, useRef} from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import ReviewPage from "../review_components/ReviewPage";
 import "./ExpandedTile.css";
 import ReviewList from "../review_components/ReviewList"; 
-import { supabase } from '../supabase';
+import { supabase } from '../lib/supabase';
 import { useClubData } from '../context/useClubData';
 import logImage from '/src/assets/logImage.png';
 import ColorThief from "colorthief";
 
 
 function ExpandedTile({club, onClose, onMembershipChange}){
+    const [animationDone, setAnimationDone] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     const [isClosing, setIsClosing] = useState(false);
     const [reviews, set_reviews] = useState([]);
@@ -25,8 +26,6 @@ function ExpandedTile({club, onClose, onMembershipChange}){
     const { clubTopTags } = useClubData();
     const topTags = clubTopTags?.get(club.id) || [];
     const id  = club.id;
-    
-    
 
     //escape key will close tile
     useEffect(() => {
@@ -103,6 +102,7 @@ function ExpandedTile({club, onClose, onMembershipChange}){
 
     useEffect(() => {
             async function fetch_reviews() {
+                if (!animationDone) return;
                 const {data, error} = await supabase
                     .from('reviews')
                     .select('*')
@@ -112,14 +112,14 @@ function ExpandedTile({club, onClose, onMembershipChange}){
                     console.error('Error fetching reviews:', error);
                     return;
                 }
-                console.log("Incoming data: ", data[0].id, typeof data[0].id);
                 set_reviews(data);
             }
             fetch_reviews();
-        }, [id])
+        }, [id, animationDone])
 
     useEffect(() => {
         async function fetch_stats(clubId) {
+            if (!animationDone) return;
             const { data, error } = await supabase.rpc('get_averages', { p_club_id: clubId });
             if (error) {
                 console.error("Error fetching stats:", error);
@@ -129,7 +129,7 @@ function ExpandedTile({club, onClose, onMembershipChange}){
             }
         }
         fetch_stats(id);
-    }, [id]);
+    }, [id, animationDone]);
 
     useEffect(() => {
         async function checkMembership() {
@@ -148,7 +148,7 @@ function ExpandedTile({club, onClose, onMembershipChange}){
             setIsMember(list.includes(club.id));
         }
         checkMembership();
-    }, [club.id]);
+    }, [club.id, animationDone]);
 
     async function handleMembership() {
         if (!user || memberLoading) return;
@@ -188,8 +188,6 @@ function ExpandedTile({club, onClose, onMembershipChange}){
         return () => console.log("ExpandedTile UNMOUNTED");
     }, []);
 
-    console.log("ExpandedTile RENDER", club.id);
-
     return (
         <motion.div
             layoutId={`club-${club.id}`}
@@ -200,6 +198,7 @@ function ExpandedTile({club, onClose, onMembershipChange}){
                 stiffness: 400,
                 damping: 30
             }}
+            onAnimationComplete = {() => setAnimationDone(true)}
         >
     
         <button className = "close-btn" onClick={handleClose}>x</button>
@@ -269,5 +268,5 @@ function ExpandedTile({club, onClose, onMembershipChange}){
     );
 }
 
-export default React.memo(ExpandedTile);
+export default ExpandedTile;
 

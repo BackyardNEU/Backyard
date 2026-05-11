@@ -7,12 +7,10 @@ import { AnimatePresence, motion } from "framer-motion";
 export const ClubList = ({ results }) => {
   const [expandedClub, setExpandedClub] = useState(null);
   const handleClose = useCallback(() => setExpandedClub(null), []);
- 
   
   if ( !results || results.length === 0) {
     return <p>No clubs found.</p>;
   }
-
 
   return (
     <>
@@ -23,19 +21,19 @@ export const ClubList = ({ results }) => {
           <ClubGrid
             key={club.id}
             result={club}
-            onExpand={() => setExpandedClub(club)}
+            onExpand={setExpandedClub}
           />
         ))}
-      </div>
-    </AnimatePresence>
+        </div>
 
-    {expandedClub && (
-      <ExpandedTile
-        club={expandedClub}
-        key={expandedClub.id}
-        onClose={handleClose}
-      />
-    )}
+        {expandedClub && (
+          <ExpandedTile
+            club={expandedClub}
+            key={expandedClub.id}
+            onClose={handleClose}
+          />
+        )}
+    </AnimatePresence>
     </>
   );
 };

@@ -37,7 +37,7 @@
 
 .calendar-event {
     position: relative;
-    padding: 8px;
+    padding: 10px;
     margin: 10px;
     border-radius: 2px;
     box-shadow: 8px 5px 8px rgba(0, 0, 0, 0.22);

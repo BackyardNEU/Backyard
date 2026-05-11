@@ -1,6 +1,6 @@
-import { supabase } from "../supabase";
+﻿import { supabase } from "../lib/supabase";
 import { useLocation } from "react-router-dom";
-import { useGlobalStore } from "../store";
+import { useGlobalStore } from "../lib/store";
 
 function Login() {
   const location = useLocation();

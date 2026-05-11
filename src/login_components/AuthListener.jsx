@@ -1,6 +1,6 @@
-import { useEffect } from "react";
-import { supabase } from "../supabase";
-import { useGlobalStore } from "../store";
+﻿import { useEffect } from "react";
+import { supabase } from "../lib/supabase";
+import { useGlobalStore } from "../lib/store";
 
 //this listener runs asynchronusly (idk how to spell that word) from the login function. Whenever our login itself has an issue, it could screw up the data behind whether a user is logged in, so instead we
 //have this listener to always check whether or not the user is logged in with google auth, or that the user's "session" is still active

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../supabase';
+﻿import React, { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../lib/supabase';
 import { FaSearch, FaTimes } from 'react-icons/fa';
 import './FriendDiscoveryList.css';
 

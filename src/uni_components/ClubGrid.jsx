@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import './ClubGrid.css';
 import heartEmpty from '/src/assets/empty_heart.png';
 import heartFull from '/src/assets/full_heart.png';
-import { supabase } from '../supabase';
+import { supabase } from '../lib/supabase';
 import { motion } from "framer-motion";
-import { useGlobalStore } from "../store";
+import { useGlobalStore } from "../lib/store";
 import { useClubData } from '../context/useClubData';
 import paperTexture from '/src/assets/white-paper-texture.jpg';
 import posterPin from '/src/assets/poster_pin.png';
@@ -67,7 +67,7 @@ export const ClubGrid = ({ result, onExpand, hideHeart, hidePins }) => {
   };
 
   const handleExpand = () => {
-      onExpand();
+      onExpand(result);
   };
   const truncate = (text, wordLimit = 5) => {
     if (!text) return "";
@@ -121,6 +121,7 @@ export const ClubGrid = ({ result, onExpand, hideHeart, hidePins }) => {
         </div>
       </div>
     </motion.button>
-
 );
 };
+
+export default React.memo(ClubGrid);

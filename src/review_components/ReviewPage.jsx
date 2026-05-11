@@ -1,7 +1,7 @@
-import { supabase } from '../supabase';
+﻿import { supabase } from '../lib/supabase';
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { useGlobalStore } from "../store";
+import { useGlobalStore } from "../lib/store";
 import thanksImage from "../assets/thanks.png"
 import ThanksPage from './ThanksPage';
 

@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useClubData } from '../context/useClubData';
 import { CalendarList } from './CalendarList';
-import { supabase } from '../supabase';
+import { supabase } from '../lib/supabase';
 import './CalendarPage.css';
 
 export const CalendarPage = () => {
     // grab relevant data from global context
-    const { favoritesCache, userId } = useClubData();
+    const { favoritesCache, userId, friendsArray } = useClubData();
 
     // null means no reqeust was ever made -> request. Empty list implies no favorited clubs have events going on this week.
     const [ weeklyEventsCache, setWeeklyEventsCache ] = useState(null);
+    const [ myRsvpSet, setMyRsvpSet ] = useState(new Set());
+    const [ friendRsvpMap, setFriendRsvpMap ] = useState(new Map());
 
     // conditional render for form element
     const [ showForm, setShowForm ] = useState(false);
@@ -45,17 +47,49 @@ export const CalendarPage = () => {
         if (!userId || favoritesCache.size === 0 || weeklyEventsCache !== null) {
             return;
         }
-        // fetch the events using the 
+        // fetch the events using an SQL query for the next 7 days
         const fetchEvents = async () => {
             const { data, error } = await supabase.rpc('get_weekly_events', {
                 p_user_id: userId
             });
             if (error) {
                 console.error("There was an issue retrieving the events: " + error);
+                return;
             }
-            else {
-                setWeeklyEventsCache(data);
+            setWeeklyEventsCache(data);
+
+            // no events = nothing
+            if (!data || data.length === 0) return;
+
+            const eventIds = data.map(e => e.id);
+
+            // this is all of the events that a particular user will see based on their favorited clubs
+            const { data: rsvpData, error: rsvpError } = await supabase
+                .from('attendees')
+                .select('event_id, user_id')
+                .in('event_id', eventIds);
+
+            if (rsvpError) {
+                console.error("There was an issue retrieving RSVPs: " + rsvpError);
+                return;
             }
+
+            const newMyRsvpSet = new Set(
+                rsvpData.filter(r => r.user_id === userId).map(r => r.event_id)
+            );
+            setMyRsvpSet(newMyRsvpSet);
+
+            const friendIdSet = new Set(friendsArray.map(f => f.id));
+            const friendProfileMap = new Map(friendsArray.map(f => [f.id, f]));
+            const newFriendRsvpMap = new Map();
+            for (const rsvp of rsvpData) {
+                console.log("RSVP ELEMENT: " + rsvp);
+                if (friendIdSet.has(rsvp.user_id)) {
+                    if (!newFriendRsvpMap.has(rsvp.event_id)) newFriendRsvpMap.set(rsvp.event_id, []);
+                    newFriendRsvpMap.get(rsvp.event_id).push(friendProfileMap.get(rsvp.user_id));
+                }
+            }
+            setFriendRsvpMap(newFriendRsvpMap);
         }
         fetchEvents();
     }, [userId, weeklyEventsCache]);
@@ -154,7 +188,20 @@ export const CalendarPage = () => {
         }
     }
   
-    //Note2self: when I implement the club field inputting interface, I need to replace the club name field with the club's id when they are logged into 
+    async function handleRSVP(eventId, isCurrentlyGoing) {
+        if (!userId) return;
+        if (isCurrentlyGoing) {
+            await supabase.from('attendees').delete()
+                .eq('user_id', userId).eq('event_id', eventId);
+            setMyRsvpSet(prev => { const next = new Set(prev); next.delete(eventId); return next; });
+        } else {
+            const { error } = await supabase.from('attendees').insert({ event_id: eventId, user_id: userId });
+            if (error) console.error("Error inserting RSVP: " + JSON.stringify(error));
+            setMyRsvpSet(prev => new Set([...prev, eventId]));
+        }
+    }
+
+    //Note2self: when I implement the club field inputting interface, I need to replace the club name field with the club's id when they are logged into
     //verified account
     return (
         <>
@@ -172,12 +219,17 @@ export const CalendarPage = () => {
                             <label>Date: <input type="date" value={newEvent.date} placeholder="yyyy-mm-dd" name="date" onChange={handleChange} required /></label>
                             <p>{warning}</p>
                             <button onClick={() => { setShowForm(false); setWarning(""); }} className="calendar-button">Cancel</button>
-                            <button onClick={handleSubmit} class="calendar-button">Save</button>
+                            <button onClick={handleSubmit} className="calendar-button">Save</button>
                         </div>
                     </div>
                 )}
             <div className="whole-calendar-page">
-                <CalendarList events={weeklyEventsCache ?? []} />
+                <CalendarList
+                    events={weeklyEventsCache ?? []}
+                    myRsvpSet={myRsvpSet}
+                    friendRsvpMap={friendRsvpMap}
+                    onRsvp={handleRSVP}
+                />
             </div>
         </>
     );
