@@ -8,7 +8,7 @@
 
 <br>
 
-<video src="src/assets/intro_screen.mp4" autoplay loop muted playsinline width="720"></video>
+<img src="src/assets/intro_screen_hero.gif" alt="Backyard Demo" width="720">
 
 <br>
 
