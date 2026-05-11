@@ -2,6 +2,14 @@
 
 ---
 
+## Login Page
+- Polish up.
+- Milo Bear Design
+- Password restrictions
+- Forgot password
+- Rate limiting
+- Biometrics Login (fingerprint and FaceID)
+
 ## Club Discovery
 - Browse all clubs at your university in a visual grid
 - Filter by category (sports, arts, tech, business, community service, academic, social, music, political)
