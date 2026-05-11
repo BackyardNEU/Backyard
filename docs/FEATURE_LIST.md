@@ -10,6 +10,18 @@
 - Rate limiting
 - Biometrics Login (fingerprint and FaceID)
 
+## Support Page
+- Q&A
+- Tickets + ticket tracking
+- Bug reports
+
+ ## About the Devs
+ - About devs, description + linkedin, github, persoanl website
+
+## LEGAL ISSUES
+- Terms of Service
+- Privacy Policy
+
 ## Club Discovery
 - Browse all clubs at your university in a visual grid
 - Filter by category (sports, arts, tech, business, community service, academic, social, music, political)
