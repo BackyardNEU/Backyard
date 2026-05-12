@@ -53,7 +53,7 @@ export const ClubDataProvider = ({ children }) => {
         let newFriendsArray = [];
 
         try {
-            allData = await apiFetch('/clubs');
+            newAllData = await apiFetch('/clubs');
             console.log("succesful fetching from server");
         }
         catch (err) {
@@ -82,6 +82,8 @@ export const ClubDataProvider = ({ children }) => {
 
         try {
             allTags = await apiFetch('/tags');
+
+            
         }
 
         const { data: userData } = await supabase.auth.getUser();
