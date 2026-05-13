@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { apiFetch } from '../lib/api';
 import { useClubData } from '../context/useClubData';
 import { ClubGrid } from '../uni_components/ClubGrid';
 import ExpandedTile from '../uni_components/ExpandedTile';
@@ -15,20 +15,14 @@ export const ClubMembershipPanel = ({ userId }) => {
     if (!userId || !allData.length) return;
 
     async function fetchMemberships() {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('member_list')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching member_list:', error);
-        return;
+      try {
+        const { member_list } = await apiFetch('/me/membership');
+        const list = member_list || [];
+        const clubs = allData.filter((club) => list.includes(club.id));
+        setMemberClubs(clubs);
+      } catch (err) {
+        console.error('Error fetching member_list:', err);
       }
-
-      const list = profile?.member_list || [];
-      const clubs = allData.filter((club) => list.includes(club.id));
-      setMemberClubs(clubs);
     }
 
     fetchMemberships();

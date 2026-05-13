@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useClubData } from '../context/useClubData';
 import { CalendarList } from './CalendarList';
-import { supabase } from '../lib/supabase';
+import { apiFetch } from '../lib/api';
 import './CalendarPage.css';
 
 export const CalendarPage = () => {
@@ -49,11 +49,11 @@ export const CalendarPage = () => {
         }
         // fetch the events using the 
         const fetchEvents = async () => {
-            const { data, error } = await supabase.rpc('get_weekly_events', {
-                p_user_id: userId
-            });
-            if (error) {
-                console.error("There was an issue retrieving the events: " + error);
+            let data;
+            try {
+                data = await apiFetch('/events/weekly');
+            } catch (err) {
+                console.error("There was an issue retrieving the events:", err);
                 return;
             }
             setWeeklyEventsCache(data);
@@ -61,13 +61,11 @@ export const CalendarPage = () => {
             if (!data || data.length === 0) return;
 
             const eventIds = data.map(e => e.id);
-            const { data: rsvpData, error: rsvpError } = await supabase
-                .from('event_rsvps')
-                .select('user_id, event_id')
-                .in('event_id', eventIds);
-
-            if (rsvpError) {
-                console.error("There was an issue retrieving RSVPs: " + rsvpError);
+            let rsvpData;
+            try {
+                rsvpData = await apiFetch(`/events/rsvps?eventIds=${eventIds.join(',')}`);
+            } catch (err) {
+                console.error("There was an issue retrieving RSVPs:", err);
                 return;
             }
 
@@ -160,39 +158,41 @@ export const CalendarPage = () => {
         const adjustedStart = newEvent.date + "T" + newEvent.startTime + ":00"; 
         const adjustedEnd = newEvent.date + "T" + newEvent.endTime + ":00";
 
-        const { error } = await supabase
-            .from('club_events')
-            .insert({
-                id_of_club: newEvent.clubId,
-                club_name: newEvent.clubName,
-                event_description: newEvent.description,
-                start_time: adjustedStart,
-                end_time: adjustedEnd
+        try {
+            await apiFetch('/events', {
+                method: 'POST',
+                body: {
+                    clubId: newEvent.clubId,
+                    clubName: newEvent.clubName,
+                    description: newEvent.description,
+                    startTime: adjustedStart,
+                    endTime: adjustedEnd,
+                },
             });
-        if (error){
-             console.error("There was an issue adding your event:", error);
-             console.error("code:", error.code, "message:", error.message, "details:", error.details, "hint:", error.hint);
-             console.log(newEvent);
-        }
-        else {
             console.log("Success adding event!");
             setShowForm(false);
             setWeeklyEventsCache(null);
             setNewEvent({
                 clubId: '', clubName: '', description: '', startTime: '', endTime: '', date: ''
             });
+        } catch (err) {
+            console.error("There was an issue adding your event:", err);
+            console.log(newEvent);
         }
     }
   
     async function handleRSVP(eventId, isCurrentlyGoing) {
         if (!userId) return;
-        if (isCurrentlyGoing) {
-            await supabase.from('event_rsvps').delete()
-                .eq('user_id', userId).eq('event_id', eventId);
-            setMyRsvpSet(prev => { const next = new Set(prev); next.delete(eventId); return next; });
-        } else {
-            await supabase.from('event_rsvps').insert({ user_id: userId, event_id: eventId });
-            setMyRsvpSet(prev => new Set([...prev, eventId]));
+        try {
+            if (isCurrentlyGoing) {
+                await apiFetch(`/events/${eventId}/rsvp`, { method: 'DELETE' });
+                setMyRsvpSet(prev => { const next = new Set(prev); next.delete(eventId); return next; });
+            } else {
+                await apiFetch(`/events/${eventId}/rsvp`, { method: 'POST' });
+                setMyRsvpSet(prev => new Set([...prev, eventId]));
+            }
+        } catch (err) {
+            console.error("RSVP failed:", err);
         }
     }
 

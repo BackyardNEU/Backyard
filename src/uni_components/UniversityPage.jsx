@@ -1,6 +1,6 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { apiFetch } from '../lib/api';
 import { UniSearchBar } from './UniSearchBar';
 import './UniversityPage.css';
 import { ClubList } from './ClubList';
@@ -86,18 +86,12 @@ export const UniversityPage = () => {
   
   useEffect(() => {
     async function fetchUniversity() {
-      const { data, error } = await supabase
-        .from('uni_names')
-        .select('*')
-        .eq('id', id)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching university:', error);
-        return;
+      try {
+        const data = await apiFetch(`/universities/${id}`, { auth: false });
+        setUniversity(data);
+      } catch (err) {
+        console.error('Error fetching university:', err);
       }
-
-      setUniversity(data);
     }
 
     fetchUniversity();

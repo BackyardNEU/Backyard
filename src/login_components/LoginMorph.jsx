@@ -6,7 +6,7 @@ import Form from "./form";
 import "./LoginMorph.css";
 import { useGlobalStore } from "../lib/store";
 import { useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { apiFetch } from "../lib/api";
 
 
 
@@ -20,15 +20,10 @@ const [isSignUp, setIsSignUp] = useState(false);
 
   useEffect(() => {
     if (!GlobalValue) { setAvatarUrl(null); return; }
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data?.user) return;
-      supabase
-        .from('profiles')
-        .select('avatar_url')
-        .eq('id', data.user.id)
-        .single()
-        .then(({ data: profile }) => setAvatarUrl(profile?.avatar_url));
-    });
+    // backend resolves the user from the JWT — no need for supabase.auth.getUser() first
+    apiFetch('/me/profile')
+      .then((profile) => setAvatarUrl(profile?.avatar_url))
+      .catch(() => {});
   }, [GlobalValue]);
 
   const handleProfileClick = () => {

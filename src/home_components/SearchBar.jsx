@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { apiFetch } from '../lib/api'
 import { FaGraduationCap, FaSearch } from 'react-icons/fa'
 import './SearchBar.css'
 
@@ -15,9 +15,9 @@ export const SearchBar = () => {
 
   // Load all universities once — enables instant client-side filtering
   useEffect(() => {
-    supabase.from("uni_names").select("*").then(({ data, error }) => {
-      if (!error && data) setAllUniversities(data);
-    });
+    apiFetch('/universities', { auth: false })
+      .then(setAllUniversities)
+      .catch((err) => console.error('Failed to load universities:', err));
   }, []);
 
   // Filter client-side as user types

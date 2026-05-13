@@ -61,7 +61,10 @@ export const ClubDataProvider = ({ children }) => {
         }
 
 
-        // Fetch review tags and compute top 2 per club
+        // TODO(api): no aggregate endpoint exists for review tags across all clubs.
+        // Options: (a) add GET /api/reviews/tags returning [{club_id, review_tags}, ...],
+        // or (b) precompute top tags inside GET /api/clubs so this round trip disappears.
+        // Leaving the direct supabase call for now so the loading screen still works.
         const { data: reviewTags, error: tagsError } = await supabase
             .from('reviews')
             .select('club_id, review_tags');
@@ -80,59 +83,40 @@ export const ClubDataProvider = ({ children }) => {
             }
         }
 
-        try {
-            allTags = await apiFetch('/tags');
-
-            
-        }
-
         const { data: userData } = await supabase.auth.getUser();
         if (userData?.user) {
-            const { data: favData, error: favError } = await supabase
-                .from('user_favorites')
-                .select('club_id')
-                .eq('user_id', userData.user.id);
+            newUserId = userData.user.id;
 
-            if (favError) {
-                console.error("Error retrieving favorites:", favError);
-            } else {
-                newFavoritesCache = new Set(favData.map(fav => fav.club_id));
+            try {
+                const favData = await apiFetch('/me/favorites');
+                newFavoritesCache = new Set((favData || []).map((fav) => fav.club_id));
                 console.log("Favorites loaded:", favData.length);
-                newUserId = userData.user.id;
+            } catch (err) {
+                console.error("Error retrieving favorites:", err);
             }
 
-            // fetch friend memberships for avatar display on club cards
-            const { data: profileData, error: profileError } = await supabase
-                .from('profiles')
-                .select('friend_list')
-                .eq('id', userData.user.id)
-                .single();
-
-            const friendList = profileData?.friend_list || [];
-            if (!profileError && friendList.length > 0) {
-                const { data: friendProfiles, error: friendError } = await supabase
-                    .from('profiles')
-                    .select('id, username, avatar_url, member_list')
-                    .in('id', friendList);
-
-                if (!friendError && friendProfiles) {
-                    newFriendsArray = friendProfiles.map(f => ({
-                        id: f.id,
-                        username: f.username,
-                        avatar_url: f.avatar_url,
-                    }));
-                    for (const friend of friendProfiles) {
-                        const clubs = friend.member_list || [];
-                        for (const clubId of clubs) {
-                            if (!newFriendMembershipMap.has(clubId)) newFriendMembershipMap.set(clubId, []);
-                            newFriendMembershipMap.get(clubId).push({
-                                id: friend.id,
-                                username: friend.username,
-                                avatar_url: friend.avatar_url,
-                            });
-                        }
+            // /me/friends returns full friend profiles in one call — collapses the old
+            // two-step (read friend_list, then fetch profiles by id).
+            try {
+                const friendProfiles = await apiFetch('/me/friends');
+                newFriendsArray = (friendProfiles || []).map((f) => ({
+                    id: f.id,
+                    username: f.username,
+                    avatar_url: f.avatar_url,
+                }));
+                for (const friend of friendProfiles || []) {
+                    const clubs = friend.member_list || [];
+                    for (const clubId of clubs) {
+                        if (!newFriendMembershipMap.has(clubId)) newFriendMembershipMap.set(clubId, []);
+                        newFriendMembershipMap.get(clubId).push({
+                            id: friend.id,
+                            username: friend.username,
+                            avatar_url: friend.avatar_url,
+                        });
                     }
                 }
+            } catch (err) {
+                console.error("Error retrieving friends:", err);
             }
         }
 

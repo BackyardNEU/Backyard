@@ -1,6 +1,7 @@
 ﻿import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { apiFetch } from '../lib/api'
 import { useGlobalStore } from '../lib/store'
 import './ProfilePage.css'
 import imageCompression from 'browser-image-compression'
@@ -47,19 +48,12 @@ export const ProfilePage = () => {
 
       if (!authUser) return;
 
-      // Fetch profile data (username/avatar) from your app table (e.g., `profiles`)
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', authUser.id)
-        .single();
-
-      if (profileError) {
-        console.error('Error fetching profile data:', profileError);
-        return;
+      try {
+        const profileData = await apiFetch('/me/profile');
+        setProfile(profileData);
+      } catch (err) {
+        console.error('Error fetching profile data:', err);
       }
-
-      setProfile(profileData);
     }
 
     loadUser();
@@ -91,30 +85,28 @@ export const ProfilePage = () => {
         const compressed = await imageCompression(file, COMPRESSION_OPTIONS)
 
         setStatus('uploading')
-        const fileName = `${user.id}.webp`
 
-        const { error: uploadError } = await supabase.storage
-          .from(BUCKET)
-          .upload(fileName, compressed, {
-            upsert: true,
-            contentType: 'image/webp',
-          });
-        
-        if (uploadError) { throw uploadError}
+        // Two-step signed upload: backend picks the path (always `<userId>.webp` for
+        // avatars, so re-uploads overwrite the previous file) and returns a signed PUT
+        // URL plus the public URL we'll save in the profile row.
+        const { signedUrl, publicUrl } = await apiFetch('/storage/profile-upload-url', {
+          method: 'POST',
+        });
 
-        const { data } = supabase.storage
-          .from(BUCKET)
-          .getPublicUrl(fileName)
+        const putRes = await fetch(signedUrl, {
+          method: 'PUT',
+          body: compressed,
+          headers: { 'Content-Type': 'image/webp' },
+        });
+        if (!putRes.ok) throw new Error(`Upload failed (${putRes.status})`);
 
+        await apiFetch('/me/profile', {
+          method: 'PUT',
+          body: { [URL_COL]: publicUrl },
+        });
 
-        const {error: updateError} = await supabase
-          .from(TABLE)
-          .update({ [URL_COL]: data.publicUrl })
-          .eq('id', user.id)
-
-        if (updateError) { throw updateError }
-        setProfile(prev => ({ ...prev, [URL_COL]: data.publicUrl }))
-        setImageUrl(data.publicUrl)
+        setProfile(prev => ({ ...prev, [URL_COL]: publicUrl }))
+        setImageUrl(publicUrl)
         setStatus('success')
     }
     catch (error) {
