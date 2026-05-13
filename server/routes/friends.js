@@ -4,13 +4,17 @@ import { requireAuth } from '../middleware/requireAuth.js';
 
 const router = express.Router();
 
-router.get('/', requireAuth, async (req, res) => {
-    // looks up the current users friends list
+router.use(requireAuth);
+
+// Returns the friend profiles (not just IDs) so the client renders without
+// a follow-up round trip. Matches the shape ClubDataProvider/FriendDiscoveryList
+// already expect.
+router.get('/', async (req, res) => {
     const { data: profile, error: profileError } = await supabaseAdmin
-    .from('profiles')
-    .select('friend_list')
-    .eq('id', req.user.id)
-    .single();
+        .from('profiles')
+        .select('friend_list')
+        .eq('id', req.user.id)
+        .single();
 
     if (profileError) {
         const err = new Error(profileError.message);
@@ -19,17 +23,12 @@ router.get('/', requireAuth, async (req, res) => {
     }
 
     const friendIds = profile?.friend_list || [];
+    if (friendIds.length === 0) return res.json([]);
 
-    // ends if user has no friends
-    if (friendIds.length === 0) {
-        return res.json([]);
-    }
-
-    // gets the list of uuids assocaited with the user's friend list
     const { data, error } = await supabaseAdmin
-    .from('profiles')
-    .select('id, username, avatar_url, member_list')
-    .in('id', friendIds);
+        .from('profiles')
+        .select('id, username, avatar_url, member_list')
+        .in('id', friendIds);
 
     if (error) {
         const err = new Error(error.message);
@@ -38,6 +37,34 @@ router.get('/', requireAuth, async (req, res) => {
     }
 
     res.json(data);
+});
+
+// PUT /api/me/friends with { friend_list: [...] }.
+// Caveat: replacing the whole array means concurrent add/remove from two tabs
+// will race — last write wins. Per-friend POST/DELETE with array_append would
+// be safer; PUT-the-whole-array matches BACKEND_PLAN.md and the current
+// frontend pattern, so sticking with it.
+router.put('/', async (req, res) => {
+    const { friend_list } = req.body || {};
+    if (!Array.isArray(friend_list)) {
+        return res.status(400).json({ error: 'friend_list must be an array' });
+    }
+
+    // Defense in depth: don't let a user add themselves, and dedupe.
+    const cleaned = [...new Set(friend_list.filter((id) => id && id !== req.user.id))];
+
+    const { error } = await supabaseAdmin
+        .from('profiles')
+        .update({ friend_list: cleaned })
+        .eq('id', req.user.id);
+
+    if (error) {
+        const err = new Error(error.message);
+        err.status = 502;
+        throw err;
+    }
+
+    res.status(204).end();
 });
 
 export default router;

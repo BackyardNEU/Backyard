@@ -1,20 +1,125 @@
 import express from 'express';
 import { supabaseAdmin } from '../supabaseAdmin.js';
+import { requireAuth } from '../middleware/requireAuth.js';
 
 const router = express.Router();
 
-router.get('/', async (req, res) => {
+router.use(requireAuth);
+
+// Whitelist of fields the user is allowed to write to their own profile.
+// Anything else in the body is ignored — prevents privilege-escalation by
+// posting columns like { id: <someone else's uuid> } or { is_admin: true }.
+const PROFILE_WRITABLE = new Set([
+    'username',
+    'avatar_url',
+    'biography',
+    'photos',
+    'school',
+    'graduation_year',
+    'major',
+]);
+
+function pickWritable(body) {
+    const out = {};
+    for (const key of Object.keys(body || {})) {
+        if (PROFILE_WRITABLE.has(key)) out[key] = body[key];
+    }
+    return out;
+}
+
+router.get('/profile', async (req, res) => {
     const { data, error } = await supabaseAdmin
-    .from('profiles')
-    .select('*');
+        .from('profiles')
+        .select('*')
+        .eq('id', req.user.id)
+        .single();
 
     if (error) {
         const err = new Error(error.message);
-        err.status = 502; // we got a response from Supabase, but it was an error
+        err.status = error.code === 'PGRST116' ? 404 : 502;
         throw err;
     }
 
     res.json(data);
+});
+
+router.put('/profile', async (req, res) => {
+    const patch = pickWritable(req.body);
+    if (Object.keys(patch).length === 0) {
+        return res.status(400).json({ error: 'No writable fields supplied' });
+    }
+
+    const { data, error } = await supabaseAdmin
+        .from('profiles')
+        .update(patch)
+        .eq('id', req.user.id)
+        .select()
+        .single();
+
+    if (error) {
+        const err = new Error(error.message);
+        err.status = 502;
+        throw err;
+    }
+
+    res.json(data);
+});
+
+// Upsert variant for first-login profile creation (AuthListener uses this).
+// The id is always forced from the JWT, never trusted from the body.
+router.post('/profile', async (req, res) => {
+    const patch = pickWritable(req.body);
+    const row = { id: req.user.id, ...patch };
+
+    const { data, error } = await supabaseAdmin
+        .from('profiles')
+        .upsert(row, { onConflict: 'id' })
+        .select()
+        .single();
+
+    if (error) {
+        const err = new Error(error.message);
+        err.status = 502;
+        throw err;
+    }
+
+    res.json(data);
+});
+
+router.get('/membership', async (req, res) => {
+    const { data, error } = await supabaseAdmin
+        .from('profiles')
+        .select('member_list')
+        .eq('id', req.user.id)
+        .single();
+
+    if (error) {
+        const err = new Error(error.message);
+        err.status = 502;
+        throw err;
+    }
+
+    res.json({ member_list: data?.member_list || [] });
+});
+
+router.put('/membership', async (req, res) => {
+    const { member_list } = req.body || {};
+    if (!Array.isArray(member_list)) {
+        return res.status(400).json({ error: 'member_list must be an array' });
+    }
+
+    const { error } = await supabaseAdmin
+        .from('profiles')
+        .update({ member_list })
+        .eq('id', req.user.id);
+
+    if (error) {
+        const err = new Error(error.message);
+        err.status = 502;
+        throw err;
+    }
+
+    res.status(204).end();
 });
 
 export default router;

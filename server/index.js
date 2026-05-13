@@ -3,6 +3,16 @@ import express from 'express';
 import cors from 'cors';
 
 import clubsRouter from './routes/clubs.js';
+import searchRouter from './routes/search.js';
+import universitiesRouter from './routes/universities.js';
+import reviewsRouter from './routes/reviews.js';
+import favoritesRouter from './routes/favorites.js';
+import votesRouter from './routes/votes.js';
+import friendsRouter from './routes/friends.js';
+import profilesRouter from './routes/profiles.js';
+import usersRouter from './routes/users.js';
+import storageRouter from './routes/storage.js';
+import eventsRouter from './routes/events.js';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -17,11 +27,22 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, timestamp: Date.now() });
 });
 
+// Public reads
 app.use('/api/clubs', clubsRouter);
+app.use('/api/search', searchRouter);
+app.use('/api/universities', universitiesRouter);
 
-// Phase 2 (public reads): search, universities, club reviews/stats/tags
-// Phase 3 (authenticated reads): favorites, profiles, friends, votes, users/search
-// Phase 4 (writes + storage): reviews, votes, favorites, profile, friends, storage upload URLs
+// Authenticated writes/reads scoped to the current user (req.user from JWT)
+app.use('/api/reviews', reviewsRouter);
+app.use('/api/me/favorites', favoritesRouter);
+app.use('/api/me/votes', votesRouter);
+app.use('/api/me/friends', friendsRouter);
+app.use('/api/me', profilesRouter); // serves /profile and /membership
+app.use('/api/users', usersRouter);
+app.use('/api/events', eventsRouter);
+
+// Signed upload URLs (auth required; service role stays on the server)
+app.use('/api/storage', storageRouter);
 
 app.use((err, req, res, _next) => {
   console.error('[api error]', err);
