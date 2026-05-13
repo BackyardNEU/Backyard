@@ -54,7 +54,7 @@ export const ClubDataProvider = ({ children }) => {
 
         try {
             newAllData = await apiFetch('/clubs');
-            console.log("succesful fetching from server");
+            console.log("successful fetching from server");
         }
         catch (err) {
             console.error("Error fetching from server: " + err);

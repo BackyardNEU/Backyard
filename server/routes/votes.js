@@ -6,11 +6,7 @@ const router = express.Router();
 
 router.use(requireAuth);
 
-// Recompute reviews.upvotes from the sum of all user_votes for a review.
-// Why the server owns this: the frontend currently writes upvotes directly,
-// which means a client could send `{ upvotes: 99999 }`. Server-side recompute
-// is the only way to make the counter trustworthy.
-// Trade-off: two extra round trips per vote (sum + update) instead of one.
+//Move aggregation+update into one DB-side transactional operation (RPC/function or trigger) and call that from the route.
 async function recomputeUpvotes(reviewId) {
     const { data, error: sumError } = await supabaseAdmin
         .from('user_votes')

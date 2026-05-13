@@ -6,7 +6,7 @@ const router = express.Router();
 router.get('/', async (req, res) => {
     const { data, error } = await supabaseAdmin
         .from('uni_names')
-        .select('*')
+        .select('id, uni_name')
         .order('uni_name');
 
     if (error) {
@@ -21,7 +21,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     const { data, error } = await supabaseAdmin
         .from('uni_names')
-        .select('*')
+        .select('id, uni_name')
         .eq('id', req.params.id)
         .single();
 
