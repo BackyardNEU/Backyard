@@ -8,7 +8,6 @@ export const CalendarList = ({ events, myRsvpSet, friendRsvpMap, onRsvp }) => {
 
     const handleWheel = useCallback((e) => {
         e.preventDefault();
-        containerRef.current.scrollLeft += e.deltaY;
         containerRef.current.scrollLeft += e.deltaX;
     }, []);
 
@@ -70,7 +69,7 @@ export const CalendarList = ({ events, myRsvpSet, friendRsvpMap, onRsvp }) => {
                                         className="rsvp-button"
                                         onClick={() => onRsvp(event.id, myRsvpSet.has(event.id))}
                                     >
-                                        {myRsvpSet.has(event.id) ? "Going ✓" : "I'm going"}
+                                        {myRsvpSet.has(event.id) ? "Going ✓" : "I'm going!"}
                                     </button>
                                     {(() => {
                                         const friends = friendRsvpMap.get(event.id);

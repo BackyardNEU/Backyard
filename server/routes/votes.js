@@ -6,25 +6,31 @@ const router = express.Router();
 
 router.use(requireAuth);
 
-//Move aggregation+update into one DB-side transactional operation (RPC/function or trigger) and call that from the route.
 async function recomputeUpvotes(reviewId) {
-    const { data, error: sumError } = await supabaseAdmin
-        .from('user_votes')
-        .select('vote')
-        .eq('review_id', reviewId);
+    const { data, error } = await supabaseAdmin.rpc('recompute_upvotes', {
+        p_review_id: reviewId,
+    });
 
-    if (sumError) throw sumError;
+    if (error) {
+        const { data: fallbackData, error: sumError } = await supabaseAdmin
+            .from('user_votes')
+            .select('vote')
+            .eq('review_id', reviewId);
 
-    const total = (data || []).reduce((acc, row) => acc + (row.vote || 0), 0);
+        if (sumError) throw sumError;
 
-    const { error: updateError } = await supabaseAdmin
-        .from('reviews')
-        .update({ upvotes: total })
-        .eq('id', reviewId);
+        const total = (fallbackData || []).reduce((acc, row) => acc + (row.vote || 0), 0);
 
-    if (updateError) throw updateError;
+        const { error: updateError } = await supabaseAdmin
+            .from('reviews')
+            .update({ upvotes: total })
+            .eq('id', reviewId);
 
-    return total;
+        if (updateError) throw updateError;
+        return total;
+    }
+
+    return data;
 }
 
 // GET /api/me/votes?reviewIds=a,b,c  → only the current user's votes

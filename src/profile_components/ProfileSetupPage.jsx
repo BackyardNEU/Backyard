@@ -147,26 +147,22 @@ const ProfileSetupPage = () => {
     };
 
     const uploadNewPhotos = async () => {
-        // TODO(api): no backend signed-URL endpoint exists yet for the `profile_photos`
-        // bucket (only profile_images and review_images are covered). Add e.g.
-        // POST /api/storage/profile-photos-upload-url on the server, then swap this
-        // block to the same two-step PUT pattern used for avatars/review images.
         const urls = [];
         for (const file of selectedPhotoFiles) {
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+            const ext = file.name.split('.').pop();
+            const { signedUrl, publicUrl } = await apiFetch('/storage/profile-photos-upload-url', {
+                method: 'POST',
+                body: { ext },
+            });
 
-            const { error: uploadError } = await supabase.storage
-                .from(PHOTO_BUCKET)
-                .upload(fileName, file);
+            const putRes = await fetch(signedUrl, {
+                method: 'PUT',
+                body: file,
+                headers: { 'Content-Type': file.type || 'application/octet-stream' },
+            });
+            if (!putRes.ok) throw new Error(`Upload failed (${putRes.status})`);
 
-            if (uploadError) throw uploadError;
-
-            const { data: urlData } = supabase.storage
-                .from(PHOTO_BUCKET)
-                .getPublicUrl(fileName);
-
-            urls.push(urlData.publicUrl);
+            urls.push(publicUrl);
         }
         return urls;
     };

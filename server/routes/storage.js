@@ -56,4 +56,11 @@ router.post('/review-upload-url', async (req, res) => {
     await makeSignedUpload('review_images', path, res);
 });
 
+router.post('/profile-photos-upload-url', async (req, res) => {
+    const ext = (req.body?.ext || 'webp').replace(/[^a-z0-9]/gi, '').slice(0, 8) || 'webp';
+    const rand = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    const path = `${req.user.id}/${rand}.${ext}`;
+    await makeSignedUpload('profile_photos', path, res);
+});
+
 export default router;

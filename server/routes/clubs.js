@@ -39,6 +39,20 @@ router.get('/:clubId/reviews', async (req, res) => {
   res.json(data);
 });
 
+router.get('/review-tags', async (req, res) => {
+  const { data, error } = await supabaseAdmin
+    .from('reviews')
+    .select('club_id, review_tags');
+
+  if (error) {
+    const err = new Error(error.message);
+    err.status = 502;
+    throw err;
+  }
+
+  res.json(data);
+});
+
 router.get('/:clubId/review-tags', async (req, res) => {
   const { clubId } = req.params;
 

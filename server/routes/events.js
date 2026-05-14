@@ -70,6 +70,17 @@ router.post('/', async (req, res) => {
 
     const { clubId, clubName, description, startTime, endTime } = req.body;
 
+    const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('member_list')
+        .eq('id', req.user.id)
+        .single();
+
+    const memberList = profile?.member_list || [];
+    if (!memberList.includes(clubId)) {
+        return res.status(403).json({ error: 'You must be a member of this club to create events' });
+    }
+
     const { data, error } = await supabaseAdmin
         .from('club_events')
         .insert({

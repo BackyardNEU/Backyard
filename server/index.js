@@ -1,6 +1,8 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 
 import clubsRouter from './routes/clubs.js';
 import searchRouter from './routes/search.js';
@@ -17,11 +19,16 @@ import eventsRouter from './routes/events.js';
 const app = express();
 const port = process.env.PORT || 3001;
 
+app.use(helmet());
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true,
 }));
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '100kb' }));
+
+const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 300 });
+const writeLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 60 });
+app.use('/api', apiLimiter);
 
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, timestamp: Date.now() });
@@ -33,16 +40,16 @@ app.use('/api/search', searchRouter);
 app.use('/api/universities', universitiesRouter);
 
 // Authenticated writes/reads scoped to the current user (req.user from JWT)
-app.use('/api/reviews', reviewsRouter);
-app.use('/api/me/favorites', favoritesRouter);
-app.use('/api/me/votes', votesRouter);
-app.use('/api/me/friends', friendsRouter);
+app.use('/api/reviews', writeLimiter, reviewsRouter);
+app.use('/api/me/favorites', writeLimiter, favoritesRouter);
+app.use('/api/me/votes', writeLimiter, votesRouter);
+app.use('/api/me/friends', writeLimiter, friendsRouter);
 app.use('/api/me', profilesRouter); // serves /profile and /membership
 app.use('/api/users', usersRouter);
-app.use('/api/events', eventsRouter);
+app.use('/api/events', writeLimiter, eventsRouter);
 
 // Signed upload URLs (auth required; service role stays on the server)
-app.use('/api/storage', storageRouter);
+app.use('/api/storage', writeLimiter, storageRouter);
 
 app.use((err, req, res, _next) => {
   console.error('[api error]', err);

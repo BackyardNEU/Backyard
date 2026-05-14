@@ -61,14 +61,8 @@ export const ClubDataProvider = ({ children }) => {
         }
 
 
-        // TODO(api): no aggregate endpoint exists for review tags across all clubs.
-        // Options: (a) add GET /api/reviews/tags returning [{club_id, review_tags}, ...],
-        // or (b) precompute top tags inside GET /api/clubs so this round trip disappears.
-        // Leaving the direct supabase call for now so the loading screen still works.
-        const { data: reviewTags, error: tagsError } = await supabase
-            .from('reviews')
-            .select('club_id, review_tags');
-        if (!tagsError && reviewTags) {
+        try {
+            const reviewTags = await apiFetch('/clubs/review-tags', { auth: false });
             const tagCounts = {};
             for (const review of reviewTags) {
                 if (!review.review_tags || !Array.isArray(review.review_tags)) continue;
@@ -81,6 +75,8 @@ export const ClubDataProvider = ({ children }) => {
                 const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
                 newClubTopTags.set(clubId, sorted.slice(0, 2).map(([tag]) => tag));
             }
+        } catch (err) {
+            console.error("Error fetching review tags:", err);
         }
 
         const { data: userData } = await supabase.auth.getUser();
