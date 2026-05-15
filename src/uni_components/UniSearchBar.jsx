@@ -1,5 +1,6 @@
 ﻿import React, {useState, useEffect} from 'react'
-import { supabase } from '../lib/supabase'
+import { apiFetch } from '../lib/api'
+import { useClubData } from '../context/useClubData'
 import {FaSearch} from 'react-icons/fa'
 import { AiFillCalendar } from "react-icons/ai";
 import './UniSearchBar.css'
@@ -31,8 +32,9 @@ export const UniSearchBar = ({ setResults, setShowCalendar, university }) => {
   const [input, setInput] = useState("")
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeCategory, setActiveCategory] = useState(null)
-  const [clubs, setClubs] = useState([]) 
+  const [clubs, setClubs] = useState([])
   const [displayText, setDisplayText] = useState("")
+  const { allData } = useClubData()
   
 
   const [typingSpeed, setTypingSpeed] = useState(100)
@@ -70,13 +72,11 @@ useEffect(() => {
       const currentPhrase = examplePhrases[phraseIndex];
       
       if (!isDeleting) {
-        // Typing: add one character
         setDisplayText(currentPhrase.substring(0, displayText.length + 1));
-        setTypingSpeed(100); // Normal typing speed
+        setTypingSpeed(100);
 
-        // If phrase is complete
         if (displayText === currentPhrase) {
-          setTypingSpeed(2000); // Pause at the end
+          setTypingSpeed(2000);
           setIsDeleting(true);
         }
       } else {
@@ -101,31 +101,22 @@ useEffect(() => {
     async function getClubs() {
       setShowCalendar(false);
       if (input.trim() !== "") {
-        // Full Text Search + Exact Match using our PostgreSQL RPC
-        const { data, error } = await supabase.rpc("search_clubs", {
-          search_query: input,
-          filter_school: university,
-        });
-        console.log("NL result sample:", data[0])
-        if (error) {
-          console.error("Error fetching clubs via RPC:", error);
-          return;
+        // Full Text Search + Exact Match via the backend search route
+        try {
+          const data = await apiFetch(
+            `/search?q=${encodeURIComponent(input)}&school=${encodeURIComponent(university)}`,
+            { auth: false }
+          );
+          console.log("NL result sample:", data[0]);
+          setClubs(data);
+          setResults(data);
+        } catch (err) {
+          console.error("Error fetching clubs via search:", err);
         }
-        setClubs(data);
-        setResults(data);
       } else {
-        // Default state: no input, fetch basic club list for the school
-        const { data, error } = await supabase
-          .from("demo_club_data")
-          .select("*")
-          .eq("school", university)
-          .limit(100);
-
-        if (error) {
-          console.error("Error fetching default clubs:", error);
-          return;
-        }
-
+        // Default state: no input. allData is already loaded by ClubDataProvider, so we
+        // just filter it client-side rather than burn a second round trip.
+        const data = allData.filter((c) => c.school === university).slice(0, 100);
         setClubs(data);
         setResults(data);
       }
@@ -138,7 +129,7 @@ useEffect(() => {
 
     // Cleanup function clears the timeout if the input changes before 300ms
     return () => clearTimeout(delayDebounceFn);
-  }, [input, university, setResults]);
+  }, [input, university, setResults, allData]);
 
   return (
     <div className="club-input-wrapper">

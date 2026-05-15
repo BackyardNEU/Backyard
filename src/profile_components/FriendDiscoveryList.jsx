@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
+import { apiFetch } from '../lib/api';
 import { FaSearch, FaTimes } from 'react-icons/fa';
 import './FriendDiscoveryList.css';
 
@@ -14,36 +14,15 @@ export const FriendDiscoveryList = ({ userId }) => {
   const fetchFriends = useCallback(async () => {
     if (!userId) return;
 
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('friend_list')
-      .eq('id', userId)
-      .single();
-
-    if (error) {
-      console.error('Error fetching friend_list:', error);
-      return;
+    // /me/friends already returns full profile rows for each friend, so we collapse
+    // the previous two-round-trip (friend_list, then profiles by id) into one call.
+    try {
+      const friendProfiles = await apiFetch('/me/friends');
+      setFriends(friendProfiles || []);
+      setFriendIds((friendProfiles || []).map((f) => f.id));
+    } catch (err) {
+      console.error('Error fetching friends:', err);
     }
-
-    const list = profile?.friend_list || [];
-    setFriendIds(list);
-
-    if (list.length === 0) {
-      setFriends([]);
-      return;
-    }
-
-    const { data: friendProfiles, error: friendError } = await supabase
-      .from('profiles')
-      .select('id, username, avatar_url')
-      .in('id', list);
-
-    if (friendError) {
-      console.error('Error fetching friend profiles:', friendError);
-      return;
-    }
-
-    setFriends(friendProfiles || []);
   }, [userId]);
 
   useEffect(() => {
@@ -57,19 +36,12 @@ export const FriendDiscoveryList = ({ userId }) => {
     }
 
     async function searchUsers() {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, username, avatar_url')
-        .ilike('username', `%${searchInput}%`)
-        .neq('id', userId)
-        .limit(10);
-
-      if (error) {
-        console.error('Error searching users:', error);
-        return;
+      try {
+        const data = await apiFetch(`/users/search?q=${encodeURIComponent(searchInput)}`);
+        setSearchResults(data || []);
+      } catch (err) {
+        console.error('Error searching users:', err);
       }
-
-      setSearchResults(data || []);
     }
 
     searchUsers();
@@ -79,31 +51,21 @@ export const FriendDiscoveryList = ({ userId }) => {
     if (addingId) return;
     setAddingId(friendId);
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('friend_list')
-      .eq('id', userId)
-      .single();
-
-    let list = profile?.friend_list || [];
-
-    if (list.includes(friendId)) {
+    if (friendIds.includes(friendId)) {
       setAddingId(null);
       return;
     }
 
-    list = [...list, friendId];
+    // PUT replaces the whole friend_list. If two tabs add concurrently, last write wins
+    // — same behavior as the previous supabase-based code.
+    const newList = [...friendIds, friendId];
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({ friend_list: list })
-      .eq('id', userId);
-
-    if (error) {
-      console.error('Error adding friend:', error);
-    } else {
-      setFriendIds(list);
+    try {
+      await apiFetch('/me/friends', { method: 'PUT', body: { friend_list: newList } });
+      setFriendIds(newList);
       await fetchFriends();
+    } catch (err) {
+      console.error('Error adding friend:', err);
     }
     setAddingId(null);
   }
@@ -112,25 +74,14 @@ export const FriendDiscoveryList = ({ userId }) => {
     if (addingId) return;
     setAddingId(friendId);
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('friend_list')
-      .eq('id', userId)
-      .single();
+    const newList = friendIds.filter((id) => id !== friendId);
 
-    let list = profile?.friend_list || [];
-    list = list.filter((id) => id !== friendId);
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({ friend_list: list })
-      .eq('id', userId);
-
-    if (error) {
-      console.error('Error removing friend:', error);
-    } else {
-      setFriendIds(list);
+    try {
+      await apiFetch('/me/friends', { method: 'PUT', body: { friend_list: newList } });
+      setFriendIds(newList);
       setFriends((prev) => prev.filter((f) => f.id !== friendId));
+    } catch (err) {
+      console.error('Error removing friend:', err);
     }
     setAddingId(null);
   }

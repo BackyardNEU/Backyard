@@ -1,7 +1,9 @@
 ﻿import { supabase } from '../lib/supabase';
+import { apiFetch } from '../lib/api';
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useGlobalStore } from "../lib/store";
+import { useClubData } from '../context/useClubData';
 import thanksImage from "../assets/thanks.png"
 import ThanksPage from './ThanksPage';
 
@@ -15,6 +17,7 @@ export default function ReviewPage({clubId, onClose}) {
         'retard', 'pussy', 'ret@rd'
     ]
     const GlobalValue = useGlobalStore((state) => state.GlobalValue);
+    const { allData } = useClubData();
     const id = clubId;
     const [reviews, set_reviews] = useState([]);
     const [warning, setWarning] = useState("")
@@ -103,25 +106,26 @@ export default function ReviewPage({clubId, onClose}) {
         try {
             setUploading(true);
             const urls = [];
-            
+
             for (const file of selectedFiles) {
-                const fileExt = file.name.split(".").pop();
-                const fileName = `${Math.random()}.${fileExt}`;
-                const filePath = `${fileName}`;
+                // Two-step signed upload: ask backend for a URL + path, then PUT bytes
+                // directly to Supabase Storage. Backend keeps the service-role key.
+                const ext = file.name.split('.').pop();
+                const { signedUrl, publicUrl } = await apiFetch('/storage/review-upload-url', {
+                    method: 'POST',
+                    body: { ext },
+                });
 
-                const { error } = await supabase.storage
-                    .from('review_images')
-                    .upload(filePath, file);
+                const putRes = await fetch(signedUrl, {
+                    method: 'PUT',
+                    body: file,
+                    headers: { 'Content-Type': file.type || 'application/octet-stream' },
+                });
+                if (!putRes.ok) throw new Error(`Upload failed (${putRes.status})`);
 
-                if (error) throw error;
-
-                const { data: urlData } = await supabase.storage
-                    .from("review_images")
-                    .getPublicUrl(filePath);
-                
-                urls.push(urlData.publicUrl);
+                urls.push(publicUrl);
             }
-            
+
             setUploadedUrls(urls);
             alert(`${urls.length} file(s) uploaded successfully.`);
             
@@ -138,16 +142,12 @@ export default function ReviewPage({clubId, onClose}) {
     
     useEffect(() => {
         async function fetch_reviews() {
-            const {data, error} = await supabase
-                .from('reviews')
-                .select('*')
-                .eq('club_id', id);
-
-            if (error) {
-                console.error('Error fetching reviews:', error);
-                return;
+            try {
+                const data = await apiFetch(`/clubs/${id}/reviews`, { auth: false });
+                set_reviews(data);
+            } catch (err) {
+                console.error('Error fetching reviews:', err);
             }
-            set_reviews(data);
         }
         fetch_reviews();
     }, [id])
@@ -156,26 +156,20 @@ export default function ReviewPage({clubId, onClose}) {
         async function fetchClub() {
             const { data: { user } } = await supabase.auth.getUser();
             setUsername(user?.user_metadata?.full_name || user?.email || "User");
-            
-            const { data, error } = await supabase
-                .from('demo_club_data')
-                .select('*')
-                .eq('id', id);
-            
-            if (error) {
-                console.error('Error fetching club:', error);
-                return;
-            }
-            
-            if (data && data.length > 0) {
-                setClub(data[0]);
+
+            // No GET /api/clubs/:id endpoint — pull from the already-loaded ClubDataProvider
+            // cache instead of round-tripping. If allData is empty (provider still loading),
+            // the second effect run will pick it up.
+            const found = allData.find((c) => c.id === id);
+            if (found) {
+                setClub(found);
             } else {
                 console.log('No club found with id:', id);
             }
         }
-        
+
         fetchClub();
-    }, [id]);
+    }, [id, allData]);
 
     const toggleTag = (tag) => {
         set_user_tags((prev) => {
@@ -200,7 +194,6 @@ export default function ReviewPage({clubId, onClose}) {
     
     async function post_review() {
         console.log("posting review")
-        const { data: { user } } = await supabase.auth.getUser();
 
         if (GlobalValue) {
             if((user_review && user_title) || uploadedUrls.length > 0)  {
@@ -211,35 +204,34 @@ export default function ReviewPage({clubId, onClose}) {
                         return;
                     }
                 }
-                
+
                 const selectedTags = Object.entries(user_tags)
                   .filter(([, v]) => v)
                   .map(([k]) => k);
 
-                const { error } = await supabase
-                    .from('reviews')
-                    .insert({
-                        club_id: id, 
-                        user_id: user.id, 
-                        review_text: user_review, 
-                        review_title: user_title, 
-                        review_tags: selectedTags, 
-                        club_hours: user_hours, 
-                        club_leadership: user_leadership, 
-                        club_fun: user_fun, 
-                        club_community: user_community, 
-                        club_growth_index: user_growth, 
-                        review_images: uploadedUrls
-                    })
-                    .select()
-                
-                if (error) {
-                    console.error('Error posting review:', error);
-                    setWarning(error.message || 'Failed to post review');
-                    return;
+                try {
+                    // Backend forces user_id from the verified JWT, so we don't pass it.
+                    await apiFetch('/reviews', {
+                        method: 'POST',
+                        body: {
+                            club_id: id,
+                            review_text: user_review,
+                            review_title: user_title,
+                            review_tags: selectedTags,
+                            club_hours: user_hours,
+                            club_leadership: user_leadership,
+                            club_fun: user_fun,
+                            club_community: user_community,
+                            club_growth_index: user_growth,
+                            review_images: uploadedUrls,
+                        },
+                    });
+                    setReviewPosted(true);
+                } catch (err) {
+                    console.error('Error posting review:', err);
+                    setWarning(err.message || 'Failed to post review');
                 }
-                setReviewPosted(true);
-            }    
+            }
         } else {
             console.log("please log in before you post a review")
         }

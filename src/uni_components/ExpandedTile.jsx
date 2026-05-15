@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import ReviewPage from "../review_components/ReviewPage";
 import "./ExpandedTile.css";
-import ReviewList from "../review_components/ReviewList"; 
+import ReviewList from "../review_components/ReviewList";
 import { supabase } from '../lib/supabase';
+import { apiFetch } from '../lib/api';
 import { useClubData } from '../context/useClubData';
 import logImage from '/src/assets/logImage.png';
 import ColorThief from "colorthief";
@@ -103,16 +104,12 @@ function ExpandedTile({club, onClose, onMembershipChange}){
     useEffect(() => {
             async function fetch_reviews() {
                 if (!animationDone) return;
-                const {data, error} = await supabase
-                    .from('reviews')
-                    .select('*')
-                    .eq('club_id', id);
-    
-                if (error) {
-                    console.error('Error fetching reviews:', error);
-                    return;
+                try {
+                    const data = await apiFetch(`/clubs/${id}/reviews`, { auth: false });
+                    set_reviews(data);
+                } catch (err) {
+                    console.error('Error fetching reviews:', err);
                 }
-                set_reviews(data);
             }
             fetch_reviews();
         }, [id, animationDone])
@@ -120,12 +117,12 @@ function ExpandedTile({club, onClose, onMembershipChange}){
     useEffect(() => {
         async function fetch_stats(clubId) {
             if (!animationDone) return;
-            const { data, error } = await supabase.rpc('get_averages', { p_club_id: clubId });
-            if (error) {
-                console.error("Error fetching stats:", error);
-            } else {
+            try {
+                const data = await apiFetch(`/clubs/${clubId}/stats`, { auth: false });
                 console.log("Fetched club stats!:", data);
                 setClubStats(data[0]);
+            } catch (err) {
+                console.error("Error fetching stats:", err);
             }
         }
         fetch_stats(id);
@@ -137,15 +134,12 @@ function ExpandedTile({club, onClose, onMembershipChange}){
             if (!authUser) { setUser(null); return; }
             setUser(authUser);
 
-            const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('member_list')
-                .eq('id', authUser.id)
-                .single();
-
-            if (error) { console.error('Error fetching membership:', error); return; }
-            const list = profile?.member_list || [];
-            setIsMember(list.includes(club.id));
+            try {
+                const { member_list } = await apiFetch('/me/membership');
+                setIsMember((member_list || []).includes(club.id));
+            } catch (err) {
+                console.error('Error fetching membership:', err);
+            }
         }
         checkMembership();
     }, [club.id, animationDone]);
@@ -154,31 +148,25 @@ function ExpandedTile({club, onClose, onMembershipChange}){
         if (!user || memberLoading) return;
         setMemberLoading(true);
 
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('member_list')
-            .eq('id', user.id)
-            .single();
+        try {
+            // Refetch the canonical list before mutating to minimize the race window when
+            // two tabs/devices are open. PUT replaces the whole array, so stale state means
+            // last-write-wins.
+            const { member_list } = await apiFetch('/me/membership');
+            let list = member_list || [];
 
-        let list = profile?.member_list || [];
+            if (isMember) {
+                list = list.filter((cid) => cid !== club.id);
+            } else {
+                list = [...list, club.id];
+            }
 
-        if (isMember) {
-            list = list.filter((cid) => cid !== club.id);
-        } else {
-            list = [...list, club.id];
-        }
-
-        const { error } = await supabase
-            .from('profiles')
-            .update({ member_list: list })
-            .eq('id', user.id);
-
-        if (error) {
-            console.error('Error updating membership:', error);
-        } else {
+            await apiFetch('/me/membership', { method: 'PUT', body: { member_list: list } });
             const wasJoined = isMember;
             setIsMember(!isMember);
             if (onMembershipChange) onMembershipChange(club.id, !wasJoined);
+        } catch (err) {
+            console.error('Error updating membership:', err);
         }
         setMemberLoading(false);
     }

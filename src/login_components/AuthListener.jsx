@@ -1,5 +1,6 @@
 ﻿import { useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import { apiFetch } from "../lib/api";
 import { useGlobalStore } from "../lib/store";
 
 //this listener runs asynchronusly (idk how to spell that word) from the login function. Whenever our login itself has an issue, it could screw up the data behind whether a user is logged in, so instead we
@@ -9,17 +10,15 @@ import { useGlobalStore } from "../lib/store";
 async function ensureProfile(user) {
   if (!user) return;
   const meta = user.user_metadata || {};
-  const { error } = await supabase
-    .from("profiles")
-    .upsert(
-      {
-        id: user.id,
-        username: meta.full_name || meta.name || "",
-        email: user.email,
-      },
-      { onConflict: ["id"] }
-    );
-  if (error) console.error("Profile upsert failed:", error.message);
+  // backend reads id from the JWT; email is not in the profile writable allowlist so it's dropped
+  try {
+    await apiFetch("/me/profile", {
+      method: "POST",
+      body: { username: meta.full_name || meta.name || "" },
+    });
+  } catch (err) {
+    console.error("Profile upsert failed:", err.message);
+  }
 }
 
 function AuthListener() {

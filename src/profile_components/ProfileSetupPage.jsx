@@ -2,6 +2,7 @@
 import { useNavigate } from 'react-router-dom'
 import imageCompression from 'browser-image-compression'
 import { supabase } from '../lib/supabase'
+import { apiFetch } from '../lib/api'
 import './ProfileSetupPage.css'
 
 const ProfileSetupPage = () => {
@@ -49,25 +50,16 @@ const ProfileSetupPage = () => {
 
             try {
                 const { data, error } = await supabase.auth.getUser();
-                const { data: uniData, error: uniError } = await supabase
-                    .from('uni_names')
-                    .select('id, uni_name')
-                    .order('uni_name', { ascending: true });
-
                 if (error) throw error;
-                if (uniError) throw uniError;
+
+                const [uniData, profileData] = await Promise.all([
+                    apiFetch('/universities', { auth: false }),
+                    apiFetch('/me/profile'),
+                ]);
 
                 const authUser = data?.user || null;
                 setUser(authUser);
                 setUniversities(uniData || []);
-
-                const { data: profileData, error: profileError } = await supabase
-                    .from(TABLE)
-                    .select('*')
-                    .eq('id', authUser.id)
-                    .single();
-
-                if (profileError) throw profileError;
 
                 setBiography(profileData?.biography || '');
                 setAvatarPreview(profileData?.avatar_url || null);
@@ -157,20 +149,20 @@ const ProfileSetupPage = () => {
     const uploadNewPhotos = async () => {
         const urls = [];
         for (const file of selectedPhotoFiles) {
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+            const ext = file.name.split('.').pop();
+            const { signedUrl, publicUrl } = await apiFetch('/storage/profile-photos-upload-url', {
+                method: 'POST',
+                body: { ext },
+            });
 
-            const { error: uploadError } = await supabase.storage
-                .from(PHOTO_BUCKET)
-                .upload(fileName, file);
+            const putRes = await fetch(signedUrl, {
+                method: 'PUT',
+                body: file,
+                headers: { 'Content-Type': file.type || 'application/octet-stream' },
+            });
+            if (!putRes.ok) throw new Error(`Upload failed (${putRes.status})`);
 
-            if (uploadError) throw uploadError;
-
-            const { data: urlData } = supabase.storage
-                .from(PHOTO_BUCKET)
-                .getPublicUrl(fileName);
-
-            urls.push(urlData.publicUrl);
+            urls.push(publicUrl);
         }
         return urls;
     };
@@ -195,51 +187,37 @@ const ProfileSetupPage = () => {
 
             if (avatarFile) {
                 const compressed = await imageCompression(avatarFile, COMPRESSION_OPTIONS);
-                const fileName = `${user.id}.webp`;
 
-                const { error: uploadError } = await supabase.storage
-                    .from(BUCKET)
-                    .upload(fileName, compressed, {
-                        upsert: true,
-                        contentType: 'image/webp',
-                    });
+                const { signedUrl, publicUrl } = await apiFetch('/storage/profile-upload-url', {
+                    method: 'POST',
+                });
 
-                if (uploadError) throw uploadError;
+                const putRes = await fetch(signedUrl, {
+                    method: 'PUT',
+                    body: compressed,
+                    headers: { 'Content-Type': 'image/webp' },
+                });
+                if (!putRes.ok) throw new Error(`Upload failed (${putRes.status})`);
 
-                const { data } = supabase.storage.from(BUCKET).getPublicUrl(fileName);
-                avatarUrl = data.publicUrl;
+                avatarUrl = publicUrl;
             }
 
             const newPhotoUrls = await uploadNewPhotos();
             const allPhotos = [...existingPhotos, ...newPhotoUrls];
 
-            const payload = {
-                [URL_COL]: avatarUrl,
-                biography: biography.trim(),
-                school_id: selectedUniversity.id,
-                school_name: selectedUniversity.uni_name,
-                photos: allPhotos,
-            };
-
-            let { error: updateError } = await supabase
-                .from(TABLE)
-                .update(payload)
-                .eq('id', user.id);
-
-            if (updateError && /column|school/i.test(updateError.message || '')) {
-                const { error: fallbackError } = await supabase
-                    .from(TABLE)
-                    .update({
-                        [URL_COL]: avatarUrl,
-                        biography: biography.trim(),
-                        school: selectedUniversity.uni_name,
-                        photos: allPhotos,
-                    })
-                    .eq('id', user.id);
-                updateError = fallbackError;
-            }
-
-            if (updateError) throw updateError;
+            // Note: the previous code tried a `school_id`/`school_name` payload first
+            // and fell back to `school` on a column error. The backend PROFILE_WRITABLE
+            // allowlist currently only includes `school`, so unknown columns are
+            // silently dropped — the fallback collapses into one call.
+            await apiFetch('/me/profile', {
+                method: 'PUT',
+                body: {
+                    [URL_COL]: avatarUrl,
+                    biography: biography.trim(),
+                    school: selectedUniversity.uni_name,
+                    photos: allPhotos,
+                },
+            });
 
             navigate('/profile', { replace: true });
         } catch (err) {

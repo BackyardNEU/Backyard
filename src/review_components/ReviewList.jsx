@@ -2,7 +2,7 @@
 import "./ReviewList.css";
 import StatsCard from "./StatsCard.jsx";
 import { UpvoteWidget } from "./UpvoteWidget";
-import { supabase } from "../lib/supabase";
+import { apiFetch } from "../lib/api";
 import { useClubData } from "../context/useClubData";
 
 /**
@@ -222,17 +222,13 @@ export default function ReviewList({ reviews, club_stats, club }) {
         }
 
         const reviewIds = reviews.map(r => r.id);
-        supabase
-            .from('user_votes')
-            .select('review_id, vote')
-            .eq('user_id', userId)
-            .in('review_id', reviewIds)
-            .then(({ data, error }) => {
-                if (error) { console.error('Error fetching user votes:', error); return; }
+        apiFetch(`/me/votes?reviewIds=${reviewIds.join(',')}`)
+            .then((data) => {
                 const votes = {};
-                data.forEach(v => { votes[v.review_id] = v.vote; });
+                (data || []).forEach(v => { votes[v.review_id] = v.vote; });
                 setUserVotes(votes);
-            });
+            })
+            .catch((err) => console.error('Error fetching user votes:', err));
     }, [reviews, userId]);
 
     const handleVote = useCallback(async (id, direction) => {
@@ -247,31 +243,22 @@ export default function ReviewList({ reviews, club_stats, club }) {
         setReviewScores((prev) => ({ ...prev, [id]: newScore }));
 
         try {
-            const { error: scoreError } = await supabase
-                .from('reviews')
-                .update({ upvotes: newScore })
-                .eq('id', id);
-            if (scoreError) throw scoreError;
+            // Server owns reviews.upvotes now — it recomputes from sum(user_votes.vote)
+            // and returns the authoritative count, so we use that instead of our
+            // optimistic estimate.
+            const resp = newVote === 0
+                ? await apiFetch(`/me/votes/${id}`, { method: 'DELETE' })
+                : await apiFetch('/me/votes', { method: 'POST', body: { review_id: id, vote: newVote } });
 
-            if (newVote === 0) {
-                const { error: voteError } = await supabase
-                    .from('user_votes')
-                    .delete()
-                    .eq('user_id', userId)
-                    .eq('review_id', id);
-                if (voteError) throw voteError;
-            } else {
-                const { error: voteError } = await supabase
-                    .from('user_votes')
-                    .upsert({ user_id: userId, review_id: id, vote: newVote });
-                if (voteError) throw voteError;
+            if (resp && typeof resp.upvotes === 'number') {
+                setReviewScores((prev) => ({ ...prev, [id]: resp.upvotes }));
             }
         } catch (err) {
             console.error('Vote error:', err);
             setUserVotes((prev) => ({ ...prev, [id]: currentVote }));
             setReviewScores((prev) => ({ ...prev, [id]: oldScore }));
         }
-    }, [userVotes, reviewScores, userId]);
+    }, [userVotes, reviewScores]);
 
     // Attach live score to each review for rendering
     const enriched = reviews.map((r) => ({ ...r, _liveScore: reviewScores[r.id] ?? (r.upvotes ?? 0) }));

@@ -2,7 +2,7 @@
 import './ClubGrid.css';
 import heartEmpty from '/src/assets/empty_heart.png';
 import heartFull from '/src/assets/full_heart.png';
-import { supabase } from '../lib/supabase';
+import { apiFetch } from '../lib/api';
 import { motion } from "framer-motion";
 import { useGlobalStore } from "../lib/store";
 import { useClubData } from '../context/useClubData';
@@ -26,34 +26,16 @@ export const ClubGrid = ({ result, onExpand, hideHeart, hidePins }) => {
 
   //if a user likes a club, refresh cache and add this favorite to it
   const updateFavorite = async (newLiked) => {
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    if (userError || !userData?.user) {
-      console.error('Error getting user', userError);
-      return;
-    }
-    const userId = userData.user.id;
-
-    if (newLiked) {
-      const { error } = await supabase
-        .from("user_favorites")
-        .insert({ club_id: result.id, user_id: userId });
-
-      if (error) console.error("Error adding favorite:", error);
-      else {
-        console.log("NEW CLUB LIKED RESETTING FAVORITES CACHE");
+    try {
+      if (newLiked) {
+        await apiFetch('/me/favorites', { method: 'POST', body: { club_id: result.id } });
         invalidateFavoritesCache(result.id, true);
-      }
-    } else {
-      const { error } = await supabase
-        .from("user_favorites")
-        .delete()
-        .match({ club_id: result.id, user_id: userId });
-
-      if (error) console.error("Error removing favorite:", error);
-      else {
-        console.log("NEW CLUB DISLIKED RESETTING FAVORITES CACHE");
+      } else {
+        await apiFetch(`/me/favorites/${result.id}`, { method: 'DELETE' });
         invalidateFavoritesCache(result.id, false);
       }
+    } catch (err) {
+      console.error(`Error ${newLiked ? 'adding' : 'removing'} favorite:`, err);
     }
   };
 
