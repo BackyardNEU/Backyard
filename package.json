@@ -25,6 +25,7 @@
     "framer-motion": "^12.23.26",
     "gapi-script": "^1.2.0",
     "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.8.0",
     "motion": "^12.38.0",
     "react": "^19.2.3",

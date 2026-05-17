@@ -1,8 +1,17 @@
-import { supabaseAdmin } from '../supabaseAdmin.js';
+import jwt from 'jsonwebtoken';
 
-// Verifies the Bearer JWT on the request and attaches the Supabase user to req.user.
-// Apply only to routes that require an authenticated user.
-export async function requireAuth(req, res, next) {
+const JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error(
+    'Missing SUPABASE_JWT_SECRET. Find it in Supabase Dashboard → Settings → API → JWT Settings → JWT Secret.'
+  );
+}
+
+// Verifies the Bearer JWT locally (no network call) and attaches { id } to req.user.
+// Supabase signs user tokens with HS256 using the project's JWT secret; jwt.verify
+// checks the signature, the exp claim, and the audience all at once.
+export function requireAuth(req, res, next) {
   const header = req.headers.authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
 
@@ -10,11 +19,11 @@ export async function requireAuth(req, res, next) {
     return res.status(401).json({ error: 'Missing Authorization bearer token' });
   }
 
-  const { data, error } = await supabaseAdmin.auth.getUser(token);
-  if (error || !data?.user) {
+  try {
+    const payload = jwt.verify(token, JWT_SECRET, { audience: 'authenticated' });
+    req.user = { id: payload.sub };
+    next();
+  } catch {
     return res.status(401).json({ error: 'Invalid or expired session' });
   }
-
-  req.user = data.user;
-  next();
 }

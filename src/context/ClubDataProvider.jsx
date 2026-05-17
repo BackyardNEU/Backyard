@@ -44,7 +44,6 @@ export const ClubDataProvider = ({ children }) => {
 
         console.log("Fetching data from Supabase: this should only occur once unless switchting to favorites tab.");
 
-        // collect all results before touching state
         let newAllData = [];
         let newClubTopTags = new Map();
         let newFavoritesCache = new Set();
@@ -52,17 +51,23 @@ export const ClubDataProvider = ({ children }) => {
         let newFriendMembershipMap = new Map();
         let newFriendsArray = [];
 
-        try {
-            newAllData = await apiFetch('/clubs');
+        // Tier 1: independent fetches fire together. allSettled keeps one failure
+        // from killing the rest — matches the old per-fetch try/catch behavior.
+        const [clubsResult, tagsResult, userResult] = await Promise.allSettled([
+            apiFetch('/clubs'),
+            apiFetch('/clubs/review-tags', { auth: false }),
+            supabase.auth.getUser(),
+        ]);
+
+        if (clubsResult.status === 'fulfilled') {
+            newAllData = clubsResult.value;
             console.log("successful fetching from server");
-        }
-        catch (err) {
-            console.error("Error fetching from server: " + err);
+        } else {
+            console.error("Error fetching from server: " + clubsResult.reason);
         }
 
-
-        try {
-            const reviewTags = await apiFetch('/clubs/review-tags', { auth: false });
+        if (tagsResult.status === 'fulfilled') {
+            const reviewTags = tagsResult.value;
             const tagCounts = {};
             for (const review of reviewTags) {
                 if (!review.review_tags || !Array.isArray(review.review_tags)) continue;
@@ -75,26 +80,30 @@ export const ClubDataProvider = ({ children }) => {
                 const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
                 newClubTopTags.set(clubId, sorted.slice(0, 2).map(([tag]) => tag));
             }
-        } catch (err) {
-            console.error("Error fetching review tags:", err);
+        } else {
+            console.error("Error fetching review tags:", tagsResult.reason);
         }
 
-        const { data: userData } = await supabase.auth.getUser();
+        const userData = userResult.status === 'fulfilled' ? userResult.value.data : null;
         if (userData?.user) {
             newUserId = userData.user.id;
 
-            try {
-                const favData = await apiFetch('/me/favorites');
+            // Tier 2: needs the user, but favorites and friends are independent of each other.
+            const [favResult, friendsResult] = await Promise.allSettled([
+                apiFetch('/me/favorites'),
+                apiFetch('/me/friends'),
+            ]);
+
+            if (favResult.status === 'fulfilled') {
+                const favData = favResult.value;
                 newFavoritesCache = new Set((favData || []).map((fav) => fav.club_id));
                 console.log("Favorites loaded:", favData.length);
-            } catch (err) {
-                console.error("Error retrieving favorites:", err);
+            } else {
+                console.error("Error retrieving favorites:", favResult.reason);
             }
 
-            // /me/friends returns full friend profiles in one call — collapses the old
-            // two-step (read friend_list, then fetch profiles by id).
-            try {
-                const friendProfiles = await apiFetch('/me/friends');
+            if (friendsResult.status === 'fulfilled') {
+                const friendProfiles = friendsResult.value;
                 newFriendsArray = (friendProfiles || []).map((f) => ({
                     id: f.id,
                     username: f.username,
@@ -111,8 +120,8 @@ export const ClubDataProvider = ({ children }) => {
                         });
                     }
                 }
-            } catch (err) {
-                console.error("Error retrieving friends:", err);
+            } else {
+                console.error("Error retrieving friends:", friendsResult.reason);
             }
         }
 
