@@ -297,6 +297,42 @@
 
 
 
+.setup-name-row {
+	width: 100%;
+	display: flex;
+	gap: 10px;
+}
+
+.setup-name-row input {
+	flex: 1;
+	min-width: 0;
+}
+
+.setup-username-wrap {
+	width: 100%;
+	position: relative;
+}
+
+.setup-username-ok {
+	position: absolute;
+	right: 10px;
+	top: 50%;
+	transform: translateY(-50%);
+	font-size: 0.8rem;
+	color: rgb(102, 158, 102);
+	font-weight: 600;
+}
+
+.setup-username-taken {
+	position: absolute;
+	right: 10px;
+	top: 50%;
+	transform: translateY(-50%);
+	font-size: 0.8rem;
+	color: #b70000;
+	font-weight: 600;
+}
+
 @media (max-width: 640px) {
 	.profile-setup-page {
 		padding: 14px;

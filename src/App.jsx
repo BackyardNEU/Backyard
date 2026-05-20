@@ -9,6 +9,7 @@ import AuthListener from "./login_components/AuthListener";
 import AuthCallbackPage from './login_components/AuthCallbackPage';
 import ProfileSetupPage from './profile_components/ProfileSetupPage';
 import { ProfilePage } from './profile_components/ProfilePage';
+import ResetPasswordPage from './login_components/ResetPasswordPage';
 import { ClubDataProvider } from './context/ClubDataProvider'
 
 function App() {
@@ -74,6 +75,7 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/profile/setup" element={<ProfileSetupPage />} />
           <Route path="/profile-setup" element={<ProfileSetupPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
         </Routes>
       </div>
     </ClubDataProvider>

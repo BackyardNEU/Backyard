@@ -4,6 +4,27 @@ import { requireAuth } from '../middleware/requireAuth.js';
 
 const router = express.Router();
 
+router.get('/check-username', async (req, res) => {
+    const username = String(req.query.username || '').trim();
+    if (username.length < 3 || username.length > 30 || !/^[a-zA-Z0-9_]+$/.test(username)) {
+        return res.json({ available: false, reason: 'Username must be 3-30 alphanumeric or underscore characters' });
+    }
+
+    const { data, error } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('username', username)
+        .limit(1);
+
+    if (error) {
+        const err = new Error(error.message);
+        err.status = 502;
+        throw err;
+    }
+
+    res.json({ available: data.length === 0 });
+});
+
 router.use(requireAuth);
 
 // GET /api/users/search?q=...
