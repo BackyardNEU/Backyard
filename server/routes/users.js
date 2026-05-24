@@ -1,19 +1,20 @@
 import express from 'express';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { validateUsername } from '../lib/validateUsername.js';
 
 const router = express.Router();
 
 router.get('/check-username', async (req, res) => {
-    const username = String(req.query.username || '').trim();
-    if (username.length < 3 || username.length > 30 || !/^[a-zA-Z0-9_]+$/.test(username)) {
-        return res.json({ available: false, reason: 'Username must be 3-30 alphanumeric or underscore characters' });
+    const { valid, normalized, reason } = validateUsername(req.query.username);
+    if (!valid) {
+        return res.json({ available: false, reason });
     }
 
     const { data, error } = await supabaseAdmin
         .from('profiles')
         .select('id')
-        .eq('username', username)
+        .eq('username', normalized)
         .limit(1);
 
     if (error) {
