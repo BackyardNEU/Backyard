@@ -9,7 +9,7 @@ router.use(requireAuth);
 // Whitelist of fields the user is allowed to write to their own profile.
 // Anything else in the body is ignored — prevents privilege-escalation by
 // posting columns like { id: <someone else's uuid> } or { is_admin: true }.
-const PROFILE_WRITABLE = new Set([
+export const PROFILE_WRITABLE = new Set([
     'username',
     'first_name',
     'last_name',
@@ -21,7 +21,7 @@ const PROFILE_WRITABLE = new Set([
     'major',
 ]);
 
-function pickWritable(body) {
+export function pickWritable(body) {
     const out = {};
     for (const key of Object.keys(body || {})) {
         if (PROFILE_WRITABLE.has(key)) out[key] = body[key];
