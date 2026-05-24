@@ -11,6 +11,8 @@ router.use(requireAuth);
 // posting columns like { id: <someone else's uuid> } or { is_admin: true }.
 const PROFILE_WRITABLE = new Set([
     'username',
+    'first_name',
+    'last_name',
     'avatar_url',
     'biography',
     'photos',
@@ -69,7 +71,7 @@ router.put('/profile', async (req, res) => {
 // The id is always forced from the JWT, never trusted from the body.
 router.post('/profile', async (req, res) => {
     const patch = pickWritable(req.body);
-    const row = { id: req.user.id, ...patch };
+    const row = { id: req.user.id, email: req.user.email, ...patch };
 
     const { data, error } = await supabaseAdmin
         .from('profiles')
