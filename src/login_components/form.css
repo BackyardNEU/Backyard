@@ -19,11 +19,134 @@ form button {
     width: 70vh;
     padding: 8px 12px;
     border: 3px solid rgb(46, 120, 139);
-    
+
     border-radius: 0;
     background-color: rgb(46, 120, 139);
     color: rgb(255, 255, 255);
     box-sizing: border-box;
     justify-self: center;
-    margin-bottom: 2%;    /* centers button in the grid */
+    margin-bottom: 2%;
+}
+
+.name-row {
+    display: flex;
+    gap: 12px;
+    width: 70vh;
+    justify-self: center;
+}
+
+.name-row input {
+    flex: 1;
+    width: auto;
+}
+
+.username-field {
+    position: relative;
+    width: 70vh;
+    justify-self: center;
+}
+
+.username-field input {
+    width: 100%;
+}
+
+.username-ok {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8rem;
+    color: rgb(102, 158, 102);
+    font-weight: 600;
+}
+
+.username-taken {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8rem;
+    color: #c0392b;
+    font-weight: 600;
+}
+
+.form-error {
+    color: #c0392b;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+/* --- Reset password page (standalone route) --- */
+.reset-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f5f5f5;
+    padding: 2rem;
+}
+
+.reset-card {
+    background: rgb(252, 252, 252);
+    border: 1px solid rgb(162, 162, 162);
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    padding: 2.5rem 3rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: min(90vw, 480px);
+}
+
+.reset-card .raccoon {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    margin-bottom: 0.5rem;
+}
+
+.reset-card h2 {
+    font-family: "Be Vietnam Pro", sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 0.5rem 0 1rem;
+}
+
+.reset-card p {
+    color: #555;
+    font-size: 0.95rem;
+    margin: 0.5rem 0 1rem;
+}
+
+.reset-card .input-field {
+    width: 100%;
+}
+
+.reset-card .input-field input,
+.reset-card .input-field button {
+    width: 100%;
+}
+
+/* --- Forgot password success / instructions --- */
+.forgot-success {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 0;
+    text-align: center;
+}
+
+.forgot-success p {
+    color: rgb(46, 120, 139);
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.forgot-instructions {
+    color: #666;
+    font-size: 0.9rem;
+    text-align: center;
+    margin: 0;
+    line-height: 1.4;
 }
