@@ -10,9 +10,11 @@ import AuthCallbackPage from './login_components/AuthCallbackPage';
 import ProfileSetupPage from './profile_components/ProfileSetupPage';
 import { ProfilePage } from './profile_components/ProfilePage';
 import { ClubDataProvider } from './context/ClubDataProvider'
+import { SupportModal } from './support_components/SupportModal'
 
 function App() {
   const [loginOpen, setLoginOpen] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -27,6 +29,7 @@ function App() {
       <div className="App">
           <AuthListener />
           <LoginMorph open={loginOpen} setOpen={setLoginOpen} />
+          <SupportModal open={supportOpen} setOpen={setSupportOpen} />
 
         <Routes>
           <Route
