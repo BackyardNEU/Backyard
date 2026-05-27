@@ -11,6 +11,7 @@ import ProfileSetupPage from './profile_components/ProfileSetupPage';
 import { ProfilePage } from './profile_components/ProfilePage';
 import ResetPasswordPage from './login_components/ResetPasswordPage';
 import { ClubDataProvider } from './context/ClubDataProvider'
+import ClubPage from './club_page_components/ClubPage'
 
 function App() {
   const [loginOpen, setLoginOpen] = useState(false);
@@ -76,6 +77,7 @@ function App() {
           <Route path="/profile/setup" element={<ProfileSetupPage />} />
           <Route path="/profile-setup" element={<ProfileSetupPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/club/:id" element={<ClubPage />} />
         </Routes>
       </div>
     </ClubDataProvider>

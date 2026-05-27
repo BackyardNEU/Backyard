@@ -22,13 +22,10 @@ router.get('/', async (req, res) => {
   res.json(data);
 });
 
-router.get('/:clubId/reviews', async (req, res) => {
-  const { clubId } = req.params;
-
+router.get('/review-tags', async (req, res) => {
   const { data, error } = await supabaseAdmin
     .from('reviews')
-    .select('*')
-    .eq('club_id', clubId);
+    .select('club_id, review_tags');
 
   if (error) {
     const err = new Error(error.message);
@@ -39,10 +36,32 @@ router.get('/:clubId/reviews', async (req, res) => {
   res.json(data);
 });
 
-router.get('/review-tags', async (req, res) => {
+// GET /api/clubs/:clubId — single club by ID
+router.get('/:clubId', async (req, res) => {
+  const { clubId } = req.params;
+
+  const { data, error } = await supabaseAdmin
+    .from('demo_club_data')
+    .select('*')
+    .eq('id', clubId)
+    .single();
+
+  if (error) {
+    const err = new Error(error.message);
+    err.status = error.code === 'PGRST116' ? 404 : 502;
+    throw err;
+  }
+
+  res.json(data);
+});
+
+router.get('/:clubId/reviews', async (req, res) => {
+  const { clubId } = req.params;
+
   const { data, error } = await supabaseAdmin
     .from('reviews')
-    .select('club_id, review_tags');
+    .select('*')
+    .eq('club_id', clubId);
 
   if (error) {
     const err = new Error(error.message);

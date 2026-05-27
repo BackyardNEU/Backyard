@@ -8,10 +8,12 @@ import { useGlobalStore } from "../lib/store";
 import { useClubData } from '../context/useClubData';
 import paperTexture from '/src/assets/white-paper-texture.jpg';
 import posterPin from '/src/assets/poster_pin.png';
+import { useNavigate } from 'react-router-dom';
 
 
 export const ClubGrid = ({ result, onExpand, hideHeart, hidePins }) => {
   const [animating, setAnimating] = useState(false);
+  const navigate = useNavigate();
   let GlobalValue = useGlobalStore((state) => state.GlobalValue);
 
   const { favoritesCache, invalidateFavoritesCache, friendMembershipMap, clubTopTags } = useClubData();
@@ -49,7 +51,7 @@ export const ClubGrid = ({ result, onExpand, hideHeart, hidePins }) => {
   };
 
   const handleExpand = () => {
-      onExpand(result);
+    navigate(`/club/${result.id}`);
   };
   const truncate = (text, wordLimit = 5) => {
     if (!text) return "";

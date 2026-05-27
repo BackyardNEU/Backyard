@@ -63,4 +63,11 @@ router.post('/profile-photos-upload-url', async (req, res) => {
     await makeSignedUpload('profile_photos', path, res);
 });
 
+router.post('/club-logo-upload-url', async (req, res) => {
+    const { clubId } = req.body;
+    const ext = (req.body?.ext || 'webp').replace(/[^a-z0-9]/gi, '').slice(0, 8) || 'webp';                                                     
+    const path = `${clubId}.${ext}`; // one logo per club, re-uploads overwrite                                                                 
+    await makeSignedUpload('club_logos', path, res);
+});
+
 export default router;

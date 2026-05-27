@@ -15,6 +15,7 @@ import profilesRouter from './routes/profiles.js';
 import usersRouter from './routes/users.js';
 import storageRouter from './routes/storage.js';
 import eventsRouter from './routes/events.js';
+import clubPageRouter from './routes/clubPage.js';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -36,6 +37,7 @@ app.get('/api/health', (req, res) => {
 
 // Public reads
 app.use('/api/clubs', clubsRouter);
+app.use('/api/clubs', clubPageRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/universities', universitiesRouter);
 
