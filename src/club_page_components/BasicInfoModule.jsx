@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { apiFetch } from '../lib/api';
 import './BasicInfoModule.css';
 
@@ -46,6 +46,17 @@ function BasicInfoModule({ club, moduleData, topTags, isApproved, onSave }) {
   });
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
+  const descRef = useRef(null);
+
+  // Whenever the description text changes, reset the height to auto first so
+  // scrollHeight shrinks correctly when text is deleted, then set it to the
+  // exact scrollHeight so the textarea grows/shrinks like a <p> element.
+  useEffect(() => {
+    if (descRef.current) {
+      descRef.current.style.height = 'auto';
+      descRef.current.style.height = `${descRef.current.scrollHeight}px`;
+    }
+  }, [draft.description, editing]);
 
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
@@ -97,56 +108,59 @@ function BasicInfoModule({ club, moduleData, topTags, isApproved, onSave }) {
         </button>
       )}
 
-      {editing ? (
-        <div className="basic-info-edit">
-          <div className="basic-info-logo-edit">
+      <div className="basic-info-view">
+        <div className="basic-info-logo">
             <img
               className="basic-info-logo"
               src={logoPreview || draft.logo_url}
               alt="Club logo"
             />
-            <label className="logo-upload-label">
-              Change Logo
-              <input type="file" accept="image/*" hidden onChange={handleLogoChange} />
-            </label>
+            {editing && (
+              <label className="logo-upload-label">
+                Change Logo
+                <input type="file" accept="image/*" hidden onChange={handleLogoChange} />
+              </label>
+            )}
           </div>
 
-          <input
-            className="basic-info-name-input"
-            value={draft.club_name}
+        { // This will either render the element as an h1 or an input field depedning on if editing is true or not
+          // Meant to keep the same style but allow editing
+        editing ? <input 
+            className="basic-info-name-input" value={draft.club_name}
             onChange={(e) => setDraft((d) => ({ ...d, club_name: e.target.value }))}
-            placeholder="Club name"
-          />
+            placeholder="Club name" /> 
+            : <h1 className="basic-info-name">{displayName}</h1>
+        }
 
-          <textarea
-            className="basic-info-desc-input"
+        { // This stays the same because tags dont change depending on club (except for the inital form submission)
+        topTags.length > 0 && (
+          <div className="basic-info-tags">
+            {topTags.map((tag) => (
+              <span key={tag} className="basic-info-tag">{tag}</span>
+            ))}
+          </div>
+        )}
+
+        { // See above- does the same thing except for description
+        editing ? <textarea
+            ref={descRef}
+            className={`basic-info-description basic-info-desc-input`}
             value={draft.description}
             onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
             placeholder="Club description"
-            rows={5}
           />
+          : <p className="basic-info-description">{displayDescription}</p>
+        }
 
+        {editing && (
           <div className="basic-info-edit-actions">
             <button onClick={handleCancel} disabled={saving}>Cancel</button>
             <button className="save-btn" onClick={handleSave} disabled={saving}>
               {saving ? 'Saving...' : 'Save'}
             </button>
           </div>
-        </div>
-      ) : (
-        <div className="basic-info-view">
-          <img className="basic-info-logo" src={displayLogo} alt={displayName} />
-          <h1 className="basic-info-name">{displayName}</h1>
-          {topTags.length > 0 && (
-            <div className="basic-info-tags">
-              {topTags.map((tag) => (
-                <span key={tag} className="basic-info-tag">{tag}</span>
-              ))}
-            </div>
-          )}
-          <p className="basic-info-description">{displayDescription}</p>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
