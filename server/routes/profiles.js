@@ -9,8 +9,10 @@ router.use(requireAuth);
 // Whitelist of fields the user is allowed to write to their own profile.
 // Anything else in the body is ignored — prevents privilege-escalation by
 // posting columns like { id: <someone else's uuid> } or { is_admin: true }.
-const PROFILE_WRITABLE = new Set([
+export const PROFILE_WRITABLE = new Set([
     'username',
+    'first_name',
+    'last_name',
     'avatar_url',
     'biography',
     'photos',
@@ -19,7 +21,7 @@ const PROFILE_WRITABLE = new Set([
     'major',
 ]);
 
-function pickWritable(body) {
+export function pickWritable(body) {
     const out = {};
     for (const key of Object.keys(body || {})) {
         if (PROFILE_WRITABLE.has(key)) out[key] = body[key];
@@ -69,7 +71,7 @@ router.put('/profile', async (req, res) => {
 // The id is always forced from the JWT, never trusted from the body.
 router.post('/profile', async (req, res) => {
     const patch = pickWritable(req.body);
-    const row = { id: req.user.id, ...patch };
+    const row = { id: req.user.id, email: req.user.email, ...patch };
 
     const { data, error } = await supabaseAdmin
         .from('profiles')
