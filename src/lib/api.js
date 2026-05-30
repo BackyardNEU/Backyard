@@ -8,7 +8,10 @@ const API_BASE = import.meta.env.VITE_API_URL
 
 // Central fetch helper. All frontend code should use this instead of supabase.from(...).
 // Set { auth: false } for routes that don't need a logged-in user (clubs, search, universities).
-export async function apiFetch(path, { method = 'GET', body, headers = {}, auth = true } = {}) {
+// `retry` defaults to true for GET/HEAD (safe to repeat) and false for everything else
+// (POST/PUT/PATCH/DELETE aren't idempotent — retrying could double-write). Pass `retry: true`
+// explicitly for a mutation you know is safe to repeat.
+export async function apiFetch(path, { method = 'GET', body, headers = {}, auth = true, retry } = {}) {
   const finalHeaders = { ...headers };
 
   if (body !== undefined && !(body instanceof FormData)) {
@@ -22,11 +25,35 @@ export async function apiFetch(path, { method = 'GET', body, headers = {}, auth 
     }
   }
 
-  const res = await fetch(`${API_BASE}${path}`, {
-    method,
-    headers: finalHeaders,
-    body: body instanceof FormData ? body : body !== undefined ? JSON.stringify(body) : undefined,
-  });
+  const isIdempotent = ['GET', 'HEAD'].includes(method.toUpperCase());
+  const shouldRetry = retry ?? isIdempotent;
+  const retryDelays = shouldRetry ? [150, 400, 1000] : [];
+  const maxAttempts = 1 + retryDelays.length;
+  const requestBody = body instanceof FormData ? body : body !== undefined ? JSON.stringify(body) : undefined;
+
+  let res;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      res = await fetch(`${API_BASE}${path}`, {
+        method,
+        headers: finalHeaders,
+        body: requestBody,
+      });
+      // 503 from the dev proxy means upstream is bouncing — back off and try again.
+      if (res.status === 503 && attempt < maxAttempts - 1) {
+        await sleep(retryDelays[attempt]);
+        continue;
+      }
+      break;
+    } catch (err) {
+      // fetch() throws on network failure (ECONNREFUSED/RESET before proxy responds).
+      if (attempt < maxAttempts - 1) {
+        await sleep(retryDelays[attempt]);
+        continue;
+      }
+      throw err;
+    }
+  }
 
   const text = await res.text();
   const data = text ? safeParseJson(text) : null;
@@ -40,6 +67,10 @@ export async function apiFetch(path, { method = 'GET', body, headers = {}, auth 
   }
 
   return data;
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function safeParseJson(text) {
