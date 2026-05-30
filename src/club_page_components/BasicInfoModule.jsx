@@ -1,57 +1,119 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { apiFetch } from '../lib/api';
+import { supabase } from '../lib/supabase';
+import ColorThief from 'colorthief';
 import './BasicInfoModule.css';
 
-// BasicInfoModule — displays and (for approved accounts) edits core club info.
-//
-// Props:
-//   club        — base record from demo_club_data: { club_name, image_url, club_description }
-//   moduleData  — overrides stored in club_page_data.modules[n].data:
-//                 { club_name?, logo_url?, description? }
-//                 Any field set here takes priority over the club base record.
-//   topTags     — string[] of top 3 tags aggregated from the reviews table via
-//                 the get_top_tags(p_club_id, p_limit) SQL RPC function.
-//                 Tags are read-only (derived live from reviews, never stored here).
-//   isApproved  — true only for the club's approved account; shows the Edit button.
-//               - LOOK INTO LATER: CAN PEOPLE EDIT THE VALUE OF THIS DIRECTLY IN THE BROWSER??
-//   onSave      — (updatedData: object) => void; called with the new moduleData on save.
-//
-// Logo upload reuses the profile_images bucket + POST /api/storage/profile-upload-url.
-// NOTE: When ready, add a dedicated club_logo bucket in Supabase Storage and a
-//       matching route in server/routes/storage.js (e.g. POST /storage/club-logo-upload-url).
+function BasicInfoModule({ club }) {
+  const id = club.id;
 
-/**                                                                                                                                           
-*   @param {{                                                                                                                                  
-*   club: { id: string, club_name: string, image_url: string, club_description: string },                                                      
-*   moduleData: { club_name?: string, logo_url?: string, description?: string },
-*   topTags: string[],                                                                                                                         
-*   isApproved: boolean,                                                                                                                     
-*   onSave: (updatedData: object) => void                                                                                                      
-* }} props                                                                                                                                   
-*/ 
-function BasicInfoModule({ club, moduleData, topTags, isApproved, onSave }) {
-  //console.log(isApproved);
+  const [dominantColor, setDominantColor] = useState(null);
+  const [topTags, setTopTags] = useState([]);
+  const [isApproved, setIsApproved] = useState(false);
+  const [moduleData, setModuleData] = useState({});
+  const [fullPageData, setFullPageData] = useState(null);
+
+  const [pageLoaded, setPageLoaded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-
-  // Resolved display values — moduleData fields override club base data when set
-  const displayName = moduleData.club_name || club.club_name || '';
-  const displayLogo = moduleData.logo_url || club.image_url || '/raccoon_pfp.png';
-  const displayDescription = moduleData.description || club.club_description || '';
-
-  const [draft, setDraft] = useState({
-    club_name: displayName,
-    logo_url: displayLogo,
-    description: displayDescription,
-  });
+  const [draft, setDraft] = useState({ club_name: '', logo_url: '', description: '' });
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
+
+  const imgRef = useRef(null);
   const descRef = useRef(null);
 
-  // Whenever the description text changes, reset the height to auto first so
-  // scrollHeight shrinks correctly when text is deleted, then set it to the
-  // exact scrollHeight so the textarea grows/shrinks like a <p> element.
+  const displayName = moduleData.club_name || club.club_name || '';
+  const displayDescription = moduleData.description || club.club_description || '';
+
+  // ColorThief
+  const getPastelColor = (r, g, b) => {
+    const factor = (r + (255 - r) * 0.85 >= 240 &&
+                    g + (255 - g) * 0.85 >= 240 &&
+                    b + (255 - b) * 0.85 >= 240) ? 0.5 : 0.85;
+    return `rgb(${Math.round(r + (255 - r) * factor)}, ${Math.round(g + (255 - g) * factor)}, ${Math.round(b + (255 - b) * factor)})`;
+  };
+
   useEffect(() => {
+    const colorThief = new ColorThief();
+    const img = imgRef.current;
+
+    const getColor = () => {
+      try {
+        const [r, g, b] = colorThief.getColor(img);
+        setDominantColor(getPastelColor(r, g, b));
+      } catch {
+        setDominantColor('rgb(211, 211, 211)');
+      }
+    };
+
+    if (!img || !img.src) { setDominantColor('rgb(211, 211, 211)'); return; }
+
+    if (img.complete) {
+      getColor();
+    } else {
+      img.addEventListener('load', getColor);
+      img.addEventListener('error', () => setDominantColor('rgb(211, 211, 211)'));
+      return () => {
+        img.removeEventListener('load', getColor);
+        img.removeEventListener('error', () => setDominantColor('rgb(211, 211, 211)'));
+      };
+    }
+  }, [club.image_url]);
+
+  // Fetch page preset + top tags
+  useEffect(() => {
+    async function fetchPageData() {
+      const [pageResult, tagsResult] = await Promise.allSettled([
+        apiFetch(`/clubs/${id}/page`, { auth: false }),
+        apiFetch(`/clubs/${id}/top-tags`, { auth: false }),
+      ]);
+
+      if (tagsResult.status === 'fulfilled') {
+        setTopTags((tagsResult.value || []).map(r => r.tag));
+      }
+
+      if (pageResult.status === 'fulfilled') {
+        const data = pageResult.value;
+        setFullPageData(data);
+        const mod = (data?.modules || []).find(m => m.type === 'basic_info');
+        const modData = mod?.data || {};
+        setModuleData(modData);
+        setDraft({
+          club_name: modData.club_name || club.club_name || '',
+          logo_url: modData.logo_url || club.image_url || '/raccoon_pfp.png',
+          description: modData.description || club.club_description || '',
+        });
+      } else {
+        setDraft({
+          club_name: club.club_name || '',
+          logo_url: club.image_url || '/raccoon_pfp.png',
+          description: club.club_description || '',
+        });
+      }
+      setPageLoaded(true);
+    }
+    fetchPageData();
+  }, [id]);
+
+  // Check approved status
+  useEffect(() => {
+    async function checkApproved() {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) return;
+      try {
+        const { approved } = await apiFetch(`/clubs/${id}/is-approved`);
+        setIsApproved(approved);
+      } catch {
+        // not approved or table doesn't exist yet
+      }
+    }
+    checkApproved();
+  }, [id]);
+
+  // Auto-resize textarea — useLayoutEffect fires synchronously after DOM mutation
+  // so scrollHeight is always accurate when measured
+  useLayoutEffect(() => {
     if (descRef.current) {
       descRef.current.style.height = 'auto';
       descRef.current.style.height = `${descRef.current.scrollHeight}px`;
@@ -71,97 +133,130 @@ function BasicInfoModule({ club, moduleData, topTags, isApproved, onSave }) {
       let finalLogoUrl = draft.logo_url;
 
       if (logoFile) {
-        // Uploads via signed URL — service-role key never leaves the server.
-        // Currently reuses profile_images bucket. See the NOTE above.
         const { signedUrl, publicUrl } = await apiFetch('/storage/club-logo-upload-url', {
           method: 'POST',
-          body: { club_id: club.id, ext: logoFile.type.split('/')[1] },
+          body: { club_id: id, ext: logoFile.type.split('/')[1] },
         });
         await fetch(signedUrl, { method: 'PUT', body: logoFile });
         finalLogoUrl = publicUrl;
       }
 
-      onSave({ ...draft, logo_url: finalLogoUrl });
-      setDraft((d) => ({ ...d, logo_url: finalLogoUrl }));
+      const updatedData = { ...draft, logo_url: finalLogoUrl };
+      const currentModules = fullPageData?.modules ?? [{ type: 'basic_info', order: 0, data: {} }];
+      const hasBasicInfo = currentModules.some(m => m.type === 'basic_info');
+      const updatedModules = hasBasicInfo
+        ? currentModules.map(m => m.type === 'basic_info' ? { ...m, data: updatedData } : m)
+        : [...currentModules, { type: 'basic_info', order: 0, data: updatedData }];
+
+      const saved = await apiFetch(`/clubs/${id}/page`, {
+        method: 'PUT',
+        body: { modules: updatedModules },
+      });
+
+      setFullPageData(saved);
+      setModuleData(updatedData);
+      setDraft(d => ({ ...d, logo_url: finalLogoUrl }));
       setLogoFile(null);
       setLogoPreview(null);
       setEditing(false);
     } catch (err) {
-      console.error('Error saving basic info:', err);
+      console.error('Error saving club info:', err);
     } finally {
       setSaving(false);
     }
   };
 
   const handleCancel = () => {
-    setDraft({ club_name: displayName, logo_url: displayLogo, description: displayDescription });
+    setDraft({
+      club_name: moduleData.club_name || club.club_name || '',
+      logo_url: moduleData.logo_url || club.image_url || '/raccoon_pfp.png',
+      description: moduleData.description || club.club_description || '',
+    });
     setLogoFile(null);
     setLogoPreview(null);
     setEditing(false);
   };
 
   return (
-    <div className="basic-info-module">
+    <>
       {isApproved && !editing && (
-        <button className="module-edit-btn" onClick={() => setEditing(true)}>
-          Edit
-        </button>
+        <button className="exp-edit-btn" onClick={() => setEditing(true)}>Edit</button>
       )}
 
-      <div className="basic-info-view">
-        <div className="basic-info-logo">
-            <img
-              className="basic-info-logo"
-              src={logoPreview || draft.logo_url}
-              alt="Club logo"
-            />
-            {editing && (
-              <label className="logo-upload-label">
-                Change Logo
-                <input type="file" accept="image/*" hidden onChange={handleLogoChange} />
-              </label>
-            )}
+      <div className="content-col">
+        <div className="rectangle" style={{ backgroundColor: dominantColor }}>
+          <img
+            ref={imgRef}
+            src={club.image_url}
+            crossOrigin="anonymous"
+            alt=""
+            style={{ display: 'none' }}
+          />
+        </div>
+        <div className="text-flex">
+          {pageLoaded && (editing
+            ? <input
+                className="club-name-exp club-name-input"
+                value={draft.club_name}
+                onChange={(e) => setDraft(d => ({ ...d, club_name: e.target.value }))}
+                placeholder="Club name"
+              />
+            : <h2 className="club-name-exp">{displayName}</h2>
+          )}
+          {topTags.length > 0 && (
+            <h2 className="club-tag1">
+              {topTags.map(s => s.replaceAll('"', '')).join(' • ')}
+            </h2>
+          )}
+        </div>
+
+        <div className="image-stack">
+          <div className="rectangle_min" style={{ '--dominant-color': dominantColor }}>
+            <div
+              className="club-img-exp"
+              style={{ backgroundImage: `url(${logoPreview || draft.logo_url || club.image_url})` }}
+              role="img"
+              aria-label={club.club_name}
+            >
+              {editing && (
+                <label className="logo-upload-label">
+                  Change Logo
+                  <input type="file" accept="image/*" hidden onChange={handleLogoChange} />
+                </label>
+              )}
+            </div>
           </div>
+        </div>
+      </div>
 
-        { // This will either render the element as an h1 or an input field depedning on if editing is true or not
-          // Meant to keep the same style but allow editing
-        editing ? <input 
-            className="basic-info-name-input" value={draft.club_name}
-            onChange={(e) => setDraft((d) => ({ ...d, club_name: e.target.value }))}
-            placeholder="Club name" /> 
-            : <h1 className="basic-info-name">{displayName}</h1>
-        }
+      {topTags.length > 0 && (
+        <div className="club-tag2">
+          {topTags.map((tag) => (
+            <div key={tag} className="tag">{tag.replaceAll('"', '')}</div>
+          ))}
+        </div>
+      )}
 
-        { // This stays the same because tags dont change depending on club (except for the inital form submission)
-        topTags.length > 0 && (
-          <div className="basic-info-tags">
-            {topTags.map((tag) => (
-              <span key={tag} className="basic-info-tag">{tag}</span>
-            ))}
-          </div>
-        )}
-
-        { // See above- does the same thing except for description
-        editing ? <textarea
+      {pageLoaded && (editing
+        ? <textarea
             ref={descRef}
-            className={`basic-info-description basic-info-desc-input`}
+            className="club-description-exp club-desc-input"
             value={draft.description}
-            onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
+            onChange={(e) => setDraft(d => ({ ...d, description: e.target.value }))}
             placeholder="Club description"
           />
-          : <p className="basic-info-description">{displayDescription}</p>
-        }
+        : <p className="club-description-exp">{displayDescription}</p>
+      )}
 
-        {editing && (
-          <div className="basic-info-edit-actions">
-            <button onClick={handleCancel} disabled={saving}>Cancel</button>
-            <button className="save-btn" onClick={handleSave} disabled={saving}>
-              {saving ? 'Saving...' : 'Save'}
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
+      {editing && (
+        <div className="expanded-edit-actions">
+          <button onClick={handleCancel} disabled={saving}>Cancel</button>
+          <button className="save-btn" onClick={handleSave} disabled={saving}>
+            {saving ? 'Saving...' : 'Save'}
+          </button>
+        </div>
+      )}
+    </>
   );
 }
 

@@ -1,9 +1,9 @@
 .expanded-card {
   position: fixed;
-  inset: 0;               
-  margin: auto;           
- width: 44vw;  /* Add this */
-  background: rgb(252, 252, 252);  
+  inset: 0;
+  margin: auto;
+  width: 44vw;
+  background: rgb(252, 252, 252);
   height: 100%;
   overflow: hidden;
   background: transparent;
@@ -11,8 +11,7 @@
   flex-direction: column;
   align-items: center;
   overflow-y: auto;
-  z-index: 8000;   
-  
+  z-index: 8000;
 }
 
 .expanded-card::before {
@@ -31,8 +30,8 @@
 }
 
 .view-reviews {
-    width: 100%;
-    box-sizing: border-box;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .close-btn {
@@ -59,114 +58,9 @@
   transition: transform 0.12s ease;
 }
 
-
-
-.log-btn{
+.log-btn {
   width: 170px;
   height: 40px;
-}
-
-.club-img-exp {
-  background-color:#f7e077;
-  flex-shrink: 0;
-  margin-bottom: 20px;
-  border-radius: 5000px;
-  border: 1px solid;
-  z-index: 8200;
-  border-color:#909090;
-  position: relative;
-}
-
-.club-img-exp::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: url('/src/assets/white-paper-texture.jpg');
-  background-size: 200px 200px;
-  background-repeat: repeat;
-  background-position: 0 0;
-  filter: brightness(1.3) contrast(0.9);
-  border-radius: inherit;
-  mix-blend-mode: multiply;
-  opacity: 0.4;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.rectangle{
-  gap: 1rem;
-  z-index: 8000;
-  border-radius: 20px;
-  position: relative;
-}
-
-.rectangle::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: url('/src/assets/white-paper-texture.jpg');
-  background-size: 50% 50%;
-  background-repeat: repeat;
-  background-position: 0 0;
-  filter: brightness(1.2) contrast(0.9);
-  border-radius: inherit;
-  mix-blend-mode: multiply;
-  opacity: 0.3;
-  z-index: -1;
-}
-
-.club-name-exp{
-  font-family: "Bebas Neue", sans-serif;
-  margin-right: 5vh;
-  align-self: flex-start;
-  color: rgb(44, 27, 43);
-  font-weight: 400;
-  font-style: normal;
-  letter-spacing: 0px;
-  font-size: max(90px,4.5vw);
-  z-index: 8200;
-}
-
-.club-tag1 {
-  font-family: "Barlow Condensed", sans-serif;
-  text-transform: uppercase;
-  font-weight: 400;
-  align-self: flex-start;
-  font-size: 2.4rem;
-  z-index: 8200;
-  margin-bottom: 30px;
-  gap: 1rem;
-  letter-spacing: -1.2px;
-  color:grey;
-}
-
-.club-tag2 {
-  font-size: 10px;
-  display: flex;
-  gap: 2rem;
-  margin-bottom: 10px;
-}
-
-.tag {
-  padding: 6px 30px;
-  font-size: 1rem;
-  font-family: "Barlow Condensed", sans-serif;
-    text-transform: uppercase;
-  background-color: rgb(0, 0, 0);
-  text-decoration: none;
-  color: white;
-  border: none;
-  border-radius: 90px;
-}
-  
-.club-description-exp {
-  font-family: "Barlow", sans-serif;
-  font-size: 1.2rem;
-  align-self: flex-start;
-  margin-left: 10vh;
-  margin-right: 10vh;
-  color:rgb(66, 66, 66);
-  text-align: center;
 }
 
 .membership-btn {
@@ -200,17 +94,14 @@
   background-color: rgb(120, 30, 30);
 }
 
+.content-col-divider {
+  width: 100%;
+}
+
 .divider {
   height: 1px;
   background-color: rgb(205, 205, 205);
   margin-top: 50px;
-}
-
-.text-flex{
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  overflow: hidden;
 }
 
 .divider-header {
@@ -220,252 +111,64 @@
   position: relative;
   font-size: 4rem;
   color: black;
-  text-align: left ;
+  text-align: left;
   margin-bottom: 30px;
-}
-
-.content-col{
-  width: 100%;
 }
 
 @keyframes review-pop {
   0% { transform: scale(1); }
-  10% {transform: scale(1.1);}
-  20% {transform: scale(1.25);}
+  10% { transform: scale(1.1); }
+  20% { transform: scale(1.25); }
   40% { transform: scale(1.35); }
   100% { transform: scale(1); }
 }
 
-@media (max-width: 699px)  {
-  .text-flex{
-    margin-top: 10px;
-    padding-left: 0.2rem;
-  }
-  .expanded-card{
+@media (max-width: 699px) {
+  .expanded-card {
     width: 100%;
-   
-    box-shadow: 0 20px 80px rgba(0,0,0,0.4), 
+    box-shadow: 0 20px 80px rgba(0,0,0,0.4),
             0 0 0 9999px rgba(46, 46, 46, 0.65),
             1px 1px 8px #adadad inset;
   }
-  
+
   .expanded-card::before {
     width: 100%;
-    
-  }
-  
-  .view-reviews{
-       padding: 0 3%;
-  }
-  .club-img-exp {
-    width: 96vw;
-    height: 96vw;
-    background-color:#ffffff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-shrink: 0;
-    transform: translateY(6%);
-    font-size: 10rem;
-    z-index: 8200;
-  }
-  
-  .club-name-exp {
-    font-size: 4rem;
-    line-height: 95%;
-    margin-bottom: 7px;
-  }
-  .club-tag1{
-    font-family: "Barlow Condensed", sans-serif;
-    font-size: 2rem;
-  }
-  .club-tag2 {
-    font-size: 0.5rem;
-    display: flex;
-    gap: 2rem;
-    margin-bottom: 10px;
-    z-index: 8200;
   }
 
-  .tag {
-    padding: 0.3rem 1.75rem;
-    font-family: "Barlow Condensed", sans-serif;
-    text-transform: uppercase;
-    font-size: 1rem;
-    background-color: rgb(0, 0, 0);
-    text-decoration: none;
-    color: white;
-    border: none;
-    border-radius: 90px;
-    z-index: 8200;
+  .view-reviews {
+    padding: 0 3%;
   }
 
-  .rectangle_min{
-    gap: 1rem;
-    display: flex;
-    align-self: center;
-    background-color: var(--dominant-color);
-    z-index: 8000;
-    border-radius: 20px;
-    width: 98vw;
-    height: 110vw;
-    transform: translateY(-13%);
-    align-items: center;
-    position: relative;
-  }
-  
-  .rectangle_min::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: url('/src/assets/white-paper-texture.jpg');
-    background-size: 250px 250px;
-    background-repeat: repeat;
-    background-position: 0 0;
-    filter: brightness(1.3) contrast(0.9);
-    border-radius: inherit;
-    mix-blend-mode: multiply;
-    opacity: 0.3;
-    z-index: -1;
-  }
-
-  .content-col{
-    width: 100%;
-    padding-top: 0.4rem ;
-    padding-left: 0.4rem;
-    padding-right: 0.4rem;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .divider{
+  .divider {
     width: 88vw;
-    margin-left:-1% ;
+    margin-left: -1%;
   }
 }
-   
+
 @media (min-width: 700px) {
   .expanded-card {
     position: fixed;
-    inset: 0;               
-    margin: auto;           
+    inset: 0;
+    margin: auto;
     width: 100vw;
     height: 100vh;
     background: transparent;
     align-items: center;
     overflow-y: auto;
-    z-index: 8000;   
+    z-index: 8000;
   }
-  
+
   .expanded-card::before {
     width: 100vw;
     height: 100vh;
   }
-  
-  .content-col {
-    display: flex;
-    flex-direction: row-reverse;
-    align-items: center;
-    justify-content: left;
-    width: 100%;
-    margin-top: 5vh;
-    gap: 3vw;
-    position: relative;
-    margin-right: -5%;
-    margin-bottom: 50px;
-  }
 
-  .image-stack {
-    position: relative;
-    display: flex;
-    align-items: center;
-    width: 28vw; 
-    height: 28vw;
-    max-width: 400px;
-    max-height: 400px;
-    flex-shrink: 0;           
-    z-index: 8200;
-    flex: 0 0 28vw;
-  }
-
-  .club-img-exp {
-    width: 28vw;
-    height: 28vw;
-    max-width: 430px;
-    max-height: 430px;
-    object-fit: cover;
-    border-radius: 50%;
-    background-color: #ffffff;
-    border: 1px solid #000;
-    margin-bottom: 0;
-  }
-
-  .rectangle {
-    position: absolute;
-    top: 53%; 
-    left: -1%;
-    width: 99vw;
-    height: 55%;
-    max-height: 250px;
-    background-color: #fbf1fb;
-    border-radius: 20px;
-    z-index: 8000;
-  }
-  
-  .rectangle::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: url('/src/assets/white-paper-texture.jpg');
-    background-size: 300px 300px;
-    background-repeat: repeat;
-    background-position: 0 0;
-    filter: brightness(1.3) contrast(0.9);
-    border-radius: inherit;
-    mix-blend-mode: multiply;
-    opacity: 0.3;
-    z-index: -1;
-  }
-
-  .text-flex {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    max-width: 50vw;
-    text-align: left;
-    z-index: 8200;
-  }
-
-  .club-name-exp {
-    font-size: clamp(4rem, 5vw, 5.9rem);
-    margin: 0;
-    line-height: 1.1;
-    white-space: normal;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2; /* Limits text to 2 lines */
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .club-tag1 {
-    font-size: 1.75rem;
-    margin-top: 0.5rem;
-    margin-bottom: 0;
-  }
-
-  .club-description-exp {
-    margin-top: 15vh;
-    text-align: center;
-    padding: 0 10%;
-  }
-  
-  .view-reviews{
+  .view-reviews {
     padding: 0 2%;
   }
-  
-  .divider{
+
+  .divider {
     width: 98vw;
-    margin-left:-1% ;
+    margin-left: -1%;
   }
 }
