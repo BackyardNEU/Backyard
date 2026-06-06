@@ -152,6 +152,11 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange 
                 +{friendsInClub.length - 3}
               </span>
             )}
+            {friendsInClub.length > 3 ? 
+              (friendsInClub.slice(0, 3).map(friend => <span key={friend.id}>{friend.username},</span>) && (<span>{friendsInClub.length - 3} others</span>)) : 
+              (friendsInClub.map(friend => <span key={friend.id}>{friend.username}, </span>))
+            }
+            <span>are also in this club</span>
           </div>
         )}
       </div>
