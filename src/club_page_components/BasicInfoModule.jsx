@@ -1,38 +1,43 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
-import { apiFetch } from '../lib/api';
-import { supabase } from '../lib/supabase';
+import { useClubData } from '../context/useClubData';
 import ColorThief from 'colorthief';
 import './BasicInfoModule.css';
 
-function BasicInfoModule({ club }) {
-  const id = club.id;
-
+/**
+ * @param {Object} club - object passed down which contains the id used for queries and api fetches.
+ * @param {Object} data - arbitrary but relevant data passed to the module. This particular module contains the logo url, description, and
+ * name of the club, but for other modules the data field would hold different, relevant info (see other modules for info).
+ * @param {string[]} topTags - the top 3 most frequented selected tags for a club aggregated in the database from reviews left by club memebers.
+ * @param {booleam} editing - determines whether or not the user is in edit mode or not (should never be true for non approved accounts)
+ * @param {Function} onChange - callback function that preserves the function and its references from being rerendered every well, rerender.
+ * @param {Function} onLogoChange - simple function that sets the value of a logo file equal to the current pending file if there 
+ * is a change- meant to allow ExpandedTile to handle file uploads since they have to be uploaded using signed URL's since files
+ * cannot be serialized into JSON.
+ */
+function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange }) {
   const [dominantColor, setDominantColor] = useState(null);
-  const [topTags, setTopTags] = useState([]);
-  const [isApproved, setIsApproved] = useState(false);
-  const [moduleData, setModuleData] = useState({});
-  const [fullPageData, setFullPageData] = useState(null);
-
-  const [pageLoaded, setPageLoaded] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [draft, setDraft] = useState({ club_name: '', logo_url: '', description: '' });
-  const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
 
   const imgRef = useRef(null);
   const descRef = useRef(null);
 
-  const displayName = moduleData.club_name || club.club_name || '';
-  const displayDescription = moduleData.description || club.club_description || '';
+  const displayName = data?.club_name || club.club_name || '';
+  const displayDescription = data?.description || club.club_description || '';
+  const logoUrl = data?.logo_url || club.image_url || '/raccoon_pfp.png';
 
-  // ColorThief
+  const { friendMembershipMap } = useClubData();
+  const friendsInClub = friendMembershipMap?.get(club.id) || [];
+
   const getPastelColor = (r, g, b) => {
     const factor = (r + (255 - r) * 0.85 >= 240 &&
                     g + (255 - g) * 0.85 >= 240 &&
                     b + (255 - b) * 0.85 >= 240) ? 0.5 : 0.85;
     return `rgb(${Math.round(r + (255 - r) * factor)}, ${Math.round(g + (255 - g) * factor)}, ${Math.round(b + (255 - b) * factor)})`;
   };
+
+  useEffect(() => {
+    console.log("Module Rendered!");
+  })
 
   useEffect(() => {
     const colorThief = new ColorThief();
@@ -61,128 +66,22 @@ function BasicInfoModule({ club }) {
     }
   }, [club.image_url]);
 
-  // Fetch page preset + top tags
-  useEffect(() => {
-    async function fetchPageData() {
-      const [pageResult, tagsResult] = await Promise.allSettled([
-        apiFetch(`/clubs/${id}/page`, { auth: false }),
-        apiFetch(`/clubs/${id}/top-tags`, { auth: false }),
-      ]);
-
-      if (tagsResult.status === 'fulfilled') {
-        setTopTags((tagsResult.value || []).map(r => r.tag));
-      }
-
-      if (pageResult.status === 'fulfilled') {
-        const data = pageResult.value;
-        setFullPageData(data);
-        const mod = (data?.modules || []).find(m => m.type === 'basic_info');
-        const modData = mod?.data || {};
-        setModuleData(modData);
-        setDraft({
-          club_name: modData.club_name || club.club_name || '',
-          logo_url: modData.logo_url || club.image_url || '/raccoon_pfp.png',
-          description: modData.description || club.club_description || '',
-        });
-      } else {
-        setDraft({
-          club_name: club.club_name || '',
-          logo_url: club.image_url || '/raccoon_pfp.png',
-          description: club.club_description || '',
-        });
-      }
-      setPageLoaded(true);
-    }
-    fetchPageData();
-  }, [id]);
-
-  // Check approved status
-  useEffect(() => {
-    async function checkApproved() {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (!authUser) return;
-      try {
-        const { approved } = await apiFetch(`/clubs/${id}/is-approved`);
-        setIsApproved(approved);
-      } catch {
-        // not approved or table doesn't exist yet
-      }
-    }
-    checkApproved();
-  }, [id]);
-
-  // Auto-resize textarea — useLayoutEffect fires synchronously after DOM mutation
-  // so scrollHeight is always accurate when measured
   useLayoutEffect(() => {
     if (descRef.current) {
       descRef.current.style.height = 'auto';
       descRef.current.style.height = `${descRef.current.scrollHeight}px`;
     }
-  }, [draft.description, editing]);
+  }, [data?.description, editing]);
 
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    setLogoFile(file);
     setLogoPreview(URL.createObjectURL(file));
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      let finalLogoUrl = draft.logo_url;
-
-      if (logoFile) {
-        const { signedUrl, publicUrl } = await apiFetch('/storage/club-logo-upload-url', {
-          method: 'POST',
-          body: { club_id: id, ext: logoFile.type.split('/')[1] },
-        });
-        await fetch(signedUrl, { method: 'PUT', body: logoFile });
-        finalLogoUrl = publicUrl;
-      }
-
-      const updatedData = { ...draft, logo_url: finalLogoUrl };
-      const currentModules = fullPageData?.modules ?? [{ type: 'basic_info', order: 0, data: {} }];
-      const hasBasicInfo = currentModules.some(m => m.type === 'basic_info');
-      const updatedModules = hasBasicInfo
-        ? currentModules.map(m => m.type === 'basic_info' ? { ...m, data: updatedData } : m)
-        : [...currentModules, { type: 'basic_info', order: 0, data: updatedData }];
-
-      const saved = await apiFetch(`/clubs/${id}/page`, {
-        method: 'PUT',
-        body: { modules: updatedModules },
-      });
-
-      setFullPageData(saved);
-      setModuleData(updatedData);
-      setDraft(d => ({ ...d, logo_url: finalLogoUrl }));
-      setLogoFile(null);
-      setLogoPreview(null);
-      setEditing(false);
-    } catch (err) {
-      console.error('Error saving club info:', err);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setDraft({
-      club_name: moduleData.club_name || club.club_name || '',
-      logo_url: moduleData.logo_url || club.image_url || '/raccoon_pfp.png',
-      description: moduleData.description || club.club_description || '',
-    });
-    setLogoFile(null);
-    setLogoPreview(null);
-    setEditing(false);
+    onLogoChange(file);
   };
 
   return (
     <>
-      {isApproved && !editing && (
-        <button className="exp-edit-btn" onClick={() => setEditing(true)}>Edit</button>
-      )}
-
       <div className="content-col">
         <div className="rectangle" style={{ backgroundColor: dominantColor }}>
           <img
@@ -194,15 +93,15 @@ function BasicInfoModule({ club }) {
           />
         </div>
         <div className="text-flex">
-          {pageLoaded && (editing
+          {editing
             ? <input
                 className="club-name-exp club-name-input"
-                value={draft.club_name}
-                onChange={(e) => setDraft(d => ({ ...d, club_name: e.target.value }))}
+                value={data?.club_name || ''}
+                onChange={(e) => onChange({ ...data, club_name: e.target.value })}
                 placeholder="Club name"
               />
             : <h2 className="club-name-exp">{displayName}</h2>
-          )}
+          }
           {topTags.length > 0 && (
             <h2 className="club-tag1">
               {topTags.map(s => s.replaceAll('"', '')).join(' • ')}
@@ -214,7 +113,7 @@ function BasicInfoModule({ club }) {
           <div className="rectangle_min" style={{ '--dominant-color': dominantColor }}>
             <div
               className="club-img-exp"
-              style={{ backgroundImage: `url(${logoPreview || draft.logo_url || club.image_url})` }}
+              style={{ backgroundImage: `url(${logoPreview || logoUrl})` }}
               role="img"
               aria-label={club.club_name}
             >
@@ -237,27 +136,40 @@ function BasicInfoModule({ club }) {
         </div>
       )}
 
-      {pageLoaded && (editing
+      <div>
+        {friendsInClub.length > 0 && (
+          <div className="friend-avatars">
+            {friendsInClub.slice(0, 3).map((friend) => (
+              <img
+                key={friend.id}
+                className="friend-avatar-img"
+                src={friend.avatar_url || "/raccoon_pfp.png"}
+                alt={friend.username}
+              />
+            ))}
+            {friendsInClub.length > 3 && (
+              <span className="friend-avatar-overflow">
+                +{friendsInClub.length - 3}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      <h2 className="about-label">About</h2>
+
+      {editing
         ? <textarea
             ref={descRef}
             className="club-description-exp club-desc-input"
-            value={draft.description}
-            onChange={(e) => setDraft(d => ({ ...d, description: e.target.value }))}
+            value={data?.description || ''}
+            onChange={(e) => onChange({ ...data, description: e.target.value })}
             placeholder="Club description"
           />
         : <p className="club-description-exp">{displayDescription}</p>
-      )}
-
-      {editing && (
-        <div className="expanded-edit-actions">
-          <button onClick={handleCancel} disabled={saving}>Cancel</button>
-          <button className="save-btn" onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving...' : 'Save'}
-          </button>
-        </div>
-      )}
+      }
     </>
   );
 }
 
-export default BasicInfoModule;
+export default React.memo(BasicInfoModule);

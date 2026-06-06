@@ -3,10 +3,11 @@ import './ClubGrid.css';
 import heartEmpty from '/src/assets/empty_heart.png';
 import heartFull from '/src/assets/full_heart.png';
 import { apiFetch } from '../lib/api';
+// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import { useGlobalStore } from "../lib/store";
 import { useClubData } from '../context/useClubData';
-import paperTexture from '/src/assets/white-paper-texture.jpg';
+//import paperTexture from '/src/assets/white-paper-texture.jpg';
 import posterPin from '/src/assets/poster_pin.png';
 export const ClubGrid = ({ result, onExpand, hideHeart, hidePins }) => {
   const [animating, setAnimating] = useState(false);

@@ -218,6 +218,10 @@
   cursor: not-allowed;
 }
 
+.about-label {
+  font-size: 50px;
+}
+
 /* Mobile */
 @media (max-width: 699px) {
   .text-flex {
