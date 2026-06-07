@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
 import { supabase } from '../lib/supabase';
 import BasicInfoModule from './BasicInfoModule';
+import JoinModule from './JoinModule';
 import './ClubPage.css';
 
 // ClubPage — module-based profile page for a club.
@@ -120,6 +121,9 @@ function ClubPage() {
                   }}
                 />
               );
+            }
+            if (mod.type === 'join') {
+              return <JoinModule key={i} club={club} data={mod.data} editing={false} />;
             }
             // Future module types rendered here
             return null;

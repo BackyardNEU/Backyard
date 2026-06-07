@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase';
 import { apiFetch } from '../lib/api';
 import logImage from '/src/assets/logImage.png';
 import BasicInfoModule from '../club_page_components/BasicInfoModule';
+import JoinModule from '../club_page_components/JoinModule';
 
 
 function ExpandedTile({ club, onClose, onMembershipChange }) {
@@ -203,6 +204,15 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                             editing={isEditing}
                             onChange={(updatedData) => handleModuleChange('basic_info', updatedData)}
                             onLogoChange={(file) => setPendingLogoFile(file)}
+                        />
+                    );
+                    if (module.type === 'join') return (
+                        <JoinModule
+                            key="join"
+                            club={club}
+                            data={module.data}
+                            editing={isEditing}
+                            onChange={(updatedData) => handleModuleChange('join', updatedData)}
                         />
                     );
                 })}
