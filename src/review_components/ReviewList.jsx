@@ -1,6 +1,5 @@
 ﻿import React, { useState, useEffect, useCallback } from 'react';
 import "./ReviewList.css";
-import StatsCard from "./StatsCard.jsx";
 import { UpvoteWidget } from "./UpvoteWidget";
 import { apiFetch } from "../lib/api";
 import { useClubData } from "../context/useClubData";
@@ -201,7 +200,7 @@ function Lightbox({ comment, type, userVote, onVote, onClose }) {
 /* ============================================================
    ReviewList  (main export)
    ============================================================ */
-export default function ReviewList({ reviews, club_stats, club }) {
+export default function ReviewList({ reviews, club }) {
     const [selectedId, setSelectedId] = useState(null);
     const [userVotes, setUserVotes] = useState({});
     const [reviewScores, setReviewScores] = useState({});
@@ -267,10 +266,6 @@ export default function ReviewList({ reviews, club_stats, club }) {
 
     return (
         <div className="review-item">
-            <p className="divider-header">Stats</p>
-            <StatsCard stats_array={club_stats} />
-
-            <div className="divider"></div>
             <p className="divider-header">Comments</p>
 
             {enriched.length > 0 ? (
@@ -303,10 +298,10 @@ export default function ReviewList({ reviews, club_stats, club }) {
                 />
             )}
 
-            <div className="divider"></div>
+            {/* <div className="divider"></div>
             <p className="divider-header">Contact</p>
             <p>{club.contact_email || "No contact info available."}</p>
-            <div className="divider"></div>
+            <div className="divider"></div> */}
         </div>
     );
 }

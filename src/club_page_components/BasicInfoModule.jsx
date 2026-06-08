@@ -4,13 +4,14 @@ import ColorThief from 'colorthief';
 import './BasicInfoModule.css';
 
 /**
- * @param {Object} club - object passed down which contains the id used for queries and api fetches.
- * @param {Object} data - arbitrary but relevant data passed to the module. This particular module contains the logo url, description, and
+ * @param {Object} props
+ * @param {Object} props.club - object passed down which contains the id used for queries and api fetches.
+ * @param {Object} props.data - arbitrary but relevant data passed to the module. This particular module contains the logo url, description, and
  * name of the club, but for other modules the data field would hold different, relevant info (see other modules for info).
- * @param {string[]} topTags - the top 3 most frequented selected tags for a club aggregated in the database from reviews left by club memebers.
- * @param {booleam} editing - determines whether or not the user is in edit mode or not (should never be true for non approved accounts)
- * @param {Function} onChange - callback function that preserves the function and its references from being rerendered every well, rerender.
- * @param {Function} onLogoChange - simple function that sets the value of a logo file equal to the current pending file if there 
+ * @param {string[]} props.topTags - the top 3 most frequented selected tags for a club aggregated in the database from reviews left by club memebers.
+ * @param {boolean} props.editing - determines whether or not the user is in edit mode or not (should never be true for non approved accounts)
+ * @param {Function} props.onChange - callback function that preserves the function and its references from being rerendered every well, rerender.
+ * @param {Function} props.onLogoChange - simple function that sets the value of a logo file equal to the current pending file if there 
  * is a change- meant to allow ExpandedTile to handle file uploads since they have to be uploaded using signed URL's since files
  * cannot be serialized into JSON.
  */

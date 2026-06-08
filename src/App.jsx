@@ -1,4 +1,4 @@
-﻿import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+﻿import { Routes, Route, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import './App.css';
 import { SearchBar } from './home_components/SearchBar';
@@ -11,7 +11,6 @@ import ProfileSetupPage from './profile_components/ProfileSetupPage';
 import { ProfilePage } from './profile_components/ProfilePage';
 import ResetPasswordPage from './login_components/ResetPasswordPage';
 import { ClubDataProvider } from './context/ClubDataProvider'
-import ClubPage from './club_page_components/ClubPage'
 
 function App() {
   const [loginOpen, setLoginOpen] = useState(false);
@@ -77,7 +76,6 @@ function App() {
           <Route path="/profile/setup" element={<ProfileSetupPage />} />
           <Route path="/profile-setup" element={<ProfileSetupPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/club/:id" element={<ClubPage />} />
         </Routes>
       </div>
     </ClubDataProvider>

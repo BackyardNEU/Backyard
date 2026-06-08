@@ -9,6 +9,7 @@ import { apiFetch } from '../lib/api';
 import logImage from '/src/assets/logImage.png';
 import BasicInfoModule from '../club_page_components/BasicInfoModule';
 import JoinModule from '../club_page_components/JoinModule';
+import StatsModule from '../club_page_components/StatsModule';
 
 
 function ExpandedTile({ club, onClose, onMembershipChange }) {
@@ -18,7 +19,6 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const [isClosing, setIsClosing] = useState(false);
     const [reviews, set_reviews] = useState([]);
     const [isClicked, setIsClicked] = useState(false);
-    const [club_stats, setClubStats] = useState(null);
     // records the user itself
     const [user, setUser] = useState(null);
     // determines if someone is a member of a club- derived from supabase table
@@ -27,7 +27,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const [memberLoading, setMemberLoading] = useState(false);
     // determines if a user is an approved club account- derived from auth
     const [isApproved, setIsApproved] = useState(false);
-    // requested modules data to be displayed from db
+    // info from modules data to be displayed from db
     const [pageData, setPageData] = useState(null);
     // top tags derived from reviews
     const [topTags, setTopTags] = useState([]);
@@ -70,7 +70,6 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
             const publicFetches = [
                 apiFetch(`/clubs/${id}/reviews`, { auth: false }),
-                apiFetch(`/clubs/${id}/stats`, { auth: false }),
                 apiFetch(`/clubs/${id}/page`, { auth: false }),
                 apiFetch(`/clubs/${id}/top-tags`, { auth: false }),
             ];
@@ -81,11 +80,10 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
             console.log("Awaiting info...");
 
-            const [reviewsResult, statsResult, pageResult, topTagsResult, membershipResult, approvedResult] =
+            const [reviewsResult, pageResult, topTagsResult, membershipResult, approvedResult] =
                 await Promise.allSettled([...publicFetches, ...authFetches]);
 
             if (reviewsResult.status === 'fulfilled') set_reviews(reviewsResult.value);
-            if (statsResult.status === 'fulfilled') setClubStats(statsResult.value?.[0]);
             if (topTagsResult.status === 'fulfilled') setTopTags((topTagsResult.value || []).map(r => r.tag));
             if (pageResult.status === 'fulfilled') {
                 setPageData(pageResult.value);
@@ -215,6 +213,14 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                             onChange={(updatedData) => handleModuleChange('join', updatedData)}
                         />
                     );
+                    if (module.type === 'stats') return (
+                        <StatsModule
+                            key="stats"
+                            data={module.data}
+                            editing={isEditing}
+                            onChange={(updatedData) => handleModuleChange('stats', updatedData)}
+                        />
+                    );
                 })}
 
             {isApproved && isEditing && (
@@ -241,7 +247,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             </div>
 
             <div className="view-reviews">
-                <ReviewList reviews={reviews} club_stats={club_stats} club={club} />
+                <ReviewList reviews={reviews} club={club} />
             </div>
 
             <div style={{ marginBottom: "30px" }}>

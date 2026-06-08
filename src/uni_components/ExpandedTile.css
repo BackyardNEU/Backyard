@@ -115,10 +115,6 @@
   margin-bottom: 30px;
 }
 
-.about-label {
-  font-size: 50px;
-}
-
 @keyframes review-pop {
   0% { transform: scale(1); }
   10% { transform: scale(1.1); }
