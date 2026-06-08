@@ -11,6 +11,7 @@ import heartEmpty from '/src/assets/empty_heart.png';
 import heartFull from '/src/assets/full_heart.png';
 import BasicInfoModule from '../club_page_components/BasicInfoModule';
 import JoinModule from '../club_page_components/JoinModule';
+import ClubMediaModule from '../club_page_components/ClubMediaModule';
 import { useClubData } from '../context/useClubData';
 import { useGlobalStore } from '../lib/store';
 
@@ -277,6 +278,14 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                             data={module.data}
                             editing={isEditing}
                             onChange={(updatedData) => handleModuleChange('join', updatedData)}
+                        />
+                    );
+                    if (module.type === 'club_media') return (
+                        <ClubMediaModule
+                            key="club_media"
+                            data={module.data}
+                            editing={isEditing}
+                            onChange={(updatedData) => handleModuleChange('club_media', updatedData)}
                         />
                     );
                 })}
