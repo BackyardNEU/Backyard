@@ -29,9 +29,90 @@
   z-index: -1;
 }
 
-.view-reviews {
+.view-reviews,
+.club-modules {
   width: 100%;
   box-sizing: border-box;
+}
+
+/* Keep modules centered the way .expanded-card did before they were wrapped */
+.club-modules {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Action row inside basic_info (between the banner and About) — centered,
+   scrolls horizontally on overflow, with 10px of vertical breathing room */
+.exp-action-row {
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 8300;
+  padding: 10px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
+}
+
+.exp-action-row::-webkit-scrollbar {
+  height: 6px;
+}
+
+.exp-action-row::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+/* Inner track sizes to its content: centered when it fits, left-aligned + scrollable when it overflows */
+.exp-action-row-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: max-content;
+  margin: 0 auto;
+}
+
+.exp-action-row-inner > * {
+  flex: 0 0 auto;
+}
+
+.add-events-btn {
+  font-family: 'Barlow Condensed', sans-serif;
+  display: inline-block;
+  padding: 10px 15px;
+  background-color: rgb(207, 87, 69);
+  color: #fff;
+  border: none;
+  border-radius: 90px;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+}
+
+.add-events-btn:hover {
+  transform: scale(1.05);
+}
+
+/* Sized to match the height of the pill buttons next to it */
+.exp-action-heart {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.12s ease;
+}
+
+.exp-action-heart.pop {
+  animation: exp-heart-pop 0.25s ease forwards;
+}
+
+@keyframes exp-heart-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.35); }
+  100% { transform: scale(1); }
 }
 
 .close-btn {
@@ -56,6 +137,7 @@
   border: none;
   border-radius: 90px;
   transition: transform 0.12s ease;
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
 }
 
 .log-btn {
@@ -75,6 +157,7 @@
   margin-top: 10px;
   margin-bottom: 10px;
   transition: transform 0.12s ease, background-color 0.2s ease;
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
 }
 
 .membership-btn:hover {
@@ -109,8 +192,8 @@
   line-height: normal;
   font-style: normal;
   position: relative;
-  font-size: 4rem;
-  color: black;
+
+  color: rgb(50, 50, 50);
   text-align: left;
   margin-bottom: 30px;
 }
@@ -135,7 +218,8 @@
     width: 100%;
   }
 
-  .view-reviews {
+  .view-reviews,
+  .club-modules {
     padding: 0 3%;
   }
 
@@ -163,7 +247,8 @@
     height: 100vh;
   }
 
-  .view-reviews {
+  .view-reviews,
+  .club-modules {
     padding: 0 2%;
   }
 

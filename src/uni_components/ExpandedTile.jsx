@@ -7,9 +7,13 @@ import ReviewList from "../review_components/ReviewList";
 import { supabase } from '../lib/supabase';
 import { apiFetch } from '../lib/api';
 import logImage from '/src/assets/logImage.png';
+import heartEmpty from '/src/assets/empty_heart.png';
+import heartFull from '/src/assets/full_heart.png';
 import BasicInfoModule from '../club_page_components/BasicInfoModule';
 import JoinModule from '../club_page_components/JoinModule';
 import StatsModule from '../club_page_components/StatsModule';
+import { useClubData } from '../context/useClubData';
+import { useGlobalStore } from '../lib/store';
 
 
 function ExpandedTile({ club, onClose, onMembershipChange }) {
@@ -39,8 +43,32 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const [isSaving, setIsSaving] = useState(false);
     // determines if a new logo has been uploaded- requires a new signed URL upload to the supabase storage bucket
     const [pendingLogoFile, setPendingLogoFile] = useState(null);
+    // favorites heart — mirrors the behavior in ClubGrid
+    const [heartAnimating, setHeartAnimating] = useState(false);
 
     const id = club.id;
+
+    const { favoritesCache, invalidateFavoritesCache } = useClubData();
+    const GlobalValue = useGlobalStore((state) => state.GlobalValue);
+    const liked = favoritesCache?.has(club.id) ?? false;
+
+    const handleHeartClick = async (e) => {
+        e.stopPropagation();
+        setHeartAnimating(true);
+        const newLiked = !liked;
+        try {
+            if (newLiked) {
+                await apiFetch('/me/favorites', { method: 'POST', body: { club_id: club.id } });
+                invalidateFavoritesCache(club.id, true);
+            } else {
+                await apiFetch(`/me/favorites/${club.id}`, { method: 'DELETE' });
+                invalidateFavoritesCache(club.id, false);
+            }
+        } catch (err) {
+            console.error(`Error ${newLiked ? 'adding' : 'removing'} favorite:`, err);
+        }
+        setTimeout(() => setHeartAnimating(false), 250);
+    };
 
     const handleClose = useCallback(() => {
         setIsClosing(true);
@@ -176,6 +204,40 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
         setIsEditing(false);
     };
 
+    // Action row rendered inside the basic_info module (between the banner and the About text)
+    const actionRow = (
+        <div className="exp-action-row">
+            <div className="exp-action-row-inner">
+                {isClicked
+                    ? <img src={logImage} className="log-btn" alt="Clicked state" />
+                    : <button className="review-btn" onClick={handleClick}>Share your experience</button>
+                }
+
+                {user && (
+                    <button
+                        className={`membership-btn ${isMember ? 'leave' : 'join'}`}
+                        onClick={handleMembership}
+                        disabled={memberLoading}
+                    >
+                        {memberLoading ? '...' : isMember ? 'Leave Club' : 'Join Club'}
+                    </button>
+                )}
+
+                {/* Placeholder — event creation to be wired up later */}
+                <button className="add-events-btn" type="button">Add Events</button>
+
+                {GlobalValue && (
+                    <img
+                        className={`exp-action-heart ${heartAnimating ? 'pop' : ''}`}
+                        src={liked ? heartFull : heartEmpty}
+                        onClick={handleHeartClick}
+                        alt={liked ? 'Remove favorite' : 'Add favorite'}
+                    />
+                )}
+            </div>
+        </div>
+    );
+
     return (
         <motion.div
             layoutId={`club-${club.id}`}
@@ -190,6 +252,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 <button className="exp-edit-btn" onClick={() => setIsEditing(true)}>Edit Page</button>
             )}
 
+            <div className="club-modules">
             {(draft ?? [])
                 .sort((a, b) => a.order - b.order)
                 .map(module => {
@@ -202,6 +265,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                             editing={isEditing}
                             onChange={(updatedData) => handleModuleChange('basic_info', updatedData)}
                             onLogoChange={(file) => setPendingLogoFile(file)}
+                            actions={actionRow}
                         />
                     );
                     if (module.type === 'join') return (
@@ -222,6 +286,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                         />
                     );
                 })}
+            </div>
 
             {isApproved && isEditing && (
                 <div className="expanded-edit-actions">
@@ -232,30 +297,12 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 </div>
             )}
 
-            {user && (
-                <button
-                    className={`membership-btn ${isMember ? 'leave' : 'join'}`}
-                    onClick={handleMembership}
-                    disabled={memberLoading}
-                >
-                    {memberLoading ? '...' : isMember ? 'Leave Club' : 'Join Club'}
-                </button>
-            )}
-
             <div className="content-col-divider">
                 <div className="divider"></div>
             </div>
 
             <div className="view-reviews">
                 <ReviewList reviews={reviews} club={club} />
-            </div>
-
-            <div style={{ marginBottom: "30px" }}>
-                <h3>Have you been in this club?</h3>
-                <div>{isClicked
-                    ? <img src={logImage} className="log-btn" alt="Clicked state" />
-                    : <button className="review-btn" onClick={handleClick}>Share your experience</button>
-                }</div>
             </div>
 
             {isOpen && (

@@ -79,6 +79,8 @@
 }
 
 .club-tag2 {
+  font-family: "Barlow Condensed", sans-serif;
+
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
@@ -87,18 +89,21 @@
 }
 
 .tag {
-  background: #f0f0f0;
+ 
   border-radius: 999px;
   padding: 0.25rem 0.75rem;
-  font-size: 0.85rem;
+  font-size: 1rem;
   color: #444;
 }
 
 .club-description-exp {
-  font-size: 1.2rem;
+  font-size: 1rem;
   align-self: flex-start;
   color: rgb(66, 66, 66);
-  text-align: center;
+  text-align: left;
+  width: 80%;
+  min-width: 650px;
+  box-sizing: border-box;
 }
 
 .text-flex {
@@ -392,8 +397,133 @@
     margin-bottom: 0;
   }
 
+
+.friend-avatar-img-bio {
+  width: 2.5em;
+  height: 2.5rem;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  object-fit: cover;
+  margin-left: -8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
   p.club-description-exp {
-    text-align: center;
-    padding: 0 10%;
+    text-align: left;
+    padding: 0;
   }
 }
+
+/* ── About section: left-aligned, in line with stats/join ── */
+.about-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+/* friend-avatars then club-tag2, in a horizontal row under the About heading */
+.about-meta-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  width: 100%;
+  margin: 0.25rem 0 1rem;
+}
+
+.about-meta-row .friend-avatars {
+  width: auto;
+  margin-top: 0;
+}
+
+.about-meta-row .club-tag2 {
+  margin-bottom: 0;
+  justify-content: flex-start;
+}
+
+/* "MORE" affordance at the end of a truncated description */
+.desc-more-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 2px;
+  font: inherit;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: rgb(62, 42, 9);
+  cursor: pointer;
+
+}
+
+.desc-more-btn:hover {
+  color: #000;
+}
+
+/* Full-description modal — modelled on .friends-modal-overlay, but layered
+   above the expanded tile's stacking context (which climbs to z-index 8300). */
+.desc-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 9000;
+}
+
+.desc-modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  width: 520px;
+  max-width: 92vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.desc-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.desc-modal-title {
+  font-family: "Bebas Neue", sans-serif;
+  font-weight: 400;
+  font-size: 2rem;
+  margin: 0;
+  color: rgb(44, 27, 43);
+}
+
+.desc-modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  font-size: 1.6rem;
+  line-height: 1;
+  padding: 0 0.4rem;
+  border-radius: 50%;
+}
+
+.desc-modal-close:hover {
+  color: #111;
+}
+
+.desc-modal-body {
+  margin: 0;
+  font-family: 'Barlow', sans-serif;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: rgb(66, 66, 66);
+  white-space: pre-wrap;
+  overflow-y: auto;
+}
+
