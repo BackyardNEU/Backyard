@@ -14,9 +14,10 @@ import './BasicInfoModule.css';
  * is a change- meant to allow ExpandedTile to handle file uploads since they have to be uploaded using signed URL's since files
  * cannot be serialized into JSON.
  */
-function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange }) {
+function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange, actions }) {
   const [dominantColor, setDominantColor] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
+  const [descOpen, setDescOpen] = useState(false);
 
   const imgRef = useRef(null);
   const descRef = useRef(null);
@@ -24,6 +25,11 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange 
   const displayName = data?.club_name || club.club_name || '';
   const displayDescription = data?.description || club.club_description || '';
   const logoUrl = data?.logo_url || club.image_url || '/raccoon_pfp.png';
+
+  // Truncate the description to 50 words in view mode; the full text opens in a modal.
+  const descWords = displayDescription.trim() ? displayDescription.trim().split(/\s+/) : [];
+  const isLongDesc = descWords.length > 50;
+  const descPreview = isLongDesc ? descWords.slice(0, 50).join(' ') : displayDescription;
 
   const { friendMembershipMap } = useClubData();
   const friendsInClub = friendMembershipMap?.get(club.id) || [];
@@ -128,51 +134,90 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange 
         </div>
       </div>
 
-      {topTags.length > 0 && (
-        <div className="club-tag2">
-          {topTags.map((tag) => (
-            <div key={tag} className="tag">{tag.replaceAll('"', '')}</div>
-          ))}
-        </div>
-      )}
+      {/* Action row slot (share / join / add events / favorite) — supplied by the parent
+          so membership & review state stays in ExpandedTile; absent on the ClubPage route. */}
+      {actions}
 
-      <div>
-        {friendsInClub.length > 0 && (
-          <div className="friend-avatars">
-            {friendsInClub.slice(0, 3).map((friend) => (
-              <img
-                key={friend.id}
-                className="friend-avatar-img"
-                src={friend.avatar_url || "/raccoon_pfp.png"}
-                alt={friend.username}
-              />
-            ))}
-            {friendsInClub.length > 3 && (
-              <span className="friend-avatar-overflow">
-                +{friendsInClub.length - 3}
-              </span>
-            )}
-            {friendsInClub.length > 3 ? 
-              (friendsInClub.slice(0, 3).map(friend => <span key={friend.id}>{friend.username},</span>) && (<span>{friendsInClub.length - 3} others</span>)) : 
-              (friendsInClub.map(friend => <span key={friend.id}>{friend.username}, </span>))
-            }
-            <span>are also in this club</span>
-          </div>
-        )}
+      <div className="about-section">
+        <h2 className="divider-header">About</h2>
+
+        <div className="about-meta-row">
+          {friendsInClub.length > 0 && (
+            <div className="friend-avatars">
+              {friendsInClub.slice(0, 3).map((friend) => (
+                <img
+                  key={friend.id}
+                  className="friend-avatar-img-bio"
+                  src={friend.avatar_url || "/raccoon_pfp.png"}
+                  alt={friend.username}
+                />
+              ))}
+              {friendsInClub.length > 3 && (
+                <span className="friend-avatar-overflow">
+                  +{friendsInClub.length - 3}
+                </span>
+              )}
+              {friendsInClub.length > 3 ?
+                (friendsInClub.slice(0, 3).map(friend => <span key={friend.id}>{friend.username},</span>) && (<span>{friendsInClub.length - 3} others</span>)) :
+                (friendsInClub.map(friend => <span key={friend.id}>{friend.username}, </span>))
+              }
+              <span>are also in this club</span>
+            </div>
+          )}
+
+          {topTags.length > 0 && (
+            <div className="club-tag2">
+              {topTags.map((tag) => (
+                <div key={tag} className="tag">{tag.replaceAll('"', '')}</div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {editing
+          ? <textarea
+              ref={descRef}
+              className="club-description-exp club-desc-input"
+              value={data?.description || ''}
+              onChange={(e) => onChange({ ...data, description: e.target.value })}
+              placeholder="Club description"
+            />
+          : <p className="club-description-exp">
+              {descPreview}
+              {isLongDesc && (
+                <>
+                  {'… '}
+                  <button
+                    type="button"
+                    className="desc-more-btn"
+                    onClick={() => setDescOpen(true)}
+                  >
+                    MORE
+                  </button>
+                </>
+              )}
+            </p>
+        }
       </div>
 
-      <h2 className="about-label">About</h2>
-
-      {editing
-        ? <textarea
-            ref={descRef}
-            className="club-description-exp club-desc-input"
-            value={data?.description || ''}
-            onChange={(e) => onChange({ ...data, description: e.target.value })}
-            placeholder="Club description"
-          />
-        : <p className="club-description-exp">{displayDescription}</p>
-      }
+      {descOpen && (
+        <div className="desc-modal-overlay" onClick={() => setDescOpen(false)}>
+          <div className="desc-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="desc-modal-header">
+              <h3 className="desc-modal-title">{displayName}</h3>
+              <button
+                type="button"
+                className="desc-modal-close"
+                onClick={() => setDescOpen(false)}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+            <p className="desc-modal-body">{displayDescription}</p>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -40,7 +40,7 @@ function JoinModule({ data, editing, onChange }) {
   if (editing) {
     return (
       <div className="join-module join-module--editing">
-        <h2 className="join-heading">Join</h2>
+        <p className="divider-header">How to Join</p>
 
         <div className="join-card-row">
           {tabs.map((t, idx) => (
@@ -95,7 +95,7 @@ function JoinModule({ data, editing, onChange }) {
 
   return (
     <div className="join-module">
-      <h2 className="join-heading">Join</h2>
+      <p className="divider-header">How to Join</p>
 
       {tabs.length > 0 && (
         <>
@@ -120,7 +120,7 @@ function JoinModule({ data, editing, onChange }) {
         <div className="join-actions">
           {applicationLink && (
             <a
-              className="join-link-btn"
+              className="apply-link-btn"
               href={applicationLink}
               target="_blank"
               rel="noopener noreferrer"
@@ -130,7 +130,7 @@ function JoinModule({ data, editing, onChange }) {
           )}
           {contactLink && (
             <a
-              className="join-link-btn"
+              className="contact-link-btn"
               href={contactLink}
               target="_blank"
               rel="noopener noreferrer"

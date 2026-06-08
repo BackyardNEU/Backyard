@@ -271,7 +271,7 @@ export default function ReviewList({ reviews, club_stats, club }) {
             <StatsCard stats_array={club_stats} />
 
             <div className="divider"></div>
-            <p className="divider-header">Comments</p>
+            <p className="divider-header">Paricipant Experiences</p>
 
             {enriched.length > 0 ? (
                 <div className="rl-grid">
