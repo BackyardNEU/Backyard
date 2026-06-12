@@ -1,0 +1,24 @@
+/* FriendProfile shares most of its chrome with ProfilePage; this file only
+   contains the deltas needed for read-only viewing. */
+
+/* No "change photo" hover affordance on a friend's avatar. */
+.friend-photo-wrap {
+  position: relative;
+  flex-shrink: 0;
+  cursor: default;
+}
+
+.friend-photo-wrap .profile-image {
+  cursor: default;
+}
+
+.friend-profile-status {
+  font-family: 'Barlow', sans-serif;
+  color: #5c5c5c;
+  margin-top: 24px;
+  font-size: 1rem;
+}
+
+.mutual-friends-empty {
+  margin: 0 0 0 4px;
+}

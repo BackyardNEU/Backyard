@@ -6,13 +6,25 @@ import ExpandedTile from '../uni_components/ExpandedTile';
 import { AnimatePresence } from 'framer-motion';
 import './ClubMembershipPanel.css';
 
-export const ClubMembershipPanel = ({ userId }) => {
+export const ClubMembershipPanel = ({ userId, memberList, readOnly = false }) => {
   const { allData } = useClubData();
   const [memberClubs, setMemberClubs] = useState([]);
   const [expandedClub, setExpandedClub] = useState(null);
 
   useEffect(() => {
-    if (!userId || !allData.length) return;
+    if (!allData.length) return;
+
+    // When memberList is passed in (e.g. viewing a friend's profile), use it
+    // directly instead of calling /me/membership — that endpoint only ever
+    // returns the current user's memberships.
+    if (memberList !== undefined) {
+      const list = memberList || [];
+      const clubs = allData.filter((club) => list.includes(club.id));
+      setMemberClubs(clubs);
+      return;
+    }
+
+    if (!userId) return;
 
     async function fetchMemberships() {
       try {
@@ -26,13 +38,14 @@ export const ClubMembershipPanel = ({ userId }) => {
     }
 
     fetchMemberships();
-  }, [userId, allData]);
+  }, [userId, allData, memberList]);
 
   if (!memberClubs.length) {
     return (
       <div className="membership-panel">
-      
-        <p className="membership-empty">You haven't joined any clubs yet.</p>
+        <p className="membership-empty">
+          {readOnly ? 'No clubs joined yet.' : "You haven't joined any clubs yet."}
+        </p>
       </div>
     );
   }
@@ -58,6 +71,10 @@ export const ClubMembershipPanel = ({ userId }) => {
             key={expandedClub.id}
             onClose={() => setExpandedClub(null)}
             onMembershipChange={(clubId, joined) => {
+              // In read-only mode this panel is showing someone else's
+              // memberships, so the viewer joining/leaving a club shouldn't
+              // mutate the list.
+              if (readOnly) return;
               if (!joined) {
                 setMemberClubs((prev) => prev.filter((c) => c.id !== clubId));
                 setExpandedClub(null);
