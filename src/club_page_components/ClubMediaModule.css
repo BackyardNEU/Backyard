@@ -10,6 +10,7 @@
 .club-media-row {
   display: flex;
   flex-direction: row;
+  align-items: flex-start;
   gap: 16px;
   width: 100%;
   overflow-x: auto;
@@ -17,6 +18,15 @@
   padding-bottom: 12px;
   scrollbar-width: thin;
   scrollbar-color: #ccc transparent;
+}
+
+/* Vertical unit: poster card on top, edit card stacked below (edit mode) */
+.cm-poster-unit {
+  flex: 0 0 auto;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .club-media-row::-webkit-scrollbar {
@@ -32,8 +42,8 @@
 .cm-poster-card {
   flex: 0 0 auto;
   position: relative;
-  width: 280px;
-  height: 420px;
+  width: 300px;
+  height: 450px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -150,102 +160,140 @@
   background: rgba(180, 40, 40, 0.9);
 }
 
+/* Edit card sits BELOW the poster. All text is Barlow Condensed. */
 .cm-poster-edit {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 10px 12px 12px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.55));
-}
-
-.cm-edit-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.cm-edit-color {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: #fff;
-  font-family: 'Barlow', sans-serif;
-  font-size: 0.75rem;
-}
-
-.cm-edit-color input[type="color"] {
-  width: 28px;
-  height: 24px;
-  padding: 0;
-  border: none;
-  border-radius: 6px;
-  background: none;
-  cursor: pointer;
-}
-
-.cm-edit-aspect {
-  margin-left: auto;
-  padding: 4px 6px;
-  font-size: 0.8rem;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-}
-
-.cm-edit-aspect option {
-  color: #000;
-}
-
-.cm-edit-text {
-  width: 100%;
+  width: 300px;
   box-sizing: border-box;
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  font-family: 'Barlow', sans-serif;
-  font-size: 0.9rem;
-  outline: none;
-}
-
-.cm-edit-text::placeholder {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.cm-edit-upload {
-  align-self: flex-start;
-  cursor: pointer;
-  font-size: 0.8rem;
-  color: #fff;
-  text-decoration: underline;
-  font-family: 'Barlow', sans-serif;
+  background: #ffffff;
+  border: 1px solid #afafaf;
+  border-radius: 18px;
+  padding: 12px;
+  color: #555;
+  font-family: 'Barlow Condensed', sans-serif;
 }
 
 .cm-edit-hint {
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.55);
-  font-family: 'Barlow', sans-serif;
+  text-align: center;
+  color: #b0b0b0;
+  font-size: 14px;
+  animation: cmHintBlink 2.4s infinite ease-in-out;
+}
+
+@keyframes cmHintBlink {
+  0%, 40% { color: #b0b0b0; }
+  50% { color: #000; }
+  60%, 100% { color: #b0b0b0; }
+}
+
+.cm-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-top: 16px;
+}
+
+.cm-row-left {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.cm-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.cm-color {
+  width: 45px;
+  height: 38px;
+  border: 1px solid #111;
+  border-radius: 12px;
+  background: #fff;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.cm-label {
+  margin-top: 5px;
+  font-weight: 550;
+  color: #444;
+  text-align: left;
+  width: 100%;
+}
+
+.cm-order,
+.cm-aspect {
+  height: 30px;
+  border: 1.3px solid #111;
+  border-radius: 10px;
+  padding: 0 8px;
+  box-sizing: border-box;
+  background: #fff;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.cm-order { width: 72px; }
+.cm-aspect { width: 84px; }
+
+.cm-muted {
+  margin-top: 5px;
+  color: #999;
+  font-size: 14px;
+  text-align: left;
+  width: 100%;
+}
+
+.cm-edit-text {
+  margin-top: 20px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #111;
+  border-radius: 14px;
+  padding: 10px;
+  font-family: inherit;
+  font-size: 16px;
+  outline: none;
+}
+
+.cm-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.cm-edit-upload {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border: none;
+  border-radius: 39px;
+  padding: 10px;
+  background: #f1f1f1;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.18);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 17px;
+  color: #414141;
+  cursor: pointer;
 }
 
 /* Add-poster card */
 .cm-add-poster {
   flex: 0 0 auto;
-  width: 280px;
-  height: 420px;
+  width: 300px;
+  height: 450px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: transparent;
   border: 2px dashed #c4c4c4;
-  border-radius: 28px;
+  border-radius: 15px;
   color: #b0b0b0;
   font-size: 4rem;
   font-weight: 300;

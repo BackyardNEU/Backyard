@@ -10,16 +10,17 @@ import './ClubMediaModule.css';
  * data shape:
  *   {
  *     posters: [{
+ *       order,           // per-poster display order (distinct from the module-level order)
  *       blob_image_url, blob_aspect, poster_color, poster_text, poster_text_color,
  *       content: [ { type:'title', value } | { type:'text', value }
  *                | { type:'media', items:[{ kind:'image'|'video', url }] } ]
  *     }]
  *   }
  *
- * Edit mode (`editing` true, approved accounts only) lets editors manage posters and
- * their content; changes flow up through `onChange` into the page draft and are saved
- * by ExpandedTile. Images upload immediately via /storage/review-upload-url; videos are
- * pasted links. Blob feathering is fixed (not user-editable).
+ * Edit mode (`editing` true, approved accounts only) lets editors manage posters and their
+ * content via an edit card that sits BELOW each poster; changes flow up through `onChange`
+ * into the page draft and are saved by ExpandedTile. Images upload immediately via
+ * /storage/review-upload-url; videos are pasted links. Blob feathering is fixed.
  *
  * @param {Object} data - module data (see shape above).
  * @param {boolean} editing - page-level edit mode.
@@ -29,13 +30,43 @@ function ClubMediaModule({ data, editing, onChange }) {
   const [openIndex, setOpenIndex] = useState(null);
   const posters = data?.posters ?? [];
 
+  const orderOf = (p, i) => (typeof p.order === 'number' ? p.order : i);
+
+  // Display order without ever reordering the underlying array (keeps keys/inputs stable);
+  // each entry keeps its original array index for update/open/delete handlers.
+  const ordered = posters
+    .map((p, i) => ({ p, i, order: orderOf(p, i) }))
+    .sort((a, b) => a.order - b.order);
+
   const updatePoster = (i, patch) =>
     onChange?.({ ...data, posters: posters.map((p, idx) => (idx === i ? { ...p, ...patch } : p)) });
 
-  const addPoster = () => onChange?.({ ...data, posters: [...posters, newPoster()] });
+  // Move a poster to display position newPos0, renumbering everyone contiguously.
+  const setPosterOrder = (origIndex, newPos0) => {
+    const seq = posters
+      .map((p, i) => ({ i, order: orderOf(p, i) }))
+      .sort((a, b) => a.order - b.order)
+      .map((e) => e.i);
+    const from = seq.indexOf(origIndex);
+    if (from === -1) return;
+    seq.splice(from, 1);
+    seq.splice(newPos0, 0, origIndex);
+    const orderByIndex = {};
+    seq.forEach((idx, pos) => { orderByIndex[idx] = pos; });
+    onChange?.({ ...data, posters: posters.map((p, i) => ({ ...p, order: orderByIndex[i] })) });
+  };
 
-  const removePoster = (i) => {
-    onChange?.({ ...data, posters: posters.filter((_, idx) => idx !== i) });
+  const addPoster = () => onChange?.({ ...data, posters: [...posters, newPoster(posters.length)] });
+
+  const removePoster = (origIndex) => {
+    const remaining = posters.filter((_, i) => i !== origIndex);
+    const seq = remaining
+      .map((p, i) => ({ i, order: orderOf(p, i) }))
+      .sort((a, b) => a.order - b.order)
+      .map((e) => e.i);
+    const orderByIndex = {};
+    seq.forEach((idx, pos) => { orderByIndex[idx] = pos; });
+    onChange?.({ ...data, posters: remaining.map((p, i) => ({ ...p, order: orderByIndex[i] })) });
     setOpenIndex(null);
   };
 
@@ -49,13 +80,16 @@ function ClubMediaModule({ data, editing, onChange }) {
       <p className="divider-header">Media</p>
 
       <div className="club-media-row">
-        {posters.map((poster, i) => (
+        {ordered.map(({ p, i }, rank) => (
           <PosterCard
             key={i}
-            poster={poster}
+            poster={p}
             editing={editing}
+            rank={rank}
+            count={posters.length}
             onOpen={() => setOpenIndex(i)}
             onUpdate={(patch) => updatePoster(i, patch)}
+            onSetOrder={(newPos0) => setPosterOrder(i, newPos0)}
             onDelete={() => removePoster(i)}
           />
         ))}
@@ -77,18 +111,17 @@ function ClubMediaModule({ data, editing, onChange }) {
   );
 }
 
-/* ─────────────────────────── Poster card ─────────────────────────── */
+/* ─────────────────────────── Poster card (+ edit card below) ─────────────────────────── */
 
-function PosterCard({ poster, editing, onOpen, onUpdate, onDelete }) {
+function PosterCard({ poster, editing, rank, count, onOpen, onUpdate, onSetOrder, onDelete }) {
   const wrapRef = useRef(null);
   const copyRef = useRef(null);
   const [marquee, setMarquee] = useState(false);
   const [dur, setDur] = useState(20);
 
   // Only scroll when the text is wider than the poster. When it does, it's an infinite
-  // right-to-left ticker: the text is duplicated and the track translates -50%, so the
-  // second copy seamlessly takes the first's place. Duration scales with the text width
-  // so the speed stays constant at 20px/s.
+  // right-to-left ticker (the text is duplicated and the track translates -50%). Duration
+  // scales with the text width so the speed stays constant at 20px/s.
   useLayoutEffect(() => {
     const wrap = wrapRef.current;
     const copy = copyRef.current;
@@ -96,7 +129,7 @@ function PosterCard({ poster, editing, onOpen, onUpdate, onDelete }) {
     const textW = copy.scrollWidth;
     const over = textW > wrap.clientWidth + 1;
     setMarquee(over);
-    if (over) setDur(Math.max(6, textW / 20)); // 20 px/s
+    if (over) setDur(Math.max(6, textW / 20));
   }, [poster.poster_text, editing]);
 
   const fit = fitBlob(poster.blob_aspect || '1 / 1', CARD_BLOB_W, CARD_BLOB_H);
@@ -112,90 +145,123 @@ function PosterCard({ poster, editing, onOpen, onUpdate, onDelete }) {
   };
 
   return (
-    <div
-      className={`cm-poster-card ${editing ? 'cm-poster-card--editing' : ''}`}
-      style={{ background: poster.poster_color || '#1e2630' }}
-      onClick={onOpen}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => { if (e.key === 'Enter') onOpen(); }}
-    >
-      {editing && (
-        <button
-          className="cm-poster-delete"
-          onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          aria-label="Delete poster"
-        >
-          ×
-        </button>
-      )}
+    <div className="cm-poster-unit">
+      <div
+        className={`cm-poster-card ${editing ? 'cm-poster-card--editing' : ''}`}
+        style={{ background: poster.poster_color || '#1e2630' }}
+        onClick={onOpen}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter') onOpen(); }}
+      >
+        {editing && (
+          <button
+            className="cm-poster-delete"
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            aria-label="Delete poster"
+          >
+            ×
+          </button>
+        )}
 
-      <div className="cm-poster-stage" style={fit}>
-        {poster.blob_image_url ? (
-          <FeatheredBlob
-            image={poster.blob_image_url}
-            aspectRatio={poster.blob_aspect || '1 / 1'}
-            color={poster.poster_color || '#1e2630'}
-            feather={BLOB_FEATHER}
-            className="cm-float"
-          />
-        ) : (
-          <div className="cm-poster-empty">No image</div>
+        <div className="cm-poster-stage" style={fit}>
+          {poster.blob_image_url ? (
+            <FeatheredBlob
+              image={poster.blob_image_url}
+              aspectRatio={poster.blob_aspect || '1 / 1'}
+              color={poster.poster_color || '#1e2630'}
+              feather={BLOB_FEATHER}
+              className="cm-float"
+            />
+          ) : (
+            <div className="cm-poster-empty">No image</div>
+          )}
+        </div>
+
+        {poster.poster_text && (
+          <div className="cm-poster-text" ref={wrapRef}>
+            <div
+              className={`cm-marquee-track ${marquee ? 'cm-marquee-on' : ''}`}
+              style={{ color: poster.poster_text_color || '#fff', '--cm-dur': `${dur}s` }}
+            >
+              <span ref={copyRef} className="cm-marquee-copy">{poster.poster_text}</span>
+              {marquee && <span className="cm-marquee-copy" aria-hidden="true">{poster.poster_text}</span>}
+            </div>
+          </div>
         )}
       </div>
 
-      {!editing && poster.poster_text && (
-        <div className="cm-poster-text" ref={wrapRef}>
-          <div
-            className={`cm-marquee-track ${marquee ? 'cm-marquee-on' : ''}`}
-            style={{ color: poster.poster_text_color || '#fff', '--cm-dur': `${dur}s` }}
-          >
-            <span ref={copyRef} className="cm-marquee-copy">{poster.poster_text}</span>
-            {marquee && <span className="cm-marquee-copy" aria-hidden="true">{poster.poster_text}</span>}
-          </div>
-        </div>
-      )}
-
       {editing && (
-        <div className="cm-poster-edit" onClick={(e) => e.stopPropagation()}>
-          <div className="cm-edit-row">
-            <label className="cm-edit-color">
-              Card
-              <input
-                type="color"
-                value={poster.poster_color || '#1e2630'}
-                onChange={(e) => onUpdate({ poster_color: e.target.value })}
-              />
-            </label>
-            <label className="cm-edit-color">
-              Text
-              <input
-                type="color"
-                value={poster.poster_text_color || '#ffffff'}
-                onChange={(e) => onUpdate({ poster_text_color: e.target.value })}
-              />
-            </label>
-            <select
-              className="cm-edit-aspect"
-              value={poster.blob_aspect || '1 / 1'}
-              onChange={(e) => onUpdate({ blob_aspect: e.target.value })}
-            >
-              {ASPECTS.map((a) => (
-                <option key={a} value={a}>{a.replace(/ /g, '')}</option>
-              ))}
-            </select>
+        <div className="cm-poster-edit">
+          <div className="cm-edit-hint">click poster to edit content</div>
+
+          <div className="cm-row">
+            <div className="cm-row-left">
+              <div className="cm-stack">
+                <label className="cm-color" style={{ background: poster.poster_color || '#1e2630' }}>
+                  <input
+                    type="color"
+                    value={poster.poster_color || '#1e2630'}
+                    onChange={(e) => onUpdate({ poster_color: e.target.value })}
+                    hidden
+                  />
+                </label>
+                <div className="cm-label">Poster</div>
+              </div>
+
+              <div className="cm-stack">
+                <label className="cm-color title" style={{ background: poster.poster_text_color || '#ffffff' }}>
+                  <input
+                    type="color"
+                    value={poster.poster_text_color || '#ffffff'}
+                    onChange={(e) => onUpdate({ poster_text_color: e.target.value })}
+                    hidden
+                  />
+                </label>
+                <div className="cm-label">Title</div>
+              </div>
+            </div>
+
+            <div className="cm-stack">
+              <select
+                className="cm-order"
+                value={rank + 1}
+                onChange={(e) => onSetOrder(Number(e.target.value) - 1)}
+              >
+                {Array.from({ length: count }, (_, n) => (
+                  <option key={n} value={n + 1}>{n + 1}</option>
+                ))}
+              </select>
+              <div className="cm-muted">order</div>
+            </div>
           </div>
+
           <input
             className="cm-edit-text"
             value={poster.poster_text || ''}
             onChange={(e) => onUpdate({ poster_text: e.target.value })}
-            placeholder="poster text"
+            placeholder="Enter Poster Title"
           />
-          <label className="cm-edit-upload">
-            {poster.blob_image_url ? 'Change image' : 'Upload image'}
-            <input type="file" accept="image/*" hidden onChange={handleBlobUpload} />
-          </label>
-          <span className="cm-edit-hint">Tap image → edit content</span>
+
+          <div className="cm-bottom">
+            <label className="cm-edit-upload">
+              EDIT BLOB IMAGE
+              <input type="file" accept="image/*" hidden onChange={handleBlobUpload} />
+            </label>
+
+            <div className="cm-stack">
+              <select
+                className="cm-aspect"
+                value={poster.blob_aspect || '1 / 1'}
+                onChange={(e) => onUpdate({ blob_aspect: e.target.value })}
+              >
+                {ASPECTS.map((a) => (
+                  <option key={a} value={a}>{a.replace(/ /g, '')}</option>
+                ))}
+              </select>
+              <div className="cm-muted">aspect ratio</div>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -374,17 +440,18 @@ function MediaCarousel({ items }) {
 const BLOB_FEATHER = 4;
 const ASPECTS = ['1 / 1', '4 / 3', '3 / 4', '16 / 9', '9 / 16', '3 / 2', '2 / 3'];
 
-// Card inner area reserved for the blob (the .cm-poster-card is 280x420 with padding).
-const CARD_BLOB_W = 252;
-const CARD_BLOB_H = 392;
+// Card inner area reserved for the blob (the .cm-poster-card is 300x450 with ~14px insets).
+const CARD_BLOB_W = 272;
+const CARD_BLOB_H = 422;
 
-const newPoster = () => ({
+const newPoster = (order = 0) => ({
   blob_image_url: '',
   blob_aspect: '1 / 1',
   poster_color: '#1e2630',
   poster_text: 'New Poster',
   poster_text_color: '#ffffff',
   content: [],
+  order,
 });
 
 // Largest aspect-correct box that fits within boxW x boxH — fills the card maximally
