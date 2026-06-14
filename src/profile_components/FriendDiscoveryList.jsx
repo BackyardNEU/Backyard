@@ -1,9 +1,11 @@
 ﻿import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
 import { FaSearch, FaTimes } from 'react-icons/fa';
 import './FriendDiscoveryList.css';
 
 export const FriendDiscoveryList = ({ userId }) => {
+  const navigate = useNavigate();
   const [friends, setFriends] = useState([]);
   const [friendIds, setFriendIds] = useState([]);
   const [searchInput, setSearchInput] = useState('');
@@ -103,14 +105,20 @@ export const FriendDiscoveryList = ({ userId }) => {
       {/* Clean friend cards + Find More button */}
       <div className="friends-scroll">
         {friends.map((friend) => (
-          <div className="friend-card" key={friend.id}>
+          <button
+            type="button"
+            className="friend-card friend-card-button"
+            key={friend.id}
+            onClick={() => navigate(`/friend/${friend.id}`)}
+            aria-label={`View ${friend.username}'s profile`}
+          >
             <img
               className="friend-avatar"
               src={friend.avatar_url || '/raccoon_pfp.png'}
               alt={friend.username}
             />
             <span className="friend-card-name">{friend.username}</span>
-          </div>
+          </button>
         ))}
         <button className="find-friends-card" onClick={openModal}>
           <span className="find-friends-plus">+</span>
