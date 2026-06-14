@@ -12,6 +12,7 @@ import heartFull from '/src/assets/full_heart.png';
 import BasicInfoModule from '../club_page_components/BasicInfoModule';
 import JoinModule from '../club_page_components/JoinModule';
 import ClubMediaModule from '../club_page_components/ClubMediaModule';
+import FaqModule from '../club_page_components/FaqModule';
 import { useClubData } from '../context/useClubData';
 import { useGlobalStore } from '../lib/store';
 
@@ -45,6 +46,9 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const [pendingLogoFile, setPendingLogoFile] = useState(null);
     // favorites heart — mirrors the behavior in ClubGrid
     const [heartAnimating, setHeartAnimating] = useState(false);
+    // pending user-submitted FAQ questions (approved editors only) + ids to delete on Save
+    const [userFaqs, setUserFaqs] = useState([]);
+    const [questionDeletes, setQuestionDeletes] = useState(() => new Set());
 
     const id = club.id;
 
@@ -137,6 +141,16 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
         fetchAll();
     }, [id, animationDone, club]);
 
+    // Approved editors: load the club's pending user-submitted FAQ questions.
+    useEffect(() => {
+        if (!isApproved) return;
+        let alive = true;
+        apiFetch(`/clubs/${id}/questions`)
+            .then((qs) => { if (alive) setUserFaqs(qs || []); })
+            .catch(() => {});
+        return () => { alive = false; };
+    }, [isApproved, id]);
+
     async function handleMembership() {
         if (!user || memberLoading) return;
         setMemberLoading(true);
@@ -168,6 +182,23 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
         ));
     }, []);
 
+    // Accept a user question: append {q,a} to the faqs module draft and mark the row to delete on Save.
+    const onAcceptQuestion = useCallback((qid, answer) => {
+        const q = userFaqs.find((x) => x.id === qid);
+        if (!q) return;
+        setDraft(prev => prev.map(m =>
+            m.type === 'faqs'
+                ? { ...m, data: { ...m.data, faqs: [...(m.data?.faqs || []), { q: q.question, a: answer }] } }
+                : m
+        ));
+        setQuestionDeletes(prev => new Set(prev).add(qid));
+    }, [userFaqs]);
+
+    // Dismiss a user question: mark the row to delete on Save.
+    const onDeleteQuestion = useCallback((qid) => {
+        setQuestionDeletes(prev => new Set(prev).add(qid));
+    }, []);
+
     const handleSave = async () => {
         setIsSaving(true);
         let finalDraft = draft;
@@ -188,6 +219,18 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             });
             setPageData(saved);
             setDraft(saved?.modules ?? finalDraft);
+
+            // Commit accepted/dismissed FAQ questions: delete their rows now that the page is saved.
+            if (questionDeletes.size) {
+                await Promise.allSettled(
+                    [...questionDeletes].map((qid) =>
+                        apiFetch(`/clubs/${id}/questions/${qid}`, { method: 'DELETE' })
+                    )
+                );
+                setUserFaqs((prev) => prev.filter((q) => !questionDeletes.has(q.id)));
+                setQuestionDeletes(new Set());
+            }
+
             setIsEditing(false);
             setPendingLogoFile(null);
         } catch (err) {
@@ -201,6 +244,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const handleCancel = () => {
         setDraft(pageData?.modules ?? []);
         setPendingLogoFile(null);
+        setQuestionDeletes(new Set()); // restore optimistically-removed questions
         setIsEditing(false);
     };
 
@@ -283,6 +327,19 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                             data={module.data}
                             editing={isEditing}
                             onChange={(updatedData) => handleModuleChange('club_media', updatedData)}
+                        />
+                    );
+                    if (module.type === 'faqs') return (
+                        <FaqModule
+                            key="faqs"
+                            club={club}
+                            data={module.data}
+                            editing={isEditing}
+                            onChange={(updatedData) => handleModuleChange('faqs', updatedData)}
+                            canAsk={!!user && !isApproved}
+                            userQuestions={userFaqs.filter((q) => !questionDeletes.has(q.id))}
+                            onAcceptQuestion={onAcceptQuestion}
+                            onDeleteQuestion={onDeleteQuestion}
                         />
                     );
                 })}

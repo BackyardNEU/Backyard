@@ -1,0 +1,215 @@
+.faq-module {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: 2rem;
+}
+
+/* ── Viewer cards row ── */
+.faq-cards-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 20px;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 30px;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: #cfcfcf transparent;
+}
+
+.faq-cards-row::-webkit-scrollbar {
+  height: 8px;
+}
+
+.faq-cards-row::-webkit-scrollbar-thumb {
+  background: #cfcfcf;
+  border-radius: 999px;
+}
+
+.faq-card {
+  flex: 0 0 200px;
+  width: 200px;
+  height: 250px;
+  position: relative;
+  scroll-snap-align: start;
+}
+
+/* ── Flip card (opacity crossfade) ── */
+.faq-flip {
+  cursor: pointer;
+}
+
+.faq-flip-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: #f8f8f8;
+  border: 1.5px solid #8e8e8e;
+  border-radius: 20px;
+  padding: 20px;
+  overflow-y: auto;
+  transition: opacity 0.55s ease;
+  font-family: 'Barlow Condensed', sans-serif;
+}
+
+.faq-flip-front { opacity: 1; pointer-events: auto; }
+.faq-flip-back { opacity: 0; pointer-events: none; }
+.faq-flip.show-answer .faq-flip-front { opacity: 0; pointer-events: none; }
+.faq-flip.show-answer .faq-flip-back { opacity: 1; pointer-events: auto; }
+
+.faq-q {
+  font-size: 24px;
+  line-height: 1.15;
+  text-align: center;
+  color: #222;
+}
+
+.faq-flip-hint {
+  margin-top: auto;
+  text-align: center;
+  color: #9e9e9e;
+  font-size: 16px;
+  animation: faqHintBlink 2.4s infinite ease-in-out;
+}
+
+/* same blink as the club_media "click poster to edit content" hint */
+@keyframes faqHintBlink {
+  0%, 40% { color: #b0b0b0; }
+  50% { color: #000; }
+  60%, 100% { color: #b0b0b0; }
+}
+
+.faq-q-small {
+  margin-bottom: 14px;
+  color: #a8a8a8;
+  font-size: 15px;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.faq-a {
+  color: #222;
+  font-size: 22px;
+  line-height: 1.25;
+  text-align: center;
+}
+
+/* ── Ask card (chat bubble) ── */
+.faq-user-bubble {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 200px;
+}
+
+.faq-ask-card {
+  position: relative;
+  z-index: 2;
+  width: 200px;
+  height: 250px;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1.5px solid #8e8e8e;
+  border-radius: 20px 20px 20px 0;
+  padding: 24px;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+  font-family: 'Barlow Condensed', sans-serif;
+}
+
+.faq-ask-input {
+  width: 100%;
+  max-height: 140px;
+  border: none;
+  outline: none;
+  background: transparent;
+  resize: none;
+  overflow-y: auto;
+  font-family: inherit;
+  font-size: 28px;
+  font-weight: 300;
+  color: #333;
+}
+
+.faq-ask-input::placeholder {
+  color: #cfcfcf;
+}
+
+.faq-spacer {
+  flex: 1;
+}
+
+.faq-send {
+  align-self: center;
+  margin-top: 6px;
+  border: none;
+  background: none;
+  color: #ccc;
+  cursor: pointer;
+  font-size: 30px;
+  line-height: 1;
+  transition: color 0.3s ease;
+}
+
+.faq-send.active {
+  color: #222;
+}
+
+.faq-send.takeoff {
+  animation: faqSendTakeoff 0.8s ease-out forwards;
+}
+
+@keyframes faqSendTakeoff {
+  0%   { transform: translate(0, 0) rotate(-1deg) scale(1); opacity: 1; }
+  40%  { transform: translate(100px, -20px) rotate(-1.5deg) scale(1.1); opacity: 0.7; }
+  100% { transform: translate(200px, -50px) rotate(-2deg) scale(0.9); opacity: 0; }
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.faq-sent {
+  margin: auto;
+  font-size: 28px;
+  color: #888;
+}
+
+/* triangle tail (lives in the bubble's vertical flex) */
+.faq-triangle {
+  position: absolute;
+  left: -0.6px;
+  bottom: -24px;
+  z-index: 1;
+  width: 30px;
+  height: 26px;
+  transform: rotate(180deg);
+  transform-origin: center;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.faq-triangle-stroke {
+  width: 100%;
+  height: 100%;
+  background: #777;
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+}
+
+.faq-triangle-fill {
+  width: 90%;
+  height: 85%;
+  background: #fff;
+  clip-path: polygon(50% 8%, 8% 100%, 92% 100%);
+  margin-bottom: 2px;
+}
