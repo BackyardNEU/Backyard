@@ -105,7 +105,7 @@ function JoinModule({ data, editing, onChange }) {
                 key={i}
                 role="tab"
                 aria-selected={i === activeIndex}
-                className={`join-tab ${i === activeIndex ? 'active' : ''}`}
+                className={`mr-cat-tab ${i === activeIndex ? 'active' : ''}`}
                 onClick={() => setActive(i)}
               >
                 {t.title || 'Untitled'}

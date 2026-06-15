@@ -54,6 +54,7 @@
   cursor: pointer;
   font-family: inherit;
   border: 1px solid grey;
+
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 

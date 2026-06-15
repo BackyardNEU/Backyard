@@ -13,6 +13,7 @@ import BasicInfoModule from '../club_page_components/BasicInfoModule';
 import JoinModule from '../club_page_components/JoinModule';
 import ClubMediaModule from '../club_page_components/ClubMediaModule';
 import FaqModule from '../club_page_components/FaqModule';
+import MemberRosterModule from '../club_page_components/MemberRosterModule';
 import { useClubData } from '../context/useClubData';
 import { useGlobalStore } from '../lib/store';
 
@@ -340,6 +341,15 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                             userQuestions={userFaqs.filter((q) => !questionDeletes.has(q.id))}
                             onAcceptQuestion={onAcceptQuestion}
                             onDeleteQuestion={onDeleteQuestion}
+                        />
+                    );
+                    if (module.type === 'member_roster') return (
+                        <MemberRosterModule
+                            key="member_roster"
+                            club={club}
+                            data={module.data}
+                            editing={isEditing}
+                            onChange={(updatedData) => handleModuleChange('member_roster', updatedData)}
                         />
                     );
                 })}

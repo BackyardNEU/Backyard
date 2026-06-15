@@ -130,7 +130,7 @@ export default function FaqTable({ faqs = [], onChange, userQuestions = [], onAc
 
       {/* count pill */}
       <div className="faq-count-pill" style={{ background: BLUE }}>
-        {unanswered} unanswered question{unanswered === 1 ? "" : "s"} in reference
+        {unanswered} unanswered question{unanswered === 1 ? "" : "s"}
       </div>
 
       <div style={{ overflowX: "auto" }}>
@@ -262,7 +262,7 @@ function AnswerCell({ ck, value, placeholder, activeKey, onSelect, accept }) {
           style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)",
             background: BLUE, color: "#fff", border: "none", borderRadius: 999, cursor: "pointer",
             padding: "6px 16px", fontSize: 14, fontWeight: 500, boxShadow: "0 2px 5px rgba(0,0,0,0.2)" }}>
-          Accept
+          Add to Faqs
         </button>
       )}
     </div>

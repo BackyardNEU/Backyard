@@ -48,7 +48,11 @@
   inset: 0;
   display: flex;
   flex-direction: column;
-  background: #f8f8f8;
+  background-image: url('/src/assets/white-paper-texture.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: brightness(1.25) contrast(1.0);
   border: 1.5px solid #8e8e8e;
   border-radius: 20px;
   padding: 20px;
