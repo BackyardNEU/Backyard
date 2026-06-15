@@ -1,4 +1,12 @@
 @import "tailwindcss";
+
+.module-warning {
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.85rem;
+  color: #c0392b;
+  margin-bottom: 8px;
+}
+
 * {
   box-sizing:border-box;
   margin: 0px;

@@ -15,7 +15,7 @@ import './BasicInfoModule.css';
  * is a change- meant to allow ExpandedTile to handle file uploads since they have to be uploaded using signed URL's since files
  * cannot be serialized into JSON.
  */
-function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange, actions }) {
+function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange, actions, warning }) {
   const [dominantColor, setDominantColor] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
   const [descOpen, setDescOpen] = useState(false);
@@ -175,6 +175,9 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
           )}
         </div>
 
+        {editing && warning && (
+          <p className="module-warning">{warning}</p>
+        )}
         {editing
           ? <textarea
               ref={descRef}

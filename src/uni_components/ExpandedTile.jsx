@@ -15,6 +15,54 @@ import StatsModule from '../club_page_components/StatsModule';
 import { useClubData } from '../context/useClubData';
 import { useGlobalStore } from '../lib/store';
 
+// --- Validation helpers ---
+function validateBasicInfo(data) {
+    if (!data?.club_name?.trim()) return 'Club name cannot be empty.';
+    if (data.club_name.trim().length > 80) return 'Club name must be 80 characters or fewer.';
+    if (!data?.description?.trim()) return 'Description cannot be empty.';
+    return null;
+}
+
+function validateJoin(data) {
+    const tabs = data?.tabs ?? [];
+    for (const tab of tabs) {
+        if (!tab.title?.trim()) return 'Each tab must have a title.';
+        if (tab.title.trim().length > 60) return 'Tab titles must be 60 characters or fewer.';
+        if (!tab.body?.trim()) return 'Each tab must have body text.';
+        if (tab.body.trim().length > 500) return 'Tab body must be 500 characters or fewer.';
+    }
+    return null;
+}
+
+function validateStats(data) {
+    const stats = data?.stats ?? [];
+    for (const s of stats) {
+        if (s.value < 0) return 'Stat values cannot be negative.';
+        if (s.value % 1 !== 0) return 'Stat value must be a whole number.';
+        if (s.type === 'quantitative') {
+            if (!s.unit1?.trim() || !s.unit2?.trim()) return 'Each quantitative stat must have a unit.';
+        }
+        if (s.type === 'qualitative') {
+            if (!s.label?.trim()) return 'Each qualitative stat must have a name.';
+            const max = s.max ?? 10;
+            if (max < 1) return 'Max must be at least 1.';
+            if (s.value > max) return 'A stat value exceeds its max.';
+            if (max % 1 !== 0) return 'Max must be a whole number.';
+        }
+    }
+    return null;
+}
+
+function getModuleWarnings(draft) {
+    const w = {};
+    for (const m of draft) {
+        if (m.type === 'basic_info') w.basic_info = validateBasicInfo(m.data);
+        if (m.type === 'join') w.join = validateJoin(m.data);
+        if (m.type === 'stats') w.stats = validateStats(m.data);
+    }
+    return w;
+}
+
 
 function ExpandedTile({ club, onClose, onMembershipChange }) {
     // determines when to begin the data requesting- animationDone triggers most data requests here
@@ -168,7 +216,11 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
         ));
     }, []);
 
+    const moduleWarnings = isEditing ? getModuleWarnings(draft) : {};
+    const isDraftValid = Object.values(moduleWarnings).every(w => w == null);
+
     const handleSave = async () => {
+        if (!isDraftValid) return;
         setIsSaving(true);
         let finalDraft = draft;
         try {
@@ -182,12 +234,12 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     m.type === 'basic_info' ? { ...m, data: { ...m.data, logo_url: publicUrl } } : m
                 );
             }
-            const saved = await apiFetch(`/clubs/${id}/page`, {
+            await apiFetch(`/clubs/${id}/page`, {
                 method: 'PUT',
                 body: { modules: finalDraft },
             });
-            setPageData(saved);
-            setDraft(saved?.modules ?? finalDraft);
+            setPageData(prev => ({ ...prev, modules: finalDraft }));
+            setDraft(finalDraft);
             setIsEditing(false);
             setPendingLogoFile(null);
         } catch (err) {
@@ -266,6 +318,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                             onChange={(updatedData) => handleModuleChange('basic_info', updatedData)}
                             onLogoChange={(file) => setPendingLogoFile(file)}
                             actions={actionRow}
+                            warning={moduleWarnings.basic_info ?? null}
                         />
                     );
                     if (module.type === 'join') return (
@@ -275,6 +328,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                             data={module.data}
                             editing={isEditing}
                             onChange={(updatedData) => handleModuleChange('join', updatedData)}
+                            warning={moduleWarnings.join ?? null}
                         />
                     );
                     if (module.type === 'stats') return (
@@ -283,6 +337,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                             data={module.data}
                             editing={isEditing}
                             onChange={(updatedData) => handleModuleChange('stats', updatedData)}
+                            warning={moduleWarnings.stats ?? null}
                         />
                     );
                 })}
@@ -291,8 +346,8 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             {isApproved && isEditing && (
                 <div className="expanded-edit-actions">
                     <button onClick={handleCancel} disabled={isSaving}>Cancel</button>
-                    <button className="save-btn" onClick={handleSave} disabled={isSaving}>
-                        {isSaving ? '`  Saving...' : 'Save'}
+                    <button className="save-btn" onClick={handleSave} disabled={isSaving || !isDraftValid}>
+                        {isSaving ? 'Saving...' : 'Save'}
                     </button>
                 </div>
             )}

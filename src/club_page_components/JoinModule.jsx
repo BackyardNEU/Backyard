@@ -15,7 +15,7 @@ import './JoinModule.css';
  * @param {boolean} editing - whether the page-level edit mode is on (only ever true for approved accounts).
  * @param {Function} onChange - callback receiving the full updated data object (preserved by parent useCallback).
  */
-function JoinModule({ data, editing, onChange }) {
+function JoinModule({ data, editing, onChange, warning }) {
   const [active, setActive] = useState(0);
 
   const tabs = data?.tabs ?? [];
@@ -42,6 +42,7 @@ function JoinModule({ data, editing, onChange }) {
       <div className="join-module join-module--editing">
         <p className="divider-header">How to Join</p>
 
+        {warning && <p className="module-warning">{warning}</p>}
         <div className="join-card-row">
           {tabs.map((t, idx) => (
             <div className="join-tab-card" key={idx}>
