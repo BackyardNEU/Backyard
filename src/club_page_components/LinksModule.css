@@ -1,0 +1,269 @@
+.links-module {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: 2rem;
+}
+
+/* ── Heading ─────────────────────────────────────────────────────────────── */
+
+.links-heading {
+  font-size: 50px;
+  margin: 0 0 1rem 0;
+  color: rgb(44, 27, 43);
+}
+
+/* ── Section label (edit mode only) ──────────────────────────────────────── */
+
+.links-section-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #999;
+  margin: 0 0 0.6rem;
+}
+
+/* ── View mode: action pill buttons ─────────────────────────────────────── */
+
+.links-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+.links-action-btn {
+  font-family: 'Barlow Condensed', sans-serif;
+  display: inline-block;
+  padding: 10px 24px;
+  font-size: 1.1rem;
+  background-color: rgb(62, 42, 9);
+  color: #fff;
+  text-decoration: none;
+  border: none;
+  border-radius: 90px;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+
+.links-action-btn:hover {
+  transform: scale(1.05);
+}
+
+/* ── View mode: social icon circles ─────────────────────────────────────── */
+
+.links-socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.links-social-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  text-decoration: none;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+  flex-shrink: 0;
+}
+
+.links-social-icon:hover {
+  transform: scale(1.1);
+  opacity: 0.9;
+}
+
+/* ── Edit mode: action card row ─────────────────────────────────────────── */
+
+.links-card-row {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 12px;
+  margin-bottom: 1.75rem;
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
+}
+
+.links-card-row::-webkit-scrollbar {
+  height: 6px;
+}
+
+.links-card-row::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.links-action-card {
+  position: relative;
+  flex: 0 0 auto;
+  width: 220px;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  background: white;
+  border-radius: 1.25rem;
+  padding: 1.5rem 1rem 1rem;
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.2),
+    0 8px 20px rgba(0, 0, 0, 0.07);
+}
+
+.links-card-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.08);
+  color: #333;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.links-card-delete:hover {
+  background: rgba(180, 40, 40, 0.85);
+  color: #fff;
+}
+
+.links-card-input {
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.95rem;
+  width: 100%;
+  box-sizing: border-box;
+  border: none;
+  outline: none;
+  padding: 0.25rem 0;
+}
+
+.links-card-input--label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: rgb(44, 27, 43);
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 0.25rem;
+}
+
+.links-card-input--label:focus {
+  border-bottom-color: #000;
+}
+
+.links-card-input--url {
+  font-size: 0.85rem;
+  color: #666;
+  border: 1px solid #e2e2e2;
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
+}
+
+.links-card-input--url:focus {
+  border-color: #999;
+}
+
+.links-add-card {
+  flex: 0 0 auto;
+  width: 220px;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 2px dashed #c4c4c4;
+  border-radius: 1.25rem;
+  color: #b0b0b0;
+  font-size: 4rem;
+  font-weight: 300;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.links-add-card:hover {
+  border-color: #777;
+  color: #555;
+}
+
+/* ── Edit mode: social URL inputs ───────────────────────────────────────── */
+
+.links-social-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 90%;
+}
+
+.links-social-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.links-social-swatch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.links-social-input-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: #555;
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.links-social-input {
+  flex: 1;
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.9rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  outline: none;
+  color: #2a2a2a;
+}
+
+.links-social-input:focus {
+  border-color: #888;
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────────────── */
+
+@media (max-width: 699px) {
+  .links-heading {
+    font-size: 2.5rem;
+  }
+
+  .links-action-card,
+  .links-add-card {
+    width: 190px;
+    min-height: 180px;
+  }
+
+  .links-social-inputs {
+    width: 100%;
+  }
+}

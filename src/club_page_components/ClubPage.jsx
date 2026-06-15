@@ -4,6 +4,7 @@ import { apiFetch } from '../lib/api';
 import { supabase } from '../lib/supabase';
 import BasicInfoModule from './BasicInfoModule';
 import JoinModule from './JoinModule';
+import LinksModule from './LinksModule';
 import './ClubPage.css';
 
 // ClubPage — module-based profile page for a club.
@@ -124,6 +125,9 @@ function ClubPage() {
             }
             if (mod.type === 'join') {
               return <JoinModule key={i} club={club} data={mod.data} editing={false} />;
+            }
+            if (mod.type === 'links') {
+              return <LinksModule key={i} data={mod.data} editing={false} onChange={() => {}} />;
             }
             // Future module types rendered here
             return null;
