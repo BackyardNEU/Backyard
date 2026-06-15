@@ -111,7 +111,7 @@ export default function FaqTable({ faqs = [], onChange, userQuestions = [], onAc
       const row = userQuestions[index];
       if (row) overlay = col === "q"
         ? { value: row.question, editable: false }
-        : { value: answers[row.id] || "", editable: true, placeholder: "enter answer here", onChange: (v) => setUserAnswer(row.id, v) };
+        : { value: answers[row.id] || "", editable: true, placeholder: "enter answer here", onChange: (v) => setUserAnswer(row.id, v), maxLength: 500 };
     } else {
       const row = faqs[index];
       const isQ = col === "q";
@@ -120,6 +120,7 @@ export default function FaqTable({ faqs = [], onChange, userQuestions = [], onAc
         editable: true,
         placeholder: isQ ? "enter a common question here" : "enter answer here",
         onChange: (v) => setFaqCell(index, isQ ? "q" : "a", v),
+        maxLength: isQ ? 200 : 500,
       };
     }
   }
@@ -305,12 +306,20 @@ function Overlay({ rect, meta, onClose }) {
       boxShadow: "0 6px 22px rgba(0,0,0,0.22)", display: "flex", alignItems: "center",
       padding: "0 16px" }}>
       {meta.editable ? (
-        <textarea ref={taRef} value={meta.value} placeholder={meta.placeholder}
-          onChange={(e) => { meta.onChange(e.target.value); resize(); }}
-          onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onClose(); } }}
-          rows={1} style={{ width: "100%", resize: "none", border: "none", outline: "none",
-            background: "transparent", fontSize: 19, color: INK, lineHeight: 1.3,
-            fontFamily: "inherit", padding: "9px 0", overflow: "hidden" }} />
+        <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
+          <textarea ref={taRef} value={meta.value} placeholder={meta.placeholder}
+            maxLength={meta.maxLength}
+            onChange={(e) => { meta.onChange(e.target.value); resize(); }}
+            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onClose(); } }}
+            rows={1} style={{ width: "100%", resize: "none", border: "none", outline: "none",
+              background: "transparent", fontSize: 19, color: INK, lineHeight: 1.3,
+              fontFamily: "inherit", padding: "9px 0", overflow: "hidden" }} />
+          {meta.maxLength && (
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <span style={{ fontSize: "0.72rem", color: "#aaa" }}>{meta.value.length}/{meta.maxLength}</span>
+            </div>
+          )}
+        </div>
       ) : (
         <div style={{ fontSize: 19, color: INK, lineHeight: 1.35, padding: "10px 0",
           whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{meta.value}</div>

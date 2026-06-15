@@ -156,6 +156,7 @@ function MemberCard({ member, categories, onRemove, onCategory, onName, onPhoto,
           className="mr-name"
           type="text"
           placeholder="Enter Member Name"
+          maxLength={50}
           value={member.name || ''}
           onChange={(e) => onName(e.target.value)}
         />
@@ -176,6 +177,7 @@ function RichTextEditor({ value, onChange, placeholder }) {
   const ref = useRef(null);
   const [empty, setEmpty] = useState(() => isEmptyHtml(value));
   const [active, setActive] = useState({});
+  const [charCount, setCharCount] = useState(() => (value || '').replace(/<[^>]*>/g, '').length);
 
   useEffect(() => {
     if (ref.current) ref.current.innerHTML = value || '';
@@ -194,6 +196,7 @@ function RichTextEditor({ value, onChange, placeholder }) {
 
   const handleInput = () => {
     setEmpty(isEmptyHtml(ref.current?.innerHTML));
+    setCharCount(ref.current?.textContent?.length ?? 0);
     onChange(ref.current?.innerHTML || '');
   };
 
@@ -218,6 +221,9 @@ function RichTextEditor({ value, onChange, placeholder }) {
         onMouseUp={refreshActive}
         onFocus={refreshActive}
       />
+      <div className="char-counter-wrap">
+        <span className="char-counter">{charCount}/500</span>
+      </div>
       <div className="mr-toolbar">
         <button type="button" className={`b ${active.bold ? 'active' : ''}`} onMouseDown={exec('bold')} title="Bold">B</button>
         <button type="button" className={`i ${active.italic ? 'active' : ''}`} onMouseDown={exec('italic')} title="Italic">I</button>

@@ -56,12 +56,53 @@ function validateStats(data) {
     return null;
 }
 
+function validateFaq(data) {
+    const faqs = data?.faqs ?? [];
+    for (const f of faqs) {
+        if (!f.q?.trim()) return 'Each FAQ must have a question.';
+        if (f.q.trim().length > 200) return 'FAQ questions must be 200 characters or fewer.';
+        if (f.a && f.a.length > 500) return 'FAQ answers must be 500 characters or fewer.';
+    }
+    return null;
+}
+
+function validateMemberRoster(data) {
+    const categories = data?.categories ?? [];
+    const members = data?.members ?? [];
+    for (const c of categories) {
+        if (!c?.trim()) return 'Category names cannot be empty.';
+        if (c.trim().length > 25) return 'Category names must be 25 characters or fewer.';
+    }
+    for (const m of members) {
+        if (!m.name?.trim()) return 'Each member must have a name.';
+        if (m.name.trim().length > 50) return 'Member names must be 50 characters or fewer.';
+        const bioText = (m.bio || '').replace(/<[^>]*>/g, '');
+        if (bioText.length > 500) return 'Member bios must be 500 characters or fewer.';
+    }
+    return null;
+}
+
+function validateClubMedia(data) {
+    const posters = data?.posters ?? [];
+    for (const p of posters) {
+        if (p.poster_text && p.poster_text.length > 100) return 'Poster titles must be 100 characters or fewer.';
+        for (const block of (p.content ?? [])) {
+            if (block.type === 'title' && block.value && block.value.length > 100) return 'Content headings must be 100 characters or fewer.';
+            if (block.type === 'text' && block.value && block.value.length > 500) return 'Content text must be 500 characters or fewer.';
+        }
+    }
+    return null;
+}
+
 function getModuleWarnings(draft) {
     const w = {};
     for (const m of draft) {
         if (m.type === 'basic_info') w.basic_info = validateBasicInfo(m.data);
         if (m.type === 'join') w.join = validateJoin(m.data);
         if (m.type === 'stats') w.stats = validateStats(m.data);
+        if (m.type === 'faqs') w.faqs = validateFaq(m.data);
+        if (m.type === 'member_roster') w.member_roster = validateMemberRoster(m.data);
+        if (m.type === 'club_media') w.club_media = validateClubMedia(m.data);
     }
     return w;
 }
@@ -401,6 +442,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                             data={module.data}
                             editing={isEditing}
                             onChange={(updatedData) => handleModuleChange('faqs', updatedData)}
+                            warning={moduleWarnings.faqs ?? null}
                             canAsk={!!user && !isApproved}
                             userQuestions={userFaqs.filter((q) => !questionDeletes.has(q.id))}
                             onAcceptQuestion={onAcceptQuestion}
@@ -414,6 +456,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                             data={module.data}
                             editing={isEditing}
                             onChange={(updatedData) => handleModuleChange('member_roster', updatedData)}
+                            warning={moduleWarnings.member_roster ?? null}
                         />
                     );
                 })}

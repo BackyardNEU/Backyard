@@ -28,6 +28,7 @@ function FaqModule({
   data,
   editing,
   onChange,
+  warning,
   canAsk = false,
   userQuestions = [],
   onAcceptQuestion,
@@ -38,6 +39,7 @@ function FaqModule({
   return (
     <div className="faq-module">
       <p className="divider-header">FAQs</p>
+      {editing && warning && <p className="module-warning">{warning}</p>}
 
       <FaqCards clubId={club?.id} faqs={faqs} canAsk={canAsk && !editing} />
 

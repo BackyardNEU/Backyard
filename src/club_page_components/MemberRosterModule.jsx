@@ -18,7 +18,7 @@ import './MemberRoster.css';
  * @param {boolean}  editing
  * @param {Function} onChange - (updatedData) => void
  */
-function MemberRosterModule({ data, editing, onChange }) {
+function MemberRosterModule({ data, editing, onChange, warning }) {
   const categories = data?.categories ?? [];
   const members = data?.members ?? [];
 
@@ -28,6 +28,7 @@ function MemberRosterModule({ data, editing, onChange }) {
   return (
     <div className="mr-module">
       <p className="divider-header">Members</p>
+      {editing && warning && <p className="module-warning">{warning}</p>}
 
       <ClubMemberScroll categories={categories} members={members} />
 

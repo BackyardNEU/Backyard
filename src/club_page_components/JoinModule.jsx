@@ -59,12 +59,18 @@ function JoinModule({ data, editing, onChange, warning }) {
                 onChange={(e) => updateTab(idx, 'title', e.target.value)}
                 placeholder="edit tab title ex: we're looking for"
               />
-              <textarea
-                className="join-card-body"
-                value={t.body || ''}
-                onChange={(e) => updateTab(idx, 'body', e.target.value)}
-                placeholder="ex: edit available positions"
-              />
+              <div>
+                <textarea
+                  className="join-card-body"
+                  value={t.body || ''}
+                  onChange={(e) => updateTab(idx, 'body', e.target.value)}
+                  placeholder="ex: edit available positions"
+                  maxLength={500}
+                />
+                <div className="char-counter-wrap">
+                  <span className="char-counter">{(t.body || '').length}/500</span>
+                </div>
+              </div>
             </div>
           ))}
 

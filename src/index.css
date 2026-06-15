@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+.char-counter-wrap {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.char-counter {
+  font-size: 0.72rem;
+  color: #aaa;
+}
+
 .module-warning {
   font-family: 'Barlow', sans-serif;
   font-size: 0.85rem;

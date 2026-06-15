@@ -26,7 +26,7 @@ import './ClubMediaModule.css';
  * @param {boolean} editing - page-level edit mode.
  * @param {Function} onChange - receives the full updated data object.
  */
-function ClubMediaModule({ data, editing, onChange }) {
+function ClubMediaModule({ data, editing, onChange, warning }) {
   const [openIndex, setOpenIndex] = useState(null);
   const posters = data?.posters ?? [];
 
@@ -78,6 +78,7 @@ function ClubMediaModule({ data, editing, onChange }) {
   return (
     <div className="club-media-module">
       <p className="divider-header">Media</p>
+      {editing && warning && <p className="module-warning">{warning}</p>}
 
       <div className="club-media-row">
         {ordered.map(({ p, i }, rank) => (
@@ -236,12 +237,18 @@ function PosterCard({ poster, editing, rank, count, onOpen, onUpdate, onSetOrder
             </div>
           </div>
 
-          <input
-            className="cm-edit-text"
-            value={poster.poster_text || ''}
-            onChange={(e) => onUpdate({ poster_text: e.target.value })}
-            placeholder="Enter Poster Title"
-          />
+          <div>
+            <input
+              className="cm-edit-text"
+              value={poster.poster_text || ''}
+              onChange={(e) => onUpdate({ poster_text: e.target.value })}
+              placeholder="Enter Poster Title"
+              maxLength={100}
+            />
+            <div className="char-counter-wrap">
+              <span className="char-counter">{(poster.poster_text || '').length}/100</span>
+            </div>
+          </div>
 
           <div className="cm-bottom">
             <label className="cm-edit-upload">
@@ -376,20 +383,32 @@ function BlockEditor({ block, onChange, onRemove }) {
     <div className="cm-block-edit">
       <button className="cm-block-remove" onClick={onRemove} aria-label="Remove block">×</button>
       {block.type === 'title' && (
-        <input
-          className="cm-block-title-input"
-          value={block.value || ''}
-          onChange={(e) => onChange({ value: e.target.value })}
-          placeholder="Title"
-        />
+        <div>
+          <input
+            className="cm-block-title-input"
+            value={block.value || ''}
+            onChange={(e) => onChange({ value: e.target.value })}
+            placeholder="Title"
+            maxLength={100}
+          />
+          <div className="char-counter-wrap">
+            <span className="char-counter">{(block.value || '').length}/100</span>
+          </div>
+        </div>
       )}
       {block.type === 'text' && (
-        <textarea
-          className="cm-block-text-input"
-          value={block.value || ''}
-          onChange={(e) => onChange({ value: e.target.value })}
-          placeholder="Text"
-        />
+        <div>
+          <textarea
+            className="cm-block-text-input"
+            value={block.value || ''}
+            onChange={(e) => onChange({ value: e.target.value })}
+            placeholder="Text"
+            maxLength={500}
+          />
+          <div className="char-counter-wrap">
+            <span className="char-counter">{(block.value || '').length}/500</span>
+          </div>
+        </div>
       )}
       {block.type === 'media' && <MediaCarousel items={block.items} />}
     </div>
