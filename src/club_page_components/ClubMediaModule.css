@@ -1,0 +1,618 @@
+.club-media-module {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: 2rem;
+}
+
+/* ── Horizontal poster row (modelled on .join-card-row) ── */
+.club-media-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
+}
+
+/* Vertical unit: poster card on top, edit card stacked below (edit mode) */
+.cm-poster-unit {
+  flex: 0 0 auto;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.club-media-row::-webkit-scrollbar {
+  height: 6px;
+}
+
+.club-media-row::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+/* ── Poster card ── */
+.cm-poster-card {
+  flex: 0 0 auto;
+  position: relative;
+  width: 300px;
+  height: 450px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 15px;
+  overflow: hidden;
+  cursor: pointer;
+  font-family: inherit;
+  border: 1px solid grey;
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+
+
+.cm-poster-card--editing {
+  cursor: default;
+}
+
+/* Stage is sized inline (contain-fit) by the JS; the blob fills it */
+.cm-poster-stage {
+  position: relative;
+  z-index: 1;
+}
+
+.cm-poster-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.95rem;
+}
+
+/* Poster text: infinite right-to-left ticker, raised off the bottom */
+.cm-poster-text {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 30px;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Static (fits the card): single copy, right-aligned. */
+.cm-marquee-track {
+  display: flex;
+  width: 100%;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+/* Overflowing: content-width track that scrolls. */
+.cm-marquee-track.cm-marquee-on {
+  width: max-content;
+  justify-content: flex-start;
+  will-change: transform;
+  animation: cm-marquee var(--cm-dur, 20s) linear infinite;
+}
+
+.cm-marquee-copy {
+  font-family: "Bebas Neue", sans-serif;
+  font-weight: 600;
+  font-size: 2.4rem;
+  line-height: 1;
+  letter-spacing: 0.5px;
+ 
+}
+
+/* Trailing gap between repeats — only in marquee mode, so it's part of the -50% loop
+   and doesn't push the static text off the right edge. */
+.cm-marquee-on .cm-marquee-copy {
+  padding-right: 2rem;
+}
+
+@keyframes cm-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); } /* second copy lands exactly where the first began */
+}
+
+@keyframes cm-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.cm-float {
+  animation: cm-float 7s ease-in-out infinite;
+}
+
+/* ── Poster edit controls (overlay at the bottom of the card) ── */
+.cm-poster-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 4;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.cm-poster-delete:hover {
+  background: rgba(180, 40, 40, 0.9);
+}
+
+/* Edit card sits BELOW the poster. All text is Barlow Condensed. */
+.cm-poster-edit {
+  width: 300px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid #afafaf;
+  border-radius: 18px;
+  padding: 12px;
+  color: #555;
+  font-family: 'Barlow Condensed', sans-serif;
+}
+
+.cm-edit-hint {
+  text-align: center;
+  color: #b0b0b0;
+  font-size: 14px;
+  animation: cmHintBlink 2.4s infinite ease-in-out;
+}
+
+@keyframes cmHintBlink {
+  0%, 40% { color: #b0b0b0; }
+  50% { color: #000; }
+  60%, 100% { color: #b0b0b0; }
+}
+
+.cm-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-top: 16px;
+}
+
+.cm-row-left {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.cm-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.cm-color {
+  width: 45px;
+  height: 38px;
+  border: 1px solid #111;
+  border-radius: 12px;
+  background: #fff;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.cm-label {
+  margin-top: 5px;
+  font-weight: 550;
+  color: #444;
+  text-align: left;
+  width: 100%;
+}
+
+.cm-order,
+.cm-aspect {
+  height: 30px;
+  border: 1.3px solid #111;
+  border-radius: 10px;
+  padding: 0 8px;
+  box-sizing: border-box;
+  background: #fff;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.cm-order { width: 72px; }
+.cm-aspect { width: 84px; }
+
+.cm-muted {
+  margin-top: 5px;
+  color: #999;
+  font-size: 14px;
+  text-align: left;
+  width: 100%;
+}
+
+.cm-edit-text {
+  margin-top: 20px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #111;
+  border-radius: 14px;
+  padding: 10px;
+  font-family: inherit;
+  font-size: 16px;
+  outline: none;
+}
+
+.cm-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.cm-edit-upload {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border: none;
+  border-radius: 39px;
+  padding: 10px;
+  background: #f1f1f1;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.18);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 17px;
+  color: #414141;
+  cursor: pointer;
+}
+
+/* Add-poster card */
+.cm-add-poster {
+  flex: 0 0 auto;
+  width: 300px;
+  height: 450px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 2px dashed #c4c4c4;
+  border-radius: 15px;
+  color: #b0b0b0;
+  font-size: 4rem;
+  font-weight: 300;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.cm-add-poster:hover {
+  border-color: #777;
+  color: #555;
+}
+
+/* ── Expanded portrait modal ── */
+.cm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 9500;
+}
+
+.cm-modal {
+  position: relative;
+  height: 96vh;
+  width: calc(96vh * 0.62);
+  max-width: 92vw;
+  background: #fff;
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.cm-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.cm-modal-close:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* No image — just the poster text centered along the top */
+.cm-modal-header {
+  flex-shrink: 0;
+  padding: 22px 44px 8px;
+  text-align: center;
+}
+
+.cm-modal-title {
+  font-family: "Bebas Neue", sans-serif;
+  font-weight: 400;
+  font-size: 2.8rem;
+  line-height: 1.05;
+  letter-spacing: 0.5px;
+}
+
+.cm-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.cm-modal-empty {
+  color: #999;
+  font-style: italic;
+  font-family: 'Barlow', sans-serif;
+}
+
+/* ── Content blocks (view) ── */
+.cm-block-title {
+  margin: 0;
+  font-family: "Bebas Neue", sans-serif;
+  font-weight: 400;
+  font-size: 3rem;
+  letter-spacing: 0.3px;
+  color: rgb(44, 27, 43);
+}
+
+.cm-block-text {
+  margin: 0;
+  font-family: 'Barlow', sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: rgb(66, 66, 66);
+  white-space: pre-wrap;
+}
+
+/* ── Content blocks (edit) ── */
+.cm-block-adder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cm-add-btn {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px dashed #bbb;
+  background: #fafafa;
+  color: #444;
+  cursor: pointer;
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.95rem;
+}
+
+.cm-add-btn:hover {
+  border-color: #777;
+  color: #000;
+}
+
+.cm-add-menu {
+  background: #f3f3f3;
+  border-radius: 12px;
+  padding: 8px;
+}
+
+.cm-add-menu > button,
+.cm-add-upload {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.cm-add-menu > button:hover,
+.cm-add-upload:hover {
+  border-color: #888;
+}
+
+.cm-add-video {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cm-add-video input {
+  min-width: 180px;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.cm-add-cancel {
+  margin-left: auto;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #888;
+  font-size: 1rem;
+}
+
+.cm-block-edit {
+  position: relative;
+  border: 1px solid #e2e2e2;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.cm-block-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.08);
+  color: #333;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.cm-block-remove:hover {
+  background: rgba(180, 40, 40, 0.85);
+  color: #fff;
+}
+
+.cm-block-title-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px 0;
+  border: none;
+  border-bottom: 1px solid #ddd;
+  outline: none;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 2rem;
+  color: rgb(44, 27, 43);
+}
+
+.cm-block-title-input:focus {
+  border-bottom-color: #000;
+}
+
+.cm-block-text-input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 4em;
+  padding: 8px;
+  border: 1px solid #e2e2e2;
+  border-radius: 8px;
+  outline: none;
+  resize: vertical;
+  font-family: 'Barlow', sans-serif;
+  font-size: 1rem;
+  color: rgb(66, 66, 66);
+}
+
+.cm-block-text-input:focus {
+  border-color: #000;
+}
+
+/* ── Swipeable media carousel (scroll-snap; no nav buttons) ── */
+.cm-carousel {
+  position: relative;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+}
+
+.cm-carousel-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.cm-carousel-track::-webkit-scrollbar {
+  display: none;
+}
+
+.cm-carousel-slide {
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+
+.cm-media-img,
+.cm-media-video,
+.cm-media-frame {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  border: 0;
+}
+
+.cm-carousel-dots {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.cm-carousel-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.cm-carousel-dot.is-active {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+/* ── Mobile: modal fills the screen ── */
+@media (max-width: 699px) {
+  .cm-modal {
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    border-radius: 0;
+  }
+
+  .cm-modal-overlay {
+    padding: 0;
+  }
+}
