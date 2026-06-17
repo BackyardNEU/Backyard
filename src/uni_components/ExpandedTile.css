@@ -37,9 +37,16 @@
 
 /* Keep modules centered the way .expanded-card did before they were wrapped */
 .club-modules {
+  /* Shared left inset for every module + the hero. Mobile: 0.4rem. Web (>500px): 0,
+     so all content starts where the full-bleed rectangle banner starts. */
+  --mod-pad: 0.4rem;
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+@media (min-width: 501px) {
+  .club-modules { --mod-pad: 0; }
 }
 
 /* Action row inside basic_info (between the banner and About) — centered,

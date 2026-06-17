@@ -1,5 +1,7 @@
 .club-media-module {
   width: 100%;
+  box-sizing: border-box;
+  padding-left: var(--mod-pad, 0.4rem);   /* mobile 0.4rem, web 0 (rectangle's left) */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -124,8 +126,8 @@
 }
 
 @keyframes cm-marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); } /* second copy lands exactly where the first began */
+  0%, 10% { transform: translateX(0); }  /* brief pause so the start is readable */
+  100% { transform: translateX(-50%); } /* second copy lands exactly where the first began */
 }
 
 @keyframes cm-float {

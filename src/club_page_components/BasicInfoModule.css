@@ -61,7 +61,7 @@
   font-weight: 400;
   font-style: normal;
   letter-spacing: 0px;
-  font-size: max(90px,4.5vw);
+  font-size: var(--name-size, 4rem);   /* --name-size is set per breakpoint on .content-col */
   white-space: nowrap;       /* one line; overflow handled by the marquee */
   z-index: 8200;
 }
@@ -85,8 +85,8 @@
   padding-right: 3rem; /* gap between the repeated copies (part of the -50% loop) */
 }
 @keyframes nameMarquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  0%, 10% { transform: translateX(0); }   /* brief pause so the start is readable */
+  100% { transform: translateX(-50%); }
 }
 
 .club-tag1 {
@@ -95,7 +95,7 @@
   font-weight: 400;
   align-self: flex-start;   /* left edge — lines up with the start of club-name-exp */
   text-align: left;
-  font-size: 2.4rem;
+  font-size: calc(var(--name-size, 4rem) / 2);   /* always exactly half the club name */
   z-index: 8200;
   margin: 0;
   letter-spacing: -1.2px;
@@ -256,8 +256,9 @@
 /* Mobile */
 @media (max-width: 500px) {
   .content-col {
+    --name-size: clamp(45px, calc(22.5px + 7.5vw), 60px);  /* 45px @300 → 60px @500 */
     width: 100%;
-    padding: 0.4rem;
+    padding: 0.4rem 0.4rem;
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -266,13 +267,12 @@
   .text-flex {
     width: 100%;
     box-sizing: border-box;
-    margin-top: 10px;
-    margin-bottom: 1px;          /* little gap between the name and the rectangle */
+    margin-top: 43px;            /* top room so the × close button has space */
+    margin-bottom: 1px;          /* ⬅ ADJUST name↔tag gap (mobile, part 1/2: space below the name) */
     padding-left: 0.5rem;          /* shared inset → name + tag start at the same x */
   }
 
   .club-name-exp {
-    font-size: 3.5rem;
     line-height: 95%;
     margin: 0;
   }
@@ -289,7 +289,7 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
-    padding: 14px 1rem 20px;
+    padding: 5px 1rem 20px;     /* ⬅ ADJUST name↔tag gap (mobile, part 2/2: top value = space above the tag) */
     background-color: var(--dominant-color);
     z-index: 8000;
     border-radius: 15px;
@@ -313,7 +313,6 @@
 
   .club-tag1--block { display: block; }
   .club-tag1 {
-    font-size: 1.6rem;
     max-width: 100%;
     white-space: nowrap;
     overflow: hidden;
@@ -337,16 +336,19 @@
 /* Desktop */
 @media (min-width: 501px) {
   .content-col {
+    --name-size: clamp(50px, calc(40px + 2vw), 90px);  /* 50px @501 → ~90px @2500 */
     display: flex;
     flex-direction: row-reverse;
     align-items: center;
     justify-content: left;
     width: 100%;
-    margin-top: 5vh;
+    margin-top: 9vh;            /* top room so the × close button has space */
     gap: 3vw;
     position: relative;
     margin-right: -5%;
     margin-bottom: 50px;
+    padding-left: var(--mod-pad, 0.4rem);   /* web: 0 → hero starts where the rectangle starts */
+    box-sizing: border-box;
   }
 
   .image-stack {
@@ -420,15 +422,18 @@
   }
 
   .club-name-exp {
-    font-size: clamp(4rem, 5vw, 5.9rem);
     margin: 0;
     line-height: 1.1;
   }
 
   .club-tag1--inline { display: block; }
   .club-tag1 {
-    font-size: 1.75rem;
-    margin-top: 0.25rem;   /* small gap under the name */
+    /* half the name (calc in base); one row, overflow handled with … */
+    margin-top: 0.25rem;   /* ⬅ ADJUST web name↔tag vertical gap here */
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
 
@@ -451,6 +456,8 @@
 /* ── About section: left-aligned, in line with stats/join ── */
 .about-section {
   width: 100%;
+  box-sizing: border-box;
+  padding-left: var(--mod-pad, 0.4rem);   /* mobile 0.4rem, web 0 (rectangle's left) */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
