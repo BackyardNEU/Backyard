@@ -127,14 +127,14 @@
 .join-tab-card {
   position: relative;
   flex: 0 0 auto;
-  width: 240px;
+  width: 300px;
   min-height: 340px;
   display: flex;
   flex-direction: column;
   background: white;
   border-radius: 1.25rem;
   padding: 1.5rem 1rem 1rem;
-  border: 1px solid #c9c9c9;
+  border: 1.6px solid #4F83B4;
 }
 
 .join-card-title {

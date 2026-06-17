@@ -61,7 +61,7 @@ function JoinModule({ data, editing, onChange, warning }) {
               />
               <div>
                 <textarea
-                  className="join-card-body"
+                  className="mr-bio"
                   value={t.body || ''}
                   onChange={(e) => updateTab(idx, 'body', e.target.value)}
                   placeholder="ex: edit available positions"

@@ -13,7 +13,10 @@
 .module-warning {
   font-family: 'Barlow', sans-serif;
   font-size: 0.85rem;
-  color: #c0392b;
+  color: #ffffff;
+  background: rgb(191, 59, 2);
+  border-radius: 50px;
+  padding: 10px 20px;
   margin-bottom: 8px;
 }
 

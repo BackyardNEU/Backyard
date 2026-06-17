@@ -98,7 +98,7 @@
   font-size: calc(var(--name-size, 4rem) / 2);   /* always exactly half the club name */
   z-index: 8200;
   margin: 0;
-  letter-spacing: -1.2px;
+  letter-spacing: -1px;
   color: grey;
 }
 
@@ -114,7 +114,7 @@
   gap: 0.5rem;
   flex-wrap: wrap;
   justify-content: center;
-  margin-bottom: 10px;
+  
 }
 
 .tag {
@@ -172,9 +172,11 @@
   font-size: 4rem;
   width: 100%;
   box-sizing: border-box;
-  border-radius: 15px;
-  box-shadow: 0 0 0 2px rgb(142, 142, 142);
-  background: white;
+  border-radius: 10px;
+
+  box-shadow: 0 0 0 2px rgb(255, 255, 255);
+  color: white;
+  background: #4F83B4;
 }
 
 
@@ -196,8 +198,10 @@
   overflow: hidden;
   min-height: 3em;
   flex-shrink: 0;
-  border-color: rgb(129, 129, 129);
-  background-color: white;
+  border: 2px solid #ffffff;
+  background-color: #4F83B4;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.18);
+  color: white;
 }
 
 
@@ -212,7 +216,7 @@
   font-weight: 700;
   padding: 0.3rem 0.7rem;
   border-radius: 6px;
-  background: rgba(0, 0, 0, 0.65);
+  background: rgba(77, 157, 218, 0.65);
 
 }
 
@@ -258,7 +262,7 @@
   .content-col {
     --name-size: clamp(45px, calc(22.5px + 7.5vw), 60px);  /* 45px @300 → 60px @500 */
     width: 100%;
-    padding: 0.4rem 0.4rem;
+    padding: 0.3rem 0.15rem;
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -269,7 +273,7 @@
     box-sizing: border-box;
     margin-top: 43px;            /* top room so the × close button has space */
     margin-bottom: 1px;          /* ⬅ ADJUST name↔tag gap (mobile, part 1/2: space below the name) */
-    padding-left: 0.5rem;          /* shared inset → name + tag start at the same x */
+    padding-left: 1rem;          /* shared inset → name + tag start at the same x */
   }
 
   .club-name-exp {
@@ -289,7 +293,7 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
-    padding: 5px 1rem 20px;     /* ⬅ ADJUST name↔tag gap (mobile, part 2/2: top value = space above the tag) */
+    padding: 1px 1rem 20px;     /* ⬅ ADJUST name↔tag gap (mobile, part 2/2: top value = space above the tag) */
     background-color: var(--dominant-color);
     z-index: 8000;
     border-radius: 15px;
@@ -429,7 +433,7 @@
   .club-tag1--inline { display: block; }
   .club-tag1 {
     /* half the name (calc in base); one row, overflow handled with … */
-    margin-top: 0.25rem;   /* ⬅ ADJUST web name↔tag vertical gap here */
+    margin-top: 0.01rem;   /* ⬅ ADJUST web name↔tag vertical gap here */
     max-width: 100%;
     white-space: nowrap;
     overflow: hidden;

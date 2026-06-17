@@ -167,12 +167,14 @@
 .cm-poster-edit {
   width: 300px;
   box-sizing: border-box;
-  background: #ffffff;
-  border: 1px solid #afafaf;
-  border-radius: 18px;
+  background: #4F83B4;
+  
+  border: 2px solid #ffffff;
+  border-radius: 15px;
   padding: 12px;
   color: #555;
   font-family: 'Barlow Condensed', sans-serif;
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
 }
 
 .cm-edit-hint {
@@ -183,10 +185,12 @@
 }
 
 @keyframes cmHintBlink {
-  0%, 40% { color: #b0b0b0; }
-  50% { color: #000; }
-  60%, 100% { color: #b0b0b0; }
+  0%, 40% { color: #ffffff; }
+  50% { color: #112b43; }
+  60%, 100% { color: #ffffff; }
 }
+
+
 
 .cm-row {
   display: flex;
@@ -210,7 +214,7 @@
 .cm-color {
   width: 45px;
   height: 38px;
-  border: 1px solid #111;
+  border: 2px solid #ffffff;
   border-radius: 12px;
   background: #fff;
   box-sizing: border-box;
@@ -220,7 +224,7 @@
 .cm-label {
   margin-top: 5px;
   font-weight: 550;
-  color: #444;
+  color: #ffffff;
   text-align: left;
   width: 100%;
 }
@@ -228,11 +232,12 @@
 .cm-order,
 .cm-aspect {
   height: 30px;
-  border: 1.3px solid #111;
+  border: 2px solid #ffffff;
+  color: white;
   border-radius: 10px;
   padding: 0 8px;
   box-sizing: border-box;
-  background: #fff;
+  background: #4F83B4;
   font-family: inherit;
   cursor: pointer;
 }
@@ -242,7 +247,7 @@
 
 .cm-muted {
   margin-top: 5px;
-  color: #999;
+  color: #ffffff;
   font-size: 14px;
   text-align: left;
   width: 100%;
@@ -252,7 +257,8 @@
   margin-top: 20px;
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid #111;
+  border: 2px solid #ffffff;
+  color: white;
   border-radius: 14px;
   padding: 10px;
   font-family: inherit;
@@ -277,12 +283,13 @@
   border: none;
   border-radius: 39px;
   padding: 10px;
-  background: #f1f1f1;
+  background: #4F83B4;
+  border: 2px solid white;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.18);
   font-family: inherit;
   font-weight: 700;
   font-size: 17px;
-  color: #414141;
+  color: #dddddd;
   cursor: pointer;
 }
 
@@ -294,11 +301,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
-  border: 2px dashed #c4c4c4;
+  background: #4F83B4;
+  border: 3px dashed #ffffff;
   border-radius: 15px;
-  color: #b0b0b0;
-  font-size: 4rem;
+  color: white;
+  font-size: 10rem;
   font-weight: 300;
   line-height: 1;
   cursor: pointer;

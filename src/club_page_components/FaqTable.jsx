@@ -1,15 +1,15 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 
 /* palette pulled from the mockup */
-const BLUE = "#4e7da9";
-const ROW_A = "#F0EFEF";
-const ROW_B = "#FAF9F9";
-const INK = "#2b3440";
-const MUTED = "#b6b6b6";
-const VLINE = "#cdcdcd";
-const SECTION_LINE = "#9b9b9b";
+const BLUE = "#000000ff";
+const ROW_A = "hsla(209, 47%, 61%, 1.00)";
+const ROW_B = "#48759fff";
+const INK = "#ffffffff";
+const MUTED = "#3f3f3fff";
+const VLINE = "#ffffffff";
+const SECTION_LINE = "#130d2bff";
 
-const ROW_H = 54;
+const ROW_H = 50;
 const USER_VISIBLE = 3;
 const OWNER_VISIBLE = 5;
 const COLS = "64px 1fr 1fr";
@@ -135,7 +135,7 @@ export default function FaqTable({ faqs = [], onChange, userQuestions = [], onAc
       </div>
 
       <div style={{ overflowX: "auto" }}>
-        <div style={{ minWidth: 760, border: `1px solid ${VLINE}`, borderRadius: 4, overflow: "hidden", background: "#fff" }}>
+        <div style={{ minWidth: 760, border: `2px solid ${VLINE}`, borderRadius: 4, overflow: "hidden", background: "#fff" }}>
           {/* ===== user questions (submitted) ===== */}
           <Section visible={USER_VISIBLE}>
             {padTo(userQuestions, USER_VISIBLE).map((row, i) =>
@@ -179,9 +179,7 @@ export default function FaqTable({ faqs = [], onChange, userQuestions = [], onAc
         </div>
       </div>
 
-      <p style={{ marginTop: 16, color: "#9aa0a8", fontSize: 13 }}>
-        Click any cell to edit; long content opens an overlay. Type an answer on a user question to reveal Accept.
-      </p>
+ 
 
       {overlay && rect && <Overlay rect={rect} meta={overlay} onClose={clearSel} />}
     </div>
@@ -226,10 +224,10 @@ function XCell({ variant, onClick }) {
           width: 32, height: 32, borderRadius: 999, background: BLUE, color: "#fff",
           display: "grid", placeItems: "center", fontSize: 15, fontWeight: 600,
           boxShadow: "0 2px 5px rgba(0,0,0,0.2)" }}
-          onMouseDown={(e) => e.stopPropagation()}>×</button>
+          onMouseDown={(e) => e.stopPropagation()}>x</button>
       ) : (
         <button onClick={onClick} aria-label="Delete row" style={{ all: "unset", cursor: "pointer",
-          color: "#5b5b5b", fontSize: 18, lineHeight: 1, padding: 6 }}
+          color: "#ffffffff", fontSize: 18, lineHeight: 1, padding: 6 }}
           onMouseDown={(e) => e.stopPropagation()}>×</button>
       )}
     </div>
@@ -312,16 +310,16 @@ function Overlay({ rect, meta, onClose }) {
             onChange={(e) => { meta.onChange(e.target.value); resize(); }}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onClose(); } }}
             rows={1} style={{ width: "100%", resize: "none", border: "none", outline: "none",
-              background: "transparent", fontSize: 19, color: INK, lineHeight: 1.3,
+              background: "transparent", fontSize: 19, color: "#000000ff", lineHeight: 1.3,
               fontFamily: "inherit", padding: "9px 0", overflow: "hidden" }} />
           {meta.maxLength && (
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <span style={{ fontSize: "0.72rem", color: "#aaa" }}>{meta.value.length}/{meta.maxLength}</span>
+              <span style={{ fontSize: "0.72rem", color: "#000" }}>{meta.value.length}/{meta.maxLength}</span>
             </div>
           )}
         </div>
       ) : (
-        <div style={{ fontSize: 19, color: INK, lineHeight: 1.35, padding: "10px 0",
+        <div style={{ fontSize: 19, color: "000000ff", lineHeight: 1.35, padding: "10px 0",
           whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{meta.value}</div>
       )}
     </div>

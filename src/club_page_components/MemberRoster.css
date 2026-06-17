@@ -91,6 +91,7 @@
   font-size: 16px;
   font-weight: 500;
   color: #1a1a1a;
+
 }
 
 @media (min-width: 1024px) {
@@ -238,11 +239,12 @@
 }
 .mr-cat-manage-label {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 13px;
+  font-size: 1.5rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #8a8a8a;
+  color: #323232;
+  
   margin-right: 4px;
 }
 .mr-cat-empty {
@@ -255,16 +257,17 @@
   align-items: center;
   gap: 4px;
   padding: 4px 6px 4px 12px;
-  background: #f2f2f1;
-  border: 1px solid #d9d9d9;
+  background: #4F83B4;
+  border: 2px solid #ffffff;
   border-radius: 999px;
+   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
 }
 .mr-cat-chip-name {
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: #1a1a1a;
+  color: #fcfcfc;
 }
 .mr-cat-chip-btn {
   width: 22px;
@@ -274,7 +277,7 @@
   border: none;
   border-radius: 50%;
   background: transparent;
-  color: #6a6a6a;
+  color: #ffffff;
   font-size: 13px;
   line-height: 1;
   cursor: pointer;
@@ -293,6 +296,7 @@
   overflow-y: hidden;
   scroll-snap-type: x proximity;
   scrollbar-width: thin;
+  
   scrollbar-color: #cfcfcf transparent;
 }
 .mr-edit-row::-webkit-scrollbar { height: 10px; }
@@ -307,11 +311,12 @@
   align-items: center;
   gap: 18px;
   padding: 16px 12px;
-  background: #fff;
-  border: 1.5px solid #d9d9d9;
-  border-radius: 30px;
+  background: #4F83B4;
+    border: 2px solid #ffffff;
+  border-radius: 15px;
   scroll-snap-align: start;
   font-family: 'Barlow Condensed', sans-serif;
+    box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
 }
 
 .mr-remove {
@@ -342,9 +347,9 @@
   padding: 0 10px;
   font-family: inherit;
   font-size: 13px;
-  color: #1a1a1a;
-  background: #fff;
-  border: 1.3px solid #1a1a1a;
+  color: white;
+  background: #4F83B4;
+  border: 2px solid white;
   border-radius: 10px;
   cursor: pointer;
   outline: none;
@@ -359,9 +364,10 @@
   margin: 4px 0 2px;
   border-radius: 50%;
   overflow: hidden;
-  background: #f2f2f1 center / cover no-repeat;
-  color: #1a1a1a;
-  font-weight: 800;
+  background: #4F83B4 center / cover no-repeat;
+  border: 2px solid white;
+  color: white;
+  font-weight: 700;
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -386,13 +392,13 @@
 
 .mr-name {
   width: 100%;
-  padding: 10px;
+  padding: 8px;
   text-align: center;
   font-family: inherit;
-  font-size: 15px;
-  color: #1a1a1a;
-  background: #fff;
-  border: 1.3px solid #1a1a1a;
+  font-size: 18px;
+  color: white;
+  background: #4F83B4;
+  border: 2px solid #ffffff;
   border-radius: 14px;
   outline: none;
 }
@@ -406,8 +412,9 @@
   display: flex;
   flex-direction: column;
   padding: 10px 16px;
-  background: #f8f8f8;
-  border: 1.3px solid #1a1a1a;
+  background: #4F83B4;
+  border: 2px solid #ffffff;
+
   border-radius: 20px;
 }
 .mr-editor {
@@ -417,11 +424,11 @@
   font-family: 'Barlow', sans-serif;
   font-size: 15px;
   line-height: 1.6;
-  color: #1a1a1a;
+  color: white;
 }
 .mr-editor.is-empty::before {
   content: attr(data-ph);
-  color: #8a8a8a;
+  color: #000000;
 }
 .mr-editor ul, .mr-editor ol { margin: 6px 0; padding-left: 24px; }
 
@@ -432,7 +439,7 @@
   align-items: center;
   gap: 4px;
   padding: 6px 8px;
-  background: #e3e3e3;
+  background: #ffffff;
   border-radius: 14px;
 }
 .mr-toolbar button {
@@ -461,13 +468,14 @@
 .mr-add-card {
   flex: 0 0 300px;
   width: 300px;
-  border: 1.5px solid #d9d9d9;
+  border: 2px solid #d9d9d9;
   border-radius: 30px;
-  background: #fff;
+  background: #4F83B4;
+   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
   cursor: pointer;
   display: grid;
   place-items: center;
-  color: #cfcfcf;
+  color: #ffffff;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 .mr-add-card:hover { background: #fcfcfc; color: #9a9a9a; border-color: #bdbdbd; }
