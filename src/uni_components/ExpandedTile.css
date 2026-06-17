@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   margin: auto;
-  width: 44vw;
+
   background: rgb(252, 252, 252);
   height: 100%;
   overflow: hidden;
@@ -19,7 +19,7 @@
   position: fixed;
   inset: 0;
   margin: auto;
-  width: 44vw;
+
   height: 100%;
   background-image: url('/src/assets/white-paper-texture.jpg');
   background-size: 100% 100%;
@@ -219,9 +219,7 @@
   }
 
   .view-reviews,
-  .club-modules {
-    padding: 0 3%;
-  }
+  
 
   .divider {
     width: 88vw;
@@ -247,10 +245,8 @@
     height: 100vh;
   }
 
-  .view-reviews,
-  .club-modules {
-    padding: 0 2%;
-  }
+
+ 
 
   .divider {
     width: 98vw;

@@ -19,13 +19,18 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   const [dominantColor, setDominantColor] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
   const [descOpen, setDescOpen] = useState(false);
+  const [nameMarquee, setNameMarquee] = useState(false);
+  const [nameDur, setNameDur] = useState(20);
 
   const imgRef = useRef(null);
   const descRef = useRef(null);
+  const nameWrapRef = useRef(null);
+  const nameRef = useRef(null);
 
   const displayName = data?.club_name || club.club_name || '';
   const displayDescription = data?.description || club.club_description || '';
   const logoUrl = data?.logo_url || club.image_url || '/raccoon_pfp.png';
+  const tagLine = (topTags || []).map(s => s.replaceAll('"', '')).join(' • ');
 
   // Truncate the description to 50 words in view mode; the full text opens in a modal.
   const descWords = displayDescription.trim() ? displayDescription.trim().split(/\s+/) : [];
@@ -80,6 +85,16 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
     }
   }, [data?.description, editing]);
 
+  // Club name is one line; if it overflows its container, scroll it like a marquee.
+  useLayoutEffect(() => {
+    const wrap = nameWrapRef.current;
+    const el = nameRef.current;
+    if (!wrap || !el) { setNameMarquee(false); return; }
+    const over = el.scrollWidth > wrap.clientWidth + 1;
+    setNameMarquee(over);
+    if (over) setNameDur(Math.max(6, el.scrollWidth / 40)); // ~40px/s
+  }, [displayName, editing]);
+
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -107,17 +122,28 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
                 onChange={(e) => onChange({ ...data, club_name: e.target.value })}
                 placeholder="Club name"
               />
-            : <h2 className="club-name-exp">{displayName}</h2>
+            : <div className="club-name-wrap" ref={nameWrapRef}>
+                <div
+                  className={`club-name-track ${nameMarquee ? 'on' : ''}`}
+                  style={nameMarquee ? { '--name-dur': `${nameDur}s` } : undefined}
+                >
+                  <h2 className="club-name-exp" ref={nameRef}>{displayName}</h2>
+                  {nameMarquee && <h2 className="club-name-exp" aria-hidden="true">{displayName}</h2>}
+                </div>
+              </div>
           }
+          {/* Web: tag sits under the name (hidden on mobile, where the block copy shows instead) */}
           {topTags.length > 0 && (
-            <h2 className="club-tag1">
-              {topTags.map(s => s.replaceAll('"', '')).join(' • ')}
-            </h2>
+            <h2 className="club-tag1 club-tag1--inline">{tagLine}</h2>
           )}
         </div>
 
         <div className="image-stack">
           <div className="rectangle_min" style={{ '--dominant-color': dominantColor }}>
+            {/* Mobile: tag sits inside the rectangle near the top (hidden on web) */}
+            {topTags.length > 0 && (
+              <h2 className="club-tag1 club-tag1--block">{tagLine}</h2>
+            )}
             <div
               className="club-img-exp"
               style={{ backgroundImage: `url(${logoPreview || logoUrl})` }}

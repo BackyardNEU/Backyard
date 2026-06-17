@@ -6,7 +6,7 @@
   flex-shrink: 0;
   margin-bottom: 20px;
   border-radius: 5000px;
-  border: 1px solid;
+  border: 0.5px solid grey;
   z-index: 8200;
   border-color: #909090;
   position: relative;
@@ -32,7 +32,7 @@
 }
 
 .rectangle {
-  gap: 1rem;
+
   z-index: 8000;
   border-radius: 20px;
   position: relative;
@@ -62,21 +62,50 @@
   font-style: normal;
   letter-spacing: 0px;
   font-size: max(90px,4.5vw);
+  white-space: nowrap;       /* one line; overflow handled by the marquee */
   z-index: 8200;
+}
+
+/* One-line club name; marquee-scrolls only when it overflows .club-name-wrap */
+.club-name-wrap {
+  width: 100%;
+  overflow: hidden;
+}
+.club-name-track {
+  display: flex;
+  width: max-content;
+}
+.club-name-track .club-name-exp {
+  margin: 0;
+}
+.club-name-track.on {
+  animation: nameMarquee var(--name-dur, 20s) linear infinite;
+}
+.club-name-track.on .club-name-exp {
+  padding-right: 3rem; /* gap between the repeated copies (part of the -50% loop) */
+}
+@keyframes nameMarquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
 }
 
 .club-tag1 {
   font-family: "Barlow Condensed", sans-serif;
   text-transform: uppercase;
   font-weight: 400;
-  align-self: flex-start;
+  align-self: flex-start;   /* left edge — lines up with the start of club-name-exp */
+  text-align: left;
   font-size: 2.4rem;
   z-index: 8200;
-  margin-bottom: 30px;
-  gap: 1rem;
+  margin: 0;
   letter-spacing: -1.2px;
   color: grey;
 }
+
+/* Two copies of the tag exist (one under the name for web, one in the rectangle for mobile);
+   only the right one shows per breakpoint. */
+.club-tag1--inline,
+.club-tag1--block { display: none; }
 
 .club-tag2 {
   font-family: "Barlow Condensed", sans-serif;
@@ -225,51 +254,45 @@
 }
 
 /* Mobile */
-@media (max-width: 699px) {
-  .text-flex {
-    margin-top: 10px;
-    padding-left: 0.2rem;
+@media (max-width: 500px) {
+  .content-col {
+    width: 100%;
+    padding: 0.4rem;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .club-img-exp {
-    width: 96vw;
-    height: 96vw;
-    background-color: #ffffff;
-    flex-shrink: 0;
-    transform: translateY(6%);
-    z-index: 8200;
+  .text-flex {
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 10px;
+    margin-bottom: 1px;          /* little gap between the name and the rectangle */
+    padding-left: 0.5rem;          /* shared inset → name + tag start at the same x */
   }
 
   .club-name-exp {
-    font-size: 4rem;
-    line-height: 95%; 
+    font-size: 3.5rem;
+    line-height: 95%;
     margin: 0;
   }
 
-  .club-tag1 {
-    font-family: "Barlow Condensed", sans-serif;
-    font-size: 2rem;
+  .image-stack {
+    width: 100%;
   }
 
-  .club-tag2 {
-    z-index: 8200;
-  }
-
-  .tag {
-    z-index: 8200;
-  }
-
+  /* Full-width rectangle: tag1 at the top-left (aligned with the name), logo centered below. */
   .rectangle_min {
-    gap: 1rem;
+    width: 100%;
+    box-sizing: border-box;
     display: flex;
-    align-self: center;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 1rem 20px;
     background-color: var(--dominant-color);
     z-index: 8000;
-    border-radius: 20px;
-    width: 98vw;
-    height: 110vw;
-    transform: translateY(-13%);
-    align-items: center;
+    border-radius: 15px;
     position: relative;
   }
 
@@ -288,19 +311,31 @@
     z-index: -1;
   }
 
-  .content-col {
-    width: 100%;
-    padding-top: 0.4rem;
-    padding-left: 0.4rem;
-    padding-right: 0.4rem;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+  .club-tag1--block { display: block; }
+  .club-tag1 {
+    font-size: 1.6rem;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
+
+  .club-img-exp {
+    width: 95vw;
+    height: 95vw;
+    align-self: center;          /* logo centered in the full-width rectangle */
+    margin: 0;
+    background-color: #ffffff;
+    flex-shrink: 0;
+    z-index: 8200;
+  }
+
+  .club-tag2 { z-index: 8200; }
+  .tag { z-index: 8200; }
 }
 
 /* Desktop */
-@media (min-width: 700px) {
+@media (min-width: 501px) {
   .content-col {
     display: flex;
     flex-direction: row-reverse;
@@ -318,13 +353,21 @@
     position: relative;
     display: flex;
     align-items: center;
+    justify-content: center;
     width: 28vw;
-    height: 28vw;
     max-width: 400px;
-    max-height: 400px;
     flex-shrink: 0;
     z-index: 8200;
     flex: 0 0 28vw;
+  }
+
+  /* tag1 sits above the logo on the right, same as mobile */
+  .rectangle_min {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
   }
 
   .club-img-exp {
@@ -334,7 +377,7 @@
     max-height: 430px;
     border-radius: 50%;
     background-color: #ffffff;
-    border: 1px solid #000;
+    border: 0.5px solid #000;
     margin-bottom: 0;
   }
 
@@ -380,18 +423,12 @@
     font-size: clamp(4rem, 5vw, 5.9rem);
     margin: 0;
     line-height: 1.1;
-    white-space: normal;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
+  .club-tag1--inline { display: block; }
   .club-tag1 {
     font-size: 1.75rem;
-    margin-top: 0.5rem;
-    margin-bottom: 0;
+    margin-top: 0.25rem;   /* small gap under the name */
   }
 
 
