@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { sanitizeBioHtml } from '../lib/sanitizeHtml';
 import './JoinModule.css';
 
 /**
@@ -53,24 +54,20 @@ function JoinModule({ data, editing, onChange, warning }) {
               >
                 ×
               </button>
-              <input
-                className="join-card-title"
-                value={t.title || ''}
-                onChange={(e) => updateTab(idx, 'title', e.target.value)}
-                placeholder="edit tab title ex: we're looking for"
-              />
-              <div>
-                <textarea
-                  className="mr-bio"
-                  value={t.body || ''}
-                  onChange={(e) => updateTab(idx, 'body', e.target.value)}
-                  placeholder="ex: edit available positions"
-                  maxLength={500}
+              <div className="mr-category-wrap">
+                <input
+                  className="mr-category"
+                  value={t.title || ''}
+                  onChange={(e) => updateTab(idx, 'title', e.target.value)}
+                  placeholder="edit tab title ex: we're looking for"
                 />
-                <div className="char-counter-wrap">
-                  <span className="char-counter">{(t.body || '').length}/500</span>
-                </div>
               </div>
+
+              <JoinTabEditor
+                value={t.body}
+                onChange={(html) => updateTab(idx, 'body', sanitizeBioHtml(html))}
+                placeholder="add about positions ex: we're looking for defenders"
+              />
             </div>
           ))}
 
@@ -81,13 +78,13 @@ function JoinModule({ data, editing, onChange, warning }) {
 
         <div className="join-link-inputs">
           <input
-            className="join-link-input"
+            className="join-link-application-input"
             value={applicationLink}
             onChange={(e) => updateLink('applicationLink', e.target.value)}
             placeholder="enter application link"
           />
           <input
-            className="join-link-input"
+            className="join-link-contact-input"
             value={contactLink}
             onChange={(e) => updateLink('contactLink', e.target.value)}
             placeholder="enter contact link"
@@ -119,7 +116,7 @@ function JoinModule({ data, editing, onChange, warning }) {
               </button>
             ))}
           </div>
-          <div className="join-tab-content">{tabs[activeIndex]?.body}</div>
+          <div className="join-tab-content" dangerouslySetInnerHTML={{ __html: tabs[activeIndex]?.body || '' }} />
         </>
       )}
 
@@ -147,6 +144,75 @@ function JoinModule({ data, editing, onChange, warning }) {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+const isEmptyHtml = (html) => {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html || '';
+  return tmp.textContent.trim() === '' && !tmp.querySelector('li, img, br');
+};
+
+/** Uncontrolled rich-text editor for join tabs — innerHTML is seeded once on mount. */
+function JoinTabEditor({ value, onChange, placeholder }) {
+  const ref = React.useRef(null);
+  const [empty, setEmpty] = React.useState(() => isEmptyHtml(value));
+  const [active, setActive] = React.useState({});
+  const [charCount, setCharCount] = React.useState(() => (value || '').replace(/<[^>]*>/g, '').length);
+
+  React.useEffect(() => {
+    if (ref.current) ref.current.innerHTML = value || '';
+    try { document.execCommand('styleWithCSS', false, false); } catch { /* not supported */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const refreshActive = () => {
+    const next = {};
+    ['bold', 'italic', 'underline'].forEach((c) => {
+      try { next[c] = document.queryCommandState(c); } catch { /* ignore */ }
+    });
+    setActive(next);
+  };
+
+  const handleInput = () => {
+    setEmpty(isEmptyHtml(ref.current?.innerHTML));
+    setCharCount(ref.current?.textContent?.length ?? 0);
+    onChange(ref.current?.innerHTML || '');
+  };
+
+  const exec = (cmd) => (e) => {
+    e.preventDefault();
+    ref.current?.focus();
+    try { document.execCommand(cmd, false, null); } catch { /* ignore */ }
+    handleInput();
+    refreshActive();
+  };
+
+  return (
+    <div className="mr-bio">
+      <div
+        ref={ref}
+        className={`mr-editor ${empty ? 'is-empty' : ''}`}
+        contentEditable
+        suppressContentEditableWarning
+        data-ph={placeholder}
+        onInput={handleInput}
+        onKeyUp={refreshActive}
+        onMouseUp={refreshActive}
+        onFocus={refreshActive}
+      />
+      <div className="char-counter-wrap">
+        <span className="char-counter">{charCount}/500</span>
+      </div>
+      <div className="mr-toolbar">
+        <button type="button" className={`b ${active.bold ? 'active' : ''}`} onMouseDown={exec('bold')} title="Bold">B</button>
+        <button type="button" className={`i ${active.italic ? 'active' : ''}`} onMouseDown={exec('italic')} title="Italic">I</button>
+        <button type="button" className={`u ${active.underline ? 'active' : ''}`} onMouseDown={exec('underline')} title="Underline">U</button>
+        <span className="sep" />
+        <button type="button" onMouseDown={exec('insertUnorderedList')} title="Bulleted list">•</button>
+        <button type="button" onMouseDown={exec('insertOrderedList')} title="Numbered list">1.</button>
+      </div>
     </div>
   );
 }

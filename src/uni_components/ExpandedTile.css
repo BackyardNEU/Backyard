@@ -260,3 +260,9 @@
     margin-left: -1%;
   }
 }
+
+@media (min-width: 501px) {
+  .club-modules{
+    left: -1%;
+  }
+}

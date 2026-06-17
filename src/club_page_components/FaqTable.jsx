@@ -135,7 +135,7 @@ export default function FaqTable({ faqs = [], onChange, userQuestions = [], onAc
       </div>
 
       <div style={{ overflowX: "auto" }}>
-        <div style={{ minWidth: 760, border: `2px solid ${VLINE}`, borderRadius: 4, overflow: "hidden", background: "#fff" }}>
+        <div style={{ minWidth: 760, border: `2px solid ${VLINE}`, borderRadius: 15, overflow: "hidden", background: "#fff" }}>
           {/* ===== user questions (submitted) ===== */}
           <Section visible={USER_VISIBLE}>
             {padTo(userQuestions, USER_VISIBLE).map((row, i) =>

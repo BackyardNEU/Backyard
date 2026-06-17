@@ -148,13 +148,13 @@
   position: fixed;
   top: 15px;
   right: calc(50% - 22vw + 1rem);
-  background: none;
+  background: #4F83B4;
   border: 1px solid #ccc;
   border-radius: 8px;
   padding: 0.3rem 0.8rem;
   cursor: pointer;
   font-size: 0.85rem;
-  color: #555;
+  color: #ffffff;
   z-index: 8300;
 }
 
@@ -461,11 +461,12 @@
 .about-section {
   width: 100%;
   box-sizing: border-box;
-  padding-left: var(--mod-pad, 0.4rem);   /* mobile 0.4rem, web 0 (rectangle's left) */
+  padding-left: 1.5%;   /* mobile 0.4rem, web 0 (rectangle's left) */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
+  
 }
 
 /* friend-avatars then club-tag2, in a horizontal row under the About heading */

@@ -1,7 +1,7 @@
 .mr-module {
   width: 100%;
   box-sizing: border-box;
-  padding-left: var(--mod-pad, 0.4rem);   /* mobile 0.4rem, web 0 (rectangle's left) */
+  padding-left: 1.5%;   /* mobile 0.4rem, web 0 (rectangle's left) */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
