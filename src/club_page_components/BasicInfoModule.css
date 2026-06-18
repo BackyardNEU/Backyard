@@ -130,8 +130,7 @@
   align-self: flex-start;
   color: rgb(32, 32, 32);
   text-align: left;
-  width: 80%;
-  min-width: 650px;
+  width: 90%;
   box-sizing: border-box;
 }
 
@@ -174,9 +173,9 @@
   box-sizing: border-box;
   border-radius: 10px;
 
-  box-shadow: 0 0 0 2px rgb(255, 255, 255);
-  color: white;
-  background: #4F83B4;
+  box-shadow: 0 0 0 3px #4F83B4;
+  color: rgb(44, 27, 43);
+  
 }
 
 
@@ -198,10 +197,10 @@
   overflow: hidden;
   min-height: 3em;
   flex-shrink: 0;
-  border: 2px solid #ffffff;
-  background-color: #4F83B4;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.18);
-  color: white;
+  border: 3px solid #4F83B4;
+
+ 
+  color: black;
 }
 
 
@@ -257,6 +256,26 @@
   font-size: 50px;
 }
 
+.friend-avatar-img-bio {
+  
+  border-radius: 50%;
+  border: 2px solid #fff;
+  object-fit: cover;
+  
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.friend-names-text {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.2rem;
+  color: #333;
+  font-weight: 400;
+
+}
+
+.friend-names-text span {
+  display: inline;
+}
 /* Mobile */
 @media (max-width: 500px) {
   .content-col {
@@ -267,6 +286,17 @@
     flex-direction: column;
     align-items: stretch;
   }
+
+  .friend-avatar-img-bio {
+  width: 2rem;
+  height: 2rem;
+  }
+
+  .club-description-exp {
+  font-size: 1rem;
+  line-height: -1em;
+  
+}
 
   .text-flex {
     width: 100%;
@@ -442,13 +472,9 @@
 
 
 .friend-avatar-img-bio {
-  width: 2.5em;
+  width: 2.5rem;
   height: 2.5rem;
-  border-radius: 50%;
-  border: 2px solid #fff;
-  object-fit: cover;
-  margin-left: -8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  
 }
 
   p.club-description-exp {
