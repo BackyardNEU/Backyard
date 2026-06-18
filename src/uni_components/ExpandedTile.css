@@ -59,9 +59,13 @@
   padding: 10px 0;
   overflow-x: auto;
   overflow-y: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: #ccc transparent;
+  
 }
+
+.exp-action-row::-webkit-scrollbar {
+  display: none;
+}
+
 
 .exp-action-row::-webkit-scrollbar {
   height: 6px;
@@ -195,11 +199,11 @@
 }
 
 .divider-header {
-  font-family: 'Barlow', sans-serif;
+  font-family: 'Barlow Condensed', sans-serif;
   line-height: normal;
   font-style: normal;
   position: relative;
-
+  font-weight: 400;
   color: rgb(50, 50, 50);
   text-align: left;
   margin-bottom: 30px;
@@ -261,8 +265,3 @@
   }
 }
 
-@media (min-width: 501px) {
-  .club-modules{
-    left: -1%;
-  }
-}

@@ -146,7 +146,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
             )}
             <div
               className="club-img-exp"
-              style={{ backgroundImage: `url(${logoPreview || logoUrl})` }}
+              style={{ backgroundImage: `url(${logoPreview || logoUrl})`, marginTop: topTags?.length === 0 ? '1rem' : undefined }}
               role="img"
               aria-label={club.club_name}
             >
@@ -168,7 +168,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
       <div className="about-section">
         <h2 className="divider-header">About</h2>
 
-        <div className="about-meta-row">
+        <div className="about-meta-row" style={friendsInClub.length === 0 ? { marginLeft: '-4px' } : undefined}>
           {friendsInClub.length > 0 && (
             <div className="friend-avatars">
               {friendsInClub.slice(0, 3).map((friend) => (
@@ -185,12 +185,30 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
                 </span>
               )}
               <div className="friend-names-text">
-                {friendsInClub.length > 3 ?
-                  (friendsInClub.slice(0, 3).map(friend => <span key={friend.id}>{friend.username},</span>) && (<span>{friendsInClub.length - 3} others</span>)) :
-                  (friendsInClub.map(friend => <span key={friend.id}>{friend.username}, </span>))
-                }
-                <span>are also in this club</span>
-              </div>
+  {friendsInClub.length === 1 ? (
+    <>
+      <span>{friendsInClub[0].username}</span>
+      <span> is a member</span>
+    </>
+  ) : friendsInClub.length === 2 ? (
+    <>
+      <span>{friendsInClub[0].username}</span>
+      <span> and </span>
+      <span>{friendsInClub[1].username}</span>
+      <span> are members</span>
+    </>
+  ) : (
+    <>
+      {friendsInClub.slice(0, 2).map((friend, idx) => (
+        <span key={friend.id}>
+          {friend.username}
+          {idx === 0 ? ', ' : ''}
+        </span>
+      ))}
+      <span> + {friendsInClub.length - 2} are members</span>
+    </>
+  )}
+</div>
             </div>
           )}
 

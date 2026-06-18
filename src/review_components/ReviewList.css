@@ -14,8 +14,9 @@
 }
 
 .divider-header {
+
     font-weight: 500;
-    font-size: 3.25rem;
+   
     margin-bottom: 8px;
 }
 
@@ -460,3 +461,4 @@
         padding: 16px;
     }
 }
+
