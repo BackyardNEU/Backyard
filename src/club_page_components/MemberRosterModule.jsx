@@ -28,10 +28,13 @@ function MemberRosterModule({ data, editing, onChange, warning }) {
   return (
     <div className="mr-module">
       <p className="divider-header">Members</p>
-      {editing && warning && <p className="module-warning">{warning}</p>}
-
+    {editing && (
+          <p className="about-edit-help">
+          Add members of your club you would like to feature. Members can be split into categories (i.e. "Coaches", "Editors", etc). Clicking a profile lets users see their bio.
+          </p>
+        )}
       <ClubMemberScroll categories={categories} members={members} />
-
+        {editing && warning && <p className="module-warning">{warning}</p>}
       {editing && <ClubMemberEdit data={data ?? { categories, members }} onChange={onChange} />}
     </div>
   );

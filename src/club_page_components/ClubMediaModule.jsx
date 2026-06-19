@@ -79,7 +79,11 @@ function ClubMediaModule({ data, editing, onChange, warning }) {
     <div className="club-media-module">
       <p className="divider-header">Media</p>
       {editing && warning && <p className="module-warning">{warning}</p>}
-
+      {editing && (
+          <p className="about-edit-help">
+            Think of these like your highlights. When user's click on your highlights, they will see a scrap book where you will take them into the world of your club.
+          </p>
+        )}
       <div className="club-media-row">
         {ordered.map(({ p, i }, rank) => (
           <PosterCard

@@ -42,8 +42,12 @@ function JoinModule({ data, editing, onChange, warning }) {
     return (
       <div className="join-module join-module--editing">
         <p className="divider-header">How to Join</p>
-
-        {warning && <p className="module-warning">{warning}</p>}
+        {editing && (
+          <p className="about-edit-help">
+            These tabs help potential new members be infromed in the joining process. Optional: Enter your application link and your recruiter email.
+          </p>
+        )}
+        {editing && warning && <p className="module-warning">{warning}</p>}
         <div className="join-card-row">
           {tabs.map((t, idx) => (
             <div className="join-tab-card" key={idx}>
@@ -54,14 +58,14 @@ function JoinModule({ data, editing, onChange, warning }) {
               >
                 ×
               </button>
-              <div className="mr-category-wrap">
+             
                 <input
-                  className="mr-category"
+                  className="join-category"
                   value={t.title || ''}
                   onChange={(e) => updateTab(idx, 'title', e.target.value)}
                   placeholder="edit tab title ex: we're looking for"
                 />
-              </div>
+              
 
               <JoinTabEditor
                 value={t.body}

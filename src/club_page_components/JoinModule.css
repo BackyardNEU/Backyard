@@ -155,6 +155,20 @@
   border-bottom-color: #000;
 }
 
+.join-category {
+  margin-top: 15px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 2px solid #ffffff;
+  color: white;
+  border-radius: 10px;
+  padding: 5px;
+  font-family: inherit;
+  font-size: 15px;
+  outline: none;
+  margin-bottom: 10px;
+}
+
 .join-card-body {
   flex: 1;
   font-family: 'Barlow', sans-serif;

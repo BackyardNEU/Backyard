@@ -39,6 +39,11 @@ function FaqModule({
   return (
     <div className="faq-module">
       <p className="divider-header">FAQs</p>
+      {editing && (
+          <p className="about-edit-help">
+            User questions will appear in the top table. You can "X" to reject them or answer them to add them to your FAQs. In the bottom table, you can manually enter any questions you typically get and answer them.
+          </p>
+        )}
       {editing && warning && <p className="module-warning">{warning}</p>}
 
       <FaqCards clubId={club?.id} faqs={faqs} canAsk={canAsk && !editing} />
