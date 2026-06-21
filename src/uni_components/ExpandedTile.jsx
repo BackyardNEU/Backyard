@@ -15,6 +15,7 @@ import StatsModule from '../club_page_components/StatsModule';
 import ClubMediaModule from '../club_page_components/ClubMediaModule';
 import FaqModule from '../club_page_components/FaqModule';
 import MemberRosterModule from '../club_page_components/MemberRosterModule';
+import { CalendarModule } from '../club_page_components/CalendarModule';
 import { useClubData } from '../context/useClubData';
 import { useGlobalStore } from '../lib/store';
 
@@ -82,6 +83,11 @@ function validateMemberRoster(data) {
     return null;
 }
 
+function validateCalendar(_data) {
+    // module.data stores only settings (filterByMembership); events live in the DB
+    return null;
+}
+
 function validateClubMedia(data) {
     const posters = data?.posters ?? [];
     for (const p of posters) {
@@ -103,6 +109,7 @@ function getModuleWarnings(draft) {
         if (m.type === 'faqs') w.faqs = validateFaq(m.data);
         if (m.type === 'member_roster') w.member_roster = validateMemberRoster(m.data);
         if (m.type === 'club_media') w.club_media = validateClubMedia(m.data);
+        if (m.type === 'calendar') w.calendar = validateCalendar(m.data);
     }
     return w;
 }
@@ -140,10 +147,14 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     // pending user-submitted FAQ questions (approved editors only) + ids to delete on Save
     const [userFaqs, setUserFaqs] = useState([]);
     const [questionDeletes, setQuestionDeletes] = useState(() => new Set());
+    // club events (for the calendar module)
+    const [clubEvents, setClubEvents] = useState([]);
+    const [clubMyRsvpSet, setClubMyRsvpSet] = useState(new Set());
+    const [clubFriendRsvpMap, setClubFriendRsvpMap] = useState(new Map());
 
     const id = club.id;
 
-    const { favoritesCache, invalidateFavoritesCache } = useClubData();
+    const { favoritesCache, invalidateFavoritesCache, friendsArray } = useClubData();
     const GlobalValue = useGlobalStore((state) => state.GlobalValue);
     const liked = favoritesCache?.has(club.id) ?? false;
 
@@ -195,6 +206,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 apiFetch(`/clubs/${id}/reviews`, { auth: false }),
                 apiFetch(`/clubs/${id}/page`, { auth: false }),
                 apiFetch(`/clubs/${id}/top-tags`, { auth: false }),
+                apiFetch(`/clubs/${id}/events`), // optional auth: sends token if logged in
             ];
             const authFetches = authUser ? [
                 apiFetch('/me/membership'),
@@ -203,11 +215,36 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
             console.log("Awaiting info...");
 
-            const [reviewsResult, pageResult, topTagsResult, membershipResult, approvedResult] =
+            const [reviewsResult, pageResult, topTagsResult, eventsResult, membershipResult, approvedResult] =
                 await Promise.allSettled([...publicFetches, ...authFetches]);
 
             if (reviewsResult.status === 'fulfilled') set_reviews(reviewsResult.value);
             if (topTagsResult.status === 'fulfilled') setTopTags((topTagsResult.value || []).map(r => r.tag));
+            if (eventsResult.status === 'fulfilled') {
+                const eventsData = eventsResult.value || [];
+                setClubEvents(eventsData);
+                if (eventsData.length > 0 && authUser) {
+                    try {
+                        const eventIds = eventsData.map((e) => e.id);
+                        const rsvpData = await apiFetch(`/clubs/${id}/events/rsvps?eventIds=${eventIds.join(',')}`);
+                        setClubMyRsvpSet(new Set(
+                            rsvpData.filter((r) => r.user_id === authUser.id).map((r) => r.event_id)
+                        ));
+                        const friendIdSet = new Set((friendsArray || []).map((f) => f.id));
+                        const friendProfileMap = new Map((friendsArray || []).map((f) => [f.id, f]));
+                        const newFriendRsvpMap = new Map();
+                        for (const rsvp of rsvpData) {
+                            if (friendIdSet.has(rsvp.user_id)) {
+                                if (!newFriendRsvpMap.has(rsvp.event_id)) newFriendRsvpMap.set(rsvp.event_id, []);
+                                newFriendRsvpMap.get(rsvp.event_id).push(friendProfileMap.get(rsvp.user_id));
+                            }
+                        }
+                        setClubFriendRsvpMap(newFriendRsvpMap);
+                    } catch (err) {
+                        console.error('Failed to fetch club RSVPs:', err);
+                    }
+                }
+            }
             if (pageResult.status === 'fulfilled') {
                 setPageData(pageResult.value);
                 // if no page row exists yet, seed a default basic_info module from base club data
@@ -272,6 +309,38 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             m.type === type ? { ...m, data: updatedData } : m
         ));
     }, []);
+
+    const handleClubRsvp = async (eventId, isCurrentlyGoing) => {
+        if (!user) return;
+        try {
+            if (isCurrentlyGoing) {
+                await apiFetch(`/clubs/${id}/events/${eventId}/rsvp`, { method: 'DELETE' });
+                setClubMyRsvpSet((prev) => { const next = new Set(prev); next.delete(eventId); return next; });
+            } else {
+                await apiFetch(`/clubs/${id}/events/${eventId}/rsvp`, { method: 'POST' });
+                setClubMyRsvpSet((prev) => new Set([...prev, eventId]));
+            }
+        } catch (err) {
+            console.error('RSVP failed:', err);
+        }
+    };
+
+    const handleAddEvent = async (eventData) => {
+        await apiFetch('/events', {
+            method: 'POST',
+            body: {
+                clubId: id,
+                clubName: club.club_name,
+                description: eventData.description,
+                startTime: eventData.startTime,
+                endTime: eventData.endTime,
+                imageUrl: eventData.imageUrl ?? undefined,
+            },
+        });
+        // Refresh events after adding
+        const events = await apiFetch(`/clubs/${id}/events`);
+        setClubEvents(events || []);
+    };
 
     const moduleWarnings = isEditing ? getModuleWarnings(draft) : {};
     const isDraftValid = Object.values(moduleWarnings).every(w => w == null);
@@ -457,6 +526,22 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                             editing={isEditing}
                             onChange={(updatedData) => handleModuleChange('member_roster', updatedData)}
                             warning={moduleWarnings.member_roster ?? null}
+                        />
+                    );
+                    if (module.type === 'calendar') return (
+                        <CalendarModule
+                            key="calendar"
+                            data={module.data}
+                            editing={isEditing}
+                            isApproved={isApproved}
+                            onChange={(updatedData) => handleModuleChange('calendar', updatedData)}
+                            warning={moduleWarnings.calendar ?? null}
+                            events={clubEvents}
+                            myRsvpSet={clubMyRsvpSet}
+                            friendRsvpMap={clubFriendRsvpMap}
+                            onRsvp={handleClubRsvp}
+                            onAddEvent={handleAddEvent}
+                            userId={user?.id ?? null}
                         />
                     );
                 })}

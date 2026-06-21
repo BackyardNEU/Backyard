@@ -15,6 +15,7 @@ import profilesRouter from './routes/profiles.js';
 import usersRouter from './routes/users.js';
 import storageRouter from './routes/storage.js';
 import eventsRouter from './routes/events.js';
+import clubEventsRouter from './routes/clubEvents.js';
 import clubPageRouter from './routes/clubPage.js';
 import questionsRouter from './routes/questions.js';
 
@@ -40,6 +41,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/clubs', clubsRouter);
 app.use('/api/clubs', clubPageRouter);
 app.use('/api/clubs', questionsRouter);
+app.use('/api/clubs', clubEventsRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/universities', universitiesRouter);
 

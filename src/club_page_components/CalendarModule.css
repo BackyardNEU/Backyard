@@ -1,0 +1,226 @@
+/* The div that holds all of the days together */
+.calendar-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    overflow-x: auto;
+    overflow: hidden;
+}
+
+/* Each day of the calendar */
+.calendar-day {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 350px;
+    min-width: 300px;
+    padding: 5px;
+}
+
+.day-title-number {
+    font-size: 30px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.current-month {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    font-size: 60px;
+}
+
+.calendar-event {
+    position: relative;
+    padding: 10px;
+    margin: 10px;
+    border-radius: 2px;
+    box-shadow: 8px 5px 8px rgba(0, 0, 0, 0.22);
+    margin-bottom: 6px;
+    z-index: 0;
+}
+
+.calendar-event::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url('/src/assets/white-paper-texture.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: inherit;
+    filter: brightness(1.25) contrast(0.9);
+    z-index: -1;
+}
+
+/* --- module wrapper --- */
+.cal-module {
+    width: 100%;
+}
+
+/* --- edit section --- */
+.cal-edit-section {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.cal-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #555;
+    cursor: pointer;
+}
+
+.cal-add-btn {
+    align-self: flex-start;
+    background: #4e7da9;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.cal-add-btn:hover {
+    background: #3d6a96;
+}
+
+/* --- add event form --- */
+.cal-form {
+    background: #f8f8f8;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.cal-form-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    color: #2b3440;
+}
+
+.cal-label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    color: #555;
+    font-weight: 500;
+}
+
+.cal-input {
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #fff;
+    box-shadow: inset 0 0 0 1px transparent;
+    transition: box-shadow 0.15s;
+}
+.cal-input:hover {
+    box-shadow: inset 0 0 0 1.5px #4e7da9;
+}
+.cal-input:focus {
+    outline: none;
+    box-shadow: inset 0 0 0 2px #4e7da9;
+}
+
+.cal-textarea {
+    resize: vertical;
+    min-height: 72px;
+}
+
+.cal-time-row {
+    display: flex;
+    gap: 16px;
+}
+.cal-time-row .cal-label {
+    flex: 1;
+}
+
+.cal-image-upload {
+    border: 1.5px dashed #ccc;
+    border-radius: 6px;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    background: #fff;
+    transition: border-color 0.15s;
+}
+.cal-image-upload:hover {
+    border-color: #4e7da9;
+}
+.cal-image-upload.has-image {
+    border-style: solid;
+}
+
+.cal-image-preview {
+    width: 100%;
+    max-height: 160px;
+    object-fit: cover;
+}
+
+.cal-image-placeholder {
+    font-size: 13px;
+    color: #aaa;
+}
+
+.cal-form-warning {
+    color: #c0392b;
+    font-size: 13px;
+    margin: 0;
+}
+
+.cal-form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.cal-cancel-btn {
+    background: none;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 7px 18px;
+    font-size: 14px;
+    cursor: pointer;
+    color: #555;
+}
+.cal-cancel-btn:hover {
+    border-color: #999;
+}
+
+.cal-submit-btn {
+    background: #4e7da9;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.cal-submit-btn:hover:not(:disabled) {
+    background: #3d6a96;
+}
+.cal-submit-btn:disabled,
+.cal-cancel-btn:disabled {
+    opacity: 0.55;
+    cursor: default;
+}
