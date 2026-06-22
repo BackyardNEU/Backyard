@@ -1,7 +1,7 @@
 ﻿import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import './App.css';
-import { SearchBar } from './home_components/SearchBar';
+import HomePage from './home_components/HomePage';
 import { UniversityPage } from './uni_components/UniversityPage';
 import LoginMorph from "./login_components/LoginMorph";
 import ReviewPage from "./review_components/ReviewPage";
@@ -31,45 +31,7 @@ function App() {
           <LoginMorph open={loginOpen} setOpen={setLoginOpen} />
 
         <Routes>
-          <Route
-            path="/"
-            element={
-              
-            <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-  {/* Responsive Video Container */}
-  <div style={{
-    width: '100%',
-    marginTop: '-40px',
-    maxWidth: '1100px',
-    marginLeft: 'auto',
-    marginRight: 'auto',
-    overflow: 'hidden',
-  }}>
-    <video 
-      src={`/src/assets/intro_screen.mp4`} 
-      autoPlay 
-      muted 
-      playsInline 
-      loop
-      style={{ 
-        width: '90%',
-        maxWidth: '1100px',
-        height: 'auto',
-        objectFit: 'cover', // Ensures no black bars, fills the container
-        display: 'block',
-        zIndex: 1,
-
-      }}
-    />
-  </div>
-
-  {/* Search Bar Container */}
-  <div className="search-bar-container" style={{ width: '100%', padding: '1rem' }}>
-    <SearchBar />
-  </div>
-</div>
-            }
-          />
+          <Route path="/" element={<HomePage onOpenLogin={() => setLoginOpen(true)} />} />
           <Route path="/university/:id" element={<UniversityPage />} />
           <Route path="/reviews/:id" element={<ReviewPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />

@@ -17,6 +17,7 @@ function LoginMorph({ open, setOpen }) {
   const navigate = useNavigate();
   const location = useLocation();
   const isProfilePage = location.pathname === '/profile';
+  const isHomePage = location.pathname === '/';
   const [view, setView] = useState("login");
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [profileName, setProfileName] = useState({ first: '', last: '' });
@@ -68,7 +69,7 @@ function LoginMorph({ open, setOpen }) {
 
   return (
     <AnimatePresence>
-      {!open && !isProfilePage && (
+      {!open && !isProfilePage && !isHomePage && (
         <div className="logged-in-controls">
           {GlobalValue && <Logout />}
           <motion.button
@@ -88,6 +89,10 @@ function LoginMorph({ open, setOpen }) {
         <motion.div
           layoutId="login"
           className="login-card"
+          initial={{ opacity: 0, scale: 0.9, y: 30 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 30 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 28 }}
         >
           <button className="close-btn" onClick={() => setOpen(false)}>
             &times;

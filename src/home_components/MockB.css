@@ -1,0 +1,205 @@
+.mock-b {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-image: url('/src/assets/white-paper-texture.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+.mock-b-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  flex-shrink: 0;
+}
+
+.mock-b-nav img {
+  height: 42px;
+}
+
+.mock-b-hero {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  padding: 0 48px 48px;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mock-b-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 480px;
+}
+
+.mock-b-headline {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: clamp(3rem, 7vw, 5.5rem);
+  font-weight: 400;
+  color: #29241d;
+  letter-spacing: 0.04em;
+  line-height: 0.92;
+  margin: 0;
+}
+
+.mock-b-sub {
+  font-family: "Barlow", sans-serif;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  color: #5c5c5c;
+  margin: 0;
+  line-height: 1.5;
+  max-width: 360px;
+}
+
+.mock-b-search {
+  width: 100%;
+  max-width: 420px;
+  margin-top: 4px;
+}
+
+.mock-b-search .school-input-wrapper {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.mock-b-btns {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.mock-b-btn {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 9px 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mock-b-btn--outline {
+  background: transparent;
+  border: 1.5px solid #5c5c5c;
+  color: #29241d;
+}
+
+.mock-b-btn--outline:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.mock-b-btn--fill {
+  background: rgb(46, 120, 139);
+  border: 1.5px solid rgb(46, 120, 139);
+  color: #fff;
+}
+
+.mock-b-btn--fill:hover {
+  background: rgb(38, 102, 118);
+}
+
+.mock-b-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 420px;
+}
+
+.mock-b-illustration {
+  width: 100%;
+  max-width: 380px;
+  height: auto;
+  filter: drop-shadow(0 8px 24px rgba(41, 36, 29, 0.15));
+}
+
+.mock-b-categories {
+  background: rgba(245, 241, 234, 0.85);
+  padding: 40px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  border-top: 1px solid #e0dbd3;
+}
+
+.mock-b-cat-title {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #5c5c5c;
+  margin: 0;
+}
+
+.mock-b-cat-row {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.mock-b-cat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid #e0dbd3;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mock-b-cat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.mock-b-cat-card img {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+}
+
+.mock-b-cat-card span {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #444;
+}
+
+@media (max-width: 768px) {
+  .mock-b-hero {
+    flex-direction: column;
+    text-align: center;
+    gap: 32px;
+    padding: 32px 24px;
+  }
+
+  .mock-b-left {
+    align-items: center;
+  }
+
+  .mock-b-sub {
+    max-width: none;
+  }
+
+  .mock-b-btns {
+    justify-content: center;
+  }
+
+  .mock-b-right {
+    max-width: 260px;
+  }
+}

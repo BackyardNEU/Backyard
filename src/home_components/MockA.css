@@ -1,0 +1,249 @@
+.mock-a {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.mock-a-hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mock-a-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mock-a-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.68);
+  backdrop-filter: blur(2px);
+}
+
+.mock-a-nav {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0px 24px;
+}
+
+.mock-a-logo {
+  height: 100px;
+  filter: brightness(0) invert(1);
+}
+
+.mock-a-coffee {
+  transition: transform 0.2s ease;
+}
+
+.mock-a-coffee:hover {
+  transform: scale(1.05);
+}
+
+.mock-a-coffee img {
+  height: 40px;
+  border-radius: 8px;
+}
+
+.mock-a-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  max-width: 720px;
+  padding: 0 24px;
+  text-align: center;
+}
+
+.mock-a-headline {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: clamp(3.5rem, 10vw, 7rem);
+  font-weight: 400;
+  color: #fff;
+  letter-spacing: 0.06em;
+  line-height: 0.95;
+  margin: 0;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.4);
+}
+
+.mock-a-sub {
+  font-family: "Barlow", sans-serif;
+  font-size: clamp(1rem, 2.5vw, 1.35rem);
+  color: rgba(255, 255, 255, 0.88);
+  margin: 0;
+  max-width: 420px;
+  line-height: 1.45;
+}
+
+.mock-a-search {
+  width: 100%;
+  max-width: 560px;
+  margin-top: 24px;
+}
+
+.mock-a-search .school-input-wrapper {
+  background-color: rgba(255, 255, 255, 0.95);
+  border-color: transparent;
+  height: 3.2rem;
+}
+
+.mock-a-btns {
+  display: flex;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.mock-a-btn {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 10px 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mock-a-btn--outline {
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  color: #fff;
+}
+
+.mock-a-btn--outline:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: #fff;
+}
+
+.mock-a-btn--fill {
+  background: rgb(46, 120, 139);
+  border: 1.5px solid rgb(46, 120, 139);
+  color: #fff;
+}
+
+.mock-a-btn--fill:hover {
+  background: rgb(38, 102, 118);
+}
+
+.mock-a-scroll-arrow {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.8rem;
+  cursor: pointer;
+  animation: mock-a-bounce 1.6s ease infinite;
+}
+
+.mock-a-scroll-arrow:hover {
+  color: #fff;
+}
+
+@keyframes mock-a-bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(10px); }
+}
+
+.mock-a-categories {
+  background: #f9f9f9;
+  padding: 48px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+
+.mock-a-cat-title {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 1.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #555;
+  margin: 0;
+}
+
+.mock-a-cat-row {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.mock-a-cat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.mock-a-cat-item:hover {
+  transform: translateY(-4px);
+}
+
+.mock-a-cat-item img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.mock-a-cat-item span {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #444;
+}
+
+.mock-a-about {
+  background: #f2f0ec;
+  padding: 64px 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.mock-a-about-inner {
+  max-width: 680px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.mock-a-about-title {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 2.4rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: #29241d;
+  margin: 0;
+}
+
+.mock-a-about p {
+  font-family: "Barlow", sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: #4a4a4a;
+  margin: 0;
+}
