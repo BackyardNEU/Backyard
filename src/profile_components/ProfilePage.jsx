@@ -8,6 +8,7 @@ import imageCompression from 'browser-image-compression'
 import { ClubMembershipPanel } from './ClubMembershipPanel'
 import { FriendDiscoveryList } from './FriendDiscoveryList'
 import { PolaroidCards } from './PolaroidCards'
+import Avatar from '../components/Avatar'
 
 //this is the landing page for our university club search, most of the info will go through here
 
@@ -127,9 +128,11 @@ export const ProfilePage = () => {
         <div className='spacer' />
         <div className='profile-header'>
           <label htmlFor="avatar-upload" className="profile-photo-btn">
-            <img
-              src={preview || profile?.avatar_url}
-              alt="Profile"
+            <Avatar
+              url={preview || profile?.avatar_url}
+              firstName={profile?.first_name}
+              lastName={profile?.last_name}
+              size={80}
               className="profile-image"
             />
           </label>

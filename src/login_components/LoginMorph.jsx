@@ -9,6 +9,7 @@ import { useGlobalStore } from "../lib/store";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { apiFetch } from "../lib/api";
+import Avatar from "../components/Avatar";
 
 function LoginMorph({ open, setOpen }) {
   let GlobalValue = useGlobalStore((state) => state.GlobalValue);
@@ -18,11 +19,15 @@ function LoginMorph({ open, setOpen }) {
   const isProfilePage = location.pathname === '/profile';
   const [view, setView] = useState("login");
   const [avatarUrl, setAvatarUrl] = useState(null);
+  const [profileName, setProfileName] = useState({ first: '', last: '' });
 
   useEffect(() => {
-    if (!GlobalValue) { setAvatarUrl(null); return; }
+    if (!GlobalValue) { setAvatarUrl(null); setProfileName({ first: '', last: '' }); return; }
     apiFetch('/me/profile')
-      .then((profile) => setAvatarUrl(profile?.avatar_url))
+      .then((profile) => {
+        setAvatarUrl(profile?.avatar_url);
+        setProfileName({ first: profile?.first_name || '', last: profile?.last_name || '' });
+      })
       .catch(() => {});
   }, [GlobalValue]);
 
@@ -71,7 +76,11 @@ function LoginMorph({ open, setOpen }) {
             className="login-icon"
             onClick={GlobalValue ? handleProfileClick : () => setOpen(true)}
           >
-            <img src={avatarUrl || "/raccoon_pfp.png"} alt={GlobalValue ? "Profile" : "Login"} />
+            {GlobalValue ? (
+              <Avatar url={avatarUrl} firstName={profileName.first} lastName={profileName.last} size={40} />
+            ) : (
+              <img src="/raccoon_pfp.png" alt="Login" />
+            )}
           </motion.button>
         </div>
       )}

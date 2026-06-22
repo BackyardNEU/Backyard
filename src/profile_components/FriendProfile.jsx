@@ -8,6 +8,7 @@ import './FriendDiscoveryList.css'
 import './FriendProfile.css'
 import { ClubMembershipPanel } from './ClubMembershipPanel'
 import { PolaroidCards } from './PolaroidCards'
+import Avatar from '../components/Avatar'
 
 // Read-only counterpart to ProfilePage. Renders another user's profile and the
 // friends both viewers have in common. There is intentionally no avatar upload,
@@ -103,9 +104,11 @@ export const FriendProfile = () => {
       <div className="spacer" />
       <div className="profile-header">
         <div className="friend-photo-wrap">
-          <img
-            src={profile?.avatar_url || '/raccoon_pfp.png'}
-            alt={profile?.username || 'Profile'}
+          <Avatar
+            url={profile?.avatar_url}
+            firstName={profile?.first_name}
+            lastName={profile?.last_name}
+            size={80}
             className="profile-image"
           />
         </div>
@@ -160,10 +163,12 @@ const MutualFriendsList = ({ friends, viewerId }) => {
               navigate(friend.id === viewerId ? '/profile' : `/friend/${friend.id}`)
             }
           >
-            <img
+            <Avatar
+              url={friend.avatar_url}
+              firstName={friend.first_name}
+              lastName={friend.last_name}
+              size={36}
               className="friend-avatar"
-              src={friend.avatar_url || '/raccoon_pfp.png'}
-              alt={friend.username}
             />
             <span className="friend-card-name">{friend.username}</span>
           </button>

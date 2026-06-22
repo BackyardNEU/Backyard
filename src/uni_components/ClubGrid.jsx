@@ -8,6 +8,7 @@ import { useGlobalStore } from "../lib/store";
 import { useClubData } from '../context/useClubData';
 import paperTexture from '/src/assets/white-paper-texture.jpg';
 import posterPin from '/src/assets/poster_pin.png';
+import Avatar from '../components/Avatar';
 
 
 export const ClubGrid = ({ result, onExpand, hideHeart, hidePins }) => {
@@ -79,11 +80,13 @@ export const ClubGrid = ({ result, onExpand, hideHeart, hidePins }) => {
         {GlobalValue && friendsInClub.length > 0 && (
           <div className="friend-avatars">
             {friendsInClub.slice(0, 3).map((friend) => (
-              <img
+              <Avatar
                 key={friend.id}
+                url={friend.avatar_url}
+                firstName={friend.first_name}
+                lastName={friend.last_name}
+                size={24}
                 className="friend-avatar-img"
-                src={friend.avatar_url || "/raccoon_pfp.png"}
-                alt={friend.username}
               />
             ))}
             {friendsInClub.length > 3 && (

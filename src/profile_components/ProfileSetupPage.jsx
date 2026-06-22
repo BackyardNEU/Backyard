@@ -4,6 +4,7 @@ import imageCompression from 'browser-image-compression'
 import { supabase } from '../lib/supabase'
 import { apiFetch } from '../lib/api'
 import './ProfileSetupPage.css'
+import Avatar from '../components/Avatar'
 
 const ProfileSetupPage = () => {
     const navigate = useNavigate()
@@ -340,9 +341,11 @@ const ProfileSetupPage = () => {
                 </div>
 
                 <label htmlFor="setup-avatar" className="setup-avatar-label">
-                    <img
-                        src={avatarPreview || '/raccoon_pfp.png'}
-                        alt="Upload profile"
+                    <Avatar
+                        url={avatarPreview}
+                        firstName={firstName}
+                        lastName={lastName}
+                        size={80}
                         className="setup-avatar"
                     />
                 </label>
