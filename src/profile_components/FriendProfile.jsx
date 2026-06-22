@@ -108,8 +108,7 @@ export const FriendProfile = () => {
             url={profile?.avatar_url}
             firstName={profile?.first_name}
             lastName={profile?.last_name}
-            size={80}
-            className="profile-image"
+            size={150}
           />
         </div>
         <div className="profile-copy">
@@ -168,7 +167,6 @@ const MutualFriendsList = ({ friends, viewerId }) => {
               firstName={friend.first_name}
               lastName={friend.last_name}
               size={36}
-              className="friend-avatar"
             />
             <span className="friend-card-name">{friend.username}</span>
           </button>

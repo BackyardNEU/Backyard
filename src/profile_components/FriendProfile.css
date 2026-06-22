@@ -5,12 +5,12 @@
 .friend-photo-wrap {
   position: relative;
   flex-shrink: 0;
+  width: 150px;
+  height: 150px;
   cursor: default;
 }
 
-.friend-photo-wrap .profile-image {
-  cursor: default;
-}
+
 
 .friend-profile-status {
   font-family: 'Barlow', sans-serif;

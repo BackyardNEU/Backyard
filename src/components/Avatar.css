@@ -1,6 +1,8 @@
 .avatar {
   border-radius: 50%;
   object-fit: cover;
+  display: block;
+  flex-shrink: 0;
 }
 
 .avatar-initials {

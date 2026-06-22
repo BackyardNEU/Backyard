@@ -57,13 +57,6 @@
   outline-offset: 2px;
 }
 
-.friend-avatar {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  object-fit: cover;
-  background-color: #eee;
-}
 
 .friend-card-name {
   font-family: "Barlow", sans-serif;
@@ -223,13 +216,6 @@
   border-bottom: none;
 }
 
-.friend-avatar-sm {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
 
 .friend-result-name {
   flex: 1;

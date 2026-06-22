@@ -22,6 +22,7 @@ const ProfileSetupPage = () => {
     const [avatarFile, setAvatarFile] = useState(null)
     const [avatarPreview, setAvatarPreview] = useState(null)
     const [showDropdown, setShowDropdown] = useState(false)
+    const [isReturningUser, setIsReturningUser] = useState(false)
     const [error, setError] = useState(null)
 
     const [existingPhotos, setExistingPhotos] = useState([])
@@ -98,6 +99,7 @@ const ProfileSetupPage = () => {
                 const existingUsername = profileData?.username || '';
                 if (existingUsername && /^[a-zA-Z0-9_]+$/.test(existingUsername)) {
                     setUsername(existingUsername);
+                    setIsReturningUser(true);
                 }
                 setBiography(profileData?.biography || '');
                 setAvatarPreview(profileData?.avatar_url || null);
@@ -214,14 +216,16 @@ const ProfileSetupPage = () => {
             return;
         }
 
-        if (!/^[a-zA-Z0-9_]{3,30}$/.test(username)) {
-            setError('Username must be 3-30 alphanumeric or underscore characters.');
-            return;
-        }
+        if (!isReturningUser) {
+            if (!/^[a-zA-Z0-9_]{3,30}$/.test(username)) {
+                setError('Username must be 3-30 alphanumeric or underscore characters.');
+                return;
+            }
 
-        if (usernameStatus && usernameStatus !== 'available') {
-            setError('That username is already taken.');
-            return;
+            if (usernameStatus && usernameStatus !== 'available') {
+                setError('That username is already taken.');
+                return;
+            }
         }
 
         if (!biography.trim()) {
@@ -316,36 +320,40 @@ const ProfileSetupPage = () => {
                     />
                 </div>
 
-                <label className="setup-field-label" htmlFor="setup-username">username</label>
-                <div className="setup-username-wrap">
-                    <input
-                        id="setup-username"
-                        className="setup-school-input"
-                        type="text"
-                        placeholder="Choose a username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
-                        autoComplete="off"
-                        required
-                        minLength={3}
-                        maxLength={30}
-                    />
-                    {usernameStatus === 'available' && (
-                        <span className="setup-username-ok">Available</span>
-                    )}
-                    {usernameStatus && usernameStatus !== 'available' && (
-                        <span className="setup-username-taken">
-                            {usernameStatus === 'taken' ? 'Taken' : usernameStatus}
-                        </span>
-                    )}
-                </div>
+                {!isReturningUser && (
+                    <>
+                        <label className="setup-field-label" htmlFor="setup-username">username</label>
+                        <div className="setup-username-wrap">
+                            <input
+                                id="setup-username"
+                                className="setup-school-input"
+                                type="text"
+                                placeholder="Choose a username"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
+                                autoComplete="off"
+                                required
+                                minLength={3}
+                                maxLength={30}
+                            />
+                            {usernameStatus === 'available' && (
+                                <span className="setup-username-ok">Available</span>
+                            )}
+                            {usernameStatus && usernameStatus !== 'available' && (
+                                <span className="setup-username-taken">
+                                    {usernameStatus === 'taken' ? 'Taken' : usernameStatus}
+                                </span>
+                            )}
+                        </div>
+                    </>
+                )}
 
                 <label htmlFor="setup-avatar" className="setup-avatar-label">
                     <Avatar
                         url={avatarPreview}
                         firstName={firstName}
                         lastName={lastName}
-                        size={80}
+                        size={196}
                         className="setup-avatar"
                     />
                 </label>

@@ -99,12 +99,7 @@
 }
 
 .setup-avatar {
-	width: 196px;
-	height: 196px;
-	border-radius: 50%;
 	border: 3px solid var(--setup-line);
-	object-fit: cover;
-	display: block;
 	background: #d9d2c6;
 }
 
@@ -344,7 +339,6 @@
 	}
 
 	.setup-avatar {
-		width: 164px;
-		height: 164px;
+		/* size controlled by Avatar component */
 	}
 }

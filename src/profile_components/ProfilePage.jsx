@@ -20,6 +20,7 @@ export const ProfilePage = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
+  const [profileLoading, setProfileLoading] = useState(true)
   const [status, setStatus]     = useState('idle')
   const [preview, setPreview]   = useState(null)
   const [imageUrl, setImageUrl] = useState(null)
@@ -38,16 +39,21 @@ export const ProfilePage = () => {
 
   useEffect(() => {
     async function loadUser() {
+      setProfileLoading(true);
       const { data, error } = await supabase.auth.getUser();
       if (error) {
         console.error('Error fetching user:', error);
+        setProfileLoading(false);
         return;
       }
 
       const authUser = data?.user;
       setUser(authUser);
 
-      if (!authUser) return;
+      if (!authUser) {
+        setProfileLoading(false);
+        return;
+      }
 
       try {
         const profileData = await apiFetch('/me/profile');
@@ -58,6 +64,8 @@ export const ProfilePage = () => {
           return;
         }
         console.error('Error fetching profile data:', err);
+      } finally {
+        setProfileLoading(false);
       }
     }
 
@@ -121,6 +129,22 @@ export const ProfilePage = () => {
   }
 }
 
+  if (profileLoading) {
+    return (
+      <div className="ProfilePage">
+        <div className='spacer' />
+        <div className='profile-header'>
+          <div className="profile-photo-btn">
+            <div style={{ width: 150, height: 150, borderRadius: '50%', backgroundColor: '#eee' }} />
+          </div>
+          <div className="profile-copy">
+            <h1 className='ProfileName' style={{ color: 'transparent' }}>Loading...</h1>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const profileDescription = profile?.biography ?? ''
 
   return (
@@ -132,13 +156,14 @@ export const ProfilePage = () => {
               url={preview || profile?.avatar_url}
               firstName={profile?.first_name}
               lastName={profile?.last_name}
-              size={80}
-              className="profile-image"
+              size={150}
             />
           </label>
           <input type="file" accept="image/*" id="avatar-upload" hidden onChange={handleAvatarUpload} />
           <div className="profile-copy">
-            <h1 className='ProfileName'>Hello, {profile?.username}</h1>
+            <h1 className='ProfileName'>Hello {profile?.first_name}!
+              
+            </h1>
             <p className="user-description">{profileDescription}</p>
             <button
               type="button"

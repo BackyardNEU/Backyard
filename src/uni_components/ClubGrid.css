@@ -232,11 +232,7 @@
 }
 
 .friend-avatar-img {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
   border: 2px solid #fff;
-  object-fit: cover;
   margin-left: -8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }

@@ -117,8 +117,7 @@ export const FriendDiscoveryList = ({ userId }) => {
               url={friend.avatar_url}
               firstName={friend.first_name}
               lastName={friend.last_name}
-              size={36}
-              className="friend-avatar"
+              size={72}
             />
             <span className="friend-card-name">{friend.username}</span>
           </button>
@@ -163,8 +162,7 @@ export const FriendDiscoveryList = ({ userId }) => {
                         url={person.avatar_url}
                         firstName={person.first_name}
                         lastName={person.last_name}
-                        size={28}
-                        className="friend-avatar-sm"
+                        size={34}
                       />
                       <span className="friend-result-name">{person.username}</span>
                       {alreadyFriend ? (
@@ -196,8 +194,7 @@ export const FriendDiscoveryList = ({ userId }) => {
                       url={friend.avatar_url}
                       firstName={friend.first_name}
                       lastName={friend.last_name}
-                      size={28}
-                      className="friend-avatar-sm"
+                      size={34}
                     />
                     <span className="friend-result-name">{friend.username}</span>
                     <button

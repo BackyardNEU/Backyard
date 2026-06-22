@@ -85,7 +85,7 @@ export const ClubGrid = ({ result, onExpand, hideHeart, hidePins }) => {
                 url={friend.avatar_url}
                 firstName={friend.first_name}
                 lastName={friend.last_name}
-                size={24}
+                size={28}
                 className="friend-avatar-img"
               />
             ))}
