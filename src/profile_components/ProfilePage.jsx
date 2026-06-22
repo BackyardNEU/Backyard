@@ -52,6 +52,10 @@ export const ProfilePage = () => {
         const profileData = await apiFetch('/me/profile');
         setProfile(profileData);
       } catch (err) {
+        if (err.status === 404) {
+          navigate('/profile-setup', { replace: true });
+          return;
+        }
         console.error('Error fetching profile data:', err);
       }
     }

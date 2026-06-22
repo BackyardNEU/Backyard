@@ -78,17 +78,22 @@ const ProfileSetupPage = () => {
                 const { data, error } = await supabase.auth.getUser();
                 if (error) throw error;
 
-                const [uniData, profileData] = await Promise.all([
-                    apiFetch('/universities', { auth: false }),
-                    apiFetch('/me/profile'),
-                ]);
-
                 const authUser = data?.user || null;
                 setUser(authUser);
+                const meta = authUser?.user_metadata || {};
+
+                const uniData = await apiFetch('/universities', { auth: false });
                 setUniversities(uniData || []);
 
-                setFirstName(profileData?.first_name || '');
-                setLastName(profileData?.last_name || '');
+                let profileData = null;
+                try {
+                    profileData = await apiFetch('/me/profile');
+                } catch (err) {
+                    if (err.status !== 404) throw err;
+                }
+
+                setFirstName(profileData?.first_name || meta.first_name || meta.given_name || '');
+                setLastName(profileData?.last_name || meta.last_name || meta.family_name || '');
                 const existingUsername = profileData?.username || '';
                 if (existingUsername && /^[a-zA-Z0-9_]+$/.test(existingUsername)) {
                     setUsername(existingUsername);
@@ -252,12 +257,8 @@ const ProfileSetupPage = () => {
             const newPhotoUrls = await uploadNewPhotos();
             const allPhotos = [...existingPhotos, ...newPhotoUrls];
 
-            // Note: the previous code tried a `school_id`/`school_name` payload first
-            // and fell back to `school` on a column error. The backend PROFILE_WRITABLE
-            // allowlist currently only includes `school`, so unknown columns are
-            // silently dropped — the fallback collapses into one call.
             await apiFetch('/me/profile', {
-                method: 'PUT',
+                method: 'POST',
                 body: {
                     first_name: firstName.trim(),
                     last_name: lastName.trim(),
@@ -287,7 +288,7 @@ const ProfileSetupPage = () => {
     return (
         <div className='profile-setup-page'>
             <div className="uni-background-layer" />
-            <form className="profile-setup-card" onSubmit={handleSubmit}>
+            <form className="profile-setup-card" onSubmit={handleSubmit} autoComplete="off">
                 <span className="setup-pin setup-pin-left" aria-hidden="true" />
                 <span className="setup-pin setup-pin-right" aria-hidden="true" />
                 <h1 className="setup-title">Finish Your Profile</h1>
@@ -300,6 +301,7 @@ const ProfileSetupPage = () => {
                         placeholder="First name"
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
+                        autoComplete="off"
                         required
                     />
                     <input
@@ -308,6 +310,7 @@ const ProfileSetupPage = () => {
                         placeholder="Last name"
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
+                        autoComplete="off"
                         required
                     />
                 </div>
@@ -321,6 +324,7 @@ const ProfileSetupPage = () => {
                         placeholder="Choose a username"
                         value={username}
                         onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
+                        autoComplete="off"
                         required
                         minLength={3}
                         maxLength={30}
@@ -358,6 +362,7 @@ const ProfileSetupPage = () => {
                     value={biography}
                     onChange={(event) => setBiography(event.target.value)}
                     placeholder="Tell people a little about yourself"
+                    autoComplete="off"
                     rows={5}
                 />
 
@@ -412,6 +417,7 @@ const ProfileSetupPage = () => {
                         className="setup-school-input"
                         value={schoolInput}
                         placeholder="Search your university"
+                        autoComplete="off"
                         onChange={(event) => {
                             setSchoolInput(event.target.value);
                             setSelectedUniversity(null);
