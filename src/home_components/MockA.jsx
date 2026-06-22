@@ -1,5 +1,5 @@
 import { SearchBar } from './SearchBar'
-import heroGif from '/src/assets/hero_students.gif'
+import heroVideo from '/src/assets/hero_students.mp4'
 import logo from '/src/assets/header_logo.png'
 import artImg from '/src/assets/art.png'
 import beakerImg from '/src/assets/beaker.png'
@@ -22,7 +22,7 @@ export default function MockA({ onOpenLogin }) {
   return (
     <div className="mock-a">
       <section className="mock-a-hero">
-        <img src={heroGif} alt="" className="mock-a-bg" />
+        <video src={heroVideo} autoPlay muted playsInline loop className="mock-a-bg" />
         <div className="mock-a-overlay" />
 
         <nav className="mock-a-nav">
