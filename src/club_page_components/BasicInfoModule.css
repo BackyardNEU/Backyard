@@ -640,3 +640,12 @@
   font-size: calc(var(--name-size, 4rem) * 0.75);
 }
 
+.about-edit-help {
+  margin: 0.2rem 0 0.75rem;
+  padding: 1rem;
+  font-size: 1.1rem;
+  color: #4c4c4c;
+  line-height: 1.2;
+  background: rgb(186, 197, 219);
+  border-radius:15px;
+}

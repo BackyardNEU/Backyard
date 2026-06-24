@@ -22,10 +22,12 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   const [nameMarquee, setNameMarquee] = useState(false);
   const [nameDur, setNameDur] = useState(20);
 
+
   const imgRef = useRef(null);
   const descRef = useRef(null);
   const nameWrapRef = useRef(null);
   const nameRef = useRef(null);
+
 
   const displayName = data?.club_name || club.club_name || '';
   const displayDescription = data?.description || club.club_description || '';
@@ -104,6 +106,11 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
 
   return (
     <>
+    {editing && (
+          <p className="about-edit-help">
+            You're in edit mode! Email explorethebackyard2025@gmail.com with any questions!
+          </p>
+        )}
       <div className="content-col">
         <div className="rectangle" style={{ backgroundColor: dominantColor }}>
           <img
@@ -167,7 +174,11 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
 
       <div className="about-section">
         <h2 className="divider-header">About</h2>
-
+        {editing && (
+          <p className="about-edit-help">
+            This is your club's basic info section. Feel free to edit your club's name, profile photo, and a description telling users about your club. 
+          </p>
+        )}
         <div className="about-meta-row" style={friendsInClub.length === 0 ? { marginLeft: '-4px' } : undefined}>
           {friendsInClub.length > 0 && (
             <div className="friend-avatars">
@@ -233,17 +244,17 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
               placeholder="Club description"
             />
           : <p className="club-description-exp">
-              {descPreview}
+                {descPreview}
               {isLongDesc && (
                 <>
                   {'… '}
-                  <button
-                    type="button"
-                    className="desc-more-btn"
-                    onClick={() => setDescOpen(true)}
-                  >
+                <button
+                  type="button"
+                  className="desc-more-btn"
+                  onClick={() => setDescOpen(true)}
+                >
                     MORE
-                  </button>
+                </button>
                 </>
               )}
             </p>
