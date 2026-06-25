@@ -25,13 +25,13 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   const [friendsModalOpen, setFriendsModalOpen] = useState(false);
   const [friendsSearch, setFriendsSearch] = useState('');
   const [imageWarning, setImageWarning] = useState('');
-
+  const [linksExpanded, setLinksExpanded] = useState(false);
+  const [linksModalOpen, setLinksModalOpen] = useState(false);
 
   const imgRef = useRef(null);
   const descRef = useRef(null);
   const nameWrapRef = useRef(null);
   const nameRef = useRef(null);
-
 
   const displayName = data?.club_name || club.club_name || '';
   const displayDescription = data?.description || club.club_description || '';
@@ -52,16 +52,50 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   const filteredInClub = friendsInClub.filter(f => f.username.toLowerCase().includes(q));
   const filteredOther = otherFriends.filter(f => f.username.toLowerCase().includes(q));
 
+  const links = data?.links ?? [];
+  const enabledLinks = links.filter(l => l.enabled && l.url);
+
+  const isValidLinkUrl = (url) => {
+    try { const u = new URL(url); return u.protocol === 'http:' || u.protocol === 'https:'; }
+    catch { return false; }
+  };
+
+  const getLinkKeyword = (name) => {
+    const n = (name || '').toLowerCase().trim();
+    const keywords = ['instagram', 'facebook', 'discord', 'email', 'album', 'slack', 'tiktok', 'linktree'];
+    return keywords.find(k => n === k) || 'default';
+  };
+
+  const handleMoreLinks = () => {
+    if (window.innerWidth <= 500) {
+      setLinksModalOpen(true);
+    } else {
+      setLinksExpanded(prev => !prev);
+    }
+  };
+
+  const toggleLinkEnabled = (i) => {
+    onChange({ ...data, links: links.map((l, idx) => idx === i ? { ...l, enabled: !l.enabled } : l) });
+  };
+
+  const updateLinkField = (i, field, value) => {
+    onChange({ ...data, links: links.map((l, idx) => idx === i ? { ...l, [field]: value } : l) });
+  };
+
+  const removeLinkRow = (i) => {
+    onChange({ ...data, links: links.filter((_, idx) => idx !== i) });
+  };
+
+  const addLinkRow = () => {
+    onChange({ ...data, links: [...links, { id: `link_${Date.now()}`, name: '', url: '', enabled: true }] });
+  };
+
   const getPastelColor = (r, g, b) => {
     const factor = (r + (255 - r) * 0.85 >= 240 &&
                     g + (255 - g) * 0.85 >= 240 &&
                     b + (255 - b) * 0.85 >= 240) ? 0.5 : 0.85;
     return `rgb(${Math.round(r + (255 - r) * factor)}, ${Math.round(g + (255 - g) * factor)}, ${Math.round(b + (255 - b) * factor)})`;
   };
-
-  useEffect(() => {
-    console.log("Module Rendered!");
-  })
 
   useEffect(() => {
     const colorThief = new ColorThief();
@@ -203,9 +237,100 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
 
       {editing && imageWarning && <p className="module-warning">{imageWarning}</p>}
 
-      {/* Action row slot (share / join / add events / favorite) — supplied by the parent
-          so membership & review state stays in ExpandedTile; absent on the ClubPage route. */}
-      {actions}
+      {/* Action row + links bar */}
+      <div className="action-links-wrapper">
+        {actions}
+        {!editing && enabledLinks.length > 0 && (
+          <>
+            <span className="links-sep">|</span>
+            <div className="links-bar">
+              {enabledLinks.slice(0, 3).map((link, i) => (
+                <a
+                  key={link.id || i}
+                  className={`review-btn link-btn link-btn--${getLinkKeyword(link.name)}`}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {link.name}
+                </a>
+              ))}
+              {enabledLinks.length > 3 && (
+                <button className="review-btn link-btn links-toggle-btn" onClick={handleMoreLinks}>
+                  {linksExpanded ? 'Less' : 'More'}
+                </button>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Desktop: extra links inline below the action row when expanded */}
+      {!editing && linksExpanded && (
+        <div className="links-expanded-row">
+          {enabledLinks.slice(3).map((link, i) => (
+            <a
+              key={link.id || i}
+              className={`review-btn link-btn link-btn--${getLinkKeyword(link.name)}`}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {link.name}
+            </a>
+          ))}
+        </div>
+      )}
+
+      {/* Edit mode: links table directly under the action row */}
+      {editing && (
+        <div className="links-edit-section">
+          <p className="links-edit-label">Club Links</p>
+          <div className="links-table">
+            <div className="links-table-header links-table-row">
+              <span className="links-cell-check">Show</span>
+              <span className="links-cell-name">Name</span>
+              <span className="links-cell-url">URL</span>
+              <span className="links-cell-del" />
+            </div>
+            {links.map((link, i) => {
+              const nameAtMax = link.name.length >= 15;
+              const urlInvalid = link.url && !isValidLinkUrl(link.url);
+              return (
+                <div key={link.id || i} className={`links-table-row ${i % 2 === 0 ? 'links-row-even' : 'links-row-odd'}`}>
+                  <div className="links-table-cell links-cell-check">
+                    <input type="checkbox" checked={!!link.enabled} onChange={() => toggleLinkEnabled(i)} />
+                  </div>
+                  <div className="links-table-cell links-cell-name">
+                    <input
+                      className={`links-name-input${nameAtMax ? ' links-input-warn' : ''}`}
+                      value={link.name}
+                      maxLength={15}
+                      onChange={(e) => updateLinkField(i, 'name', e.target.value)}
+                      placeholder="e.g. Instagram"
+                    />
+                    <span className={`links-char-count${nameAtMax ? ' links-char-over' : ''}`}>{link.name.length}/15</span>
+                    {nameAtMax && <span className="links-row-warning">Name is at the 15-character limit.</span>}
+                  </div>
+                  <div className="links-table-cell links-cell-url">
+                    <input
+                      className={`links-url-input${urlInvalid ? ' links-input-warn' : ''}`}
+                      value={link.url}
+                      onChange={(e) => updateLinkField(i, 'url', e.target.value)}
+                      placeholder="https://..."
+                    />
+                    {urlInvalid && <span className="links-row-warning">Invalid URL (must start with https:// or http://).</span>}
+                  </div>
+                  <div className="links-table-cell links-cell-del">
+                    <button className="links-del-btn" onClick={() => removeLinkRow(i)}>×</button>
+                  </div>
+                </div>
+              );
+            })}
+            <button className="links-add-btn" onClick={addLinkRow}>+ Add Link</button>
+          </div>
+        </div>
+      )}
 
       <div className="about-section">
         <h2 className="divider-header">About</h2>
@@ -346,6 +471,32 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
             {filteredInClub.length === 0 && filteredOther.length === 0 && (
               <p className="friends-empty">No friends found.</p>
             )}
+          </div>
+        </div>
+      )}
+
+      {linksModalOpen && (
+        <div className="links-modal-overlay" onClick={() => setLinksModalOpen(false)}>
+          <div className="links-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="friends-modal-header">
+              <h3 className="friends-modal-title">All Links</h3>
+              <button className="friends-modal-close" onClick={() => setLinksModalOpen(false)}>
+                <FaTimes />
+              </button>
+            </div>
+            <div className="links-modal-grid">
+              {enabledLinks.map((link, i) => (
+                <a
+                  key={link.id || i}
+                  className={`review-btn link-btn link-btn--${getLinkKeyword(link.name)}`}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {link.name}
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       )}

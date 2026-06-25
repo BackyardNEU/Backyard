@@ -792,3 +792,268 @@
   font-size: 0.9rem;
   margin: 0;
 }
+
+/* ── Action row + links ── */
+
+/* Outer wrapper that puts the action row and links bar on the same flex line */
+.action-links-wrapper {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 0;
+}
+
+/* Let the action row shrink to fit its content inside the wrapper */
+.action-links-wrapper .exp-action-row {
+  width: auto;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.action-links-wrapper .exp-action-row-inner {
+  margin: 0;
+}
+
+/* "|" divider between action buttons and link buttons */
+.links-sep {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 2rem;
+  color: #ccc;
+  line-height: 1;
+  padding: 0 0.4rem;
+  user-select: none;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* Row of link buttons (first 3 + More) */
+.links-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 8px 0;
+}
+
+/* Base link button — inherits review-btn shape */
+.link-btn {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.95rem;
+  padding: 8px 16px;
+  text-decoration: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Keyword text-color variants (on the dark review-btn background) */
+.link-btn--instagram { color: #FF79A1; }
+.link-btn--facebook  { color: #74B5FF; }
+.link-btn--discord   { color: #B3BAF7; }
+.link-btn--email     { color: #7DEDA7; }
+.link-btn--album     { color: #FFD275; }
+.link-btn--slack     { color: #7DE8F5; }
+.link-btn--tiktok    { color: #9FFFF4; }
+.link-btn--linktree  { color: #A3F7B5; }
+
+/* Desktop inline expansion — extra links shown in a row below the action row */
+.links-expanded-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0 0 10px 10px;
+  width: 100%;
+}
+
+/* On mobile the expanded row is never shown (More opens the modal instead) */
+@media (max-width: 500px) {
+  .links-expanded-row {
+    display: none;
+  }
+}
+
+/* Mobile "All Links" modal */
+.links-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.links-modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  width: 92vw;
+  max-width: 440px;
+  max-height: 80vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.links-modal-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+/* ── Edit mode: links table ── */
+
+.links-edit-section {
+  width: 100%;
+  margin-top: 0.5rem;
+  box-sizing: border-box;
+}
+
+.links-edit-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #444;
+  margin: 0 0 0.4rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.links-table {
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #ddd;
+}
+
+/* 4-column grid: checkbox | name | url | delete */
+.links-table-row {
+  display: grid;
+  grid-template-columns: 48px 1fr 2fr 40px;
+  min-height: 44px;
+  align-items: start;
+}
+
+.links-table-header {
+  background: rgb(44, 27, 43);
+  color: #fff;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-height: 36px;
+  align-items: center;
+}
+
+.links-table-header span {
+  padding: 0 10px;
+}
+
+/* Alternating row colors matching FaqTable palette */
+.links-row-even { background: hsla(209, 47%, 61%, 1.00); }
+.links-row-odd  { background: #48759fff; }
+
+.links-table-cell {
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-start;
+}
+
+.links-cell-check,
+.links-cell-del {
+  align-items: center;
+  justify-content: center;
+}
+
+.links-cell-check input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+.links-name-input,
+.links-url-input {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 0.9rem;
+  font-family: 'Barlow', sans-serif;
+  width: 100%;
+  box-sizing: border-box;
+  color: #1a1a1a;
+  outline: none;
+}
+
+.links-name-input:focus,
+.links-url-input:focus {
+  border-color: #4F83B4;
+}
+
+.links-input-warn {
+  border-color: #e53935 !important;
+  background: rgba(255, 230, 230, 0.95) !important;
+}
+
+.links-char-count {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.65);
+  align-self: flex-end;
+}
+
+.links-char-over {
+  color: #FFB3B3;
+  font-weight: 600;
+}
+
+.links-row-warning {
+  font-size: 0.7rem;
+  color: #FFD0D0;
+  font-family: 'Barlow', sans-serif;
+  line-height: 1.2;
+}
+
+.links-del-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  line-height: 1;
+  margin-top: 4px;
+}
+
+.links-del-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.links-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 16px;
+  background: rgba(79, 131, 180, 0.12);
+  border: none;
+  border-top: 1px solid #ddd;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4F83B4;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.links-add-btn:hover {
+  background: rgba(79, 131, 180, 0.22);
+}

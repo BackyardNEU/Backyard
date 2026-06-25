@@ -20,10 +20,19 @@ import { useClubData } from '../context/useClubData';
 import { useGlobalStore } from '../lib/store';
 
 // --- Validation helpers ---
+const isValidUrl = (url) => {
+  try { const u = new URL(url); return u.protocol === 'http:' || u.protocol === 'https:'; }
+  catch { return false; }
+};
+
 function validateBasicInfo(data) {
     if (!data?.club_name?.trim()) return 'Club name cannot be empty.';
     if (data.club_name.trim().length > 80) return 'Club name must be 80 characters or fewer.';
     if (!data?.description?.trim()) return 'Description cannot be empty.';
+    for (const l of (data?.links ?? [])) {
+        if (l.name.length > 15) return 'Link names must be 15 characters or fewer.';
+        if (l.url && !isValidUrl(l.url)) return 'One or more link URLs are invalid.';
+    }
     return null;
 }
 
@@ -256,6 +265,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                         club_name: club.club_name || '',
                         logo_url: club.image_url || '/raccoon_pfp.png',
                         description: club.club_description || '',
+                        links: [],
                     }
                 }]);
                 console.log("Success retrieving data!");
