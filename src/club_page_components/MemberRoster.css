@@ -257,7 +257,7 @@
   align-items: center;
   gap: 4px;
   padding: 4px 6px 4px 12px;
-  background: #4F83B4;
+  background: #16193C;
   border: 2px solid #ffffff;
   border-radius: 999px;
    box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
@@ -311,7 +311,7 @@
   align-items: center;
   gap: 18px;
   padding: 16px 12px;
-  background: #4F83B4;
+  background: #16193C;
     border: 2px solid #ffffff;
   border-radius: 15px;
   scroll-snap-align: start;
@@ -347,9 +347,9 @@
   padding: 0 10px;
   font-family: inherit;
   font-size: 13px;
-  color: white;
-  background: #4F83B4;
-  border: 2px solid white;
+  color: #CFD2E5;
+  background: #16193C;
+  border: 2px solid #CFD2E5;
   border-radius: 10px;
   cursor: pointer;
   outline: none;
@@ -364,9 +364,9 @@
   margin: 4px 0 2px;
   border-radius: 50%;
   overflow: hidden;
-  background: #4F83B4 center / cover no-repeat;
-  border: 2px solid white;
-  color: white;
+  background: #16193C center / cover no-repeat;
+  border: 2px solid #CFD2E5;
+  color: #CFD2E5;
   font-weight: 700;
   display: grid;
   place-items: center;
@@ -396,9 +396,9 @@
   text-align: center;
   font-family: inherit;
   font-size: 18px;
-  color: white;
-  background: #4F83B4;
-  border: 2px solid #ffffff;
+  color: #CFD2E5;
+  background: #16193C;
+  border: 2px solid #CFD2E5;
   border-radius: 14px;
   outline: none;
 }
@@ -412,8 +412,8 @@
   display: flex;
   flex-direction: column;
   padding: 10px 16px;
-  background: #4F83B4;
-  border: 2px solid #ffffff;
+  background: #16193C;
+  border: 2px solid #CFD2E5;
 
   border-radius: 20px;
 }
@@ -424,7 +424,7 @@
   font-family: 'Barlow', sans-serif;
   font-size: 15px;
   line-height: 1.6;
-  color: white;
+  color: #CFD2E5;
 }
 .mr-editor.is-empty::before {
   content: attr(data-ph);
@@ -439,7 +439,7 @@
   align-items: center;
   gap: 4px;
   padding: 6px 8px;
-  background: #ffffff;
+  background: #CFD2E5;
   border-radius: 14px;
 }
 .mr-toolbar button {
@@ -470,7 +470,7 @@
   width: 300px;
   border: 2px solid #d9d9d9;
   border-radius: 30px;
-  background: #4F83B4;
+  background: #16193C;
    box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
   cursor: pointer;
   display: grid;

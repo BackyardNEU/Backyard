@@ -153,7 +153,7 @@
   border: none;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.5);
-  color: #fff;
+  color: #CFD2E5;
   font-size: 16px;
   line-height: 1;
   cursor: pointer;
@@ -167,9 +167,9 @@
 .cm-poster-edit {
   width: 300px;
   box-sizing: border-box;
-  background: #4F83B4;
+  background: #16193C;
   
-  border: 2px solid #ffffff;
+  border: 2px solid #CFD2E5;
   border-radius: 15px;
   padding: 12px;
   color: #555;
@@ -185,9 +185,9 @@
 }
 
 @keyframes cmHintBlink {
-  0%, 40% { color: #ffffff; }
+  0%, 40% { color: #CFD2E5; }
   50% { color: #112b43; }
-  60%, 100% { color: #ffffff; }
+  60%, 100% { color: #CFD2E5; }
 }
 
 
@@ -214,7 +214,7 @@
 .cm-color {
   width: 45px;
   height: 38px;
-  border: 2px solid #ffffff;
+  border: 2px solid #CFD2E5;
   border-radius: 12px;
   background: #fff;
   box-sizing: border-box;
@@ -224,7 +224,7 @@
 .cm-label {
   margin-top: 5px;
   font-weight: 550;
-  color: #ffffff;
+  color: #CFD2E5;
   text-align: left;
   width: 100%;
 }
@@ -232,12 +232,12 @@
 .cm-order,
 .cm-aspect {
   height: 30px;
-  border: 2px solid #ffffff;
-  color: white;
+  border: 2px solid #CFD2E5;
+  color: #CFD2E5;
   border-radius: 10px;
   padding: 0 8px;
   box-sizing: border-box;
-  background: #4F83B4;
+  background: #16193C;
   font-family: inherit;
   cursor: pointer;
 }
@@ -247,7 +247,7 @@
 
 .cm-muted {
   margin-top: 5px;
-  color: #ffffff;
+  color: #CFD2E5;
   font-size: 14px;
   text-align: left;
   width: 100%;
@@ -257,8 +257,8 @@
   margin-top: 20px;
   width: 100%;
   box-sizing: border-box;
-  border: 2px solid #ffffff;
-  color: white;
+  border: 2px solid #CFD2E5;
+  color: #CFD2E5;
   border-radius: 14px;
   padding: 10px;
   font-family: inherit;
@@ -283,13 +283,13 @@
   border: none;
   border-radius: 39px;
   padding: 10px;
-  background: #4F83B4;
-  border: 2px solid white;
+  background: #16193C;
+  border: 2px solid #CFD2E5;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.18);
   font-family: inherit;
   font-weight: 700;
   font-size: 17px;
-  color: #dddddd;
+  color: #CFD2E5;
   cursor: pointer;
 }
 
@@ -302,9 +302,9 @@
   align-items: center;
   justify-content: center;
   background: #4F83B4;
-  border: 3px dashed #ffffff;
+  border: 3px dashed #CFD2E5;
   border-radius: 15px;
-  color: white;
+  color: #CFD2E5;
   font-size: 10rem;
   font-weight: 300;
   line-height: 1;

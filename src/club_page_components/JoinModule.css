@@ -131,10 +131,10 @@
   min-height: 340px;
   display: flex;
   flex-direction: column;
-  background: #4F83B4;
+  background: #16193C;
   border-radius: 1.25rem;
   padding: 1.5rem 1rem 1rem;
-  border: 2px solid #ffffff;
+  border: 2px solid #CFD2E5;
 }
 
 .join-card-title {
@@ -159,8 +159,8 @@
   margin-top: 15px;
   width: 100%;
   box-sizing: border-box;
-  border: 2px solid #ffffff;
-  color: white;
+  border: 2px solid #CFD2E5;
+  color: #CFD2E5;
   border-radius: 10px;
   padding: 5px;
   font-family: inherit;
@@ -176,7 +176,7 @@
   color: rgb(66, 66, 66);
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid #e2e2e2;
+  border: 1px solid #CFD2E5;
   border-radius: 8px;
   outline: none;
   padding: 0.6rem;
@@ -255,11 +255,11 @@
   width: 100%;
   box-sizing: border-box;
   padding: 0.7rem 1rem;
-  border: 2px solid #4F83B4;
+  border: 2px solid #16193C;
   outline: none;
   border-radius: 15px;
   font-weight: 500;
-  color: #4F83B4;
+  color: #16193C;
   background:#A7CCEE;
   
 }
