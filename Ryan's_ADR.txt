@@ -10,3 +10,27 @@ hours per week).
 
 Main challenge: Styling things correctly by making the carousel, adding an event listener for horizontal scrolling, changing how the data is read and the route
 that posts the data, as well as the interface to switch between a unit measurement and a scalable measurement.
+
+Record 2: How to request data for the weekly view
+---
+Problem: We need to request and map all the events for the monthly calendar but there are two many events and days to do the apping for the whole year. 
+
+Solution: Only request the events for the current, previous, and next month to ensure seemless loading. We will request the next month in whatever direction we 
+move in. EX:
+
+Start with the month of May: 
+Request June events
+Request April event (empty bc theyre no events in the past you can see unless we make a change)
+
+Move one month in the future:
+June becomes the current viewable month
+May becomes the previous month
+Request July events
+
+Move one month backwards:
+May becomes the current viewable month
+June becomes the next month
+Request April events
+
+Main challenge: Mapping events to each month in the browser. Also 3 requests at once.
+

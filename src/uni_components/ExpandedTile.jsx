@@ -531,6 +531,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     if (module.type === 'calendar') return (
                         <CalendarModule
                             key="calendar"
+                            club={club}
                             data={module.data}
                             editing={isEditing}
                             isApproved={isApproved}
