@@ -32,7 +32,6 @@
 }
 
 .rectangle {
-
   z-index: 8000;
   border-radius: 20px;
   position: relative;
@@ -274,12 +273,8 @@
   font-size: 1.2rem;
   color: #000000;
   font-weight: 400;
-    margin-left: 1rem;
-
-}
-
-.friend-names-text span {
-  display: inline;
+  margin-left: 1rem;
+  white-space: nowrap;
 }
 /* Mobile */
 @media (max-width: 500px) {
@@ -501,7 +496,7 @@
   }
 
 .friend-names-text {
-    font-size: 1.5rem;
+    font-size: 1rem;
   }
 
   p.club-description-exp {
@@ -535,7 +530,8 @@
   
 }
 
-.about-meta-row .friend-avatars {
+.about-meta-row .friend-avatars,
+.about-meta-row .friend-avatars-btn {
     width: auto;
 
  display: flex;
@@ -648,4 +644,151 @@
   line-height: 1.2;
   background: rgb(186, 197, 219);
   border-radius:15px;
+}
+
+/* Friends-in-club clickable button */
+.friend-avatars-btn {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 20px;
+  cursor: pointer;
+  gap: 4px;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.friend-avatars-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* Friends-in-club modal — z-index sits above the expanded tile stack (max 8300) */
+.friends-modal-overlay-basic-info {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+.friends-modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  width: 440px;
+  max-width: 92vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+}
+.friends-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.friends-modal-title {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 500;
+  font-size: 1.2rem;
+  margin: 0;
+  color: #1a1a1a;
+  white-space: normal;
+  word-break: break-word;
+  flex: 1;
+}
+.friends-modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  font-size: 1rem;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: color 0.15s ease;
+  flex-shrink: 0;
+}
+.friends-modal-close:hover {
+  color: #111;
+}
+.friend-search-wrapper {
+  width: 100%;
+  height: 2.5rem;
+  border-radius: 20px;
+  background-color: #fbfbfb;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  border: 1px solid rgb(202, 200, 200);
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+.friend-search-wrapper input {
+  background-color: transparent;
+  border: none;
+  outline: none;
+  font-family: "Barlow", sans-serif;
+  width: 100%;
+  height: 100%;
+  font-size: 1rem;
+  margin-left: 8px;
+  color: #333;
+}
+.friend-search-wrapper input::placeholder {
+  color: #999;
+  font-family: "Barlow", sans-serif;
+}
+.friend-search-icon {
+  fill: #888;
+  flex-shrink: 0;
+}
+.friends-modal-section-title {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 500;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #555;
+  flex-shrink: 0;
+}
+.friends-modal-list {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.friend-modal-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 4px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.friend-modal-row:last-child {
+  border-bottom: none;
+}
+.friend-avatar-sm {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.friend-result-name {
+  flex: 1;
+  font-family: "Barlow", sans-serif;
+  font-size: 0.9rem;
+  color: #333;
+}
+.friends-empty {
+  color: #999;
+  font-style: italic;
+  font-size: 0.9rem;
+  margin: 0;
 }

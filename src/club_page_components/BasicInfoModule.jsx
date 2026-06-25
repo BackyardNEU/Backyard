@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useClubData } from '../context/useClubData';
 import ColorThief from 'colorthief';
+import { FaSearch, FaTimes } from 'react-icons/fa';
 import './BasicInfoModule.css';
 
 /**
@@ -21,6 +22,8 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   const [descOpen, setDescOpen] = useState(false);
   const [nameMarquee, setNameMarquee] = useState(false);
   const [nameDur, setNameDur] = useState(20);
+  const [friendsModalOpen, setFriendsModalOpen] = useState(false);
+  const [friendsSearch, setFriendsSearch] = useState('');
 
 
   const imgRef = useRef(null);
@@ -39,8 +42,14 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   const isLongDesc = descWords.length > 50;
   const descPreview = isLongDesc ? descWords.slice(0, 50).join(' ') : displayDescription;
 
-  const { friendMembershipMap } = useClubData();
+  const { friendMembershipMap, friendsArray } = useClubData();
   const friendsInClub = friendMembershipMap?.get(club.id) || [];
+
+  const friendsInClubIds = new Set(friendsInClub.map(f => f.id));
+  const otherFriends = (friendsArray || []).filter(f => !friendsInClubIds.has(f.id));
+  const q = friendsSearch.toLowerCase();
+  const filteredInClub = friendsInClub.filter(f => f.username.toLowerCase().includes(q));
+  const filteredOther = otherFriends.filter(f => f.username.toLowerCase().includes(q));
 
   const getPastelColor = (r, g, b) => {
     const factor = (r + (255 - r) * 0.85 >= 240 &&
@@ -181,7 +190,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
         )}
         <div className="about-meta-row" style={friendsInClub.length === 0 ? { marginLeft: '-4px' } : undefined}>
           {friendsInClub.length > 0 && (
-            <div className="friend-avatars">
+            <button className="friend-avatars-btn" onClick={() => setFriendsModalOpen(true)}>
               {friendsInClub.slice(0, 3).map((friend) => (
                 <img
                   key={friend.id}
@@ -191,36 +200,16 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
                 />
               ))}
               {friendsInClub.length > 3 && (
-                <span className="friend-avatar-overflow">
-                  +{friendsInClub.length - 3}
-                </span>
+                <span className="friend-avatar-overflow">+{friendsInClub.length - 3}</span>
               )}
-              <div className="friend-names-text">
-  {friendsInClub.length === 1 ? (
-    <>
-      <span>{friendsInClub[0].username}</span>
-      <span> is a member</span>
-    </>
-  ) : friendsInClub.length === 2 ? (
-    <>
-      <span>{friendsInClub[0].username}</span>
-      <span> and </span>
-      <span>{friendsInClub[1].username}</span>
-      <span> are members</span>
-    </>
-  ) : (
-    <>
-      {friendsInClub.slice(0, 2).map((friend, idx) => (
-        <span key={friend.id}>
-          {friend.username}
-          {idx === 0 ? ', ' : ''}
-        </span>
-      ))}
-      <span> + {friendsInClub.length - 2} are members</span>
-    </>
-  )}
-</div>
-            </div>
+              <span className="friend-names-text">
+                {friendsInClub.length === 1
+                  ? `${friendsInClub[0].username} is in this club`
+                  : friendsInClub.length === 2
+                    ? `${friendsInClub[0].username} and ${friendsInClub[1].username} are in this club`
+                    : `${friendsInClub[0].username} and ${friendsInClub.length - 1} others are in this club`}
+              </span>
+            </button>
           )}
 
           {topTags.length > 0 && (
@@ -276,6 +265,61 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
               </button>
             </div>
             <p className="desc-modal-body">{displayDescription}</p>
+          </div>
+        </div>
+      )}
+
+      {friendsModalOpen && (
+        <div className="friends-modal-overlay-basic-info" onClick={() => { setFriendsModalOpen(false); setFriendsSearch(''); }}>
+          <div className="friends-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="friends-modal-header">
+              <h3 className="friends-modal-title">Friends in {displayName}</h3>
+              <button className="friends-modal-close" onClick={() => { setFriendsModalOpen(false); setFriendsSearch(''); }}>
+                <FaTimes />
+              </button>
+            </div>
+
+            <div className="friend-search-wrapper">
+              <FaSearch className="friend-search-icon" />
+              <input
+                placeholder="Search friends"
+                value={friendsSearch}
+                onChange={(e) => setFriendsSearch(e.target.value)}
+                autoFocus
+              />
+            </div>
+
+            {filteredInClub.length > 0 && (
+              <>
+                <div className="friends-modal-section-title">In This Club</div>
+                <div className="friends-modal-list">
+                  {filteredInClub.map((friend) => (
+                    <div className="friend-modal-row" key={friend.id}>
+                      <img className="friend-avatar-sm" src={friend.avatar_url || '/raccoon_pfp.png'} alt={friend.username} />
+                      <span className="friend-result-name">{friend.username}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {filteredOther.length > 0 && (
+              <>
+                <div className="friends-modal-section-title">Other Friends</div>
+                <div className="friends-modal-list">
+                  {filteredOther.map((friend) => (
+                    <div className="friend-modal-row" key={friend.id}>
+                      <img className="friend-avatar-sm" src={friend.avatar_url || '/raccoon_pfp.png'} alt={friend.username} />
+                      <span className="friend-result-name">{friend.username}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {filteredInClub.length === 0 && filteredOther.length === 0 && (
+              <p className="friends-empty">No friends found.</p>
+            )}
           </div>
         </div>
       )}
