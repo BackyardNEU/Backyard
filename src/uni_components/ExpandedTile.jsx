@@ -97,6 +97,8 @@ function validateCalendar(_data) {
     return null;
 }
 
+function validateComments() { return null; }
+
 function validateClubMedia(data) {
     const posters = data?.posters ?? [];
     for (const p of posters) {
@@ -119,6 +121,7 @@ function getModuleWarnings(draft) {
         if (m.type === 'member_roster') w.member_roster = validateMemberRoster(m.data);
         if (m.type === 'club_media') w.club_media = validateClubMedia(m.data);
         if (m.type === 'calendar') w.calendar = validateCalendar(m.data);
+        if (m.type === 'comments') w.comments = validateComments(m.data);
     }
     return w;
 }
@@ -160,6 +163,8 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const [clubEvents, setClubEvents] = useState([]);
     const [clubMyRsvpSet, setClubMyRsvpSet] = useState(new Set());
     const [clubFriendRsvpMap, setClubFriendRsvpMap] = useState(new Map());
+    // club members (for comments module authorized/unauthorized tabs)
+    const [clubMembers, setClubMembers] = useState([]);
 
     const id = club.id;
 
@@ -216,6 +221,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 apiFetch(`/clubs/${id}/page`, { auth: false }),
                 apiFetch(`/clubs/${id}/top-tags`, { auth: false }),
                 apiFetch(`/clubs/${id}/events`), // optional auth: sends token if logged in
+                apiFetch(`/clubs/${id}/members`, { auth: false }),
             ];
             const authFetches = authUser ? [
                 apiFetch('/me/membership'),
@@ -224,11 +230,12 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
             console.log("Awaiting info...");
 
-            const [reviewsResult, pageResult, topTagsResult, eventsResult, membershipResult, approvedResult] =
+            const [reviewsResult, pageResult, topTagsResult, eventsResult, membersResult, membershipResult, approvedResult] =
                 await Promise.allSettled([...publicFetches, ...authFetches]);
 
             if (reviewsResult.status === 'fulfilled') set_reviews(reviewsResult.value);
             if (topTagsResult.status === 'fulfilled') setTopTags((topTagsResult.value || []).map(r => r.tag));
+            if (membersResult.status === 'fulfilled') setClubMembers(membersResult.value || []);
             if (eventsResult.status === 'fulfilled') {
                 const eventsData = eventsResult.value || [];
                 setClubEvents(eventsData);
@@ -258,16 +265,19 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 setPageData(pageResult.value);
                 // if no page row exists yet, seed a default basic_info module from base club data
                 const modules = pageResult.value?.modules;
-                setDraft(modules?.length > 0 ? modules : [{
-                    type: 'basic_info',
-                    order: 0,
-                    data: {
-                        club_name: club.club_name || '',
-                        logo_url: club.image_url || '/raccoon_pfp.png',
-                        description: club.club_description || '',
-                        links: [],
-                    }
-                }]);
+                setDraft(modules?.length > 0 ? modules : [
+                    {
+                        type: 'basic_info',
+                        order: 0,
+                        data: {
+                            club_name: club.club_name || '',
+                            logo_url: club.image_url || '/raccoon_pfp.png',
+                            description: club.club_description || '',
+                            links: [],
+                        }
+                    },
+                    { type: 'comments', order: 1, data: {} },
+                ]);
                 console.log("Success retrieving data!");
             }
             if (membershipResult?.status === 'fulfilled')
@@ -555,6 +565,18 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                             userId={user?.id ?? null}
                         />
                     );
+                    if (module.type === 'comments') return (
+                        <ReviewList
+                            key="comments"
+                            reviews={reviews}
+                            editing={isEditing}
+                            members={clubMembers}
+                            onToggleHide={(reviewId, hidden) =>
+                                set_reviews(prev => prev.map(r => r.id === reviewId ? { ...r, isHidden: hidden } : r))
+                            }
+                            warning={moduleWarnings.comments ?? null}
+                        />
+                    );
                 })}
             </div>
 
@@ -566,14 +588,6 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     </button>
                 </div>
             )}
-
-            <div className="content-col-divider">
-                <div className="divider"></div>
-            </div>
-
-            <div className="view-reviews">
-                <ReviewList reviews={reviews} club={club} />
-            </div>
 
             {isOpen && (
                 <div>
