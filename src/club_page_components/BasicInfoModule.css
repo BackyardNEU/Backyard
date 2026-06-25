@@ -119,7 +119,8 @@
 .tag {
  
   border-radius: 999px;
-  padding: 0.25rem 0.4rem;
+  padding: 0.15rem 0.4rem;
+  margin-top: 1px;
   font-size: 1.1rem;
   font-weight: 400;
   color: #000000;
@@ -270,6 +271,7 @@
 
 .friend-names-text {
   font-family: 'Barlow Condensed', sans-serif;
+
   font-size: 1.2rem;
   color: #000000;
   font-weight: 400;
@@ -496,7 +498,7 @@
   }
 
 .friend-names-text {
-    font-size: 1rem;
+    font-size: 1.5rem;
   }
 
   p.club-description-exp {
@@ -652,7 +654,6 @@
   align-items: center;
   background: none;
   border: none;
-  padding: 4px 8px;
   border-radius: 20px;
   cursor: pointer;
   gap: 4px;
