@@ -38,7 +38,6 @@ export async function apiFetch(path, { method = 'GET', body, headers = {}, auth 
     err.body = data;
     throw err;
   }
-
   return data;
 }
 

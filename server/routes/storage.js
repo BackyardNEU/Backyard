@@ -65,9 +65,16 @@ router.post('/profile-photos-upload-url', async (req, res) => {
 
 router.post('/club-logo-upload-url', async (req, res) => {
     const { clubId } = req.body;
-    const ext = (req.body?.ext || 'webp').replace(/[^a-z0-9]/gi, '').slice(0, 8) || 'webp';                                                     
-    const path = `${clubId}.${ext}`; // one logo per club, re-uploads overwrite                                                                 
+    const ext = (req.body?.ext || 'webp').replace(/[^a-z0-9]/gi, '').slice(0, 8) || 'webp';
+    const path = `${clubId}.${ext}`; // one logo per club, re-uploads overwrite
     await makeSignedUpload('club_logos', path, res);
+});
+
+router.post('/event-poster-upload-url', async (req, res) => {
+    const ext = (req.body?.ext || 'jpg').replace(/[^a-z0-9]/gi, '').slice(0, 8) || 'jpg';
+    const rand = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    const path = `${req.user.id}/${rand}.${ext}`;
+    await makeSignedUpload('event_posters', path, res);
 });
 
 export default router;

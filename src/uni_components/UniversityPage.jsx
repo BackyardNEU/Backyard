@@ -6,7 +6,6 @@ import './UniversityPage.css';
 import { ClubList } from './ClubList';
 import { useGlobalStore } from "../lib/store";
 import { useClubData } from '../context/useClubData';
-import { CalendarPage } from './CalendarPage';
 
 // Import your images
 import ghibliBackground from '/src/assets/ghibili_background.jpg';
@@ -116,18 +115,17 @@ export const UniversityPage = () => {
 
         <div className="uni-search-row">
           <div className="uni-search-shell">
-            <UniSearchBar setResults={setResults} setShowCalendar={setShowCalendar} university={university.uni_name} />
+            <UniSearchBar setResults={setResults} university={university.uni_name} />
           </div>
         </div>
-
-        <main className="uni-club-stage">
-          <div className="uni-club-viewport">
-            {showCalendar ? <CalendarPage /> : <ClubList results={results} />}
-          </div>
-        </main>
-
-        <div className="uni-icon-row" />
-      </div>
+        
+          <main className="uni-club-stage">                                                                                              
+            <div className="uni-club-viewport">                                                                                            
+              <ClubList results={results} />                                                                                             
+            </div>                                                                                                                       
+          </main>  
+          
+        </div>
     </div>
   );
 };

@@ -2,7 +2,6 @@
 import { apiFetch } from '../lib/api'
 import { useClubData } from '../context/useClubData'
 import {FaSearch} from 'react-icons/fa'
-import { AiFillCalendar } from "react-icons/ai";
 import './UniSearchBar.css'
 
 const CATEGORIES = [
@@ -27,7 +26,7 @@ const CATEGORIES = [
   { label: "Service", category: "service" },
 ];
 
-export const UniSearchBar = ({ setResults, setShowCalendar, university }) => {
+export const UniSearchBar = ({ setResults, university }) => {
 
   const [input, setInput] = useState("")
   const [menuOpen, setMenuOpen] = useState(false)
@@ -99,7 +98,6 @@ useEffect(() => {
    
     useEffect(() => {
     async function getClubs() {
-      setShowCalendar(false);
       if (input.trim() !== "") {
         // Full Text Search + Exact Match via the backend search route
         try {
@@ -156,26 +154,17 @@ useEffect(() => {
         />
     </div>
 
-        <button
-          className="uni-calendar-btn"
-          type="button"
-          onClick={() => setShowCalendar(prev => !prev)}
-          aria-label="Toggle calendar"
-        >
-          <AiFillCalendar />
-        </button>
-
         <div className="hamburger-wrapper">
           <button
-  className={`uni-hamburger-btn ${activeCategory ? 'active' : ''}`}
-  type="button"
-  onClick={() => setMenuOpen(prev => !prev)}
-  aria-label="Open club categories"
->
-  {activeCategory
-    ? CATEGORIES.find(c => c.category === activeCategory)?.label
-    : "Categories"}
-</button>
+            className={`uni-hamburger-btn ${activeCategory ? 'active' : ''}`}
+            type="button"
+            onClick={() => setMenuOpen(prev => !prev)}
+            aria-label="Open club categories"
+          >
+            {activeCategory
+              ? CATEGORIES.find(c => c.category === activeCategory)?.label
+              : "Categories"}
+          </button>
           {menuOpen && (
             <div className="uni-hamburger-dropdown">
               {CATEGORIES.map(({ label, category }) => (
@@ -193,5 +182,4 @@ useEffect(() => {
         </div>
     </div>
   )
-  
 }
