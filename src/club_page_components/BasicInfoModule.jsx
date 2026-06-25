@@ -355,10 +355,25 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
               )}
               <span className="friend-names-text">
                 {friendsInClub.length === 1
-                  ? `${friendsInClub[0].username} is in this club`
+                ? (
+    <>
+      <span>{friendsInClub[0].username}</span>
+      <span> is a member</span>
+    </>
+  )
                   : friendsInClub.length === 2
-                    ? `${friendsInClub[0].username} and ${friendsInClub[1].username} are in this club`
-                    : `${friendsInClub[0].username} and ${friendsInClub.length - 1} others are in this club`}
+                    ? `${friendsInClub[0].username} and ${friendsInClub[1].username} are members`
+                    : (
+    <>
+      {friendsInClub.slice(0, 2).map((friend, idx) => (
+        <span key={friend.id}>
+          {friend.username}
+          {idx === 0 ? ', ' : ''}
+        </span>
+      ))}
+      <span> + {friendsInClub.length - 2} are members</span>
+    </>
+  )}
               </span>
             </button>
           )}
