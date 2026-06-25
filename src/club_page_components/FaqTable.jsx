@@ -120,7 +120,7 @@ export default function FaqTable({ faqs = [], onChange, userQuestions = [], onAc
         editable: true,
         placeholder: isQ ? "enter a common question here" : "enter answer here",
         onChange: (v) => setFaqCell(index, isQ ? "q" : "a", v),
-        maxLength: isQ ? 200 : 500,
+        maxLength: isQ ? 100 : 500,
       };
     }
   }

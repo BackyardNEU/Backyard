@@ -24,6 +24,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   const [nameDur, setNameDur] = useState(20);
   const [friendsModalOpen, setFriendsModalOpen] = useState(false);
   const [friendsSearch, setFriendsSearch] = useState('');
+  const [imageWarning, setImageWarning] = useState('');
 
 
   const imgRef = useRef(null);
@@ -106,9 +107,32 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
     if (over) setNameDur(Math.max(6, el.scrollWidth / 40)); // ~40px/s
   }, [displayName, editing]);
 
-  const handleLogoChange = (e) => {
+  const handleLogoChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    const validity = await new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const ratio = img.naturalWidth / img.naturalHeight;
+        resolve(ratio >= 0.25 && ratio <= 4.0 ? 'ok' : 'proportions');
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve('load'); };
+      img.src = url;
+    });
+
+    if (validity === 'load') {
+      setImageWarning('Image upload unsuccessful. Please try a different file.');
+      return;
+    }
+    if (validity === 'proportions') {
+      setImageWarning('Image has unusual proportions. Please use an aspect ratio between 1:4 and 4:1.');
+      return;
+    }
+
+    setImageWarning('');
     setLogoPreview(URL.createObjectURL(file));
     onLogoChange(file);
   };
@@ -176,6 +200,8 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
           </div>
         </div>
       </div>
+
+      {editing && imageWarning && <p className="module-warning">{imageWarning}</p>}
 
       {/* Action row slot (share / join / add events / favorite) — supplied by the parent
           so membership & review state stays in ExpandedTile; absent on the ClubPage route. */}

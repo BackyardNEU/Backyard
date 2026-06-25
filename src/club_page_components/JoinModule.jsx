@@ -16,8 +16,15 @@ import './JoinModule.css';
  * @param {boolean} editing - whether the page-level edit mode is on (only ever true for approved accounts).
  * @param {Function} onChange - callback receiving the full updated data object (preserved by parent useCallback).
  */
+const isValidUrl = (url) => {
+  try { const u = new URL(url); return u.protocol === 'http:' || u.protocol === 'https:'; }
+  catch { return false; }
+};
+
 function JoinModule({ data, editing, onChange, warning }) {
   const [active, setActive] = useState(0);
+  const [appLinkWarning, setAppLinkWarning] = useState('');
+  const [contactLinkWarning, setContactLinkWarning] = useState('');
 
   const tabs = data?.tabs ?? [];
   const applicationLink = data?.applicationLink || '';
@@ -72,6 +79,7 @@ function JoinModule({ data, editing, onChange, warning }) {
                 onChange={(html) => updateTab(idx, 'body', sanitizeBioHtml(html))}
                 placeholder="add about positions ex: we're looking for defenders"
               />
+              {isEmptyHtml(t.body) && <p className="module-warning">Bio cannot be empty.</p>}
             </div>
           ))}
 
@@ -84,15 +92,25 @@ function JoinModule({ data, editing, onChange, warning }) {
           <input
             className="join-link-application-input"
             value={applicationLink}
-            onChange={(e) => updateLink('applicationLink', e.target.value)}
+            onChange={(e) => {
+              const v = e.target.value;
+              updateLink('applicationLink', v);
+              setAppLinkWarning(v && !isValidUrl(v) ? 'Application link must be a valid URL (https://...)' : '');
+            }}
             placeholder="enter application link"
           />
+          {appLinkWarning && <p className="module-warning">{appLinkWarning}</p>}
           <input
             className="join-link-contact-input"
             value={contactLink}
-            onChange={(e) => updateLink('contactLink', e.target.value)}
+            onChange={(e) => {
+              const v = e.target.value;
+              updateLink('contactLink', v);
+              setContactLinkWarning(v && !isValidUrl(v) ? 'Contact link must be a valid URL (https://...)' : '');
+            }}
             placeholder="enter contact link"
           />
+          {contactLinkWarning && <p className="module-warning">{contactLinkWarning}</p>}
         </div>
       </div>
     );

@@ -28,6 +28,7 @@ import './ClubMediaModule.css';
  */
 function ClubMediaModule({ data, editing, onChange, warning }) {
   const [openIndex, setOpenIndex] = useState(null);
+  const [localWarning, setLocalWarning] = useState('');
   const posters = data?.posters ?? [];
 
   const orderOf = (p, i) => (typeof p.order === 'number' ? p.order : i);
@@ -56,7 +57,11 @@ function ClubMediaModule({ data, editing, onChange, warning }) {
     onChange?.({ ...data, posters: posters.map((p, i) => ({ ...p, order: orderByIndex[i] })) });
   };
 
-  const addPoster = () => onChange?.({ ...data, posters: [...posters, newPoster(posters.length)] });
+  const addPoster = () => {
+    if (posters.length >= 15) { setLocalWarning('Maximum of 15 posters reached.'); return; }
+    setLocalWarning('');
+    onChange?.({ ...data, posters: [...posters, newPoster(posters.length)] });
+  };
 
   const removePoster = (origIndex) => {
     const remaining = posters.filter((_, i) => i !== origIndex);
@@ -78,7 +83,7 @@ function ClubMediaModule({ data, editing, onChange, warning }) {
   return (
     <div className="club-media-module">
       <p className="divider-header">Media</p>
-      {editing && warning && <p className="module-warning">{warning}</p>}
+      {editing && (localWarning || warning) && <p className="module-warning">{localWarning || warning}</p>}
       {editing && (
           <p className="about-edit-help">
             Think of these like your highlights. When user's click on your highlights, they will see a scrap book where you will take them into the world of your club.
@@ -96,6 +101,7 @@ function ClubMediaModule({ data, editing, onChange, warning }) {
             onUpdate={(patch) => updatePoster(i, patch)}
             onSetOrder={(newPos0) => setPosterOrder(i, newPos0)}
             onDelete={() => removePoster(i)}
+            onError={setLocalWarning}
           />
         ))}
 
@@ -118,7 +124,7 @@ function ClubMediaModule({ data, editing, onChange, warning }) {
 
 /* ─────────────────────────── Poster card (+ edit card below) ─────────────────────────── */
 
-function PosterCard({ poster, editing, rank, count, onOpen, onUpdate, onSetOrder, onDelete }) {
+function PosterCard({ poster, editing, rank, count, onOpen, onUpdate, onSetOrder, onDelete, onError }) {
   const wrapRef = useRef(null);
   const copyRef = useRef(null);
   const [marquee, setMarquee] = useState(false);
@@ -142,10 +148,34 @@ function PosterCard({ poster, editing, rank, count, onOpen, onUpdate, onSetOrder
   const handleBlobUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const validity = await new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const ratio = img.naturalWidth / img.naturalHeight;
+        resolve(ratio >= 0.25 && ratio <= 4.0 ? 'ok' : 'proportions');
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve('load'); };
+      img.src = url;
+    });
+
+    if (validity === 'load') {
+      onError?.('Image upload unsuccessful. Please try a different file.');
+      return;
+    }
+    if (validity === 'proportions') {
+      onError?.('Image proportions are too extreme. Use an aspect ratio between 1:4 and 4:1.');
+      return;
+    }
+
     try {
+      onError?.('');
       onUpdate({ blob_image_url: await uploadImage(file) });
     } catch (err) {
       console.error('Blob image upload failed:', err);
+      onError?.('Image upload unsuccessful. Please try again.');
     }
   };
 
@@ -247,10 +277,10 @@ function PosterCard({ poster, editing, rank, count, onOpen, onUpdate, onSetOrder
               value={poster.poster_text || ''}
               onChange={(e) => onUpdate({ poster_text: e.target.value })}
               placeholder="Enter Poster Title"
-              maxLength={100}
+              maxLength={40}
             />
             <div className="char-counter-wrap">
-              <span className="char-counter">{(poster.poster_text || '').length}/100</span>
+              <span className="char-counter">{(poster.poster_text || '').length}/40</span>
             </div>
           </div>
 

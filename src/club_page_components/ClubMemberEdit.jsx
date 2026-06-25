@@ -156,7 +156,7 @@ function MemberCard({ member, categories, onRemove, onCategory, onName, onPhoto,
           className="mr-name"
           type="text"
           placeholder="Enter Member Name"
-          maxLength={50}
+          maxLength={25}
           value={member.name || ''}
           onChange={(e) => onName(e.target.value)}
         />
