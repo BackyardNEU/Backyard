@@ -149,7 +149,7 @@ function StatsModule({ data, editing, onChange, warning }) {
                                     onClick={() => removeStat(index)}
                                     aria-label="Remove stat"
                                 >
-                                    ✕
+                                ✕
                                 </button>
                             </div>
                         ))}
@@ -158,7 +158,7 @@ function StatsModule({ data, editing, onChange, warning }) {
                             onClick={() => addStat(false)}
                             disabled={quantCount>= 8}
                         >
-                            + Add quantitative stat {quantCount >= 8 ? '(limit reached)' : `(${quantCount}/8)`}
+                            + QUALITATIVE {quantCount >= 8 ? '(limit reached)' : `(${quantCount}/8)`}
                         </button>
                     </div>
                     {/* Qualitative edit — value, max, label, slider, remove */}
@@ -247,10 +247,10 @@ function StatsModule({ data, editing, onChange, warning }) {
                             const color = STAT_COLORS[index % STAT_COLORS.length];
                             return (
                                 <div className="quant-stat-holder" key={index}>
-                                    <p className="number-big" style={{ color }}>
+                                    <p className="number" style={{ color }}>
                                         <CountUp target={value} animate={animated} delay={index * 120} />
                                     </p>
-                                    <span className="number-small">{stat.unit1} per {stat.unit2}</span>
+                                    <span className="stat-label">{stat.unit1} per {stat.unit2}</span>
                                 </div>
                             );
                         })}

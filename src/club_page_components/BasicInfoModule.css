@@ -127,6 +127,16 @@
     text-transform: uppercase;
 }
 
+.separator {
+ 
+  border-radius: 999px;
+  margin-top: 1px;
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: #000000;
+    text-transform: uppercase;
+}
+
 .club-description-exp {
   font-size: 1.3rem;
   align-self: flex-start;
@@ -271,7 +281,7 @@
 
 .friend-names-text {
   font-family: 'Barlow Condensed', sans-serif;
-
+  
   font-size: 1.2rem;
   color: #000000;
   font-weight: 400;
