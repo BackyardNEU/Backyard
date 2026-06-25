@@ -17,7 +17,7 @@
   width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
-  padding-bottom: 30px;
+  
   scroll-snap-type: x proximity;
   scrollbar-width: thin;
   scrollbar-color: #cfcfcf transparent;

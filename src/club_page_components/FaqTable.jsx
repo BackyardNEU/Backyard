@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 
 /* palette pulled from the mockup */
-const BLUE = "#000000ff";
+const BLUE = "#da0000ff";
 const ROW_A = "#16193C";
 const ROW_B = "#252951ff";
-const INK = "#ffffffff";
-const MUTED = "#b7b7b7ff";
+const INK = "#CFD2E5";
+const MUTED = "#ffffffff";
 const VLINE = "#ffffffff";
-const SECTION_LINE = "#5b5964ff";
+const SECTION_LINE = "#CFD2E5";
 
 const ROW_H = 50;
 const USER_VISIBLE = 3;
@@ -221,7 +221,7 @@ function XCell({ variant, onClick }) {
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
       {variant === "circle" ? (
         <button onClick={onClick} aria-label="Delete question" style={{ all: "unset", cursor: "pointer",
-          width: 32, height: 32, borderRadius: 999, background: BLUE, color: "#fff",
+          width: 32, height: 32, borderRadius: 999, background: BLUE, color: "#ffffffff",
           display: "grid", placeItems: "center", fontSize: 15, fontWeight: 600,
           boxShadow: "0 2px 5px rgba(0,0,0,0.2)" }}
           onMouseDown={(e) => e.stopPropagation()}>x</button>
@@ -300,7 +300,7 @@ function Overlay({ rect, meta, onClose }) {
   return (
     <div className="cell-overlay" style={{ position: "fixed", left: rect.left, top: rect.top,
       minWidth: rect.width, maxWidth: maxW, minHeight: rect.height, zIndex: 9600,
-      background: "#fff", border: `1px solid #000`, borderRadius: 3,
+      background: "#CFD2E5", border: `1px solid #000`, borderRadius: 3,
       boxShadow: "0 6px 22px rgba(0,0,0,0.22)", display: "flex", alignItems: "center",
       padding: "0 16px" }}>
       {meta.editable ? (
