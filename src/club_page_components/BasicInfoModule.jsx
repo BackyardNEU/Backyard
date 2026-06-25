@@ -62,7 +62,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
 
   const getLinkKeyword = (name) => {
     const n = (name || '').toLowerCase().trim();
-    const keywords = ['instagram', 'facebook', 'discord', 'email', 'album', 'slack', 'tiktok', 'linktree'];
+    const keywords = ['instagram', 'facebook', 'discord', 'email', 'album', 'slack', 'tiktok', 'linktree', 'youtube'];
     return keywords.find(k => n === k) || 'default';
   };
 

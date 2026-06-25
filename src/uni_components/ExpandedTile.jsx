@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+﻿import React, { useState, useEffect, useCallback } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import ReviewPage from "../review_components/ReviewPage";
@@ -53,7 +53,7 @@ function validateStats(data) {
         if (s.value < 0) return 'Stat values cannot be negative.';
         if (s.value % 1 !== 0) return 'Stat value must be a whole number.';
         if (s.type === 'quantitative') {
-            if (!s.unit1?.trim() || !s.unit2?.trim()) return 'Each quantitative stat must have a unit.';
+            if (!s.unit1?.trim()) return 'Each quantitative stat must have a unit.';
         }
         if (s.type === 'qualitative') {
             if (!s.label?.trim()) return 'Each qualitative stat must have a name.';

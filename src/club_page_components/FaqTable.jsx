@@ -2,12 +2,12 @@ import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from
 
 /* palette pulled from the mockup */
 const BLUE = "#000000ff";
-const ROW_A = "hsla(209, 47%, 61%, 1.00)";
-const ROW_B = "#48759fff";
+const ROW_A = "#16193C";
+const ROW_B = "#252951ff";
 const INK = "#ffffffff";
-const MUTED = "#3f3f3fff";
+const MUTED = "#b7b7b7ff";
 const VLINE = "#ffffffff";
-const SECTION_LINE = "#130d2bff";
+const SECTION_LINE = "#5b5964ff";
 
 const ROW_H = 50;
 const USER_VISIBLE = 3;

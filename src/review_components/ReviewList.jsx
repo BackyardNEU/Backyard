@@ -96,7 +96,7 @@ function CommentCard({ review, userVote, onVote, onToggleHide, editing }) {
         if (!cardRef.current) return;
         // Measure after images might have loaded — use a small delay
         const check = () => {
-            if (cardRef.current && cardRef.current.scrollHeight > 800) setNeedsExpand(true);
+            if (cardRef.current && cardRef.current.scrollHeight > 200) setNeedsExpand(true);
         };
         const t = setTimeout(check, 150);
         return () => clearTimeout(t);

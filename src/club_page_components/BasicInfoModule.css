@@ -225,11 +225,11 @@
   cursor: pointer;
   font-size: 1.5rem;
   font-family: 'bebas neue', sans-serif;
-  color: #fff;
+  color: #ffffff;
   font-weight: 700;
   padding: 0.3rem 0.7rem;
   border-radius: 6px;
-  background: rgba(77, 157, 218, 0.65);
+  background: #16193c70;
 
 }
 
@@ -651,6 +651,7 @@
 .about-edit-help {
   margin: 0.2rem 0 0.75rem;
   padding: 1rem;
+  max-width: 800px;
   font-size: 1.1rem;
   color: #4c4c4c;
   line-height: 1.2;
@@ -810,7 +811,9 @@
 .action-links-wrapper {
   display: flex;
   align-items: center;
+  justify-content: center;
   flex-wrap: wrap;
+  
   width: 100%;
   gap: 0;
 }
@@ -836,6 +839,7 @@
   user-select: none;
   flex-shrink: 0;
   align-self: center;
+  padding: 0px 10px;
 }
 
 /* Row of link buttons (first 3 + More) */
@@ -860,13 +864,14 @@
 }
 
 /* Keyword text-color variants (on the dark review-btn background) */
-.link-btn--instagram { color: #FF79A1; }
-.link-btn--facebook  { color: #74B5FF; }
+.link-btn--instagram { background-color: rgb(194, 0, 181); color: #ffffff; }
+.link-btn--facebook  { background-color: rgb(66, 143, 187); color: #ffffff;  }
 .link-btn--discord   { color: #B3BAF7; }
+.link-btn--youtube  { background-color: rgb(165, 39, 17); color: #ffffff;  }
 .link-btn--email     { color: #7DEDA7; }
 .link-btn--album     { color: #FFD275; }
 .link-btn--slack     { color: #7DE8F5; }
-.link-btn--tiktok    { color: #9FFFF4; }
+.link-btn--tiktok    {background-color: rgb(0, 0, 0); color: #ffffff;}
 .link-btn--linktree  { color: #A3F7B5; }
 
 /* Desktop inline expansion — extra links shown in a row below the action row */
@@ -921,6 +926,7 @@
   width: 100%;
   margin-top: 0.5rem;
   box-sizing: border-box;
+   padding-left: 1.5%;
 }
 
 .links-edit-label {

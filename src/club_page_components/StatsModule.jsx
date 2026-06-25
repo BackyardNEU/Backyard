@@ -2,14 +2,23 @@ import React, { useState, useEffect, useRef } from 'react';
 import './StatsModule.css';
 
 const STAT_COLORS = [
-    'rgba(82, 50, 6, 1)',
-    'rgb(47, 115, 164)',
-    'rgba(255, 128, 0, 1)',
-    'rgba(198, 165, 1, 0.85)',
-    'rgba(124, 124, 124, 0.85)',
-    'rgba(180, 60, 100, 0.85)',
-    'rgba(60, 160, 100, 0.85)',
-    'rgba(100, 80, 200, 0.85)',
+    '#382825',
+    '#56758b',
+    '#BE0D00',
+    '#FC7200',
+    '#ffcc13',
+    '#857a75',
+    '#a39a96',
+    '#d3d1c9ff',
+    '#382825',
+    '#56758b',
+    '#BE0D00',
+    '#FC7200',
+    '#ffcc13',
+    '#857a75',
+    '#a39a96',
+    '#d3d1c9ff',
+
 ];
 
 const fill = (backgroundColor, start, end, value) => {
@@ -85,7 +94,7 @@ function StatsModule({ data, editing, onChange, warning }) {
         // true indicates qualitative stat (no unit, has max)
         if (type) onChange({ ...data, stats: [...stats, { label: '', value: 0, max: 10, type: "qualitative" }] });
         // false indicates quantitative stat (no max, has unit)
-        else onChange({ ...data, stats: [...stats, { unit1: '', unit2: '', value: 0, type: "quantitative" }] });
+        else onChange({ ...data, stats: [...stats, { unit1: '', value: 0, type: "quantitative" }] });
     };
 
     const removeStat = (index) => {
@@ -102,159 +111,176 @@ function StatsModule({ data, editing, onChange, warning }) {
             <p className="divider-header">Stats</p>
             {editing && (
           <p className="about-edit-help">
-            Think of these like your highlights. When user's click on your highlights, they will see a scrap book where you will take them into the world of your club.
+            Enter any quantitative stats (ex. 45 member) or qualitative stats (ex. 3.5/4 avg GPA )
           </p>
         )}
             {editing && warning && <p className="module-warning">{warning}</p>}
-            {editing ? (
+         {editing ? (
                 <div className="rendered-part">
-                    {/* Quantitative edit — value, unit, remove */}
-                    <div className="quant-stats">
-                        {stats.map((stat, index) => stat.type !== "quantitative" ? null : (
-                            <div className="quant-stat-holder" key={index}>
-                                <label>
-                                    <input
-                                        className="number-big edit-mode-input"
-                                        type="number"
-                                        step={1}
-                                        value={stat.value}
-                                        onChange={(e) => updateStat(index, 'value', e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                                    />
-                                </label>
-                                {/* Combine unit (EX: hours per week, competitions per season) */}
-                                <div className="combined-unit">
-                                    <label>
-                                        <input
-                                            className="edit-mode-input"
-                                            type="text"
-                                            placeholder="Unit-1"
-                                            maxLength={10}
-                                            value={stat.unit1 || ''}
-                                            onChange={(e) => updateStat(index, 'unit1', e.target.value)}
-                                        /> per
-                                    </label>
-                                    <label>
-                                        <input
-                                            className="edit-mode-input"
-                                            type="text"
-                                            placeholder="Unit-2"
-                                            maxLength={10}
-                                            value={stat.unit2 || ''}
-                                            onChange={(e) => updateStat(index, 'unit2', e.target.value)}
-                                        />
-                                    </label>
-                                </div>
-                                <button
-                                    className="stats-remove-btn"
-                                    onClick={() => removeStat(index)}
-                                    aria-label="Remove stat"
-                                >
-                                ✕
-                                </button>
-                            </div>
-                        ))}
+                 {/* Quantitative edit — value, unit, remove */}
+<div className="quant-stats">
+    {stats.map((stat, index) => stat.type !== "quantitative" ? null : (() => {
+        // Calculate color based on its position among OTHER quantitative stats
+        const quantIndex = stats.slice(0, index).filter(s => s.type === 'quantitative').length;
+        const color = STAT_COLORS[quantIndex % STAT_COLORS.length];
+        
+        return (
+            <div className="quant-stat-holder" key={index}>
+                {/* NEW: Horizontal flex wrapper for inputs */}
+                <div className="quant-inputs-row">
+                    <label>
+                        <input
+                            className="number-big edit-mode-input"
+                            type="number"
+                            style={{ color }}
+                            step={1}
+                            value={stat.value}
+                            onChange={(e) => updateStat(index, 'value', e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                        />
+                    </label>
+                    <div className="combined-unit">
+                        <label>
+                            <input
+                                className="edit-mode-input"
+                                type="text"
+                                style={{ color }}
+                                placeholder="Stat Name"
+                                maxLength={10}
+                                value={stat.unit1 || ''}
+                                onChange={(e) => updateStat(index, 'unit1', e.target.value)}
+                            /> 
+                        </label>
+                    </div>
+                </div>
+
+                {/* The remove button naturally falls below the row container */}
+                <button
+                    className="stats-remove-btn"
+                    onClick={() => removeStat(index)}
+                    aria-label="Remove stat"
+                >
+                    x
+                </button>
+            </div>
+        );
+    })())}
+ 
+
                         <button
                             className="stats-add-btn"
                             onClick={() => addStat(false)}
-                            disabled={quantCount>= 8}
+                            disabled={quantCount >= 8}
                         >
-                            + QUALITATIVE {quantCount >= 8 ? '(limit reached)' : `(${quantCount}/8)`}
+                            + QUANTITATIVE {quantCount >= 8 ? '(limit reached)' : `  (${quantCount}/8)`}
                         </button>
                     </div>
+
                     {/* Qualitative edit — value, max, label, slider, remove */}
                     <div className="qual-stats">
                         {stats.map((stat, index) => stat.type !== "qualitative" ? null : (() => {
+                            // Calculate color based on total quant stats + its position among qualitative stats
                             const qualIndex = stats.slice(0, index).filter(s => s.type === 'qualitative').length;
                             const color = STAT_COLORS[(quantCount + qualIndex) % STAT_COLORS.length];
+                            
                             return (
-                            <div key={index}>
-                                <div className="vert-flex">
-                                    <div className="">
-                                        <label className="">
-                                            <input
-                                                className="number-big edit-mode-input"
-                                                type="number"
-                                                max={stat.max ?? 10}
-                                                step={1}
-                                                value={stat.value}
-                                                onChange={(e) => updateStat(index, 'value', e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                                            />
-                                        </label>
-                                        <label className="">
-                                            /
-                                            <input
-                                                className="number-small edit-mode-input"
-                                                type="number"
-                                                step={1}
-                                                value={stat.max ?? 10}
-                                                onChange={(e) => updateStat(index, 'max', e.target.value === '' ? '' : parseInt(e.target.value) || '')}
-                                            />
-                                        </label>
-                                        <label className="stat-name-input-label">
-                                            <input
-                                                className="range-label edit-mode-input"
-                                                type="text"
-                                                placeholder="Stat name"
-                                                maxLength={30}
-                                                value={stat.label}
-                                                onChange={(e) => updateStat(index, 'label', e.target.value)}
-                                            />
-                                        </label>
+                                <div key={index}>
+                                    <div className="vert-flex">
+                                        <div className="">
+                                            <label className="">
+                                                <input
+                                                    className="number-big edit-mode-input"
+                                                    type="number"
+                                                    style={{ color }}
+                                                    max={stat.max ?? 10}
+                                                    step={1}
+                                                    value={stat.value}
+                                                    onChange={(e) => updateStat(index, 'value', e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                                                />
+                                            </label>
+                                            <label className="">
+                                                /
+                                                <input
+                                                    className="number-small edit-mode-input"
+                                                    type="number"
+                                                    style={{ color }}
+                                                    step={1}
+                                                    value={stat.max ?? 10}
+                                                    onChange={(e) => updateStat(index, 'max', e.target.value === '' ? '' : parseInt(e.target.value) || '')}
+                                                />
+                                            </label>
+                                            <label className="stat-name-input-label">
+                                                <input
+                                                    className="range-label edit-mode-input"
+                                                    type="text"
+                                                    placeholder="Stat name"
+                                                    maxLength={30}
+                                                    value={stat.label}
+                                                    onChange={(e) => updateStat(index, 'label', e.target.value)}
+                                                />
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div className="sliderContainer">
+                                        <button
+                                            className="stats-remove-btn"
+                                            onClick={() => removeStat(index)}
+                                            aria-label="Remove stat"
+                                        >
+                                            ✕
+                                        </button>
+                                        <input
+                                            className="slider"
+                                            type="range"
+                                            min="0"
+                                            max={stat.max}
+                                            step="1"
+                                            value={stat.value}
+                                            onChange={(e) => updateStat(index, 'value', parseInt(e.target.value) || 0)}
+                                            style={{
+                                                background: fill(color, 0, stat.max, stat.value),
+                                                boxShadow: `0 0 0 1px #adadad`
+                                            }}
+                                        />
+                                        
                                     </div>
                                 </div>
-                                <div className="sliderContainer">
-                                    <input
-                                        className="slider"
-                                        type="range"
-                                        min="0"
-                                        max={stat.max}
-                                        step="1"
-                                        value={stat.value}
-                                        onChange={(e) => updateStat(index, 'value', parseInt(e.target.value) || 0)}
-                                        style={{
-                                            background: fill(color, 0, stat.max, stat.value),
-                                            boxShadow: `0 0 0 1px #adadad`
-                                        }}
-                                    />
-                                    <p className="number" style={{ color }}>
-                                        {stat.value}<span className="number-small">/{stat.max}</span>
-                                    </p>
-                                </div>
-                                <button
-                                    className="stats-remove-btn"
-                                    onClick={() => removeStat(index)}
-                                    aria-label="Remove stat"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                        );})())}
+                            );
+                        })())}
                         <button
                             className="stats-add-btn"
                             onClick={() => addStat(true)}
                             disabled={qualCount >= 8}
                         >
-                            + Add qualitative stat {qualCount >= 8 ? '(limit reached)' : `(${qualCount}/8)`}
+                            + QUALITATIVE {qualCount >= 8 ? '(limit reached)' : `(${qualCount}/8)`}
                         </button>
                     </div>
                 </div>
-            ) : (
+        
+            
+               ) : (
+                // View Mode
                 <div>
-                    {/* Quantitative view — number + unit, no bar */}
+                    {/* Quantitative view — number + unit side-by-side */}
                     <div className="quant-stats">
                         {stats.filter(s => s.type === "quantitative").map((stat, index) => {
                             const value = parseInt(Number(stat.value).toFixed(1)) || 0;
                             const color = STAT_COLORS[index % STAT_COLORS.length];
                             return (
                                 <div className="quant-stat-holder" key={index}>
-                                    <p className="number" style={{ color }}>
-                                        <CountUp target={value} animate={animated} delay={index * 120} />
-                                    </p>
-                                    <span className="stat-label">{stat.unit1} per {stat.unit2}</span>
+                                    {/* Use the same horizontal flex row from edit mode */}
+                                    <div className="quant-inputs-row" style={{ alignItems: 'flex-end', gap: '6px' }}>
+                                        <p className="number-big" style={{ color, width: 'auto', margin: 0, lineHeight: '0.85' }}>
+                                            <CountUp target={value} animate={animated} delay={index * 120} />
+                                        </p>
+                                        <span className="stat-label" style={{ color, paddingBottom: '2px' }}>
+                                            {stat.unit1}
+                                        </span>
+                                    </div>
                                 </div>
                             );
                         })}
                     </div>
+
                     {/* Qualitative view — bar + number/max */}
                     <div className="qual-stats">
                         {stats.filter(s => s.type === "qualitative").map((stat, index) => {
@@ -265,9 +291,9 @@ function StatsModule({ data, editing, onChange, warning }) {
                             return (
                                 <div className="range-row" key={index}>
                                     <div className="vert-flex">
-                                        <p className="number-big" style={{ color }}>
+                                        <p className="number-big" style={{ color, margin: 0 }}>
                                             <CountUp target={value} animate={animated} delay={index * 120} />
-                                            <span className="number-small">/{stat.max}</span>
+                                            <span className="number-small" style={{ color }}>{stat.max}</span>
                                         </p>
                                         <span className="stat-label">{stat.label}</span>
                                     </div>

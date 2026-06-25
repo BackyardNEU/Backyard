@@ -258,16 +258,16 @@
   gap: 4px;
   padding: 4px 6px 4px 12px;
   background: #16193C;
-  border: 2px solid #ffffff;
+  border: 2px solid #CFD2E5;
   border-radius: 999px;
-   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+
 }
 .mr-cat-chip-name {
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: #fcfcfc;
+  color: #CFD2E5;
 }
 .mr-cat-chip-btn {
   width: 22px;
@@ -277,7 +277,7 @@
   border: none;
   border-radius: 50%;
   background: transparent;
-  color: #ffffff;
+  color: #CFD2E5;
   font-size: 13px;
   line-height: 1;
   cursor: pointer;
@@ -312,11 +312,11 @@
   gap: 18px;
   padding: 16px 12px;
   background: #16193C;
-    border: 2px solid #ffffff;
+    border: 2px solid #CFD2E5;
   border-radius: 15px;
   scroll-snap-align: start;
   font-family: 'Barlow Condensed', sans-serif;
-    box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+
 }
 
 .mr-remove {

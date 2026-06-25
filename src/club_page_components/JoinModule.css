@@ -50,7 +50,7 @@
 
 .join-tab-content {
   width: 90%;
-  min-height: 6rem;
+  
   font-family: 'Barlow', sans-serif;
   font-size: 1.2rem;
   line-height: 1.55;
@@ -70,7 +70,7 @@
 .apply-link-btn {
   font-family: 'Barlow Condensed', sans-serif;
   display: inline-block;
-  padding: 10px 24px;
+    padding: 8px 16px;
   font-size: 1.1rem;
   background-color: rgb(62, 42, 9);
   color: #fff;
@@ -85,7 +85,7 @@
 .contact-link-btn {
   font-family: 'Barlow Condensed', sans-serif;
   display: inline-block;
-  padding: 10px 24px;
+      padding: 8px 16px;
   font-size: 1.1rem;
   background-color: rgb(47, 115, 164);
   color: #fff;
@@ -239,10 +239,10 @@
 
 .join-link-inputs {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 0.75rem;
-  width: 50%;
-  max-width: 500px;
+  width: 70%;
+  max-width: 900px;
   margin-top: 1.5rem;
   
  
