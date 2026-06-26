@@ -3,6 +3,7 @@ import { useClubData } from '../context/useClubData';
 import ColorThief from 'colorthief';
 import { FaSearch, FaTimes } from 'react-icons/fa';
 import './BasicInfoModule.css';
+import LinksTable from './LinksTable';
 
 /**
  * @param {Object} props
@@ -55,11 +56,6 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   const links = data?.links ?? [];
   const enabledLinks = links.filter(l => l.enabled && l.url);
 
-  const isValidLinkUrl = (url) => {
-    try { const u = new URL(url); return u.protocol === 'http:' || u.protocol === 'https:'; }
-    catch { return false; }
-  };
-
   const getLinkKeyword = (name) => {
     const n = (name || '').toLowerCase().trim();
     const keywords = ['instagram', 'facebook', 'discord', 'email', 'album', 'slack', 'tiktok', 'linktree', 'youtube'];
@@ -74,21 +70,6 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
     }
   };
 
-  const toggleLinkEnabled = (i) => {
-    onChange({ ...data, links: links.map((l, idx) => idx === i ? { ...l, enabled: !l.enabled } : l) });
-  };
-
-  const updateLinkField = (i, field, value) => {
-    onChange({ ...data, links: links.map((l, idx) => idx === i ? { ...l, [field]: value } : l) });
-  };
-
-  const removeLinkRow = (i) => {
-    onChange({ ...data, links: links.filter((_, idx) => idx !== i) });
-  };
-
-  const addLinkRow = () => {
-    onChange({ ...data, links: [...links, { id: `link_${Date.now()}`, name: '', url: '', enabled: true }] });
-  };
 
   const getPastelColor = (r, g, b) => {
     const factor = (r + (255 - r) * 0.85 >= 240 &&
@@ -240,7 +221,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
       {/* Action row + links bar */}
       <div className="action-links-wrapper">
         {actions}
-        {!editing && enabledLinks.length > 0 && (
+        {enabledLinks.length > 0 && (
           <>
             <span className="links-sep">|</span>
             <div className="links-bar">
@@ -263,10 +244,16 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
             </div>
           </>
         )}
+        {editing && (
+          <LinksTable
+            links={links}
+            onChange={(next) => onChange({ ...data, links: next })}
+          />
+        )}
       </div>
 
       {/* Desktop: extra links inline below the action row when expanded */}
-      {!editing && linksExpanded && (
+      {linksExpanded && (
         <div className="links-expanded-row">
           {enabledLinks.slice(3).map((link, i) => (
             <a
@@ -279,56 +266,6 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
               {link.name}
             </a>
           ))}
-        </div>
-      )}
-
-      {/* Edit mode: links table directly under the action row */}
-      {editing && (
-        <div className="links-edit-section">
-          <p className="links-edit-label">Club Links</p>
-          <div className="links-table">
-            <div className="links-table-header links-table-row">
-              <span className="links-cell-check">Show</span>
-              <span className="links-cell-name">Name</span>
-              <span className="links-cell-url">URL</span>
-              <span className="links-cell-del" />
-            </div>
-            {links.map((link, i) => {
-              const nameAtMax = link.name.length >= 15;
-              const urlInvalid = link.url && !isValidLinkUrl(link.url);
-              return (
-                <div key={link.id || i} className={`links-table-row ${i % 2 === 0 ? 'links-row-even' : 'links-row-odd'}`}>
-                  <div className="links-table-cell links-cell-check">
-                    <input type="checkbox" checked={!!link.enabled} onChange={() => toggleLinkEnabled(i)} />
-                  </div>
-                  <div className="links-table-cell links-cell-name">
-                    <input
-                      className={`links-name-input${nameAtMax ? ' links-input-warn' : ''}`}
-                      value={link.name}
-                      maxLength={15}
-                      onChange={(e) => updateLinkField(i, 'name', e.target.value)}
-                      placeholder="e.g. Instagram"
-                    />
-                    <span className={`links-char-count${nameAtMax ? ' links-char-over' : ''}`}>{link.name.length}/15</span>
-                    {nameAtMax && <span className="links-row-warning">Name is at the 15-character limit.</span>}
-                  </div>
-                  <div className="links-table-cell links-cell-url">
-                    <input
-                      className={`links-url-input${urlInvalid ? ' links-input-warn' : ''}`}
-                      value={link.url}
-                      onChange={(e) => updateLinkField(i, 'url', e.target.value)}
-                      placeholder="https://..."
-                    />
-                    {urlInvalid && <span className="links-row-warning">Invalid URL (must start with https:// or http://).</span>}
-                  </div>
-                  <div className="links-table-cell links-cell-del">
-                    <button className="links-del-btn" onClick={() => removeLinkRow(i)}>×</button>
-                  </div>
-                </div>
-              );
-            })}
-            <button className="links-add-btn" onClick={addLinkRow}>+ Add Link</button>
-          </div>
         </div>
       )}
 

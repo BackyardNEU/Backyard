@@ -45,84 +45,21 @@ function JoinModule({ data, editing, onChange, warning }) {
   const updateLink = (field, value) =>
     onChange({ ...data, [field]: value });
 
-  if (editing) {
-    return (
-      <div className="join-module join-module--editing">
-        <p className="divider-header">How to Join</p>
-        {editing && (
-          <p className="about-edit-help">
-            These tabs help potential new members be infromed in the joining process. Optional: Enter your application link and your recruiter email.
-          </p>
-        )}
-        {editing && warning && <p className="module-warning">{warning}</p>}
-        <div className="join-card-row">
-          {tabs.map((t, idx) => (
-            <div className="join-tab-card" key={idx}>
-              <button
-                className="join-tab-remove-btn"
-                onClick={() => removeTab(idx)}
-                aria-label="Delete tab"
-              >
-                X
-              </button>
-             
-                <input
-                  className="join-category"
-                  value={t.title || ''}
-                  onChange={(e) => updateTab(idx, 'title', e.target.value)}
-                  placeholder="edit tab title ex: we're looking for"
-                />
-              
-
-              <JoinTabEditor
-                value={t.body}
-                onChange={(html) => updateTab(idx, 'body', sanitizeBioHtml(html))}
-                placeholder="add about positions ex: we're looking for defenders"
-              />
-              {isEmptyHtml(t.body) && <p className="module-warning">Bio cannot be empty.</p>}
-            </div>
-          ))}
-
-          <button className="join-add-card" onClick={addTab} aria-label="Add a tab">
-            +
-          </button>
-        </div>
-
-        <div className="join-link-inputs">
-          <input
-            className="join-link-application-input"
-            value={applicationLink}
-            onChange={(e) => {
-              const v = e.target.value;
-              updateLink('applicationLink', v);
-              setAppLinkWarning(v && !isValidUrl(v) ? 'Application link must be a valid URL (https://...)' : '');
-            }}
-            placeholder="enter application link"
-          />
-          {appLinkWarning && <p className="module-warning">{appLinkWarning}</p>}
-          <input
-            className="join-link-contact-input"
-            value={contactLink}
-            onChange={(e) => {
-              const v = e.target.value;
-              updateLink('contactLink', v);
-              setContactLinkWarning(v && !isValidUrl(v) ? 'Contact link must be a valid URL (https://...)' : '');
-            }}
-            placeholder="enter contact link"
-          />
-          {contactLinkWarning && <p className="module-warning">{contactLinkWarning}</p>}
-        </div>
-      </div>
-    );
-  }
-
-  // View mode — nothing to show if the module is empty.
-  if (tabs.length === 0 && !applicationLink && !contactLink) return null;
+  // Nothing to show if empty and not editing
+  if (!editing && tabs.length === 0 && !applicationLink && !contactLink) return null;
 
   return (
-    <div className="join-module">
+    <div className={`join-module${editing ? ' join-module--editing' : ''}`}>
       <p className="divider-header">How to Join</p>
 
+      {editing && (
+        <p className="about-edit-help">
+          These tabs help potential new members be informed in the joining process. Optional: Enter your application link and your recruiter email.
+        </p>
+      )}
+      {editing && warning && <p className="module-warning">{warning}</p>}
+
+      {/* Live preview — always visible, updates as you edit */}
       {tabs.length > 0 && (
         <>
           <div className="join-tabs" role="tablist">
@@ -150,6 +87,7 @@ function JoinModule({ data, editing, onChange, warning }) {
               href={applicationLink}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={editing ? (e) => e.preventDefault() : undefined}
             >
               Apply
             </a>
@@ -160,11 +98,71 @@ function JoinModule({ data, editing, onChange, warning }) {
               href={contactLink}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={editing ? (e) => e.preventDefault() : undefined}
             >
               Contact recruiter
             </a>
           )}
         </div>
+      )}
+
+      {/* Edit controls */}
+      {editing && (
+        <>
+          <div className="join-card-row">
+            {tabs.map((t, idx) => (
+              <div className="join-tab-card" key={idx}>
+                <button
+                  className="join-tab-remove-btn"
+                  onClick={() => removeTab(idx)}
+                  aria-label="Delete tab"
+                >
+                  X
+                </button>
+                <input
+                  className="join-category"
+                  value={t.title || ''}
+                  onChange={(e) => updateTab(idx, 'title', e.target.value)}
+                  placeholder="edit tab title ex: we're looking for"
+                />
+                <JoinTabEditor
+                  value={t.body}
+                  onChange={(html) => updateTab(idx, 'body', sanitizeBioHtml(html))}
+                  placeholder="add about positions ex: we're looking for defenders"
+                />
+                {isEmptyHtml(t.body) && <p className="module-warning">Bio cannot be empty.</p>}
+              </div>
+            ))}
+            <button className="join-add-card" onClick={addTab} aria-label="Add a tab">
+              +
+            </button>
+          </div>
+
+          <div className="join-link-inputs">
+            <input
+              className="join-link-application-input"
+              value={applicationLink}
+              onChange={(e) => {
+                const v = e.target.value;
+                updateLink('applicationLink', v);
+                setAppLinkWarning(v && !isValidUrl(v) ? 'Application link must be a valid URL (https://...)' : '');
+              }}
+              placeholder="enter application link"
+            />
+            {appLinkWarning && <p className="module-warning">{appLinkWarning}</p>}
+            <input
+              className="join-link-contact-input"
+              value={contactLink}
+              onChange={(e) => {
+                const v = e.target.value;
+                updateLink('contactLink', v);
+                setContactLinkWarning(v && !isValidUrl(v) ? 'Contact link must be a valid URL (https://...)' : '');
+              }}
+              placeholder="enter contact link"
+            />
+            {contactLinkWarning && <p className="module-warning">{contactLinkWarning}</p>}
+          </div>
+        </>
       )}
     </div>
   );
