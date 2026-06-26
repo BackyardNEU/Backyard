@@ -45,7 +45,6 @@
     width: 100%;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
-    /* subtle scrollbar */
     scrollbar-width: thin;
     scrollbar-color: #ccc transparent;
 }
@@ -58,29 +57,55 @@
     border-radius: 4px;
 }
 
-/* ===== Comment card ===== */
+/* ===== Comment card — no border/overflow; SVG handles the border ===== */
 .comment-card {
     position: relative;
     width: 300px;
     flex-shrink: 0;
     scroll-snap-align: start;
     border-radius: 10px;
-    overflow: hidden;
-    max-height: 800px;
-    transition: max-height 0.4s ease;
     background: #FFFDFB;
-    border: 1px solid #9C8E8C;
     display: flex;
     flex-direction: column;
 }
 
-.comment-card[data-expanded] {
-    max-height: 4000px;
-}
-
-/* Dimmed look for hidden cards in edit mode */
 .comment-card--hidden {
     opacity: 0.45;
+}
+
+/* ===== SVG border overlay ===== */
+.comment-border-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.comment-border-svg path {
+    fill: none;
+    stroke: #9C8E8C;
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.comment-border-svg path.divider-line {
+    stroke: #e0dbd9;
+}
+
+/* ===== Card body — shrinks/expands; footer stays outside ===== */
+.comment-card__body {
+    position: relative;
+    max-height: 500px;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+}
+
+.comment-card[data-expanded] .comment-card__body {
+    max-height: 4000px;
 }
 
 /* ===== Card content ===== */
@@ -104,12 +129,12 @@
     line-height: 1.45;
     margin: 0;
     padding: 10px 14px;
-    flex: 1;
 }
 
+/* Invisible spacer — SVG draws the wavy line at this y-position */
 .comment-divider {
     height: 1px;
-    background: #e0dbd9;
+    background: transparent;
     margin: 0 14px;
     flex-shrink: 0;
 }
@@ -120,17 +145,35 @@
     overflow: hidden;
 }
 
+.comment-image.portrait  { aspect-ratio: 3/4; }
+.comment-image.landscape { aspect-ratio: 4/3; }
+.comment-image.square    { aspect-ratio: 1/1; }
+
 .comment-carousel {
     position: relative;
     width: 100%;
 }
 
-/* Natural aspect ratio — no fixed height */
+/* When aspect-ratio class constrains the container, fill it */
+.comment-image.portrait .comment-carousel,
+.comment-image.landscape .comment-carousel,
+.comment-image.square .comment-carousel {
+    height: 100%;
+}
+
 .comment-carousel__img {
+    display: block;
     width: 100%;
     height: auto;
-    display: block;
+    border-radius: 20px;
+    padding: 11px;
     object-fit: cover;
+}
+
+.comment-image.portrait .comment-carousel__img,
+.comment-image.landscape .comment-carousel__img,
+.comment-image.square .comment-carousel__img {
+    height: 100%;
 }
 
 .comment-img-placeholder {
@@ -184,51 +227,62 @@
     background: rgba(0,0,0,0.65);
 }
 
-/* ===== Footer ===== */
+/* ===== Footer — always visible, outside the body ===== */
 .comment-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 14px 12px;
-    margin-top: auto;
+    padding: 6px 10px;
     flex-shrink: 0;
 }
 
 .comment-date {
     font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.75rem;
-    color: #ff9d00;
-    letter-spacing: 0.3px;
+    font-size: 0.95rem;
+    color: #3A201F;
+    transform: translateY(-10px);
 }
 
-/* ===== Like button ===== */
-.comment-like-btn {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.9rem;
-    background: none;
-    border: 1px solid #d4ccc9;
-    border-radius: 999px;
-    padding: 4px 12px;
-    cursor: pointer;
-    color: #888;
+/* ===== Like button — stacked heart over count ===== */
+.comment-likes {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 5px;
-    transition: color 0.15s, border-color 0.15s;
-}
-.comment-like-btn:hover {
-    color: #ef5a4d;
-    border-color: #ef5a4d;
-}
-.comment-like-btn--active {
-    color: #ef5a4d;
-    border-color: #ef5a4d;
+    line-height: 1;
+    cursor: pointer;
 }
 
-/* ===== More / Less expand ===== */
+.comment-like-btn {
+    border: none;
+    background: none;
+    color: #9C8E8C;
+    font-size: 1.7rem;
+    transform: translateY(-2px);
+    transition: color 0.15s, transform 0.15s;
+    padding: 0;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.comment-likes:hover .comment-like-btn {
+    transform: scale(1.08);
+}
+
+.comment-likes--active .comment-like-btn {
+    color: #ef5a4d;
+}
+
+.comment-like-count {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.95rem;
+    color: #3A201F;
+    text-align: center;
+}
+
+/* ===== More / Less — inside the body ===== */
 .comment-expand-fade {
     position: absolute;
-    bottom: 50px; /* sits above the footer */
+    bottom: 0;
     left: 0;
     right: 0;
     height: 60px;
@@ -239,7 +293,7 @@
 
 .comment-expand-btn {
     position: absolute;
-    bottom: 48px;
+    bottom: 8px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 3;
@@ -252,12 +306,12 @@
     cursor: pointer;
     color: #5a4b40;
     transition: background 0.15s;
+    white-space: nowrap;
 }
 .comment-expand-btn:hover {
     background: #f5f0ee;
 }
 
-/* When card is expanded, reposition More/Less below footer */
 .comment-card[data-expanded] .comment-expand-btn {
     position: static;
     display: block;
@@ -279,8 +333,8 @@
     padding: 8px 14px 10px;
     border-top: 1px solid #ede8e6;
     cursor: pointer;
-    user-select: none;
     -webkit-user-select: none;
+    user-select: none;
     flex-shrink: 0;
 }
 .comment-hide-label input[type="checkbox"] {
