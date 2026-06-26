@@ -59,11 +59,11 @@ function JoinModule({ data, editing, onChange, warning }) {
           {tabs.map((t, idx) => (
             <div className="join-tab-card" key={idx}>
               <button
-                className="join-tab-delete"
+                className="join-tab-remove-btn"
                 onClick={() => removeTab(idx)}
                 aria-label="Delete tab"
               >
-                ×
+                X
               </button>
              
                 <input

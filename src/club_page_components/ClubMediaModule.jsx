@@ -195,7 +195,7 @@ function PosterCard({ poster, editing, rank, count, onOpen, onUpdate, onSetOrder
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
             aria-label="Delete poster"
           >
-            ×
+            X
           </button>
         )}
 
@@ -415,7 +415,7 @@ function BlockAdder({ onAdd }) {
 function BlockEditor({ block, onChange, onRemove }) {
   return (
     <div className="cm-block-edit">
-      <button className="cm-block-remove" onClick={onRemove} aria-label="Remove block">×</button>
+      
       {block.type === 'title' && (
         <div>
           <input

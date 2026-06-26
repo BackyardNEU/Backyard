@@ -133,7 +133,7 @@
   flex-direction: column;
   background: #16193C;
   border-radius: 1.25rem;
-  padding: 1.5rem 1rem 1rem;
+  padding: 1rem 1rem 1rem;
   border: 2px solid #CFD2E5;
 }
 
@@ -187,29 +187,28 @@
   border-color: #000;
 }
 
-.join-tab-delete {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 24px;
-  height: 24px;
+.join-tab-remove-btn {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.08);
-  color: #333;
-  font-size: 16px;
-  line-height: 1;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+    
+    padding: 0px 5px;
+    color: #ffffff;
+    border-radius: 5px;
+    font-size: 1rem;
+    justify-content: center;
+    align-items: flex-end;
+    align-self:flex-end;
+    transition: transform 0.1s ease-in;
 }
 
-.join-tab-delete:hover {
-  background: rgba(180, 40, 40, 0.85);
+.join-tab-remove-btn:hover {
+  background: rgba(180, 40, 40);
   color: #fff;
+  transform: scale(1.1);
+  
+
 }
+
+
 
 /* Add-a-tab card — vertical playing card with a plus */
 .join-add-card {

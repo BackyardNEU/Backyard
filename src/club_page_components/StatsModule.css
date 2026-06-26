@@ -28,7 +28,7 @@
 .stats-remove-btn {
     display: flex;
     background:#16193C;
-    color: #adadad;
+    color: white;
     border-radius: 5px;
     width: 20px;
     height: 20px;
@@ -40,6 +40,7 @@
 
 .stats-remove-btn:hover {
     transform: scale(1.1);
+    background: rgba(180, 40, 40);
 }
 
 /* View mode — stat bars */

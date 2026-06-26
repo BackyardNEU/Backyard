@@ -39,6 +39,7 @@
   height: 250px;
   position: relative;
   scroll-snap-align: start;
+  margin-bottom: 35px;
 }
 
 /* ── Flip card (opacity crossfade) ── */

@@ -140,28 +140,7 @@
 }
 
 /* ── Poster edit controls (overlay at the bottom of the card) ── */
-.cm-poster-delete {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 4;
-  width: 26px;
-  height: 26px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.5);
-  color: #CFD2E5;
-  font-size: 16px;
-  line-height: 1;
-  cursor: pointer;
-}
 
-.cm-poster-delete:hover {
-  background: rgba(180, 40, 40, 0.9);
-}
 
 /* Edit card sits BELOW the poster. All text is Barlow Condensed. */
 .cm-poster-edit {
@@ -491,28 +470,29 @@
   padding: 12px;
 }
 
-.cm-block-remove {
+.cm-poster-delete {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  z-index: 2;
-  width: 22px;
-  height: 22px;
+  top: 8px;
+  right: 8px;
+  
   display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.08);
-  color: #333;
-  font-size: 14px;
-  line-height: 1;
+  background: #16193C;
+  padding: 0px 5px;
+    color: #ffffff;
+    border-radius: 5px;
+    font-size: 1rem;
+    justify-content: center;
+    align-items: flex-end;
+    align-self:flex-end;
+    transition: transform 0.1s ease-in;
+  
+  
   cursor: pointer;
-}
+}    
 
-.cm-block-remove:hover {
-  background: rgba(180, 40, 40, 0.85);
-  color: #fff;
+.cm-poster-delete:hover {
+  transform: scale(1.1);
+  background: rgba(180, 40, 40);
 }
 
 .cm-block-title-input {
