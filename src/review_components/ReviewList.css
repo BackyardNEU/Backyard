@@ -39,6 +39,7 @@
 .rl-comments-row {
     display: flex;
     flex-direction: row;
+    align-items: flex-start;
     overflow-x: auto;
     gap: 16px;
     padding: 4px 0 20px;
@@ -85,7 +86,7 @@
 
 .comment-border-svg path {
     fill: none;
-    stroke: #9C8E8C;
+    stroke: #3A201F;;
     stroke-width: 1;
     vector-effect: non-scaling-stroke;
     stroke-linecap: round;
@@ -111,11 +112,11 @@
 /* ===== Card content ===== */
 .comment-title {
     font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1.25rem;
-    font-weight: 400;
+    font-size: 1.5rem;
+    font-weight: 500;
     color: #3A201F;
     margin: 0;
-    padding: 12px 14px 8px;
+    padding: 10px 14px 10px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -125,7 +126,7 @@
     font-family: 'Barlow', sans-serif;
     font-size: 0.93rem;
     font-weight: 200;
-    color: #5a4b40;
+    color: #3A201F;
     line-height: 1.45;
     margin: 0;
     padding: 10px 14px;
@@ -165,7 +166,7 @@
     display: block;
     width: 100%;
     height: auto;
-    border-radius: 20px;
+    border-radius: 15px;
     padding: 11px;
     object-fit: cover;
 }
