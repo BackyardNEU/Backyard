@@ -185,12 +185,16 @@
   font-size: 4rem;
   width: 100%;
   box-sizing: border-box;
-  border-radius: 10px;
+  border-radius: 15px;
 
-  box-shadow: 0 0 0 3px #4F83B4;
+  box-shadow: 0 0 0 3px #16193C;
   color: rgb(44, 27, 43);
-  
 }
+.club-name-input:hover {
+  box-shadow: 0 0 0 3px #4F83B4;
+  border-radius: 5px;
+ }
+
 
 
 
@@ -198,7 +202,7 @@
   background: transparent;
   border: 2px solid transparent;
   outline: none;
-  border-radius: 8px;
+  border-radius: 15px;
   padding: 0.25rem 0.5rem;
   font-family: inherit;
   /* Reset margins inherited from .club-description-exp so width: 100% doesn't overflow */
@@ -211,12 +215,16 @@
   overflow: hidden;
 
   flex-shrink: 0;
-  border: 3px solid #4F83B4;
+  border: 3px solid #16193C;
 
  
   color: black;
 }
 
+.club-desc-input:hover {
+  border-color: #4F83B4;
+  border-radius: 5px;
+}
 
 
 .logo-upload-label {
