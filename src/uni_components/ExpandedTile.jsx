@@ -165,6 +165,8 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const [clubFriendRsvpMap, setClubFriendRsvpMap] = useState(new Map());
     // club members (for comments module authorized/unauthorized tabs)
     const [clubMembers, setClubMembers] = useState([]);
+    // pending hide/show changes for comments — keyed by reviewId, only committed on Save
+    const [hideDraft, setHideDraft] = useState({});
 
     const id = club.id;
 
@@ -403,6 +405,19 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             setPageData(prev => ({ ...prev, modules: finalDraft }));
             setDraft(finalDraft);
 
+            // Commit pending hide/show changes for comments
+            if (Object.keys(hideDraft).length > 0) {
+                await Promise.allSettled(
+                    Object.entries(hideDraft).map(([reviewId, hidden]) =>
+                        apiFetch(`/reviews/${reviewId}`, { method: 'PATCH', body: { isHidden: hidden } })
+                    )
+                );
+                set_reviews(prev => prev.map(r =>
+                    r.id in hideDraft ? { ...r, is_hidden: hideDraft[r.id] } : r
+                ));
+                setHideDraft({});
+            }
+
             // Commit accepted/dismissed FAQ questions: delete their rows now that the page is saved.
             if (questionDeletes.size) {
                 await Promise.allSettled(
@@ -428,6 +443,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
         setDraft(pageData?.modules ?? []);
         setPendingLogoFile(null);
         setQuestionDeletes(new Set()); // restore optimistically-removed questions
+        setHideDraft({});
         setIsEditing(false);
     };
 
@@ -476,7 +492,20 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             <button className="close-btn" onClick={handleClose}>x</button>
 
             {isApproved && !isEditing && (
-                <button className="exp-edit-btn" onClick={() => setIsEditing(true)}>Edit Page</button>
+                <button className="exp-edit-btn" onClick={async () => {
+                    if (!pageData?.modules?.length) {
+                        try {
+                            const result = await apiFetch(`/clubs/${id}/page/init`, { method: 'POST' });
+                            if (result?.modules?.length) {
+                                setPageData(result);
+                                setDraft(result.modules);
+                            }
+                        } catch (err) {
+                            console.error('Failed to initialize page defaults:', err);
+                        }
+                    }
+                    setIsEditing(true);
+                }}>Edit Page</button>
             )}
 
             <div className="club-modules">
@@ -571,8 +600,9 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                             reviews={reviews}
                             editing={isEditing}
                             members={clubMembers}
+                            hideDraft={hideDraft}
                             onToggleHide={(reviewId, hidden) =>
-                                set_reviews(prev => prev.map(r => r.id === reviewId ? { ...r, isHidden: hidden } : r))
+                                setHideDraft(prev => ({ ...prev, [reviewId]: hidden }))
                             }
                             warning={moduleWarnings.comments ?? null}
                         />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import "./ReviewList.css";
 import { apiFetch } from "../lib/api";
 import { useClubData } from "../context/useClubData";
@@ -188,7 +188,7 @@ function LikeButton({ count, isLiked, onToggle }) {
     return (
         <div
             className={`comment-likes${isLiked ? ' comment-likes--active' : ''}`}
-            onClick={(e) => { e.stopPropagation(); onToggle(); }}
+            onClick={(e) => { e.stopPropagation(); onToggle(isLiked); }}
             role="button"
             tabIndex={0}
             aria-label={isLiked ? 'Unlike' : 'Like'}
@@ -245,7 +245,7 @@ function CommentCard({ review, userVote, onVote, onToggleHide, editing }) {
 
     return (
         <div
-            className={`comment-card${review.isHidden && editing ? ' comment-card--hidden' : ''}`}
+            className={`comment-card${review._pendingHidden && editing ? ' comment-card--hidden' : ''}`}
             ref={cardRef}
             data-expanded={isExpanded || undefined}
         >
@@ -281,7 +281,7 @@ function CommentCard({ review, userVote, onVote, onToggleHide, editing }) {
                 <LikeButton
                     count={review._liveScore}
                     isLiked={userVote === 1}
-                    onToggle={() => onVote(userVote === 1 ? 0 : 1)}
+                    onToggle={(currentlyLiked) => onVote(currentlyLiked ? 0 : 1)}
                 />
             </div>
 
@@ -289,8 +289,8 @@ function CommentCard({ review, userVote, onVote, onToggleHide, editing }) {
                 <label className="comment-hide-label">
                     <input
                         type="checkbox"
-                        checked={!!review.isHidden}
-                        onChange={() => onToggleHide(review.id, !review.isHidden)}
+                        checked={!!review._pendingHidden}
+                        onChange={() => onToggleHide(review.id, !review._pendingHidden)}
                         onClick={(e) => e.stopPropagation()}
                     />
                     Hide comment
@@ -302,7 +302,7 @@ function CommentCard({ review, userVote, onVote, onToggleHide, editing }) {
 
 /* ── ReviewList (main export) ── */
 
-export default function ReviewList({ reviews, editing, members, onToggleHide }) {
+export default function ReviewList({ reviews, editing, members, hideDraft = {}, onToggleHide }) {
     const [activeTab, setActiveTab] = useState(0); // 0 = Members, 1 = Others
     const [userVotes, setUserVotes] = useState({});
     const [reviewScores, setReviewScores] = useState({});
@@ -328,14 +328,12 @@ export default function ReviewList({ reviews, editing, members, onToggleHide }) 
             .catch(err => console.error('Error fetching votes:', err));
     }, [reviews, userId]);
 
-    const handleVote = useCallback(async (id, direction) => {
+    const handleVote = useCallback(async (id, newVote) => {
         const currentVote = userVotes[id] || 0;
-        const newVote = currentVote === direction ? 0 : direction;
-        const delta = newVote - currentVote;
         const oldScore = reviewScores[id] ?? 0;
 
         setUserVotes(prev => ({ ...prev, [id]: newVote }));
-        setReviewScores(prev => ({ ...prev, [id]: oldScore + delta }));
+        setReviewScores(prev => ({ ...prev, [id]: oldScore + (newVote - currentVote) }));
 
         try {
             const resp = newVote === 0
@@ -351,20 +349,18 @@ export default function ReviewList({ reviews, editing, members, onToggleHide }) 
         }
     }, [userVotes, reviewScores]);
 
-    const handleToggleHide = useCallback(async (reviewId, hidden) => {
-        if (onToggleHide) onToggleHide(reviewId, hidden);
-        try {
-            await apiFetch(`/reviews/${reviewId}`, { method: 'PATCH', body: { isHidden: hidden }, auth: true });
-        } catch (err) {
-            console.error('Hide toggle error:', err);
-            if (onToggleHide) onToggleHide(reviewId, !hidden);
-        }
+    const handleToggleHide = useCallback((reviewId, hidden) => {
+        onToggleHide?.(reviewId, hidden);
     }, [onToggleHide]);
 
-    const enriched = reviews.map(r => ({ ...r, _liveScore: reviewScores[r.id] ?? (r.upvotes ?? 0) }));
-    const visible = editing ? enriched : enriched.filter(r => !r.isHidden);
+    const enriched = reviews.map(r => ({
+        ...r,
+        _liveScore: reviewScores[r.id] ?? (r.upvotes ?? 0),
+        _pendingHidden: r.id in hideDraft ? hideDraft[r.id] : (r.is_hidden || r.isHidden || false),
+    }));
+    const visible = editing ? enriched : enriched.filter(r => !r._pendingHidden);
 
-    const memberIds = new Set((members || []).map(m => m.user_id));
+    const memberIds = useMemo(() => new Set((members || []).map(m => m.user_id)), [members]);
     const authorizedReviews = visible.filter(r => memberIds.has(r.user_id));
     const unauthorizedReviews = visible.filter(r => !memberIds.has(r.user_id));
     const activeReviews = activeTab === 0 ? authorizedReviews : unauthorizedReviews;
