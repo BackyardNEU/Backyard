@@ -125,7 +125,10 @@ function StatsModule({ data, editing, onChange, warning }) {
         const color = STAT_COLORS[quantIndex % STAT_COLORS.length];
         
         return (
-            <div className="quant-stat-holder" key={index}>
+            <div
+    className={`quant-stat-holder ${editing ? "editing" : ""}`}
+    key={index}
+>
                 {/* NEW: Horizontal flex wrapper for inputs */}
                 <div className="quant-inputs-row">
                     <label>
