@@ -10,9 +10,9 @@ const router = express.Router();
 // 1. Table: club_page_data
 //    club_id    uuid  PRIMARY KEY  REFERENCES demo_club_data(id)
 //    modules    jsonb NOT NULL DEFAULT '[]'
-//      Shape: [{ type: string, order: int, data: object }, ...]
+//      Shape: [{ type: string, order: int, isDisplayed: bool, data: object }, ...]
 //      Example row:
-//        { "type": "basic_info", "order": 0,
+//        { "type": "basic_info", "order": 0, "isDisplayed": true,
 //          "data": { "club_name": "...", "logo_url": "...", "description": "..." } }
 //    updated_at timestamptz DEFAULT now()
 //
@@ -38,6 +38,7 @@ const DEFAULT_MODULES = [
   {
     type: 'basic_info',
     order: 0,
+    isDisplayed: true,
     data: {
       logo_url: '',
       club_name: 'Your Club Name',
@@ -48,6 +49,7 @@ const DEFAULT_MODULES = [
   {
     type: 'club_media',
     order: 1,
+    isDisplayed: true,
     data: {
       posters: [
         {
@@ -68,6 +70,7 @@ const DEFAULT_MODULES = [
   {
     type: 'join',
     order: 2,
+    isDisplayed: true,
     data: {
       tabs: [
         { title: 'How to Join', body: 'Describe your rush, application, or tryout process here.' },
@@ -81,6 +84,7 @@ const DEFAULT_MODULES = [
   {
     type: 'faqs',
     order: 3,
+    isDisplayed: true,
     data: {
       faqs: [
         { q: 'Do first-years usually get in?', a: 'Answer here.' },
@@ -92,6 +96,7 @@ const DEFAULT_MODULES = [
   {
     type: 'stats',
     order: 4,
+    isDisplayed: true,
     data: {
       stats: [
         { type: 'quantitative', label: 'Time commitment', unit1: 'hrs', unit2: 'week', value: 5 },
@@ -104,6 +109,7 @@ const DEFAULT_MODULES = [
   {
     type: 'member_roster',
     order: 5,
+    isDisplayed: true,
     data: {
       members: [
         { name: 'Member Name', bio: '<p>Add a short bio here.</p>', photo: '', user_id: null, category: 'Leadership' },
@@ -111,6 +117,20 @@ const DEFAULT_MODULES = [
       ],
       categories: ['Leadership', 'General'],
     },
+  },
+  {
+    type: 'calendar',
+    order: 6,
+    isDisplayed: true,
+    data: {
+      filterByMembership: false,
+    },
+  },
+  {
+    type: 'comments',
+    order: 7,
+    isDisplayed: true,
+    data: {},
   },
 ];
 

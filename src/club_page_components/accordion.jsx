@@ -1,121 +1,93 @@
-import React, { useState } from "react";
-import {
-  DndContext,
-  closestCenter,
-} from "@dnd-kit/core";
-
+import React, { useState } from 'react';
+import { DndContext, closestCenter } from '@dnd-kit/core';
 import {
   SortableContext,
   verticalListSortingStrategy,
   useSortable,
   arrayMove,
-} from "@dnd-kit/sortable";
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import './accordion.css';
 
-import { CSS } from "@dnd-kit/utilities";
+export const MODULE_TITLES = {
+  club_media: 'Media',
+  join: 'How to Join',
+  faqs: 'FAQs',
+  stats: 'Stats',
+  member_roster: 'Members',
+  calendar: 'Events',
+  comments: 'Comments',
+};
 
-import "./ModuleAccordion.css";
-
-const initialModules = [
-  {
-    id: "links",
-    title: "Links Module",
-    content: "This is where the links module will display",
-    included: true,
-  },
-  {
-    id: "faq",
-    title: "FAQ Module",
-    content: "This is where the FAQ module will display",
-    included: true,
-  },
-  {
-    id: "members",
-    title: "Featured Members Module",
-    content: "This is where the featured members module will display",
-    included: true,
-  },
-];
-
-export default function ModuleAccordion() {
-  const [modules, setModules] = useState(initialModules);
-  const [openIds, setOpenIds] = useState(["links"]);
+/**
+ * Sortable accordion list for editable club page modules (everything except basic_info).
+ *
+ * @param {Array}    modules          - module objects from draft (sorted by order)
+ * @param {Function} onReorder        - (reorderedModules) => void
+ * @param {Function} onToggleDisplayed - (type) => void
+ * @param {Function} renderContent    - (module) => ReactNode
+ */
+export default function ModuleAccordion({
+  modules,
+  onReorder,
+  onToggleDisplayed,
+  renderContent,
+}) {
+  const [openIds, setOpenIds] = useState([]);
 
   const toggleOpen = (id) => {
     setOpenIds((prev) =>
-      prev.includes(id)
-        ? prev.filter((item) => item !== id)
-        : [...prev, id]
-    );
-  };
-
-  const toggleIncluded = (id) => {
-    setModules((prev) =>
-      prev.map((module) =>
-        module.id === id
-          ? {
-              ...module,
-              included: !module.included,
-            }
-          : module
-      )
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   };
 
   const handleDragEnd = (event) => {
     const { active, over } = event;
-
     if (!over || active.id === over.id) return;
 
-    setModules((items) => {
-      const oldIndex = items.findIndex(
-        (item) => item.id === active.id
-      );
+    const oldIndex = modules.findIndex((item) => item.type === active.id);
+    const newIndex = modules.findIndex((item) => item.type === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
 
-      const newIndex = items.findIndex(
-        (item) => item.id === over.id
-      );
-
-      return arrayMove(items, oldIndex, newIndex);
-    });
+    onReorder(arrayMove(modules, oldIndex, newIndex));
   };
 
   return (
     <div className="accordion">
-
-      <DndContext
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
+      <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext
-          items={modules.map((m) => m.id)}
+          items={modules.map((m) => m.type)}
           strategy={verticalListSortingStrategy}
         >
           {modules.map((module) => (
             <SortableModule
-              key={module.id}
+              key={module.type}
               module={module}
-              isOpen={openIds.includes(module.id)}
-              onToggleOpen={() =>
-                toggleOpen(module.id)
-              }
-              onToggleIncluded={() =>
-                toggleIncluded(module.id)
-              }
-            />
+              title={MODULE_TITLES[module.type] ?? module.type}
+              isOpen={openIds.includes(module.type)}
+              onToggleOpen={() => toggleOpen(module.type)}
+              onToggleDisplayed={() => onToggleDisplayed(module.type)}
+            >
+              {renderContent(module)}
+            </SortableModule>
           ))}
         </SortableContext>
       </DndContext>
-
     </div>
   );
 }
 
 function SortableModule({
   module,
+  title,
   isOpen,
   onToggleOpen,
-  onToggleIncluded,
+  onToggleDisplayed,
+  children,
 }) {
+  const isDisplayed = module.isDisplayed !== false;
+  const isEvents = module.type === 'calendar';
+
   const {
     attributes,
     listeners,
@@ -123,14 +95,10 @@ function SortableModule({
     transform,
     transition,
     isDragging,
-  } = useSortable({
-    id: module.id,
-  });
+  } = useSortable({ id: module.type });
 
   const style = {
-    transform: CSS.Transform.toString(
-      transform
-    ),
+    transform: CSS.Transform.toString(transform),
     transition,
   };
 
@@ -138,62 +106,41 @@ function SortableModule({
     <div
       ref={setNodeRef}
       style={style}
-      className={`item ${
-        isOpen ? "active" : ""
-      } ${isDragging ? "dragging" : ""}`}
+      className={`item ${isOpen ? 'active' : ''} ${isDragging ? 'dragging' : ''}`}
     >
-      <button
-        className="header"
-        onClick={onToggleOpen}
-      >
+      <button type="button" className="header" onClick={onToggleOpen}>
         <div className="controls">
-
           <div
             className="drag-control"
             {...attributes}
             {...listeners}
-            onClick={(e) =>
-              e.stopPropagation()
-            }
+            onClick={(e) => e.stopPropagation()}
           >
-            <span className="drag-handle">
-              ⋮⋮
-            </span>
+            <span className="drag-handle">⋮⋮</span>
           </div>
 
-          <div
-            className="include-toggle"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleIncluded();
-            }}
+          <label
+            className="module-label"
+            onClick={(e) => e.stopPropagation()}
           >
+            <input
+              type="checkbox"
+              checked={isDisplayed}
+              onChange={onToggleDisplayed}
+            />
             <span
-              className={`pill ${
-                module.included
-                  ? "included"
-                  : "excluded"
-              }`}
+              className={`module-name ${!isDisplayed ? 'muted' : ''} ${isEvents ? 'events-emphasis' : ''}`}
             >
-              {module.included
-                ? "Included"
-                : "Not Included"}
+              {title}
             </span>
-          </div>
-
+          </label>
         </div>
 
-        <span className="question">
-          {module.title}
-        </span>
-
-        <span className="icon">
-          +
-        </span>
+        <span className="icon">+</span>
       </button>
 
       <div className="content">
-        <p>{module.content}</p>
+        <div className="content-inner">{children}</div>
       </div>
     </div>
   );

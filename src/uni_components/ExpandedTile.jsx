@@ -16,6 +16,7 @@ import ClubMediaModule from '../club_page_components/ClubMediaModule';
 import FaqModule from '../club_page_components/FaqModule';
 import MemberRosterModule from '../club_page_components/MemberRosterModule';
 import { CalendarModule } from '../club_page_components/CalendarModule';
+import ModuleAccordion from '../club_page_components/accordion';
 import { useClubData } from '../context/useClubData';
 import { useGlobalStore } from '../lib/store';
 
@@ -124,6 +125,19 @@ function getModuleWarnings(draft) {
         if (m.type === 'comments') w.comments = validateComments(m.data);
     }
     return w;
+}
+
+function normalizeModules(modules) {
+    return (modules ?? []).map((m, i) => ({
+        ...m,
+        order: m.order ?? i,
+        isDisplayed: m.isDisplayed !== false,
+    }));
+}
+
+function applyAccordionOrder(basicInfo, accordionModules) {
+    const ordered = accordionModules.map((m, i) => ({ ...m, order: i + 1 }));
+    return basicInfo ? [{ ...basicInfo, order: 0, isDisplayed: true }, ...ordered] : ordered;
 }
 
 
@@ -267,10 +281,11 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 setPageData(pageResult.value);
                 // if no page row exists yet, seed a default basic_info module from base club data
                 const modules = pageResult.value?.modules;
-                setDraft(modules?.length > 0 ? modules : [
+                setDraft(modules?.length > 0 ? normalizeModules(modules) : normalizeModules([
                     {
                         type: 'basic_info',
                         order: 0,
+                        isDisplayed: true,
                         data: {
                             club_name: club.club_name || '',
                             logo_url: club.image_url || '/raccoon_pfp.png',
@@ -278,8 +293,8 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                             links: [],
                         }
                     },
-                    { type: 'comments', order: 1, data: {} },
-                ]);
+                    { type: 'comments', order: 1, isDisplayed: true, data: {} },
+                ]));
                 console.log("Success retrieving data!");
             }
             if (membershipResult?.status === 'fulfilled')
@@ -329,6 +344,19 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const handleModuleChange = useCallback((type, updatedData) => {
         setDraft(prev => prev.map(m =>
             m.type === type ? { ...m, data: updatedData } : m
+        ));
+    }, []);
+
+    const handleModuleReorder = useCallback((reorderedAccordionModules) => {
+        setDraft((prev) => {
+            const basicInfo = prev.find((m) => m.type === 'basic_info');
+            return applyAccordionOrder(basicInfo, reorderedAccordionModules);
+        });
+    }, []);
+
+    const handleToggleDisplayed = useCallback((type) => {
+        setDraft((prev) => prev.map((m) =>
+            m.type === type ? { ...m, isDisplayed: m.isDisplayed === false } : m
         ));
     }, []);
 
@@ -440,12 +468,17 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
     // for the cancel button- disables editing and reverts the draft back to the current state of the data
     const handleCancel = () => {
-        setDraft(pageData?.modules ?? []);
+        setDraft(normalizeModules(pageData?.modules ?? []));
         setPendingLogoFile(null);
         setQuestionDeletes(new Set()); // restore optimistically-removed questions
         setHideDraft({});
         setIsEditing(false);
     };
+
+    const sortedDraft = [...(draft ?? [])].sort((a, b) => a.order - b.order);
+    const basicInfoModule = sortedDraft.find((m) => m.type === 'basic_info');
+    const accordionModules = sortedDraft.filter((m) => m.type !== 'basic_info');
+    const viewerModules = sortedDraft.filter((m) => m.type === 'basic_info' || m.isDisplayed !== false);
 
     // Action row rendered inside the basic_info module (between the banner and the About text)
     const actionRow = (
@@ -481,6 +514,121 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
         </div>
     );
 
+    const renderModule = (module) => {
+        if (module.type === 'basic_info') {
+            return (
+                <BasicInfoModule
+                    key="basic_info"
+                    club={club}
+                    data={module.data}
+                    topTags={topTags}
+                    editing={isEditing}
+                    onChange={(updatedData) => handleModuleChange('basic_info', updatedData)}
+                    onLogoChange={(file) => setPendingLogoFile(file)}
+                    actions={actionRow}
+                    warning={moduleWarnings.basic_info ?? null}
+                />
+            );
+        }
+        if (module.type === 'join') {
+            return (
+                <JoinModule
+                    key="join"
+                    club={club}
+                    data={module.data}
+                    editing={isEditing}
+                    onChange={(updatedData) => handleModuleChange('join', updatedData)}
+                    warning={moduleWarnings.join ?? null}
+                />
+            );
+        }
+        if (module.type === 'stats') {
+            return (
+                <StatsModule
+                    key="stats"
+                    data={module.data}
+                    editing={isEditing}
+                    onChange={(updatedData) => handleModuleChange('stats', updatedData)}
+                    warning={moduleWarnings.stats ?? null}
+                />
+            );
+        }
+        if (module.type === 'club_media') {
+            return (
+                <ClubMediaModule
+                    key="club_media"
+                    data={module.data}
+                    editing={isEditing}
+                    warning={moduleWarnings.club_media ?? null}
+                    onChange={(updatedData) => handleModuleChange('club_media', updatedData)}
+                />
+            );
+        }
+        if (module.type === 'faqs') {
+            return (
+                <FaqModule
+                    key="faqs"
+                    club={club}
+                    data={module.data}
+                    editing={isEditing}
+                    onChange={(updatedData) => handleModuleChange('faqs', updatedData)}
+                    warning={moduleWarnings.faqs ?? null}
+                    canAsk={!!user && !isApproved}
+                    userQuestions={userFaqs.filter((q) => !questionDeletes.has(q.id))}
+                    onAcceptQuestion={onAcceptQuestion}
+                    onDeleteQuestion={onDeleteQuestion}
+                />
+            );
+        }
+        if (module.type === 'member_roster') {
+            return (
+                <MemberRosterModule
+                    key="member_roster"
+                    club={club}
+                    data={module.data}
+                    editing={isEditing}
+                    onChange={(updatedData) => handleModuleChange('member_roster', updatedData)}
+                    warning={moduleWarnings.member_roster ?? null}
+                />
+            );
+        }
+        if (module.type === 'calendar') {
+            return (
+                <CalendarModule
+                    key="calendar"
+                    club={club}
+                    data={module.data}
+                    editing={isEditing}
+                    isApproved={isApproved}
+                    onChange={(updatedData) => handleModuleChange('calendar', updatedData)}
+                    warning={moduleWarnings.calendar ?? null}
+                    events={clubEvents}
+                    myRsvpSet={clubMyRsvpSet}
+                    friendRsvpMap={clubFriendRsvpMap}
+                    onRsvp={handleClubRsvp}
+                    onAddEvent={handleAddEvent}
+                    userId={user?.id ?? null}
+                />
+            );
+        }
+        if (module.type === 'comments') {
+            return (
+                <ReviewList
+                    key="comments"
+                    reviews={reviews}
+                    editing={isEditing}
+                    members={clubMembers}
+                    hideDraft={hideDraft}
+                    onToggleHide={(reviewId, hidden) =>
+                        setHideDraft(prev => ({ ...prev, [reviewId]: hidden }))
+                    }
+                    warning={moduleWarnings.comments ?? null}
+                />
+            );
+        }
+        return null;
+    };
+
     return (
         <motion.div
             layoutId={`club-${club.id}`}
@@ -498,7 +646,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                             const result = await apiFetch(`/clubs/${id}/page/init`, { method: 'POST' });
                             if (result?.modules?.length) {
                                 setPageData(result);
-                                setDraft(result.modules);
+                                setDraft(normalizeModules(result.modules));
                             }
                         } catch (err) {
                             console.error('Failed to initialize page defaults:', err);
@@ -509,105 +657,19 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             )}
 
             <div className="club-modules">
-            {(draft ?? [])
-                .sort((a, b) => a.order - b.order)
-                .map(module => {
-                    if (module.type === 'basic_info') return (
-                        <BasicInfoModule
-                            key="basic_info"
-                            club={club}
-                            data={module.data}
-                            topTags={topTags}
-                            editing={isEditing}
-                            onChange={(updatedData) => handleModuleChange('basic_info', updatedData)}
-                            onLogoChange={(file) => setPendingLogoFile(file)}
-                            actions={actionRow}
-                            warning={moduleWarnings.basic_info ?? null}
-                        />
-                    );
-                    if (module.type === 'join') return (
-                        <JoinModule
-                            key="join"
-                            club={club}
-                            data={module.data}
-                            editing={isEditing}
-                            onChange={(updatedData) => handleModuleChange('join', updatedData)}
-                            warning={moduleWarnings.join ?? null}
-                        />
-                    );
-                    if (module.type === 'stats') return (
-                        <StatsModule
-                            key="stats"
-                            data={module.data}
-                            editing={isEditing}
-                            onChange={(updatedData) => handleModuleChange('stats', updatedData)}
-                            warning={moduleWarnings.stats ?? null}
-                        />
-                    );
-                    if (module.type === 'club_media') return (
-                        <ClubMediaModule
-                            key="club_media"
-                            data={module.data}
-                            editing={isEditing}
-                            warning={moduleWarnings.club_media ?? null}
-                            onChange={(updatedData) => handleModuleChange('club_media', updatedData)}
-                        />
-                    );
-                    if (module.type === 'faqs') return (
-                        <FaqModule
-                            key="faqs"
-                            club={club}
-                            data={module.data}
-                            editing={isEditing}
-                            onChange={(updatedData) => handleModuleChange('faqs', updatedData)}
-                            warning={moduleWarnings.faqs ?? null}
-                            canAsk={!!user && !isApproved}
-                            userQuestions={userFaqs.filter((q) => !questionDeletes.has(q.id))}
-                            onAcceptQuestion={onAcceptQuestion}
-                            onDeleteQuestion={onDeleteQuestion}
-                        />
-                    );
-                    if (module.type === 'member_roster') return (
-                        <MemberRosterModule
-                            key="member_roster"
-                            club={club}
-                            data={module.data}
-                            editing={isEditing}
-                            onChange={(updatedData) => handleModuleChange('member_roster', updatedData)}
-                            warning={moduleWarnings.member_roster ?? null}
-                        />
-                    );
-                    if (module.type === 'calendar') return (
-                        <CalendarModule
-                            key="calendar"
-                            club={club}
-                            data={module.data}
-                            editing={isEditing}
-                            isApproved={isApproved}
-                            onChange={(updatedData) => handleModuleChange('calendar', updatedData)}
-                            warning={moduleWarnings.calendar ?? null}
-                            events={clubEvents}
-                            myRsvpSet={clubMyRsvpSet}
-                            friendRsvpMap={clubFriendRsvpMap}
-                            onRsvp={handleClubRsvp}
-                            onAddEvent={handleAddEvent}
-                            userId={user?.id ?? null}
-                        />
-                    );
-                    if (module.type === 'comments') return (
-                        <ReviewList
-                            key="comments"
-                            reviews={reviews}
-                            editing={isEditing}
-                            members={clubMembers}
-                            hideDraft={hideDraft}
-                            onToggleHide={(reviewId, hidden) =>
-                                setHideDraft(prev => ({ ...prev, [reviewId]: hidden }))
-                            }
-                            warning={moduleWarnings.comments ?? null}
-                        />
-                    );
-                })}
+                {basicInfoModule && renderModule(basicInfoModule)}
+                {isEditing ? (
+                    <ModuleAccordion
+                        modules={accordionModules}
+                        onReorder={handleModuleReorder}
+                        onToggleDisplayed={handleToggleDisplayed}
+                        renderContent={renderModule}
+                    />
+                ) : (
+                    viewerModules
+                        .filter((m) => m.type !== 'basic_info')
+                        .map((module) => renderModule(module))
+                )}
             </div>
 
             {isApproved && isEditing && (

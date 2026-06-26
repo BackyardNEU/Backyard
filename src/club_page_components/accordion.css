@@ -1,117 +1,123 @@
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
+.accordion {
+  width: 95%;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.accordion{
-  width:95%;
-  margin:auto;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
+.accordion .item {
+  background: white;
+  border: 1px solid #e5e5e5;
+  border-radius: 20px;
+  overflow: hidden;
 }
 
-.item{
-  background:white;
-  border:1px solid #e5e5e5;
-  border-radius:20px;
-  overflow:hidden;
+.accordion .item.dragging {
+  opacity: 0.7;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
 }
 
-.item.dragging{
-  opacity:.7;
-  box-shadow:0 12px 30px rgba(0,0,0,.12);
+.accordion .header {
+  width: 100%;
+  border: none;
+  background: none;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  cursor: pointer;
 }
 
-.header{
-  width:100%;
-  border:none;
-  background:none;
-  padding:20px 24px;
-  display:flex;
-  align-items:center;
-  gap:20px;
-  cursor:pointer;
+.accordion .controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
 }
 
-.controls{
-  display:flex;
-  align-items:center;
-  gap:16px;
+.accordion .drag-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.drag-control{
-  display:flex;
-  align-items:center;
-  justify-content:center;
+.accordion .drag-handle {
+  cursor: grab;
+  font-size: 22px;
+  color: #666;
+  font-weight: 700;
+  user-select: none;
 }
 
-.drag-handle{
-  cursor:grab;
-  font-size:22px;
-  color:#666;
-  font-weight:700;
-  user-select:none;
+.accordion .module-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
 }
 
-.include-toggle{
-  cursor:pointer;
+.accordion .module-label input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: #111;
 }
 
-.pill{
-  min-width:120px;
-  padding:10px 16px;
-  border-radius:999px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:13px;
-  font-weight:600;
-  transition:.2s;
+.accordion .module-name {
+  text-align: left;
+  font-size: 18px;
+  font-weight: 600;
+  color: #222;
 }
 
-.pill.included{
-  background:#111;
-  color:white;
+.accordion .module-name.muted {
+  color: #aaa;
 }
 
-.pill.excluded{
-  background:#f3f3f3;
-  color:#777;
-  border:1px solid #ddd;
+.accordion .module-name.events-emphasis {
+  color: #b45309;
 }
 
-.question{
-  flex:1;
-  text-align:left;
-  font-size:18px;
-  font-weight:600;
+.accordion .module-name.events-emphasis.muted {
+  color: #d4a574;
 }
 
-.icon{
-  font-size:24px;
-  transition:.3s;
+.accordion .icon {
+  font-size: 24px;
+  flex-shrink: 0;
+  transition: 0.3s;
 }
 
-.active .icon{
-  transform:rotate(45deg);
+.accordion .active .icon {
+  transform: rotate(45deg);
 }
 
-.content{
-  max-height:0;
-  overflow:hidden;
-  transition:max-height .3s ease,
-             padding .3s ease;
-  padding:0 24px;
+.accordion .content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
 }
 
-.active .content{
-  max-height:300px;
-  padding:0 24px 24px;
+.accordion .active .content {
+  grid-template-rows: 1fr;
 }
 
-.content p{
-  color:#555;
-  line-height:1.7;
+.accordion .content-inner {
+  overflow: hidden;
+  padding: 0 24px;
+}
+
+.accordion .active .content-inner {
+  padding: 0 24px 24px;
+}
+
+/* Module titles also appear inside each module — hide the duplicate in accordion edit mode */
+.accordion .content-inner .divider-header {
+  display: none;
 }
