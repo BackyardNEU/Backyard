@@ -325,13 +325,13 @@
   right: 12px;
   width: 26px;
   height: 26px;
-  display: grid;
+  display: flex;
   place-items: center;
   border: none;
   border-radius: 50%;
   background: transparent;
   color: #8a8a8a;
-  font-size: 16px;
+  font-size: 1rem;
   line-height: 1;
   cursor: pointer;
   opacity: 0;
