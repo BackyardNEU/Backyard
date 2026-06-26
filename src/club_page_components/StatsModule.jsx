@@ -198,7 +198,7 @@ function StatsModule({ data, editing, onChange, warning }) {
                                                 />
                                             </label>
                                             <label className="">
-                                                /
+                                            <span style={{ paddingLeft: "5px", paddingRight: "5px" }}>/</span>
                                                 <input
                                                     className="number-small edit-mode-input"
                                                     type="number"
@@ -293,7 +293,7 @@ function StatsModule({ data, editing, onChange, warning }) {
                                     <div className="vert-flex">
                                         <p className="number-big" style={{ color, margin: 0 }}>
                                             <CountUp target={value} animate={animated} delay={index * 120} />
-                                            <span className="number-small" style={{ color }}>{stat.max}</span>
+                                            <span className="number-small" style={{ color }}>/{stat.max}</span>
                                         </p>
                                         <span className="stat-label">{stat.label}</span>
                                     </div>
