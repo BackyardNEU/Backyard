@@ -16,7 +16,8 @@
 .range-row { display: flex; flex-direction: column; align-items: flex-start; align-self: flex-start; gap: 10px; width: 70vw; margin-bottom: 8px; }
 .range-label { width: 120px; font-family: "Barlow Condensed", sans-serif; font-size: 1.2rem; flex-shrink: 0; text-transform: uppercase; }
 .range-bar-container { width: 100%; height: 23px; border-radius: 20px; box-shadow: 0 0 0 1px #adadad; overflow: hidden; }
-.range-bar-fill { height: 100%; border-radius: 20px 10px 10px 20px; border: 3px solid rgb(255,255,255); }
+.range-bar-fill { height: 100%; border-radius: 20px; border: 3px solid rgb(255,255,255); }
+.range-bar-partial {  height: 100%; border-radius: 20px 10px 10px 20px; border: 3px solid rgb(255,255,255); }
 .range-value { width: 10px; font-size: 14px; flex-shrink: 0; }
 
 /* ===== Tabs ===== */

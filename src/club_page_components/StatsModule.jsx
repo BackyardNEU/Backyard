@@ -299,7 +299,7 @@ function StatsModule({ data, editing, onChange, warning }) {
                                     </div>
                                     <div className="range-bar-container">
                                         <div
-                                            className="range-bar-fill"
+                                            className={`${stat.value !== stat.max ? 'range-bar-partial': 'range-bar-fill'}`}
                                             style={{
                                                 width: animated ? `${barPct}%` : '0%',
                                                 backgroundColor: color,
