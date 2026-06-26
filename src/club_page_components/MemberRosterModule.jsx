@@ -27,7 +27,7 @@ function MemberRosterModule({ data, editing, onChange, warning }) {
 
   return (
     <div className="mr-module">
-      <p className="divider-header">Members</p>
+      <p className="divider-header">Featured Members</p>
     {editing && (
           <p className="about-edit-help">
           Add members of your club you would like to feature. Members can be split into categories (i.e. "Coaches", "Editors", etc). Clicking a profile lets users see their bio.

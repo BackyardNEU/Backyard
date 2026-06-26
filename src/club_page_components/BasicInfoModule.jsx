@@ -15,9 +15,11 @@ import LinksTable from './LinksTable';
  * @param {Function} props.onChange - callback function that preserves the function and its references from being rerendered every well, rerender.
  * @param {Function} props.onLogoChange - simple function that sets the value of a logo file equal to the current pending file if there 
  * is a change- meant to allow ExpandedTile to handle file uploads since they have to be uploaded using signed URL's since files
- * cannot be serialized into JSON.
+ * @param {React.ReactNode} props.actions - action row slot rendered between hero and about in full/hero mode
+ * @param {string|null} props.warning - validation message shown in edit mode
+ * @param {'full'|'hero'|'about'} props.part - which slice to render; hero is fixed above the accordion
  */
-function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange, actions, warning }) {
+function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange, actions, warning, part = 'full' }) {
   const [dominantColor, setDominantColor] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
   const [descOpen, setDescOpen] = useState(false);
@@ -152,13 +154,17 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
     onLogoChange(file);
   };
 
+  const showHero = part === 'full' || part === 'hero';
+  const showAbout = part === 'full' || part === 'about';
+
   return (
     <>
-    {editing && (
+    {editing && showHero && (
           <p className="about-edit-help">
             You're in edit mode! Email explorethebackyard2025@gmail.com with any questions!
           </p>
         )}
+      {showHero && (
       <div className="content-col">
         <div className="rectangle" style={{ backgroundColor: dominantColor }}>
           <img
@@ -215,10 +221,12 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
           </div>
         </div>
       </div>
+      )}
 
-      {editing && imageWarning && <p className="module-warning">{imageWarning}</p>}
+      {showHero && editing && imageWarning && <p className="module-warning">{imageWarning}</p>}
 
-      {/* Action row + links bar */}
+      {showHero && (
+      <>
       <div className="action-links-wrapper">
         {actions}
         {enabledLinks.length > 0 && (
@@ -252,7 +260,6 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
         )}
       </div>
 
-      {/* Desktop: extra links inline below the action row when expanded */}
       {linksExpanded && (
         <div className="links-expanded-row">
           {enabledLinks.slice(3).map((link, i) => (
@@ -268,12 +275,17 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
           ))}
         </div>
       )}
+      </>
+      )}
 
+      {showAbout && (
       <div className="about-section">
         <h2 className="divider-header">About</h2>
         {editing && (
           <p className="about-edit-help">
-            This is your club's basic info section. Feel free to edit your club's name, profile photo, and a description telling users about your club. 
+            {part === 'about'
+              ? 'Share a description telling users about your club.'
+              : "This is your club's basic info section. Feel free to edit your club's name, profile photo, and a description telling users about your club."}
           </p>
         )}
         <div className="about-meta-row" style={friendsInClub.length === 0 ? { marginLeft: '-4px' } : undefined}>
@@ -352,8 +364,9 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
             </p>
         }
       </div>
+      )}
 
-      {descOpen && (
+      {showAbout && descOpen && (
         <div className="desc-modal-overlay" onClick={() => setDescOpen(false)}>
           <div className="desc-modal" onClick={(e) => e.stopPropagation()}>
             <div className="desc-modal-header">
@@ -372,7 +385,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
         </div>
       )}
 
-      {friendsModalOpen && (
+      {showAbout && friendsModalOpen && (
         <div className="friends-modal-overlay-basic-info" onClick={() => { setFriendsModalOpen(false); setFriendsSearch(''); }}>
           <div className="friends-modal" onClick={(e) => e.stopPropagation()}>
             <div className="friends-modal-header">
@@ -427,7 +440,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
         </div>
       )}
 
-      {linksModalOpen && (
+      {showHero && linksModalOpen && (
         <div className="links-modal-overlay" onClick={() => setLinksModalOpen(false)}>
           <div className="links-modal" onClick={(e) => e.stopPropagation()}>
             <div className="friends-modal-header">

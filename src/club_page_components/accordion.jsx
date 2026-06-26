@@ -10,6 +10,7 @@ import { CSS } from '@dnd-kit/utilities';
 import './accordion.css';
 
 export const MODULE_TITLES = {
+  basic_info: 'About',
   club_media: 'Media',
   join: 'How to Join',
   faqs: 'FAQs',
@@ -20,7 +21,7 @@ export const MODULE_TITLES = {
 };
 
 /**
- * Sortable accordion list for editable club page modules (everything except basic_info).
+ * Sortable accordion list for editable club page modules (including About; hero stays fixed above).
  *
  * @param {Array}    modules          - module objects from draft (sorted by order)
  * @param {Function} onReorder        - (reorderedModules) => void

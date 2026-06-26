@@ -367,7 +367,7 @@ export default function ReviewList({ reviews, editing, members, hideDraft = {}, 
 
     return (
         <div className="review-item">
-            <p className="divider-header">Comments</p>
+            <p className="divider-header">Participant Posts</p>
 
             <div className="comment-tabs" role="tablist">
                 {['Members', 'Others'].map((label, i) => (

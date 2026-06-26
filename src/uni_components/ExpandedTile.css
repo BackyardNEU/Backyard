@@ -193,6 +193,16 @@
   width: 100%;
 }
 
+.module-view-divider {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 28px 0;
+}
+
+.module-view-divider .divider {
+  margin-top: 0;
+}
+
 .divider {
   height: 1px;
   background-color: rgb(205, 205, 205);

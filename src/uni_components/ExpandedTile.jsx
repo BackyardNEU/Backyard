@@ -135,9 +135,8 @@ function normalizeModules(modules) {
     }));
 }
 
-function applyAccordionOrder(basicInfo, accordionModules) {
-    const ordered = accordionModules.map((m, i) => ({ ...m, order: i + 1 }));
-    return basicInfo ? [{ ...basicInfo, order: 0, isDisplayed: true }, ...ordered] : ordered;
+function applyAccordionOrder(reorderedModules) {
+    return reorderedModules.map((m, i) => ({ ...m, order: i }));
 }
 
 
@@ -348,10 +347,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     }, []);
 
     const handleModuleReorder = useCallback((reorderedAccordionModules) => {
-        setDraft((prev) => {
-            const basicInfo = prev.find((m) => m.type === 'basic_info');
-            return applyAccordionOrder(basicInfo, reorderedAccordionModules);
-        });
+        setDraft(() => applyAccordionOrder(reorderedAccordionModules));
     }, []);
 
     const handleToggleDisplayed = useCallback((type) => {
@@ -477,8 +473,8 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
     const sortedDraft = [...(draft ?? [])].sort((a, b) => a.order - b.order);
     const basicInfoModule = sortedDraft.find((m) => m.type === 'basic_info');
-    const accordionModules = sortedDraft.filter((m) => m.type !== 'basic_info');
-    const viewerModules = sortedDraft.filter((m) => m.type === 'basic_info' || m.isDisplayed !== false);
+    const accordionModules = sortedDraft;
+    const viewModules = sortedDraft.filter((m) => m.isDisplayed !== false);
 
     // Action row rendered inside the basic_info module (between the banner and the About text)
     const actionRow = (
@@ -514,11 +510,11 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
         </div>
     );
 
-    const renderModule = (module) => {
+    const renderModule = (module, part = 'full') => {
         if (module.type === 'basic_info') {
             return (
                 <BasicInfoModule
-                    key="basic_info"
+                    key={`basic_info-${part}`}
                     club={club}
                     data={module.data}
                     topTags={topTags}
@@ -527,6 +523,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     onLogoChange={(file) => setPendingLogoFile(file)}
                     actions={actionRow}
                     warning={moduleWarnings.basic_info ?? null}
+                    part={part}
                 />
             );
         }
@@ -657,18 +654,37 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             )}
 
             <div className="club-modules">
-                {basicInfoModule && renderModule(basicInfoModule)}
+                {basicInfoModule && renderModule(basicInfoModule, 'hero')}
                 {isEditing ? (
                     <ModuleAccordion
                         modules={accordionModules}
                         onReorder={handleModuleReorder}
                         onToggleDisplayed={handleToggleDisplayed}
-                        renderContent={renderModule}
+                        renderContent={(module) =>
+                            renderModule(module, module.type === 'basic_info' ? 'about' : 'full')
+                        }
                     />
                 ) : (
-                    viewerModules
-                        .filter((m) => m.type !== 'basic_info')
-                        .map((module) => renderModule(module))
+                    <>
+                        {viewModules.length > 0 && (
+                            <div className="module-view-divider">
+                                <div className="divider" />
+                            </div>
+                        )}
+                        {viewModules.map((module, index) => (
+                            <React.Fragment key={module.type}>
+                                {index > 0 && (
+                                    <div className="module-view-divider">
+                                        <div className="divider" />
+                                    </div>
+                                )}
+                                {renderModule(
+                                    module,
+                                    module.type === 'basic_info' ? 'about' : 'full'
+                                )}
+                            </React.Fragment>
+                        ))}
+                    </>
                 )}
             </div>
 
