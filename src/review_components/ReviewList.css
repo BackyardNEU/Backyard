@@ -71,7 +71,8 @@
 }
 
 .comment-card--hidden {
-    opacity: 0.45;
+    opacity: 0.10;
+    
 }
 
 /* ===== SVG border overlay ===== */
@@ -330,9 +331,11 @@
     gap: 6px;
     font-family: 'Barlow', sans-serif;
     font-size: 0.78rem;
-    color: #666;
+    color: rgb(207, 210, 229);
     padding: 8px 14px 10px;
+    border-radius: 0px 0px 15px 15px;
     border-top: 1px solid #ede8e6;
+    background-color: rgb(22, 25, 60);
     cursor: pointer;
     -webkit-user-select: none;
     user-select: none;
@@ -342,4 +345,5 @@
     cursor: pointer;
     width: 14px;
     height: 14px;
+    fill: #3A201F;
 }

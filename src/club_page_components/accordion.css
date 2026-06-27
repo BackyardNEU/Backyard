@@ -6,6 +6,21 @@
   gap: 12px;
 }
 
+.about-edit-help {
+  width: 95%;
+  margin: 0.2rem 0 0.75rem 0;
+  padding: 1rem;
+  max-width: 800px;
+  font-size: 1.1rem;
+  color: #4c4c4c;
+  line-height: 1.2;
+  background: rgb(186, 197, 219);
+  border-radius: 15px;
+  text-align: left;
+
+  
+}
+
 .accordion .item {
   background: white;
   border: 1px solid #e5e5e5;

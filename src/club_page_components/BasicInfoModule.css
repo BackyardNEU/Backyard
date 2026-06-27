@@ -209,7 +209,7 @@
   align-self: start;
   margin-left: 0;
   margin-right: 0;
-  width: calc(100% - 20vh);
+  width: 100%;
   box-sizing: border-box;
   resize: none;
   overflow: hidden;

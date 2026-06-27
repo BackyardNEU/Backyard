@@ -275,7 +275,7 @@ function StatsModule({ data, editing, onChange, warning }) {
                                         <p className="number-big" style={{ color, width: 'auto', margin: 0, lineHeight: '0.85' }}>
                                             <CountUp target={value} animate={animated} delay={index * 120} />
                                         </p>
-                                        <span className="stat-label" style={{ color, paddingBottom: '2px' }}>
+                                        <span className="stat-label" style={{ color, marginBottom: '-3px' }}>
                                             {stat.unit1}
                                         </span>
                                     </div>

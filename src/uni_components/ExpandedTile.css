@@ -196,7 +196,7 @@
 .module-view-divider {
   width: 100%;
   box-sizing: border-box;
-  padding: 28px 0;
+  padding: 10px 0;
 }
 
 .module-view-divider .divider {
@@ -206,7 +206,7 @@
 .divider {
   height: 1px;
   background-color: rgb(205, 205, 205);
-  margin-top: 50px;
+  
 }
 
 .divider-header {
@@ -271,8 +271,8 @@
  
 
   .divider {
-    width: 98vw;
-    margin-left: -1%;
+    width: 97vw;
+    margin-left: 1.5%;
   }
 }
 

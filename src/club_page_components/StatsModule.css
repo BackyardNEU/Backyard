@@ -55,7 +55,7 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 2px;
+
 }
 
 .stats-module .number-big {
@@ -131,10 +131,10 @@
     flex-direction: row;
     overflow-x: auto;
     overflow-y: hidden;
-    width: 100%;
+    width: 70vw;
     gap: 8px;
     scrollbar-width: thin;
-    border-bottom: 1px solid rgb(175, 175, 175);
+    border-bottom: 0.9px dashed rgb(175, 175, 175);
 }
 
 .quant-stat-holder {

@@ -1,7 +1,10 @@
 import React, { useState, useRef, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import FeatheredBlob from './FeatheredBlob';
 import { apiFetch } from '../lib/api';
 import './ClubMediaModule.css';
+
+const REVEAL_MS = 1600;
 
 /**
  * Club Media module — a horizontal row of poster cards that expand into a
@@ -28,6 +31,7 @@ import './ClubMediaModule.css';
  */
 function ClubMediaModule({ data, editing, onChange, warning }) {
   const [openIndex, setOpenIndex] = useState(null);
+  const [reveal, setReveal] = useState(null); // { rect, scale, active }
   const [localWarning, setLocalWarning] = useState('');
   const posters = data?.posters ?? [];
 
@@ -73,7 +77,34 @@ function ClubMediaModule({ data, editing, onChange, warning }) {
     seq.forEach((idx, pos) => { orderByIndex[idx] = pos; });
     onChange?.({ ...data, posters: remaining.map((p, i) => ({ ...p, order: orderByIndex[i] })) });
     setOpenIndex(null);
+    setReveal(null);
   };
+
+  const openPoster = (index, rect) => {
+    const { scale70, scaleFinal } = blobRevealMetrics(rect);
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    setOpenIndex(index);
+    setReveal({
+      rect,
+      scale70,
+      scaleFinal,
+      dx: cx - window.innerWidth / 2,
+      dy: cy - window.innerHeight / 2,
+    });
+  };
+
+  const closePoster = () => {
+    setOpenIndex(null);
+    setReveal(null);
+  };
+
+  // Unmount the flying blob once the portal expansion finishes.
+  useLayoutEffect(() => {
+    if (!reveal) return undefined;
+    const done = setTimeout(() => setReveal(null), REVEAL_MS);
+    return () => clearTimeout(done);
+  }, [reveal?.rect]);
 
   // Nothing to show publicly when empty; in edit mode we still render so the add card appears.
   if (posters.length === 0 && !editing) return null;
@@ -97,7 +128,8 @@ function ClubMediaModule({ data, editing, onChange, warning }) {
             editing={editing}
             rank={rank}
             count={posters.length}
-            onOpen={() => setOpenIndex(i)}
+            onOpen={(rect) => openPoster(i, rect)}
+            isPosterOpen={openIndex === i}
             onUpdate={(patch) => updatePoster(i, patch)}
             onSetOrder={(newPos0) => setPosterOrder(i, newPos0)}
             onDelete={() => removePoster(i)}
@@ -114,9 +146,14 @@ function ClubMediaModule({ data, editing, onChange, warning }) {
         <PosterModal
           poster={open}
           editing={editing}
-          onClose={() => setOpenIndex(null)}
+          revealing={!!reveal}
+          onClose={closePoster}
           onUpdate={(patch) => updatePoster(openIndex, patch)}
         />
+      )}
+
+      {open && reveal && (
+        <BlobRevealLayer poster={open} reveal={reveal} />
       )}
     </div>
   );
@@ -124,9 +161,10 @@ function ClubMediaModule({ data, editing, onChange, warning }) {
 
 /* ─────────────────────────── Poster card (+ edit card below) ─────────────────────────── */
 
-function PosterCard({ poster, editing, rank, count, onOpen, onUpdate, onSetOrder, onDelete, onError }) {
+function PosterCard({ poster, editing, rank, count, onOpen, isPosterOpen, onUpdate, onSetOrder, onDelete, onError }) {
   const wrapRef = useRef(null);
   const copyRef = useRef(null);
+  const stageRef = useRef(null);
   const [marquee, setMarquee] = useState(false);
   const [dur, setDur] = useState(20);
 
@@ -144,6 +182,13 @@ function PosterCard({ poster, editing, rank, count, onOpen, onUpdate, onSetOrder
   }, [poster.poster_text, editing]);
 
   const fit = fitBlob(poster.blob_aspect || '1 / 1', CARD_BLOB_W, CARD_BLOB_H);
+
+  const handleBlobClick = (e) => {
+    if (editing || !poster.blob_image_url) return;
+    e.stopPropagation();
+    const rect = stageRef.current?.getBoundingClientRect();
+    if (rect) onOpen(rect);
+  };
 
   const handleBlobUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -184,10 +229,6 @@ function PosterCard({ poster, editing, rank, count, onOpen, onUpdate, onSetOrder
       <div
         className={`cm-poster-card ${editing ? 'cm-poster-card--editing' : ''}`}
         style={{ background: poster.poster_color || '#1e2630' }}
-        onClick={onOpen}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => { if (e.key === 'Enter') onOpen(); }}
       >
         {editing && (
           <button
@@ -199,7 +240,16 @@ function PosterCard({ poster, editing, rank, count, onOpen, onUpdate, onSetOrder
           </button>
         )}
 
-        <div className="cm-poster-stage" style={fit}>
+        <div
+          className={`cm-poster-stage ${isPosterOpen ? 'cm-poster-stage--hidden' : ''}`}
+          style={fit}
+          ref={stageRef}
+          onClick={handleBlobClick}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleBlobClick(e); }}
+          role={!editing && poster.blob_image_url ? 'button' : undefined}
+          tabIndex={!editing && poster.blob_image_url ? 0 : undefined}
+          aria-label={!editing && poster.blob_image_url ? `Open ${poster.poster_text || 'poster'}` : undefined}
+        >
           {poster.blob_image_url ? (
             <FeatheredBlob
               image={poster.blob_image_url}
@@ -311,44 +361,80 @@ function PosterCard({ poster, editing, rank, count, onOpen, onUpdate, onSetOrder
 
 /* ─────────────────────────── Expanded modal ─────────────────────────── */
 
-function PosterModal({ poster, editing, onClose, onUpdate }) {
+function PosterModal({ poster, editing, revealing, onClose, onUpdate }) {
   const content = poster.content ?? [];
   const setContent = (next) => onUpdate({ content: next });
   const addBlock = (block) => setContent([block, ...content]); // newest on top
   const updateBlock = (bi, patch) => setContent(content.map((b, i) => (i === bi ? { ...b, ...patch } : b)));
   const removeBlock = (bi) => setContent(content.filter((_, i) => i !== bi));
 
+  const revealCls = revealing ? ' cm-reveal' : '';
+
   return (
-    <div className="cm-modal-overlay" onClick={onClose}>
-      <div className="cm-modal" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="cm-modal-close" onClick={onClose} aria-label="Close">×</button>
+    <div
+      className={`cm-modal-overlay${revealCls}`}
+      style={{ '--cm-reveal-ms': `${REVEAL_MS}ms` }}
+      onClick={onClose}
+    >
+      <div className="cm-modal-card">
+        <div className={`cm-modal${revealCls}`} onClick={(e) => e.stopPropagation()}>
+          <button type="button" className="cm-modal-close" onClick={onClose} aria-label="Close">×</button>
 
-        <div className="cm-modal-header">
-          <span className="cm-modal-title" style={{ color: poster.poster_color || '#2c1b2b' }}>
-            {poster.poster_text || 'Untitled'}
-          </span>
-        </div>
+          <div className="cm-modal-header">
+            <span className="cm-modal-title" style={{ color: poster.poster_color || '#2c1b2b' }}>
+              {poster.poster_text || 'Untitled'}
+            </span>
+          </div>
 
-        <div className="cm-modal-body">
-          {editing && <BlockAdder onAdd={addBlock} />}
+          <div className="cm-modal-body">
+            {editing && <BlockAdder onAdd={addBlock} />}
 
-          {content.map((block, bi) =>
-            editing ? (
-              <BlockEditor
-                key={bi}
-                block={block}
-                onChange={(patch) => updateBlock(bi, patch)}
-                onRemove={() => removeBlock(bi)}
-              />
-            ) : (
-              <ContentBlock key={bi} block={block} />
-            )
-          )}
+            {content.map((block, bi) =>
+              editing ? (
+                <BlockEditor
+                  key={bi}
+                  block={block}
+                  onChange={(patch) => updateBlock(bi, patch)}
+                  onRemove={() => removeBlock(bi)}
+                />
+              ) : (
+                <ContentBlock key={bi} block={block} />
+              )
+            )}
 
-          {content.length === 0 && !editing && <p className="cm-modal-empty">No media yet.</p>}
+            {content.length === 0 && !editing && <p className="cm-modal-empty">No media yet.</p>}
+          </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function BlobRevealLayer({ poster, reveal }) {
+  const { rect, scale70, scaleFinal, dx, dy } = reveal;
+
+  return createPortal(
+    <div
+      className="cm-blob-reveal"
+      style={{
+        '--cm-reveal-ms': `${REVEAL_MS}ms`,
+        '--cm-blob-w': `${rect.width}px`,
+        '--cm-blob-h': `${rect.height}px`,
+        '--cm-blob-dx': `${dx}px`,
+        '--cm-blob-dy': `${dy}px`,
+        '--cm-blob-scale-70': scale70,
+        '--cm-blob-scale': scaleFinal,
+      }}
+      aria-hidden="true"
+    >
+      <FeatheredBlob
+        image={poster.blob_image_url}
+        aspectRatio={poster.blob_aspect || '1 / 1'}
+        color={poster.poster_color || '#1e2630'}
+        feather={BLOB_FEATHER}
+      />
+    </div>,
+    document.body,
   );
 }
 
@@ -506,6 +592,18 @@ const newPoster = (order = 0) => ({
   content: [],
   order,
 });
+
+function blobRevealMetrics(rect) {
+  const scale70 = Math.min(
+    (window.innerWidth * 0.7) / rect.width,
+    (window.innerHeight * 0.7) / rect.height,
+  );
+  const scaleFinal = Math.min(
+    (window.innerWidth * 0.9) / rect.width,
+    (window.innerHeight * 0.9) / rect.height,
+  );
+  return { scale70, scaleFinal: Math.max(scaleFinal, scale70 * 1.08) };
+}
 
 // Largest aspect-correct box that fits within boxW x boxH — fills the card maximally
 // without overflowing, for any blob aspect.
