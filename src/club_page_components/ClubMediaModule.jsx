@@ -2,9 +2,12 @@ import React, { useState, useRef, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import FeatheredBlob from './FeatheredBlob';
 import { apiFetch } from '../lib/api';
+import { uploadVideo } from '../lib/uploadVideo';
 import './ClubMediaModule.css';
 
 const REVEAL_MS = 1600;
+const MAX_VIDEO_SECONDS = 15;
+const VIDEO_WIDTHS = ['50', '70', '100'];
 
 /**
  * Club Media module — a horizontal row of poster cards that expand into a
@@ -16,14 +19,16 @@ const REVEAL_MS = 1600;
  *       order,           // per-poster display order (distinct from the module-level order)
  *       blob_image_url, blob_aspect, poster_color, poster_text, poster_text_color,
  *       content: [ { type:'title', value } | { type:'text', value }
- *                | { type:'media', items:[{ kind:'image'|'video', url }] } ]
+ *                | { type:'media', items:[{ kind:'image'|'video', url }] }
+ *                | { type:'uploaded_video', url, width:'50'|'70'|'100' } ]
  *     }]
  *   }
  *
  * Edit mode (`editing` true, approved accounts only) lets editors manage posters and their
  * content via an edit card that sits BELOW each poster; changes flow up through `onChange`
  * into the page draft and are saved by ExpandedTile. Images upload immediately via
- * /storage/review-upload-url; videos are pasted links. Blob feathering is fixed.
+ * /storage/review-upload-url; short videos (≤15 s) upload via
+ * /storage/club-media-video-upload-url; longer YouTube-style videos are pasted links.
  *
  * @param {Object} data - module data (see shape above).
  * @param {boolean} editing - page-level edit mode.
@@ -80,11 +85,15 @@ function ClubMediaModule({ data, editing, onChange, warning }) {
     setReveal(null);
   };
 
-  const openPoster = (index, rect) => {
+  const openPoster = (index, rect, skipReveal = false) => {
+    setOpenIndex(index);
+    if (skipReveal) {
+      setReveal(null);
+      return;
+    }
     const { scale70, scaleFinal } = blobRevealMetrics(rect);
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
-    setOpenIndex(index);
     setReveal({
       rect,
       scale70,
@@ -128,7 +137,7 @@ function ClubMediaModule({ data, editing, onChange, warning }) {
             editing={editing}
             rank={rank}
             count={posters.length}
-            onOpen={(rect) => openPoster(i, rect)}
+            onOpen={(rect) => openPoster(i, rect, editing)}
             isPosterOpen={openIndex === i}
             onUpdate={(patch) => updatePoster(i, patch)}
             onSetOrder={(newPos0) => setPosterOrder(i, newPos0)}
@@ -149,6 +158,7 @@ function ClubMediaModule({ data, editing, onChange, warning }) {
           revealing={!!reveal}
           onClose={closePoster}
           onUpdate={(patch) => updatePoster(openIndex, patch)}
+          onWarning={setLocalWarning}
         />
       )}
 
@@ -184,7 +194,7 @@ function PosterCard({ poster, editing, rank, count, onOpen, isPosterOpen, onUpda
   const fit = fitBlob(poster.blob_aspect || '1 / 1', CARD_BLOB_W, CARD_BLOB_H);
 
   const handleBlobClick = (e) => {
-    if (editing || !poster.blob_image_url) return;
+    if (!editing && !poster.blob_image_url) return;
     e.stopPropagation();
     const rect = stageRef.current?.getBoundingClientRect();
     if (rect) onOpen(rect);
@@ -246,9 +256,13 @@ function PosterCard({ poster, editing, rank, count, onOpen, isPosterOpen, onUpda
           ref={stageRef}
           onClick={handleBlobClick}
           onKeyDown={(e) => { if (e.key === 'Enter') handleBlobClick(e); }}
-          role={!editing && poster.blob_image_url ? 'button' : undefined}
-          tabIndex={!editing && poster.blob_image_url ? 0 : undefined}
-          aria-label={!editing && poster.blob_image_url ? `Open ${poster.poster_text || 'poster'}` : undefined}
+          role={poster.blob_image_url || editing ? 'button' : undefined}
+          tabIndex={poster.blob_image_url || editing ? 0 : undefined}
+          aria-label={
+            poster.blob_image_url || editing
+              ? `${editing ? 'Edit' : 'Open'} ${poster.poster_text || 'poster'}`
+              : undefined
+          }
         >
           {poster.blob_image_url ? (
             <FeatheredBlob
@@ -361,7 +375,7 @@ function PosterCard({ poster, editing, rank, count, onOpen, isPosterOpen, onUpda
 
 /* ─────────────────────────── Expanded modal ─────────────────────────── */
 
-function PosterModal({ poster, editing, revealing, onClose, onUpdate }) {
+function PosterModal({ poster, editing, revealing, onClose, onUpdate, onWarning }) {
   const content = poster.content ?? [];
   const setContent = (next) => onUpdate({ content: next });
   const addBlock = (block) => setContent([block, ...content]); // newest on top
@@ -387,7 +401,7 @@ function PosterModal({ poster, editing, revealing, onClose, onUpdate }) {
           </div>
 
           <div className="cm-modal-body">
-            {editing && <BlockAdder onAdd={addBlock} />}
+            {editing && <BlockAdder onAdd={addBlock} onWarning={onWarning} />}
 
             {content.map((block, bi) =>
               editing ? (
@@ -438,7 +452,7 @@ function BlobRevealLayer({ poster, reveal }) {
   );
 }
 
-function BlockAdder({ onAdd }) {
+function BlockAdder({ onAdd, onWarning }) {
   const [open, setOpen] = useState(false);
   const [videoMode, setVideoMode] = useState(false);
   const [videoUrl, setVideoUrl] = useState('');
@@ -447,6 +461,7 @@ function BlockAdder({ onAdd }) {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
     try {
+      onWarning?.('');
       const items = [];
       for (const f of files) items.push({ kind: 'image', url: await uploadImage(f) });
       onAdd({ type: 'media', items });
@@ -454,6 +469,27 @@ function BlockAdder({ onAdd }) {
       console.error('Image upload failed:', err);
     }
     setOpen(false);
+  };
+
+  const addShortVideo = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    try {
+      onWarning?.('');
+      const duration = await getVideoDuration(file);
+      if (duration > MAX_VIDEO_SECONDS) {
+        onWarning?.(`Videos must be ${MAX_VIDEO_SECONDS} seconds or shorter. This file is ${Math.ceil(duration)} seconds.`);
+        return;
+      }
+      const url = await uploadVideo(file);
+      onAdd({ type: 'uploaded_video', url, width: '100' });
+      setOpen(false);
+    } catch (err) {
+      console.error('Video upload failed:', err);
+      onWarning?.('Video upload unsuccessful. Please try again.');
+    }
   };
 
   const addVideo = () => {
@@ -481,8 +517,12 @@ function BlockAdder({ onAdd }) {
         Image(s)
         <input type="file" accept="image/*" multiple hidden onChange={addImages} />
       </label>
+      <label className="cm-add-upload">
+        Short Video (≤{MAX_VIDEO_SECONDS}s)
+        <input type="file" accept="video/mp4,video/webm,video/quicktime" hidden onChange={addShortVideo} />
+      </label>
       {!videoMode ? (
-        <button onClick={() => setVideoMode(true)}>Video</button>
+        <button onClick={() => setVideoMode(true)}>Video Link</button>
       ) : (
         <span className="cm-add-video">
           <input
@@ -501,7 +541,8 @@ function BlockAdder({ onAdd }) {
 function BlockEditor({ block, onChange, onRemove }) {
   return (
     <div className="cm-block-edit">
-      
+      <button type="button" className="cm-poster-delete" onClick={onRemove} aria-label="Remove block">X</button>
+
       {block.type === 'title' && (
         <div>
           <input
@@ -531,6 +572,33 @@ function BlockEditor({ block, onChange, onRemove }) {
         </div>
       )}
       {block.type === 'media' && <MediaCarousel items={block.items} />}
+      {block.type === 'uploaded_video' && (
+        <>
+          <UploadedVideoBlock block={block} />
+          <div className="cm-video-width-row">
+            <select
+              className="cm-video-width cm-aspect"
+              value={block.width || '100'}
+              onChange={(e) => onChange({ width: e.target.value })}
+            >
+              {VIDEO_WIDTHS.map((w) => (
+                <option key={w} value={w}>{w}%</option>
+              ))}
+            </select>
+            <span className="cm-muted">width</span>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function UploadedVideoBlock({ block }) {
+  if (!block?.url) return null;
+  const width = VIDEO_WIDTHS.includes(block.width) ? block.width : '100';
+  return (
+    <div className={`cm-video-block cm-video-block--${width}`}>
+      <video className="cm-media-video" src={block.url} controls playsInline />
     </div>
   );
 }
@@ -539,6 +607,7 @@ function ContentBlock({ block }) {
   if (block?.type === 'title') return <h3 className="cm-block-title">{block.value}</h3>;
   if (block?.type === 'text') return <p className="cm-block-text">{block.value}</p>;
   if (block?.type === 'media') return <MediaCarousel items={block.items} />;
+  if (block?.type === 'uploaded_video') return <UploadedVideoBlock block={block} />;
   return null;
 }
 
@@ -634,6 +703,23 @@ async function uploadImage(file) {
 function youtubeId(url) {
   const m = String(url).match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
   return m ? m[1] : null;
+}
+
+function getVideoDuration(file) {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    const url = URL.createObjectURL(file);
+    video.onloadedmetadata = () => {
+      URL.revokeObjectURL(url);
+      resolve(video.duration);
+    };
+    video.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Could not read video file'));
+    };
+    video.src = url;
+  });
 }
 
 function renderMediaItem(item) {

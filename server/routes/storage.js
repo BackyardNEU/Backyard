@@ -77,4 +77,14 @@ router.post('/event-poster-upload-url', async (req, res) => {
     await makeSignedUpload('event_posters', path, res);
 });
 
+// Club media short videos (≤15 s on the client): mp4/webm/mov, namespaced per user.
+router.post('/club-media-video-upload-url', async (req, res) => {
+    const raw = (req.body?.ext || 'mp4').replace(/[^a-z0-9]/gi, '').slice(0, 8).toLowerCase() || 'mp4';
+    const allowed = new Set(['mp4', 'webm', 'mov', 'm4v']);
+    const ext = allowed.has(raw) ? raw : 'mp4';
+    const rand = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    const path = `${req.user.id}/${rand}.${ext}`;
+    await makeSignedUpload('club_media_videos', path, res);
+});
+
 export default router;

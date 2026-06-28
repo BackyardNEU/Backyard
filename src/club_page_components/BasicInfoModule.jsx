@@ -326,7 +326,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
               </span>
             </button>
           )}
-  <p className = "separator">•</p>
+  <p className = "tag">•</p>
           {topTags.length > 0 && (
             <div className="club-tag2">
               {topTags.map((tag) => (

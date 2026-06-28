@@ -102,11 +102,15 @@ function validateComments() { return null; }
 
 function validateClubMedia(data) {
     const posters = data?.posters ?? [];
+    const validWidths = new Set(['50', '70', '100']);
     for (const p of posters) {
         if (p.poster_text && p.poster_text.length > 100) return 'Poster titles must be 100 characters or fewer.';
         for (const block of (p.content ?? [])) {
             if (block.type === 'title' && block.value && block.value.length > 100) return 'Content headings must be 100 characters or fewer.';
             if (block.type === 'text' && block.value && block.value.length > 500) return 'Content text must be 500 characters or fewer.';
+            if (block.type === 'uploaded_video' && block.width && !validWidths.has(String(block.width))) {
+                return 'Video width must be 50%, 70%, or 100%.';
+            }
         }
     }
     return null;

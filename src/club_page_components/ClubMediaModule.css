@@ -66,6 +66,10 @@
   cursor: default;
 }
 
+.cm-poster-card--editing .cm-poster-stage {
+  cursor: pointer;
+}
+
 /* Stage is sized inline (contain-fit) by the JS; the blob fills it */
 .cm-poster-stage {
   position: relative;
@@ -568,6 +572,35 @@
   display: block;
   object-fit: contain;
   border: 0;
+}
+
+/* Standalone uploaded short-video blocks (outside the carousel) */
+.cm-video-block {
+  margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+}
+
+.cm-video-block--50 { width: 50%; }
+.cm-video-block--70 { width: 70%; }
+.cm-video-block--100 { width: 100%; }
+
+.cm-video-block .cm-media-video {
+  width: 100%;
+  height: auto;
+  aspect-ratio: auto;
+}
+
+.cm-video-width-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.cm-video-width-row .cm-video-width {
+  width: 84px;
 }
 
 .cm-carousel-dots {
