@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { ClubGrid } from './ClubGrid';
 import ExpandedTile from "./ExpandedTile";
 import './ClubList.css';
+// eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion } from "framer-motion";
 
 export const ClubList = ({ results }) => {

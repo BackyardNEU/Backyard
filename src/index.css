@@ -1,4 +1,36 @@
 @import "tailwindcss";
+
+.char-counter-wrap {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.char-counter {
+  font-size: 0.72rem;
+  color: #ffffff;
+}
+
+.module-warning {
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.85rem;
+  color: #ffffff;
+  background: rgb(191, 59, 2);
+  border-radius: 50px;
+  padding: 10px 20px;
+  margin-bottom: 8px;
+
+  animation: fadeIn 1s ease forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 * {
   box-sizing:border-box;
   margin: 0px;

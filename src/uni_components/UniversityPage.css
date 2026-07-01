@@ -55,7 +55,7 @@
   width: auto;
   pointer-events: none;
   z-index: 10;
-  border: 1px solid seagreen;
+ 
 }
 
 .uni-header-logo {
@@ -107,15 +107,6 @@
   align-items: end;
   padding: 0 0 0.4rem 0;
 }
-
-
-
-
-
-  /*background-color: #f8f6f4;*/
-  
-/*150px*/
-
 
 .raleway-uni {
   

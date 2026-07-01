@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useClubData } from '../context/useClubData';
-import { CalendarList } from './CalendarList';
+import { CalendarList } from '../club_page_components/CalendarList';
 import { apiFetch } from '../lib/api';
 import './CalendarPage.css';
 

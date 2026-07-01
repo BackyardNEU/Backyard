@@ -53,6 +53,7 @@ function validateEvent(body) {
     if (!clubId || !clubName || !description || !startTime || !endTime) {
         return 'Missing required fields: clubId, clubName, description, startTime, endTime';
     }
+    if (description.length > 200) return 'Description must be 200 characters or fewer';
 
     const start = new Date(startTime);
     const end = new Date(endTime);
@@ -68,7 +69,7 @@ router.post('/', async (req, res) => {
     const validationError = validateEvent(req.body);
     if (validationError) return res.status(400).json({ error: validationError });
 
-    const { clubId, clubName, description, startTime, endTime } = req.body;
+    const { clubId, clubName, description, startTime, endTime, imageUrl } = req.body;
 
     const { data: profile } = await supabaseAdmin
         .from('profiles')
@@ -81,15 +82,18 @@ router.post('/', async (req, res) => {
         return res.status(403).json({ error: 'You must be a member of this club to create events' });
     }
 
+    const insert = {
+        id_of_club: clubId,
+        club_name: clubName,
+        event_description: description,
+        start_time: startTime,
+        end_time: endTime,
+    };
+    if (imageUrl) insert.event_image_url = imageUrl;
+
     const { data, error } = await supabaseAdmin
         .from('club_events')
-        .insert({
-            id_of_club: clubId,
-            club_name: clubName,
-            event_description: description,
-            start_time: startTime,
-            end_time: endTime,
-        })
+        .insert(insert)
         .select()
         .single();
 

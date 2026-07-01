@@ -1,4 +1,4 @@
-﻿import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+﻿import { Routes, Route, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import './App.css';
 import { SearchBar } from './home_components/SearchBar';
