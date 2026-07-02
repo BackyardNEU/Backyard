@@ -23,7 +23,7 @@ export const FriendProfile = () => {
 
   useEffect(() => {
     let cancelled = false
-
+    
     async function load() {
       setStatus('loading')
       setErrorMessage(null)
