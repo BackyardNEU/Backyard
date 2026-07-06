@@ -239,7 +239,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 apiFetch(`/clubs/${id}/reviews`, { auth: false }),
                 apiFetch(`/clubs/${id}/page`, { auth: false }),
                 apiFetch(`/clubs/${id}/top-tags`, { auth: false }),
-                apiFetch(`/clubs/${id}/events`), // optional auth: sends token if logged in
+                apiFetch(`/clubs/${id}/events/upcoming`), // optional auth: sends token if logged in
                 apiFetch(`/clubs/${id}/members`, { auth: false }),
             ];
             const authFetches = authUser ? [
@@ -376,7 +376,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     };
 
     const handleAddEvent = async (eventData) => {
-        await apiFetch('/events', {
+        const newEvent = await apiFetch('/events', {
             method: 'POST',
             body: {
                 clubId: id,
@@ -387,9 +387,9 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 imageUrl: eventData.imageUrl ?? undefined,
             },
         });
-        // Refresh events after adding
-        const events = await apiFetch(`/clubs/${id}/events`);
-        setClubEvents(events || []);
+        setClubEvents((prev) =>
+            [...prev, newEvent].sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
+        );
     };
 
     const moduleWarnings = isEditing ? getModuleWarnings(draft) : {};

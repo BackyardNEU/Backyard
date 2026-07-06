@@ -1,24 +1,19 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import {
-  startOfDay, addDays, format, isSameDay, parseISO,
-  getDay, getDaysInMonth, isToday, isBefore,
-} from 'date-fns';
+import React, { useState, useRef, useLayoutEffect } from 'react';
+import { format, parseISO } from 'date-fns';
 import { apiFetch } from '../lib/api';
 import './CalendarModule.css';
 
-const WEEK_DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-
 /**
- * Calendar / Events module.
+ * Calendar / Events module — simplified "Coming Up" list.
  *
  * data shape: { filterByMembership: boolean }
- * @param {Object}   club          - club object (id used for monthly fetch)
+ * @param {Object}   club          - club object
  * @param {Object}   data          - module data
- * @param {boolean}  editing       - page layout edit mode (shows filterByMembership toggle)
+ * @param {boolean}  editing       - page edit mode
  * @param {boolean}  isApproved    - true for approved club owners; shows add-event form
  * @param {Function} onChange      - (updatedData) => void
  * @param {string}   warning
- * @param {Array}    events        - weekly events fetched by ExpandedTile
+ * @param {Array}    events        - upcoming events fetched by ExpandedTile, sorted by start_time
  * @param {Set}      myRsvpSet     - event IDs the current user has RSVPd to
  * @param {Map}      friendRsvpMap - event ID → [{ username, ... }]
  * @param {Function} onRsvp        - (eventId, isCurrentlyGoing) => void
@@ -39,25 +34,18 @@ export function CalendarModule({
   onAddEvent,
   userId,
 }) {
-  // ── view toggle ──────────────────────────────────────────────────────────
-  const [viewMode, setViewMode] = useState('week');
-
-  // ── weekly view refs ─────────────────────────────────────────────────────
-  const containerRef = useRef(null);
   const imageInputRef = useRef(null);
 
-  // ── monthly view state ───────────────────────────────────────────────────
-  const todayDate = startOfDay(new Date());
-  const [displayYear, setDisplayYear] = useState(todayDate.getFullYear());
-  const [displayMonth, setDisplayMonth] = useState(todayDate.getMonth() + 1); // 1-12
-  const [monthlyEvents, setMonthlyEvents] = useState([]);
-  const [monthlyMyRsvpSet, setMonthlyMyRsvpSet] = useState(new Set());
-  const [monthlyLoading, setMonthlyLoading] = useState(false);
+  const [overlayEvent, setOverlayEvent] = useState(null);
+  const overlayScrollRef = useRef(null);
+  const overlayItemRefs = useRef({});
 
-  // ── day detail overlay ───────────────────────────────────────────────────
-  const [selectedDay, setSelectedDay] = useState(null); // day number or null
+  useLayoutEffect(() => {
+    if (!overlayEvent || !overlayScrollRef.current) return;
+    const el = overlayItemRefs.current[overlayEvent.id];
+    if (el) el.scrollIntoView({ block: 'start', behavior: 'instant' });
+  }, [overlayEvent]);
 
-  // ── add event form ───────────────────────────────────────────────────────
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({ description: '', date: '', startTime: '', endTime: '' });
   const [imageFile, setImageFile] = useState(null);
@@ -65,126 +53,9 @@ export function CalendarModule({
   const [formWarning, setFormWarning] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ── weekly scroll ────────────────────────────────────────────────────────
-  const handleWheel = useCallback((e) => {
-    e.preventDefault();
-    if (containerRef.current) containerRef.current.scrollLeft += e.deltaX;
-  }, []);
-  const handleMouseEnter = () => containerRef.current?.addEventListener('wheel', handleWheel, { passive: false });
-  const handleMouseLeave = () => containerRef.current?.removeEventListener('wheel', handleWheel);
+  const sorted = [...events].sort((a, b) => parseISO(a.start_time) - parseISO(b.start_time));
 
-  const today = startOfDay(new Date());
-  const weekDays = Array.from({ length: 7 }, (_, i) => {
-    const date = addDays(today, i);
-    const dayEvents = events
-      .filter((event) => isSameDay(parseISO(event.start_time), date))
-      .sort((a, b) => parseISO(a.start_time) - parseISO(b.start_time));
-    return { date, label: format(date, 'EEE'), sublabel: format(date, 'd'), isToday: i === 0, events: dayEvents };
-  });
-
-  // ── monthly data fetch ───────────────────────────────────────────────────
-  useEffect(() => {
-    if (viewMode !== 'month' || !club?.id) return;
-    let cancelled = false;
-    const fetchMonthly = async () => {
-      console.log("UseEffect running!");
-      setMonthlyLoading(true);
-      try {
-        const eventsData = await apiFetch(
-          `/clubs/${club.id}/events/monthly?year=${displayYear}&month=${displayMonth}`
-        );
-        if (cancelled) return;
-        setMonthlyEvents(eventsData || []);
-
-        if (!eventsData || eventsData.length === 0) return;
-        const eventIds = eventsData.map((e) => e.id);
-        const rsvpData = await apiFetch(
-          `/clubs/${club.id}/events/rsvps?eventIds=${eventIds.join(',')}`
-        );
-        if (cancelled) return;
-        setMonthlyMyRsvpSet(
-          new Set((rsvpData || []).filter((r) => r.user_id === userId).map((r) => r.event_id))
-        );
-        console.log(eventsData);
-      } catch (err) {
-        console.error('Failed to fetch monthly events:', err);
-      } finally {
-        if (!cancelled) setMonthlyLoading(false);
-      }
-    };
-    fetchMonthly();
-    return () => { cancelled = true; };
-  }, [viewMode, displayYear, displayMonth, club?.id, userId]);
-
-  // ── build events-by-day map for the displayed month ──────────────────────
-  const monthlyEventsByDay = new Map();
-  for (const event of monthlyEvents) {
-    const d = parseISO(event.start_time);
-    if (d.getFullYear() === displayYear && d.getMonth() + 1 === displayMonth) {
-      const dayNum = d.getDate();
-      if (!monthlyEventsByDay.has(dayNum)) monthlyEventsByDay.set(dayNum, []);
-      monthlyEventsByDay.get(dayNum).push(event);
-    }
-  }
-  for (const [, evts] of monthlyEventsByDay) {
-    evts.sort((a, b) => parseISO(a.start_time) - parseISO(b.start_time));
-  }
-
-  // ── monthly navigation ───────────────────────────────────────────────────
-  function navigateMonth(delta) {
-    
-    const newDate = new Date(displayYear, displayMonth - 1 + delta, 1);
-    setDisplayYear(newDate.getFullYear());
-    setDisplayMonth(newDate.getMonth() + 1);
-    setSelectedDay(null);
-  }
-
-  function getMonthGrid() {
-    const firstDay = new Date(displayYear, displayMonth - 1, 1);
-    const offset = getDay(firstDay); // 0 = Sunday
-    const totalDays = getDaysInMonth(firstDay);
-    return [
-      ...Array(offset).fill(null),
-      ...Array.from({ length: totalDays }, (_, i) => i + 1),
-    ];
-  }
-
-  function getDayClass(dayNum) {
-    const date = new Date(displayYear, displayMonth - 1, dayNum);
-    const hasEvents = monthlyEventsByDay.has(dayNum);
-    if (isBefore(date, today)) return 'cal-day-past';
-    if (isToday(date)) return hasEvents ? 'cal-day-today-events' : 'cal-day-today';
-    return hasEvents ? 'cal-day-has-events' : 'cal-day-normal';
-  }
-
-  // ── overlay helpers ──────────────────────────────────────────────────────
-  function openDayOverlay(dayNum) {
-    if (!monthlyEventsByDay.has(dayNum)) return;
-    const date = new Date(displayYear, displayMonth - 1, dayNum);
-    if (isBefore(date, today)) return; // past days are grey and not clickable
-    setSelectedDay(dayNum);
-  }
-
-  function closeOverlay() {
-    setSelectedDay(null);
-  }
-
-  async function handleMonthlyRsvp(eventId, isCurrentlyGoing) {
-    if (!userId || !club?.id) return;
-    try {
-      if (isCurrentlyGoing) {
-        await apiFetch(`/clubs/${club.id}/events/${eventId}/rsvp`, { method: 'DELETE' });
-        setMonthlyMyRsvpSet((prev) => { const next = new Set(prev); next.delete(eventId); return next; });
-      } else {
-        await apiFetch(`/clubs/${club.id}/events/${eventId}/rsvp`, { method: 'POST' });
-        setMonthlyMyRsvpSet((prev) => new Set([...prev, eventId]));
-      }
-    } catch (err) {
-      console.error('Monthly RSVP failed:', err);
-    }
-  }
-
-  // ── add-event form helpers ───────────────────────────────────────────────
+  // ── add-event form helpers ─────────────────────────────────────────────
   function validateForm() {
     const { description, date, startTime, endTime } = formData;
     if (!description.trim()) { setFormWarning('Description is required.'); return false; }
@@ -257,191 +128,61 @@ export function CalendarModule({
     setFormWarning('');
   };
 
-  // ── derived values ───────────────────────────────────────────────────────
-  const cells = getMonthGrid();
-  const selectedDayEvents = selectedDay ? (monthlyEventsByDay.get(selectedDay) || []) : [];
-  const monthDisplayDate = new Date(displayYear, displayMonth - 1, 1);
-
-  // form preview times
-  const previewStartTime = formData.date && formData.startTime
-    ? `${formData.date}T${formData.startTime}:00` : null;
-  const previewEndTime = formData.date && formData.endTime
-    ? `${formData.date}T${formData.endTime}:00` : null;
-  const previewImage = imagePreview || club?.logo_url || null;
-
-  // ── render ───────────────────────────────────────────────────────────────
+  // ── render ─────────────────────────────────────────────────────────────
   return (
     <div className="cal-module">
-      <p className="divider-header">Events</p>
+      <p className="divider-header">Coming Up</p>
       {editing && warning && <p className="module-warning">{warning}</p>}
 
-      {/* View toggle */}
-      <div className="cal-view-toggle">
-        <button
-          className={`cal-toggle-btn${viewMode === 'week' ? ' cal-toggle-active' : ''}`}
-          onClick={() => setViewMode('week')}
-        >
-          Week
-        </button>
-        <button
-          className={`cal-toggle-btn${viewMode === 'month' ? ' cal-toggle-active' : ''}`}
-          onClick={() => setViewMode('month')}
-        >
-          Month
-        </button>
-      </div>
+      {/* Event list */}
+      {sorted.length === 0 ? (
+        <p className="cal-empty">No upcoming events.</p>
+      ) : (
+        <div className="cal-event-list">
+          {sorted.map((event) => {
+            const start = parseISO(event.start_time);
+            const end = parseISO(event.end_time);
+            const friends = friendRsvpMap.get(event.id);
+            const isGoing = myRsvpSet.has(event.id);
 
-      {/* ══ WEEKLY VIEW ═══════════════════════════════════════════════════ */}
-      {viewMode === 'week' && (
-        <>
-          <h1 className="current-month">{format(today, 'MMMM')}</h1>
-          <div
-            className="calendar-container"
-            ref={containerRef}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-          >
-            {weekDays.map((day) => (
-              <div key={day.date.toISOString()} className={`calendar-day${day.isToday ? ' today' : ''}`}>
-                <div className="day-title-number">
-                  <span>{day.label}</span>
-                  <span>{day.sublabel}</span>
-                </div>
-                {day.events.length === 0 ? (
-                  <p>No events</p>
-                ) : (
-                  day.events.map((event) => (
-                    <div key={event.id} className="calendar-event">
-                      {event.event_image_url && (
-                        <img className="club-img" src={event.event_image_url} alt="" />
-                      )}
-                      <div className="club-name">{event.club_name}</div>
-                      <div className="event-description">
-                        <p>about<span className="club-info">{event.event_description}</span></p>
-                      </div>
-                      <div>
-                        <span>time </span>
-                        <span className="club-info">
-                          {format(parseISO(event.start_time), 'h:mm a')} – {format(parseISO(event.end_time), 'h:mm a')}
-                        </span>
-                      </div>
-                      {userId && (
-                        <button
-                          className="rsvp-button"
-                          onClick={() => onRsvp?.(event.id, myRsvpSet.has(event.id))}
-                        >
-                          {myRsvpSet.has(event.id) ? 'Going ✓' : "I'm going!"}
-                        </button>
-                      )}
-                      {(() => {
-                        const friends = friendRsvpMap.get(event.id);
-                        if (!friends || friends.length === 0) return null;
-                        const first = friends[0].username;
-                        const rest = friends.length - 1;
-                        return (
-                          <p className="friend-rsvp-callout">
-                            {rest === 0
-                              ? `${first} is going`
-                              : `${first} and ${rest} ${rest === 1 ? 'other' : 'others'} you know are going`}
-                          </p>
-                        );
-                      })()}
-                    </div>
-                  ))
+            return (
+              <div
+                key={event.id}
+                className="cal-event-item cal-event-item--clickable"
+                onClick={() => setOverlayEvent(event)}
+              >
+                {event.event_image_url && (
+                  <img className="cal-event-img" src={event.event_image_url} alt="" />
                 )}
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* ══ MONTHLY VIEW ══════════════════════════════════════════════════ */}
-      {viewMode === 'month' && (
-        <div className="cal-monthly-card">
-          {/* Seasonal tree placeholder */}
-          <div className="cal-monthly-tree">
-            <img src="/raccoon_pfp.png" alt="seasonal tree" className="cal-tree-img" />
-          </div>
-
-          {/* Month name + navigation */}
-          <div className="cal-monthly-header">
-            <span className="cal-month-name">{format(monthDisplayDate, 'MMM').toUpperCase()}</span>
-            <div className="cal-month-nav">
-              <button className="cal-nav-btn" onClick={() => navigateMonth(-1)}>‹</button>
-              <button className="cal-nav-btn" onClick={() => navigateMonth(1)}>›</button>
-            </div>
-          </div>
-
-          {monthlyLoading ? (
-            <p className="cal-loading">Loading…</p>
-          ) : (
-            <div className="cal-grid">
-              {/* Day-of-week headers */}
-              {WEEK_DAYS.map((d, i) => (
-                <div key={i} className="cal-weekday-label">{d}</div>
-              ))}
-              {/* Day cells */}
-              {cells.map((dayNum, i) => (
-                <div
-                  key={i}
-                  className={`cal-day-cell${dayNum ? ` ${getDayClass(dayNum)}` : ' cal-day-empty'}`}
-                  onClick={
-                    dayNum && monthlyEventsByDay.has(dayNum)
-                      ? () => openDayOverlay(dayNum)
-                      : undefined
-                  }
-                >
-                  {dayNum || ''}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ══ DAY DETAIL OVERLAY ════════════════════════════════════════════ */}
-      {selectedDay !== null && (
-        <div className="cal-overlay-backdrop" onClick={closeOverlay}>
-          <div className="cal-overlay-portrait" onClick={(e) => e.stopPropagation()}>
-            <button className="cal-overlay-close" onClick={closeOverlay}>✕</button>
-            <h2 className="cal-overlay-date">
-              {format(new Date(displayYear, displayMonth - 1, selectedDay), 'EEEE, MMMM d')}
-            </h2>
-
-            {/* Scrollable stack of event cards */}
-            <div className="cal-portrait-scroll">
-              {selectedDayEvents.map((event) => (
-                <div key={event.id} className="cal-portrait-event">
-                  <div className="cal-portrait-img-wrap">
-                    {event.event_image_url ? (
-                      <img src={event.event_image_url} alt="Event" className="cal-portrait-img" />
-                    ) : (
-                      <img src={club?.logo_url} className="cal-portrait-img" alt="No image" />
-                    )}
-                  </div>
-                  <div className="cal-portrait-info">
-                    <p className="cal-overlay-desc">{event.event_description}</p>
-                    <p className="cal-overlay-time">
-                      {format(parseISO(event.start_time), 'h:mm a')} –{' '}
-                      {format(parseISO(event.end_time), 'h:mm a')}
+                <div className="cal-event-body">
+                  <p className="cal-event-date">{format(start, 'EEE, MMM d').toUpperCase()}</p>
+                  <p className="cal-event-time">
+                    {format(start, 'h:mm a')} – {format(end, 'h:mm a')}
+                  </p>
+                  <p className="cal-event-desc">{event.event_description}</p>
+                  {friends && friends.length > 0 && (
+                    <p className="friend-rsvp-callout">
+                      {friends.length === 1
+                        ? `${friends[0].username} is going`
+                        : `${friends[0].username} and ${friends.length - 1} ${friends.length - 1 === 1 ? 'other' : 'others'} you know are going`}
                     </p>
-                    {userId && (
-                      <button
-                        className="rsvp-button"
-                        onClick={() => handleMonthlyRsvp(event.id, monthlyMyRsvpSet.has(event.id))}
-                      >
-                        {monthlyMyRsvpSet.has(event.id) ? 'Going ✓' : "I'm going!"}
-                      </button>
-                    )}
-                  </div>
+                  )}
+                  {userId && (
+                    <button
+                      className={`rsvp-button${isGoing ? ' rsvp-going' : ''}`}
+                      onClick={(e) => { e.stopPropagation(); onRsvp?.(event.id, isGoing); }}
+                    >
+                      {isGoing ? 'Going ✓' : "I'm going!"}
+                    </button>
+                  )}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
-      {/* ══ EDIT SETTINGS ═════════════════════════════════════════════════ */}
+      {/* Edit settings */}
       {editing && (
         <div className="cal-edit-section">
           <label className="cal-toggle-label">
@@ -455,7 +196,72 @@ export function CalendarModule({
         </div>
       )}
 
-      {/* ══ ADD EVENT ═════════════════════════════════════════════════════ */}
+      {/* Event lightbox overlay — scrollable portrait stack */}
+      {overlayEvent && (
+        <div
+          className="cal-overlay-backdrop"
+          onClick={() => setOverlayEvent(null)}
+        >
+          <div
+            className="cal-overlay-portrait"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="cal-overlay-close"
+              onClick={() => setOverlayEvent(null)}
+              aria-label="Close"
+            >✕</button>
+
+            <div className="cal-portrait-scroll" ref={overlayScrollRef}>
+              {sorted.map((ev) => {
+                const evStart = parseISO(ev.start_time);
+                const evEnd = parseISO(ev.end_time);
+                const evIsGoing = myRsvpSet.has(ev.id);
+                const evFriends = friendRsvpMap.get(ev.id);
+                return (
+                  <div
+                    key={ev.id}
+                    className="cal-portrait-event"
+                    ref={(el) => { overlayItemRefs.current[ev.id] = el; }}
+                  >
+                    {ev.event_image_url ? (
+                      <div className="cal-portrait-img-wrap">
+                        <img className="cal-portrait-img" src={ev.event_image_url} alt="" />
+                      </div>
+                    ) : null}
+                    <div className="cal-portrait-info">
+                      <p className="cal-overlay-date-line">
+                        {format(evStart, 'EEEE, MMMM d')}
+                      </p>
+                      <p className="cal-overlay-time">
+                        {format(evStart, 'h:mm a')} – {format(evEnd, 'h:mm a')}
+                      </p>
+                      <p className="cal-overlay-desc">{ev.event_description}</p>
+                      {evFriends && evFriends.length > 0 && (
+                        <p className="friend-rsvp-callout">
+                          {evFriends.length === 1
+                            ? `${evFriends[0].username} is going`
+                            : `${evFriends[0].username} and ${evFriends.length - 1} ${evFriends.length - 1 === 1 ? 'other' : 'others'} you know are going`}
+                        </p>
+                      )}
+                      {userId && (
+                        <button
+                          className={`rsvp-button${evIsGoing ? ' rsvp-going' : ''}`}
+                          onClick={() => onRsvp?.(ev.id, evIsGoing)}
+                        >
+                          {evIsGoing ? 'Going ✓' : "I'm going!"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add event (approved accounts only) */}
       {isApproved && (
         <div className="cal-add-event-section">
           {!showForm && (
@@ -543,47 +349,30 @@ export function CalendarModule({
                 </div>
               </div>
 
-              {/* ── Live previews ─────────────────────────────────────── */}
-              {imagePreview && (
-                <div className="cal-preview-section">
-                  <p className="cal-preview-title">Previews</p>
-
-                  {/* Week view card */}
-                  <div className="cal-preview-element">
-                    <p className="cal-preview-label">Week view</p>
-                    <div className="calendar-event cal-preview-week-card">
-                      <img className="club-img" src={imagePreview} alt="" />
-                      <div className="club-name">{club?.name || 'Your Club'}</div>
-                      <div className="event-description">
-                        <p>about<span className="club-info">{formData.description || '…'}</span></p>
-                      </div>
-                      {previewStartTime && previewEndTime && (
-                        <div>
-                          <span>time </span>
-                          <span className="club-info">
-                            {format(new Date(previewStartTime), 'h:mm a')} – {format(new Date(previewEndTime), 'h:mm a')}
-                          </span>
-                        </div>
+              {/* Live card preview */}
+              {(imagePreview || formData.description || formData.date) && (
+                <div className="cal-form-preview-wrap">
+                  <p className="cal-form-preview-label">Preview</p>
+                  <div className="cal-event-item cal-form-preview-card">
+                    {imagePreview && (
+                      <img className="cal-event-img" src={imagePreview} alt="" />
+                    )}
+                    <div className="cal-event-body">
+                      {formData.date && (
+                        <p className="cal-event-date">
+                          {format(new Date(`${formData.date}T00:00:00`), 'EEE, MMM d').toUpperCase()}
+                        </p>
                       )}
-                    </div>
-                  </div>
-
-                  {/* Month overlay portrait card */}
-                  <div className="cal-preview-element">
-                    <p className="cal-preview-label">Month view</p>
-                    <div className="cal-portrait-preview">
-                      <div className="cal-portrait-img-wrap">
-                        <img src={imagePreview} alt="Event" className="cal-portrait-img" />
-                      </div>
-                      <div className="cal-portrait-info">
-                        <p className="cal-overlay-desc">{formData.description || '…'}</p>
-                        {previewStartTime && previewEndTime && (
-                          <p className="cal-overlay-time">
-                            {format(new Date(previewStartTime), 'h:mm a')} –{' '}
-                            {format(new Date(previewEndTime), 'h:mm a')}
-                          </p>
-                        )}
-                      </div>
+                      {(formData.startTime || formData.endTime) && (
+                        <p className="cal-event-time">
+                          {formData.startTime ? format(new Date(`${formData.date || '2000-01-01'}T${formData.startTime}:00`), 'h:mm a') : '?'}
+                          {' – '}
+                          {formData.endTime ? format(new Date(`${formData.date || '2000-01-01'}T${formData.endTime}:00`), 'h:mm a') : '?'}
+                        </p>
+                      )}
+                      {formData.description && (
+                        <p className="cal-event-desc">{formData.description}</p>
+                      )}
                     </div>
                   </div>
                 </div>
