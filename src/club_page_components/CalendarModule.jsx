@@ -37,6 +37,7 @@ export function CalendarModule({
   const imageInputRef = useRef(null);
 
   const [overlayEvent, setOverlayEvent] = useState(null);
+  const [overlayHasMore, setOverlayHasMore] = useState(false);
   const overlayScrollRef = useRef(null);
   const overlayItemRefs = useRef({});
 
@@ -44,7 +45,18 @@ export function CalendarModule({
     if (!overlayEvent || !overlayScrollRef.current) return;
     const el = overlayItemRefs.current[overlayEvent.id];
     if (el) el.scrollIntoView({ block: 'start', behavior: 'instant' });
+    // check after scroll settles
+    const el2 = overlayScrollRef.current;
+    setTimeout(() => {
+      setOverlayHasMore(el2.scrollHeight - el2.scrollTop - el2.clientHeight > 10);
+    }, 50);
   }, [overlayEvent]);
+
+  const handleOverlayScroll = () => {
+    const el = overlayScrollRef.current;
+    if (!el) return;
+    setOverlayHasMore(el.scrollHeight - el.scrollTop - el.clientHeight > 10);
+  };
 
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({ description: '', date: '', startTime: '', endTime: '' });
@@ -212,7 +224,10 @@ export function CalendarModule({
               aria-label="Close"
             >✕</button>
 
-            <div className="cal-portrait-scroll" ref={overlayScrollRef}>
+            {overlayHasMore && (
+              <div className="cal-overlay-more-arrow" aria-hidden="true">&#8964;</div>
+            )}
+            <div className="cal-portrait-scroll" ref={overlayScrollRef} onScroll={handleOverlayScroll}>
               {sorted.map((ev) => {
                 const evStart = parseISO(ev.start_time);
                 const evEnd = parseISO(ev.end_time);
