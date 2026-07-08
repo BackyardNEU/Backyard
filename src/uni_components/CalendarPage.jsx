@@ -4,7 +4,7 @@ import {
   getDay, getDaysInMonth, isToday, isBefore,
 } from 'date-fns';
 import { apiFetch } from '../lib/api';
-import './CalendarModule.css';
+import './CalendarPage.css';
 
 const WEEK_DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
