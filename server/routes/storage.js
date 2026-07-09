@@ -103,7 +103,7 @@ const SAFE_IMAGE_TYPES = new Set([
     'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif',
 ]);
 
-function validateStorageUrl(publicUrl) {
+function parseStorageUrl(publicUrl) {
     let parsed;
     try { parsed = new URL(publicUrl); } catch { return null; }
 
@@ -113,10 +113,34 @@ function validateStorageUrl(publicUrl) {
     if (!parsed.pathname.startsWith('/storage/v1/object/public/')) return null;
 
     const after = parsed.pathname.slice('/storage/v1/object/public/'.length);
-    const bucket = after.split('/')[0];
+    const segments = after.split('/');
+    const bucket = segments[0];
     if (!USER_BUCKETS.has(bucket)) return null;
 
-    return parsed;
+    return { parsed, bucket, objectPath: segments.slice(1).join('/') };
+}
+
+const USER_NAMESPACED_BUCKETS = new Set([
+    'review_images', 'profile_photos', 'event_posters', 'club_media_videos',
+]);
+
+async function verifyOwnership(bucket, objectPath, userId) {
+    if (bucket === 'profile_images') {
+        return objectPath.startsWith(`${userId}.`);
+    }
+    if (USER_NAMESPACED_BUCKETS.has(bucket)) {
+        return objectPath.startsWith(`${userId}/`);
+    }
+    if (bucket === 'club_logos') {
+        const clubId = objectPath.split('.')[0];
+        const { data } = await supabaseAdmin
+            .from('approved_club_accounts')
+            .select('id', { count: 'exact', head: true })
+            .eq('club_id', clubId)
+            .eq('user_id', userId);
+        return !!data;
+    }
+    return false;
 }
 
 async function verifyContentType(publicUrl) {
@@ -132,8 +156,14 @@ router.post('/verify-image', async (req, res) => {
         return res.status(400).json({ ok: false, error: 'publicUrl is required' });
     }
 
-    if (!process.env.SUPABASE_URL || !validateStorageUrl(publicUrl)) {
+    const urlInfo = process.env.SUPABASE_URL && parseStorageUrl(publicUrl);
+    if (!urlInfo) {
         return res.status(400).json({ ok: false, error: 'Invalid storage URL' });
+    }
+
+    const owned = await verifyOwnership(urlInfo.bucket, urlInfo.objectPath, req.user.id);
+    if (!owned) {
+        return res.status(403).json({ ok: false, error: 'You do not own this file' });
     }
 
     const isImage = await verifyContentType(publicUrl);

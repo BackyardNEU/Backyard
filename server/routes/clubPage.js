@@ -240,37 +240,39 @@ router.post('/:clubId/page/init', requireAuth, async (req, res) => {
 
 function extractModuleText(modules) {
   const texts = {};
+  let i = 0;
+  const add = (prefix, value) => { if (value) texts[`${prefix}_${i++}`] = value; };
   for (const mod of modules) {
     const d = mod.data || {};
     if (mod.type === 'basic_info') {
-      if (d.club_name) texts.club_name = d.club_name;
-      if (d.description) texts.description = d.description;
+      add('club_name', d.club_name);
+      add('description', d.description);
     } else if (mod.type === 'join') {
       for (const tab of d.tabs || []) {
-        if (tab.title) texts[`tab_title_${tab.title}`] = tab.title;
-        if (tab.body) texts[`tab_body_${tab.title}`] = tab.body;
+        add('tab_title', tab.title);
+        add('tab_body', tab.body);
       }
     } else if (mod.type === 'faqs') {
       for (const faq of d.faqs || []) {
-        if (faq.q) texts[`faq_q_${faq.q.slice(0, 20)}`] = faq.q;
-        if (faq.a) texts[`faq_a_${faq.q?.slice(0, 20)}`] = faq.a;
+        add('faq_q', faq.q);
+        add('faq_a', faq.a);
       }
     } else if (mod.type === 'member_roster') {
       for (const m of d.members || []) {
-        if (m.name) texts[`member_${m.name}`] = m.name;
-        if (m.bio) texts[`member_bio_${m.name}`] = m.bio;
+        add('member_name', m.name);
+        add('member_bio', m.bio);
       }
     } else if (mod.type === 'club_media') {
       for (const p of d.posters || []) {
-        if (p.poster_text) texts[`poster_${p.order}`] = p.poster_text;
+        add('poster_text', p.poster_text);
         for (const c of p.content || []) {
-          if (c.value) texts[`poster_content_${p.order}_${c.type}`] = c.value;
+          add('poster_content', c.value);
         }
       }
     } else if (mod.type === 'stats') {
       for (const s of d.stats || []) {
-        if (s.label) texts[`stat_${s.label}`] = s.label;
-        if (s.unit1) texts[`stat_unit_${s.label}`] = s.unit1;
+        add('stat_label', s.label);
+        add('stat_unit', s.unit1);
       }
     }
   }
