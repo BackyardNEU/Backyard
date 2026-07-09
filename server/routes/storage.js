@@ -1,10 +1,17 @@
 import express from 'express';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { checkMuted } from '../middleware/checkMuted.js';
+import { ImageModerator } from '../lib/imageModerator.js';
 
 const router = express.Router();
 
 router.use(requireAuth);
+router.use(checkMuted);
+
+const imageModerator = process.env.CLOUD_VISION_API
+    ? new ImageModerator(process.env.CLOUD_VISION_API)
+    : null;
 
 // Pattern: backend mints a short-lived signed upload URL, browser PUTs the
 // file bytes directly to Supabase Storage. We never proxy megabytes through
@@ -85,6 +92,86 @@ router.post('/club-media-video-upload-url', async (req, res) => {
     const rand = Math.random().toString(36).slice(2) + Date.now().toString(36);
     const path = `${req.user.id}/${rand}.${ext}`;
     await makeSignedUpload('club_media_videos', path, res);
+});
+
+const USER_BUCKETS = new Set([
+    'profile_images', 'review_images', 'profile_photos',
+    'club_logos', 'event_posters', 'club_media_videos',
+]);
+
+const SAFE_IMAGE_TYPES = new Set([
+    'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif',
+]);
+
+function validateStorageUrl(publicUrl) {
+    let parsed;
+    try { parsed = new URL(publicUrl); } catch { return null; }
+
+    const allowed = new URL(process.env.SUPABASE_URL);
+    if (parsed.hostname !== allowed.hostname || parsed.protocol !== 'https:'
+        || parsed.username || parsed.password) return null;
+    if (!parsed.pathname.startsWith('/storage/v1/object/public/')) return null;
+
+    const after = parsed.pathname.slice('/storage/v1/object/public/'.length);
+    const bucket = after.split('/')[0];
+    if (!USER_BUCKETS.has(bucket)) return null;
+
+    return parsed;
+}
+
+async function verifyContentType(publicUrl) {
+    const headRes = await fetch(publicUrl, { method: 'HEAD' });
+    if (!headRes.ok) return false;
+    const contentType = (headRes.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+    return SAFE_IMAGE_TYPES.has(contentType);
+}
+
+router.post('/verify-image', async (req, res) => {
+    const { publicUrl } = req.body || {};
+    if (!publicUrl || typeof publicUrl !== 'string') {
+        return res.status(400).json({ ok: false, error: 'publicUrl is required' });
+    }
+
+    if (!process.env.SUPABASE_URL || !validateStorageUrl(publicUrl)) {
+        return res.status(400).json({ ok: false, error: 'Invalid storage URL' });
+    }
+
+    const isImage = await verifyContentType(publicUrl);
+    if (!isImage) {
+        if (imageModerator) await imageModerator.deleteFromStorage(publicUrl);
+        return res.status(400).json({ ok: false, error: 'File is not a valid image' });
+    }
+
+    if (!imageModerator) {
+        return res.json({ ok: true });
+    }
+
+    const result = await imageModerator.scan(publicUrl);
+
+    if (result.safe) {
+        return res.json({ ok: true });
+    }
+
+    await imageModerator.deleteFromStorage(publicUrl);
+
+    const strike = await imageModerator.recordStrike(
+        req.user.id,
+        result.violations[0].category,
+        { publicUrl, violations: result.violations },
+    );
+
+    const response = {
+        ok: false,
+        error: 'Your image was detected to have inappropriate content',
+        strikes: strike.strikes,
+    };
+
+    if (strike.muted) {
+        response.muted = true;
+        response.muted_until = strike.mutedUntil;
+    }
+
+    res.status(422).json(response);
 });
 
 export default router;

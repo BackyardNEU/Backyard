@@ -100,6 +100,14 @@ export const ProfilePage = () => {
         });
         if (!putRes.ok) throw new Error(`Upload failed (${putRes.status})`);
 
+        const verification = await apiFetch('/storage/verify-image', {
+          method: 'POST',
+          body: { publicUrl },
+        });
+        if (!verification.ok) {
+          throw new Error(verification.error || 'Avatar rejected by content policy');
+        }
+
         await apiFetch('/me/profile', {
           method: 'PUT',
           body: { [URL_COL]: publicUrl },

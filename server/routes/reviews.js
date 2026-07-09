@@ -1,6 +1,8 @@
 import express from 'express';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { checkMuted } from '../middleware/checkMuted.js';
+import textModerator from '../lib/textModerator.js';
 
 const router = express.Router();
 
@@ -88,10 +90,18 @@ function pickWritable(body) {
     return out;
 }
 
-router.post('/', async (req, res) => {
+router.post('/', checkMuted, async (req, res) => {
     const patch = pickWritable(req.body);
     if (!patch.club_id) {
         return res.status(400).json({ error: 'club_id required' });
+    }
+
+    const textCheck = textModerator.checkFields({
+        review_text: patch.review_text,
+        review_title: patch.review_title,
+    });
+    if (!textCheck.clean) {
+        return res.status(400).json({ error: textCheck.message });
     }
 
     // user_id always comes from the verified JWT, never from the body.

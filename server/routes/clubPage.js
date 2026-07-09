@@ -1,6 +1,8 @@
 import express from 'express';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { checkMuted } from '../middleware/checkMuted.js';
+import textModerator from '../lib/textModerator.js';
 
 const router = express.Router();
 
@@ -236,15 +238,60 @@ router.post('/:clubId/page/init', requireAuth, async (req, res) => {
   res.status(201).json(data);
 });
 
+function extractModuleText(modules) {
+  const texts = {};
+  for (const mod of modules) {
+    const d = mod.data || {};
+    if (mod.type === 'basic_info') {
+      if (d.club_name) texts.club_name = d.club_name;
+      if (d.description) texts.description = d.description;
+    } else if (mod.type === 'join') {
+      for (const tab of d.tabs || []) {
+        if (tab.title) texts[`tab_title_${tab.title}`] = tab.title;
+        if (tab.body) texts[`tab_body_${tab.title}`] = tab.body;
+      }
+    } else if (mod.type === 'faqs') {
+      for (const faq of d.faqs || []) {
+        if (faq.q) texts[`faq_q_${faq.q.slice(0, 20)}`] = faq.q;
+        if (faq.a) texts[`faq_a_${faq.q?.slice(0, 20)}`] = faq.a;
+      }
+    } else if (mod.type === 'member_roster') {
+      for (const m of d.members || []) {
+        if (m.name) texts[`member_${m.name}`] = m.name;
+        if (m.bio) texts[`member_bio_${m.name}`] = m.bio;
+      }
+    } else if (mod.type === 'club_media') {
+      for (const p of d.posters || []) {
+        if (p.poster_text) texts[`poster_${p.order}`] = p.poster_text;
+        for (const c of p.content || []) {
+          if (c.value) texts[`poster_content_${p.order}_${c.type}`] = c.value;
+        }
+      }
+    } else if (mod.type === 'stats') {
+      for (const s of d.stats || []) {
+        if (s.label) texts[`stat_${s.label}`] = s.label;
+        if (s.unit1) texts[`stat_unit_${s.label}`] = s.unit1;
+      }
+    }
+  }
+  return texts;
+}
+
 // PUT /api/clubs/:clubId/page
 // Authenticated. Approved club account only.
 // Upserts the modules array for this club's page.
-router.put('/:clubId/page', requireAuth, async (req, res) => {
+router.put('/:clubId/page', requireAuth, checkMuted, async (req, res) => {
   const { clubId } = req.params;
   const { modules } = req.body;
 
   if (!Array.isArray(modules)) {
     return res.status(400).json({ error: 'modules must be an array' });
+  }
+
+  const moduleTexts = extractModuleText(modules);
+  const textCheck = textModerator.checkFields(moduleTexts);
+  if (!textCheck.clean) {
+    return res.status(400).json({ error: textCheck.message, field: textCheck.field });
   }
 
   // Verify the authenticated user is an approved account for this club.
