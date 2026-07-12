@@ -20,6 +20,7 @@ import { CalendarModule as LegacyCalendarModule } from './CalendarPage';
 import ModuleAccordion from '../club_page_components/accordion';
 import { useClubData } from '../context/useClubData';
 import { useGlobalStore } from '../lib/store';
+import InviteLinkButton from '../club_page_components/InviteLinkButton';
 
 // --- Validation helpers ---
 const isValidUrl = (url) => {
@@ -645,20 +646,23 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             <button className="close-btn" onClick={handleClose}>x</button>
 
             {isApproved && !isEditing && (
-                <button className="exp-edit-btn" onClick={async () => {
-                    if (!pageData?.modules?.length) {
-                        try {
-                            const result = await apiFetch(`/clubs/${id}/page/init`, { method: 'POST' });
-                            if (result?.modules?.length) {
-                                setPageData(result);
-                                setDraft(normalizeModules(result.modules));
+                <div className="exp-editor-toolbar">
+                    <button className="exp-edit-btn" onClick={async () => {
+                        if (!pageData?.modules?.length) {
+                            try {
+                                const result = await apiFetch(`/clubs/${id}/page/init`, { method: 'POST' });
+                                if (result?.modules?.length) {
+                                    setPageData(result);
+                                    setDraft(normalizeModules(result.modules));
+                                }
+                            } catch (err) {
+                                console.error('Failed to initialize page defaults:', err);
                             }
-                        } catch (err) {
-                            console.error('Failed to initialize page defaults:', err);
                         }
-                    }
-                    setIsEditing(true);
-                }}>Edit Page</button>
+                        setIsEditing(true);
+                    }}>Edit Page</button>
+                    <InviteLinkButton clubId={id} />
+                </div>
             )}
 
             <div className="club-modules">

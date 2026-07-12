@@ -10,6 +10,7 @@ import AuthCallbackPage from './login_components/AuthCallbackPage';
 import ProfileSetupPage from './profile_components/ProfileSetupPage';
 import { ProfilePage } from './profile_components/ProfilePage';
 import ResetPasswordPage from './login_components/ResetPasswordPage';
+import JoinPage from './join_components/JoinPage';
 import { ClubDataProvider } from './context/ClubDataProvider'
 
 function App() {
@@ -76,6 +77,7 @@ function App() {
           <Route path="/profile/setup" element={<ProfileSetupPage />} />
           <Route path="/profile-setup" element={<ProfileSetupPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/join/:token" element={<JoinPage />} />
         </Routes>
       </div>
     </ClubDataProvider>

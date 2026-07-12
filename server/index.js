@@ -18,6 +18,7 @@ import eventsRouter from './routes/events.js';
 import clubEventsRouter from './routes/clubEvents.js';
 import clubPageRouter from './routes/clubPage.js';
 import questionsRouter from './routes/questions.js';
+import invitesRouter from './routes/invites.js';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -56,6 +57,9 @@ app.use('/api/events', writeLimiter, eventsRouter);
 
 // Signed upload URLs (auth required; service role stays on the server)
 app.use('/api/storage', writeLimiter, storageRouter);
+
+// Invite links: generate (POST /api/clubs/:clubId/invite-link) + validate/redeem (GET|POST /api/invite/:token)
+app.use('/api', writeLimiter, invitesRouter);
 
 app.use((err, req, res, _next) => {
   console.error('[api error]', err);

@@ -269,7 +269,13 @@ const ProfileSetupPage = () => {
                 },
             });
 
-            navigate('/profile', { replace: true });
+            const pendingJoinToken = sessionStorage.getItem('pendingJoinToken');
+            if (pendingJoinToken) {
+                sessionStorage.removeItem('pendingJoinToken');
+                navigate(`/join/${pendingJoinToken}`, { replace: true });
+            } else {
+                navigate('/profile', { replace: true });
+            }
         } catch (err) {
             console.error('Error saving profile setup:', err);
             setError('Could not save your profile. Please try again.');

@@ -1,0 +1,110 @@
+.invite-link-btn-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.invite-generate-btn {
+  padding: 0.45rem 1rem;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-family: "Be Vietnam Pro", sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.invite-generate-btn:hover:not(:disabled) {
+  background: #f5f5f5;
+  border-color: #aaa;
+}
+
+.invite-generate-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.invite-link-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.invite-link-row {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.invite-link-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-family: monospace;
+  background: #f9f9f9;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.invite-copy-btn {
+  padding: 0.4rem 0.8rem;
+  background: #2d2d2d;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-family: "Be Vietnam Pro", sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s;
+}
+
+.invite-copy-btn:hover {
+  background: #111;
+}
+
+.invite-link-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.invite-expires {
+  font-size: 0.78rem;
+  color: #888;
+}
+
+.invite-revoke-btn {
+  background: none;
+  border: none;
+  color: #c0392b;
+  font-size: 0.78rem;
+  font-family: "Be Vietnam Pro", sans-serif;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.invite-revoke-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.invite-revoked-msg {
+  font-size: 0.82rem;
+  color: #888;
+}
+
+.invite-error {
+  font-size: 0.8rem;
+  color: #c0392b;
+  margin: 0;
+}

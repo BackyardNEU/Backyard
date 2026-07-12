@@ -157,10 +157,17 @@
 
 /* Edit mode */
 
-.exp-edit-btn {
+.exp-editor-toolbar {
   position: fixed;
   top: 15px;
   right: calc(50% - 22vw + 1rem);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 8300;
+}
+
+.exp-edit-btn {
   background: #4F83B4;
   border: 1px solid #ccc;
   border-radius: 8px;
@@ -168,7 +175,6 @@
   cursor: pointer;
   font-size: 0.85rem;
   color: #ffffff;
-  z-index: 8300;
 }
 
 .exp-edit-btn:hover {
