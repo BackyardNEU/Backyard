@@ -1,7 +1,7 @@
 ﻿import React, {useState, useEffect} from 'react'
 import { apiFetch } from '../lib/api'
 import { useClubData } from '../context/useClubData'
-import {FaSearch} from 'react-icons/fa'
+import {FaSearch, FaCalendarAlt} from 'react-icons/fa'
 import './UniSearchBar.css'
 
 const CATEGORIES = [
@@ -26,7 +26,7 @@ const CATEGORIES = [
   { label: "Service", category: "service" },
 ];
 
-export const UniSearchBar = ({ setResults, university }) => {
+export const UniSearchBar = ({ setResults, university, calendarActive = false }) => {
 
   const [input, setInput] = useState("")
   const [menuOpen, setMenuOpen] = useState(false)
@@ -55,6 +55,13 @@ export const UniSearchBar = ({ setResults, university }) => {
       new CustomEvent("backyard-category-select", { detail: { category } })
     );
     setMenuOpen(false);
+  };
+
+  const handleCalendarClick = () => {
+    setActiveCategory(null);
+    window.dispatchEvent(
+      new CustomEvent("backyard-category-select", { detail: { category: "calendar" } })
+    );
   };
 
   const handleClick = () => {
@@ -180,6 +187,15 @@ useEffect(() => {
             </div>
           )}
         </div>
+
+        <button
+          className={`uni-calendar-btn${calendarActive ? ' active' : ''}`}
+          type="button"
+          onClick={handleCalendarClick}
+          aria-label="View events calendar"
+        >
+          <FaCalendarAlt />
+        </button>
     </div>
   )
 }

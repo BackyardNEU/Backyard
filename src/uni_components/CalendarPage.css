@@ -561,3 +561,65 @@
   color: #666;
   margin: 0;
 }
+
+/* ===== STANDALONE CALENDAR PAGE OVERLAY ===== */
+.cal-page-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 500;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 12px;
+  overflow-y: auto;
+  margin: 0;
+}
+
+.cal-page-card {
+  position: relative;
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px 28px 32px;
+  width: min(820px, 94vw);
+  max-height: calc(100vh - 24px);
+  overflow-y: auto;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25);
+  scrollbar-width: none;
+  flex-grow: 1;
+}
+
+.cal-page-card::-webkit-scrollbar {
+  display: none;
+}
+
+.cal-page-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: #f0f0f0;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: background 0.15s;
+}
+
+.cal-page-close:hover {
+  background: #e0e0e0;
+}
+
+.cal-unauthed-msg {
+  text-align: center;
+  color: #666;
+  font-size: 15px;
+  padding: 40px 0;
+  margin: 0;
+}

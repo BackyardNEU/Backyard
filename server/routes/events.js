@@ -34,7 +34,7 @@ router.get('/rsvps', async (req, res) => {
     if (ids.length === 0) return res.json([]);
 
     const { data, error } = await supabaseAdmin
-        .from('event_rsvps')
+        .from('attendees')
         .select('user_id, event_id')
         .in('event_id', ids);
 
@@ -108,7 +108,7 @@ router.post('/', async (req, res) => {
 
 router.post('/:eventId/rsvp', async (req, res) => {
     const { error } = await supabaseAdmin
-        .from('event_rsvps')
+        .from('attendees')
         .upsert(
             { user_id: req.user.id, event_id: req.params.eventId },
             { onConflict: 'user_id,event_id', ignoreDuplicates: true }
@@ -125,7 +125,7 @@ router.post('/:eventId/rsvp', async (req, res) => {
 
 router.delete('/:eventId/rsvp', async (req, res) => {
     const { error } = await supabaseAdmin
-        .from('event_rsvps')
+        .from('attendees')
         .delete()
         .eq('user_id', req.user.id)
         .eq('event_id', req.params.eventId);

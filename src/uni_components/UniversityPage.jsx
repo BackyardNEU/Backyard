@@ -4,6 +4,7 @@ import { apiFetch } from '../lib/api';
 import { UniSearchBar } from './UniSearchBar';
 import './UniversityPage.css';
 import { ClubList } from './ClubList';
+import { CalendarPage } from './CalendarPage';
 import { useGlobalStore } from "../lib/store";
 import { useClubData } from '../context/useClubData';
 
@@ -115,17 +116,21 @@ export const UniversityPage = () => {
 
         <div className="uni-search-row">
           <div className="uni-search-shell">
-            <UniSearchBar setResults={setResults} university={university.uni_name} />
+            <UniSearchBar setResults={setResults} university={university.uni_name} calendarActive={showCalendar} />
           </div>
         </div>
         
-          <main className="uni-club-stage">                                                                                              
-            <div className="uni-club-viewport">                                                                                            
-              <ClubList results={results} />                                                                                             
-            </div>                                                                                                                       
-          </main>  
-          
+          <main className="uni-club-stage">
+            <div className="uni-club-viewport">
+              <ClubList results={results} />
+            </div>
+          </main>
+
         </div>
+
+        {showCalendar && (
+          <CalendarPage onClose={() => { setShowCalendar(false); setSelectedCategory(null); }} />
+        )}
     </div>
   );
 };
