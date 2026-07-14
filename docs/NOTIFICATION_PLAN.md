@@ -356,3 +356,49 @@ Signed-in user cannot select another user's notification rows via a direct Supab
 ### Extensibility smoke test
 
 Temporarily add a fake `type: 'test_ping'` entry to `registry.js`, register a handler, and call `NotificationService.dispatch({ type: 'test_ping', ... })` from a debug endpoint. Confirm it renders in the panel and clears without any component changes.
+
+
+## File Structure
+
+NewBackyard/
+├── server/
+│   ├── notifications/                     ← already created
+│   │   ├── service.js                     ✅ exists
+│   │   ├── queue.js                       ✅ exists
+│   │   ├── decisionLayer.js               🆕 new
+│   │   ├── handlers/
+│   │   │   ├── friendRequest.js           🆕 new
+│   │   │   └── friendAccepted.js          🆕 new
+│   │   ├── channels/
+│   │   │   ├── inApp.js                   🆕 new
+│   │   │   ├── email.js                   🆕 new
+│   │   │   └── push.js                   🆕 new (stub)
+│   │   └── emailTemplates/
+│   │       ├── friend_request.jsx         🆕 new
+│   │       └── friend_accepted.jsx        🆕 new
+│   ├── routes/
+│   │   ├── friends.js                     ✅ exists → modify
+│   │   ├── friend-requests.js             🆕 new
+│   │   ├── notifications.js               🆕 new
+│   │   └── ... (all other routes)         ✅ untouched
+│   ├── middleware/
+│   │   └── requireAuth.js                 ✅ exists → reuse
+│   ├── lib/
+│   │   └── resend.js                      ✅ exists → reuse
+│   ├── supabaseAdmin.js                   ✅ exists → reuse
+│   └── index.js                           ✅ exists → modify
+│
+├── src/
+│   ├── notifications/                     🆕 entire folder is new
+│   │   ├── registry.js
+│   │   ├── useNotifications.js
+│   │   ├── NotificationBell.jsx
+│   │   ├── NotificationsPanel.jsx
+│   │   ├── NotificationItem.jsx
+│   │   └── notifications.css
+│   ├── lib/
+│   │   └── store.js                       ✅ exists → modify (add unreadCount)
+│   ├── login_components/
+│   │   └── LoginMorph.jsx                 ✅ exists → modify (mount bell)
+│   └── profile_components/
+│       └── FriendDiscoveryList.jsx        ✅ exists → modify (request flow)
