@@ -12,11 +12,5 @@ export async function startQueue() {
     console.log('[queue] received notification job:', job.data); //later on we'll implement decision logic, atm it just logs the job data
   });
 
-  await boss.work('notifications.archive', async () => {
-    console.log('[queue] archive job fired — wire up SQL in Phase 3');
-  });
-
-  await boss.schedule('notifications.archive', '0 3 * * *');
-
   console.log('[queue] workers registered');
 }
