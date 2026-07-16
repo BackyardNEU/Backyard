@@ -9,7 +9,7 @@ export async function startQueue() {
 
   // Main worker — Phase 3 will replace the console.log with decision layer + channel fan-out
   await boss.work('notifications.dispatch', async ([job]) => {
-    console.log('[queue] received notification job:', job.data);
+    console.log('[queue] received notification job:', job.data); //later on we'll implement decision logic, atm it just logs the job data
   });
 
   await boss.work('notifications.archive', async () => {
