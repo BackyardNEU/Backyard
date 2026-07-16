@@ -18,6 +18,7 @@ import eventsRouter from './routes/events.js';
 import clubEventsRouter from './routes/clubEvents.js';
 import clubPageRouter from './routes/clubPage.js';
 import questionsRouter from './routes/questions.js';
+import { startQueue } from './notifications/queue.js';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -64,4 +65,9 @@ app.use((err, req, res, _next) => {
 
 app.listen(port, () => {
   console.log(`API listening on http://localhost:${port}`);
+});
+
+startQueue().catch((err) => {
+  console.error('[queue] failed to start:', err);
+  process.exit(1);
 });
