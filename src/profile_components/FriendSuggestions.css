@@ -1,0 +1,190 @@
+.suggestions-panel {
+  width: 100%;
+}
+
+/* ── Horizontal scroll row ── */
+.suggestions-scroll {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
+}
+
+.suggestions-scroll::-webkit-scrollbar {
+  height: 5px;
+}
+
+.suggestions-scroll::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+/* ── Card ── */
+.suggestion-card {
+  flex: 0 0 auto;
+  width: 300px;
+  border-radius: 14px;
+  border: 1px solid #e8e8e8;
+  background: #fff;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  overflow: hidden;
+  outline: none;
+}
+
+.suggestion-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.09);
+}
+
+.suggestion-card:focus-visible {
+  outline: 2px solid #888;
+  outline-offset: 2px;
+}
+
+/* ── Photo area — portrait ratio ── */
+.suggestion-photo-area {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  background: #eee;
+  overflow: hidden;
+}
+
+.suggestion-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* ── Dismiss button (top-right × ) ── */
+.suggestion-dismiss {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  border: none;
+  color: #fff;
+  font-size: 1.1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1;
+  transition: background 0.15s ease;
+  padding: 0;
+}
+
+.suggestion-dismiss:hover {
+  background: rgba(0, 0, 0, 0.68);
+}
+
+/* ── Carousel dots ── */
+.suggestion-dots {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+}
+
+.suggestion-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.suggestion-dot.active {
+  background: #fff;
+}
+
+/* ── Info section ── */
+.suggestion-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 14px 10px;
+}
+
+.suggestion-text-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.suggestion-name {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 2px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.suggestion-meta {
+  font-family: "Barlow", sans-serif;
+  font-size: 0.82rem;
+  color: #888;
+  margin: 0;
+  line-height: 1.55;
+}
+
+/* ── Add friend button ── */
+.suggestion-add-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #1a1a1a;
+  border: none;
+  color: #fff;
+  font-size: 1.4rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease, transform 0.1s ease;
+  padding: 0;
+}
+
+.suggestion-add-btn:hover:not(:disabled) {
+  background: #333;
+  transform: scale(1.08);
+}
+
+.suggestion-add-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── "Click to view profile" hint ── */
+.suggestion-view-prompt {
+  font-family: "Barlow", sans-serif;
+  font-size: 0.72rem;
+  color: #bbb;
+  text-align: center;
+  padding: 0 14px 12px;
+}
