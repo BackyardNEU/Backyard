@@ -19,6 +19,7 @@ import clubEventsRouter from './routes/clubEvents.js';
 import clubPageRouter from './routes/clubPage.js';
 import questionsRouter from './routes/questions.js';
 import { startQueue } from './notifications/queue.js';
+import friendRequestsRouter from './routes/friend-requests.js';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -51,6 +52,7 @@ app.use('/api/reviews', writeLimiter, reviewsRouter);
 app.use('/api/me/favorites', writeLimiter, favoritesRouter);
 app.use('/api/me/votes', writeLimiter, votesRouter);
 app.use('/api/me/friends', writeLimiter, friendsRouter);
+app.use('/api/friend-requests', writeLimiter, friendRequestsRouter);
 app.use('/api/me', profilesRouter); // serves /profile and /membership
 app.use('/api/users', usersRouter);
 app.use('/api/events', writeLimiter, eventsRouter);
