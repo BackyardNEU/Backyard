@@ -650,12 +650,17 @@
   display: flex;
   justify-content: center;
   width: 100%;
-  padding: 0 34px;
   box-sizing: border-box;
 }
 
 .calpg-month-row.calpg-align-row {
   justify-content: flex-start;
+}
+
+@media (min-width: 1400px) {
+  .calpg-month-row-monthly.calpg-align-row {
+    padding: 0 34px;
+  }
 }
 
 /* ===== INLINE CALENDAR MONTH GRID(S) ===== */
@@ -673,6 +678,7 @@
 @media (min-width: 1400px) {
   .calpg-dual-grid-row {
     justify-content: space-between;
+    padding: 0 34px;
   }
 }
 
@@ -780,7 +786,6 @@
 /* ===== INLINE CALENDAR WEEK VIEW ALIGNMENT ===== */
 .calpg-week-row {
   justify-content: center;
-  padding: 0 20px;
   box-sizing: border-box;
 }
 

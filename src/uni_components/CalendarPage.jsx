@@ -848,7 +848,7 @@ export function CalendarPage({ onClose }) {
           <div className="calpg-tree-wrap">
             <img src={treeImg} alt="" className="calpg-tree-img" />
           </div>
-          <div className="calpg-month-row calpg-align-row">
+          <div className={`calpg-month-row calpg-align-row${viewMode === 'month' ? ' calpg-month-row-monthly' : ''}`}>
             <h1 className={`calpg-month${viewMode === 'month' ? ' calpg-month-monthly' : ''}`}>
               <span className="calpg-month-full">{format(headerDate, 'MMMM')}</span>
               <span className="calpg-month-abbr">{format(headerDate, 'MMM').toUpperCase()}</span>
