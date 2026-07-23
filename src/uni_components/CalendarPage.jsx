@@ -803,7 +803,7 @@ export function CalendarPage({ onClose }) {
           <div className="calpg-tree-wrap">
             <img src={treeImg} alt="" className="calpg-tree-img" />
           </div>
-          <div className="calpg-month-row">
+          <div className="calpg-month-row calpg-align-row">
             <h1 className="calpg-month">
               <span className="calpg-month-full">{format(headerDate, 'MMMM')}</span>
               <span className="calpg-month-abbr">{format(headerDate, 'MMM').toUpperCase()}</span>
@@ -819,13 +819,13 @@ export function CalendarPage({ onClose }) {
 
         {viewMode === 'week' && (
           <div
-            className="calendar-container"
+            className="calendar-container calpg-week-row"
             ref={containerRef}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
           >
             {weekDays.map(day => (
-              <div key={day.date.toISOString()} className={`calendar-day${day.isToday ? ' today' : ''}`}>
+              <div key={day.date.toISOString()} className={`calendar-day calpg-week-day${day.isToday ? ' today' : ''}`}>
                 <div className="day-title-number calpg-day-title">
                   <span className="calpg-day-label">{day.label}</span>
                   <span className="calpg-day-num">{day.sublabel}</span>
@@ -866,17 +866,19 @@ export function CalendarPage({ onClose }) {
           monthlyLoading ? (
             <p className="cal-loading">Loading…</p>
           ) : (
-            <div className="cal-grid">
-              {WEEK_DAYS.map((d, i) => <div key={i} className="cal-weekday-label">{d}</div>)}
-              {cells.map((dayNum, i) => (
-                <div
-                  key={i}
-                  className={`cal-day-cell${dayNum ? ` ${getDayClass(dayNum)}` : ' cal-day-empty'}`}
-                  onClick={dayNum && monthlyEventsByDay.has(dayNum) ? () => setSelectedDay(dayNum) : undefined}
-                >
-                  {dayNum || ''}
-                </div>
-              ))}
+            <div className="calpg-align-row">
+              <div className="cal-grid">
+                {WEEK_DAYS.map((d, i) => <div key={i} className="cal-weekday-label calpg-weekday-label">{d}</div>)}
+                {cells.map((dayNum, i) => (
+                  <div
+                    key={i}
+                    className={`cal-day-cell${dayNum ? ` ${getDayClass(dayNum)}` : ' cal-day-empty'}`}
+                    onClick={dayNum && monthlyEventsByDay.has(dayNum) ? () => setSelectedDay(dayNum) : undefined}
+                  >
+                    {dayNum || ''}
+                  </div>
+                ))}
+              </div>
             </div>
           )
         )}
@@ -925,7 +927,7 @@ export function CalendarPage({ onClose }) {
         type="button"
         onClick={() => setViewMode(v => (v === 'week' ? 'month' : 'week'))}
       >
-        {viewMode === 'week' ? 'Week' : 'Month'}
+        {viewMode === 'week' ? 'Month' : 'Week'}
       </button>
     </>
   );

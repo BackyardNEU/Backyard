@@ -328,8 +328,8 @@
 
 .cal-month-name {
   font-size: 38px;
-  font-weight: 900;
-  color: #1a1a1a;
+  font-weight: 400;
+  color: #911e1e;
   letter-spacing: -1px;
   font-family: Georgia, serif;
 }
@@ -622,6 +622,7 @@
 .calpg-tree-wrap {
   display: flex;
   justify-content: center;
+  padding-top: 6px;
   margin-bottom: 2px;
 }
 
@@ -633,16 +634,31 @@
 
 .calpg-month-row {
   display: flex;
-  justify-content: flex-start;
   align-items: flex-start;
   gap: 14px;
 }
 
+.calpg-align-row {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+.calpg-align-row > .cal-grid {
+  width: 100%;
+}
+
+.calpg-month-row.calpg-align-row {
+  justify-content: flex-start;
+}
+
 .calpg-month {
   font-family: "Bebas Neue", sans-serif;
-  font-size: 5rem;
+  font-size: 6rem;
   letter-spacing: 1px;
-  color: #1a1a1a;
+  color: #3b3c3c;
   margin: 0;
   padding-left: 14px;
   line-height: 1;
@@ -676,7 +692,7 @@
   color: #1a1a1a;
   font-family: "Barlow Condensed", sans-serif;
   text-transform: uppercase;
-  font-size: 1.2rem;
+  font-size: 1.6rem;
   font-weight: 300;
   letter-spacing: 0.04em;
   cursor: pointer;
@@ -688,10 +704,31 @@
   color: #4e7da9;
 }
 
+@media (max-width: 700px) {
+  .calpg-toggle-btn {
+    font-size: 1.5rem;
+  }
+}
+
+/* ===== INLINE CALENDAR WEEK VIEW ALIGNMENT ===== */
+.calpg-week-row {
+  justify-content: center;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
 /* ===== INLINE CALENDAR WEEK VIEW DAY LABELS ===== */
 .calpg-day-label {
   font-family: "Barlow Condensed", sans-serif;
   text-transform: uppercase;
+}
+
+/* ===== INLINE CALENDAR MONTH VIEW WEEKDAY HEADER (S M T W T F S) ===== */
+.calpg-weekday-label {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 600;
+  font-size: 1.2rem;
+  color: #3b3c3c;
 }
 
 @media (max-width: 700px) {
@@ -700,5 +737,9 @@
   }
   .calpg-day-num {
     display: none;
+  }
+  .calpg-week-day {
+    flex: 0 0 46%;
+    min-width: 130px;
   }
 }
