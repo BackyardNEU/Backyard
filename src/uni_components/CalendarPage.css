@@ -562,38 +562,25 @@
   margin: 0;
 }
 
-/* ===== STANDALONE CALENDAR PAGE OVERLAY ===== */
-.cal-page-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  z-index: 500;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-end;
-  padding: 12px;
-  overflow-y: auto;
-  margin: 0;
-}
-
-.cal-page-card {
+/* ===== STANDALONE CALENDAR PAGE (university page inline calendar) ===== */
+.calpg-card {
   position: relative;
   background: #fff;
-  border-radius: 16px;
-  padding: 28px 28px 32px;
-  width: min(820px, 94vw);
-  max-height: calc(100vh - 24px);
+  border: 1px solid black;
+  padding: 24px 24px 64px;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
   overflow-y: auto;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25);
+  
   scrollbar-width: none;
-  flex-grow: 1;
 }
 
-.cal-page-card::-webkit-scrollbar {
+.calpg-card::-webkit-scrollbar {
   display: none;
 }
 
-.cal-page-close {
+.calpg-close {
   position: absolute;
   top: 14px;
   right: 16px;
@@ -612,7 +599,7 @@
   transition: background 0.15s;
 }
 
-.cal-page-close:hover {
+.calpg-close:hover {
   background: #e0e0e0;
 }
 
@@ -622,4 +609,79 @@
   font-size: 15px;
   padding: 40px 0;
   margin: 0;
+}
+
+/* ===== INLINE CALENDAR HEADER (tree + month name) ===== */
+.calpg-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.calpg-tree-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2px;
+}
+
+.calpg-tree-img {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+}
+
+.calpg-month-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.calpg-month {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 48px;
+  letter-spacing: 1px;
+  color: #1a1a1a;
+  margin: 0;
+  line-height: 1;
+}
+
+.calpg-month-full {
+  display: inline;
+}
+
+.calpg-month-abbr {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .calpg-month-full {
+    display: none;
+  }
+  .calpg-month-abbr {
+    display: inline;
+  }
+}
+
+/* ===== INLINE CALENDAR VIEW TOGGLE (bottom-right of the card) ===== */
+.calpg-toggle-btn {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  background: #2b3440;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  z-index: 20;
+  transition: background 0.15s;
+}
+
+.calpg-toggle-btn:hover {
+  background: #3d4a5c;
 }

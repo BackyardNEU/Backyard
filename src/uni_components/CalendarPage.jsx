@@ -7,6 +7,7 @@ import { apiFetch } from '../lib/api';
 import { supabase } from '../lib/supabase';
 import '../club_page_components/CalendarModule.css';
 import './CalendarPage.css';
+import treeImg from '/src/assets/tree.png';
 
 const WEEK_DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
@@ -275,7 +276,7 @@ export function CalendarModule({
   // ── render ───────────────────────────────────────────────────────────────
   return (
     <div className="cal-module">
-      <p className="divider-header">Events</p>
+
       {editing && warning && <p className="module-warning">{warning}</p>}
 
       {/* View toggle */}
@@ -775,120 +776,109 @@ export function CalendarPage({ onClose }) {
 
   if (status === 'loading') {
     return (
-      <div className="cal-page-overlay">
-        <div className="cal-page-card">
-          <p className="cal-loading">Loading events…</p>
-        </div>
+      <div className="calpg-card">
+        <p className="cal-loading">Loading events…</p>
       </div>
     );
   }
 
   if (status === 'unauthed') {
     return (
-      <div className="cal-page-overlay" onClick={onClose}>
-        <div className="cal-page-card" onClick={e => e.stopPropagation()}>
-          <button className="cal-page-close" onClick={onClose}>✕</button>
-          <p className="cal-unauthed-msg">Sign in to see your club events.</p>
-        </div>
+      <div className="calpg-card">
+        <button className="calpg-close" onClick={onClose}>✕</button>
+        <p className="cal-unauthed-msg">Sign in to see your club events.</p>
       </div>
     );
   }
 
+  const headerDate = viewMode === 'month' ? monthDisplayDate : today;
+
   return (
-    <div className="cal-page-overlay" onClick={onClose}>
-      <div className="cal-page-card" onClick={e => e.stopPropagation()}>
-        <button className="cal-page-close" onClick={onClose}>✕</button>
+    <>
+      <div className="calpg-card">
+        <button className="calpg-close" onClick={onClose}>✕</button>
 
-        <p className="divider-header">Events</p>
 
-        <div className="cal-view-toggle">
-          <button
-            className={`cal-toggle-btn${viewMode === 'week' ? ' cal-toggle-active' : ''}`}
-            onClick={() => setViewMode('week')}
-          >Week</button>
-          <button
-            className={`cal-toggle-btn${viewMode === 'month' ? ' cal-toggle-active' : ''}`}
-            onClick={() => setViewMode('month')}
-          >Month</button>
-        </div>
-
-        {viewMode === 'week' && (
-          <>
-            <h1 className="current-month">{format(today, 'MMMM')}</h1>
-            <div
-              className="calendar-container"
-              ref={containerRef}
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-            >
-              {weekDays.map(day => (
-                <div key={day.date.toISOString()} className={`calendar-day${day.isToday ? ' today' : ''}`}>
-                  <div className="day-title-number">
-                    <span>{day.label}</span>
-                    <span>{day.sublabel}</span>
-                  </div>
-                  {day.events.length === 0 ? (
-                    <p>No events</p>
-                  ) : (
-                    day.events.map(event => (
-                      <div key={event.id} className="calendar-event">
-                        {event.event_image_url && <img className="club-img" src={event.event_image_url} alt="" />}
-                        <div className="club-name">{event.club_name}</div>
-                        <div className="event-description">
-                          <p>about<span className="club-info">{event.event_description}</span></p>
-                        </div>
-                        <div>
-                          <span>time </span>
-                          <span className="club-info">
-                            {format(parseISO(event.start_time), 'h:mm a')} – {format(parseISO(event.end_time), 'h:mm a')}
-                          </span>
-                        </div>
-                        {userId && event.club_id && (
-                          <button
-                            className="rsvp-button"
-                            onClick={() => handleWeeklyRsvp(event.id, myRsvpSet.has(event.id))}
-                          >
-                            {myRsvpSet.has(event.id) ? 'Going ✓' : "I'm going!"}
-                          </button>
-                        )}
-                      </div>
-                    ))
-                  )}
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        {viewMode === 'month' && (
-          <div className="cal-monthly-card">
-            <div className="cal-monthly-tree">
-              <img src="/raccoon_pfp.png" alt="seasonal tree" className="cal-tree-img" />
-            </div>
-            <div className="cal-monthly-header">
-              <span className="cal-month-name">{format(monthDisplayDate, 'MMM').toUpperCase()}</span>
+        <div className="calpg-header">
+          <div className="calpg-tree-wrap">
+            <img src={treeImg} alt="" className="calpg-tree-img" />
+          </div>
+          <div className="calpg-month-row">
+            <h1 className="calpg-month">
+              <span className="calpg-month-full">{format(headerDate, 'MMMM')}</span>
+              <span className="calpg-month-abbr">{format(headerDate, 'MMM').toUpperCase()}</span>
+            </h1>
+            {viewMode === 'month' && (
               <div className="cal-month-nav">
                 <button className="cal-nav-btn" onClick={() => navigateMonth(-1)}>‹</button>
                 <button className="cal-nav-btn" onClick={() => navigateMonth(1)}>›</button>
               </div>
-            </div>
-            {monthlyLoading ? (
-              <p className="cal-loading">Loading…</p>
-            ) : (
-              <div className="cal-grid">
-                {WEEK_DAYS.map((d, i) => <div key={i} className="cal-weekday-label">{d}</div>)}
-                {cells.map((dayNum, i) => (
-                  <div
-                    key={i}
-                    className={`cal-day-cell${dayNum ? ` ${getDayClass(dayNum)}` : ' cal-day-empty'}`}
-                    onClick={dayNum && monthlyEventsByDay.has(dayNum) ? () => setSelectedDay(dayNum) : undefined}
-                  >
-                    {dayNum || ''}
-                  </div>
-                ))}
-              </div>
             )}
           </div>
+        </div>
+
+        {viewMode === 'week' && (
+          <div
+            className="calendar-container"
+            ref={containerRef}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
+            {weekDays.map(day => (
+              <div key={day.date.toISOString()} className={`calendar-day${day.isToday ? ' today' : ''}`}>
+                <div className="day-title-number">
+                  <span>{day.label}</span>
+                  <span>{day.sublabel}</span>
+                </div>
+                {day.events.length === 0 ? (
+                  <p>No events</p>
+                ) : (
+                  day.events.map(event => (
+                    <div key={event.id} className="calendar-event">
+                      {event.event_image_url && <img className="club-img" src={event.event_image_url} alt="" />}
+                      <div className="club-name">{event.club_name}</div>
+                      <div className="event-description">
+                        <p>about<span className="club-info">{event.event_description}</span></p>
+                      </div>
+                      <div>
+                        <span>time </span>
+                        <span className="club-info">
+                          {format(parseISO(event.start_time), 'h:mm a')} – {format(parseISO(event.end_time), 'h:mm a')}
+                        </span>
+                      </div>
+                      {userId && event.club_id && (
+                        <button
+                          className="rsvp-button"
+                          onClick={() => handleWeeklyRsvp(event.id, myRsvpSet.has(event.id))}
+                        >
+                          {myRsvpSet.has(event.id) ? 'Going ✓' : "I'm going!"}
+                        </button>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {viewMode === 'month' && (
+          monthlyLoading ? (
+            <p className="cal-loading">Loading…</p>
+          ) : (
+            <div className="cal-grid">
+              {WEEK_DAYS.map((d, i) => <div key={i} className="cal-weekday-label">{d}</div>)}
+              {cells.map((dayNum, i) => (
+                <div
+                  key={i}
+                  className={`cal-day-cell${dayNum ? ` ${getDayClass(dayNum)}` : ' cal-day-empty'}`}
+                  onClick={dayNum && monthlyEventsByDay.has(dayNum) ? () => setSelectedDay(dayNum) : undefined}
+                >
+                  {dayNum || ''}
+                </div>
+              ))}
+            </div>
+          )
         )}
 
         {selectedDay !== null && (
@@ -929,7 +919,15 @@ export function CalendarPage({ onClose }) {
           </div>
         )}
       </div>
-    </div>
+
+      <button
+        className="calpg-toggle-btn"
+        type="button"
+        onClick={() => setViewMode(v => (v === 'week' ? 'month' : 'week'))}
+      >
+        {viewMode === 'week' ? 'Week' : 'Month'}
+      </button>
+    </>
   );
 }
 
