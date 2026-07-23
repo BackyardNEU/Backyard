@@ -826,9 +826,9 @@ export function CalendarPage({ onClose }) {
           >
             {weekDays.map(day => (
               <div key={day.date.toISOString()} className={`calendar-day${day.isToday ? ' today' : ''}`}>
-                <div className="day-title-number">
-                  <span>{day.label}</span>
-                  <span>{day.sublabel}</span>
+                <div className="day-title-number calpg-day-title">
+                  <span className="calpg-day-label">{day.label}</span>
+                  <span className="calpg-day-num">{day.sublabel}</span>
                 </div>
                 {day.events.length === 0 ? (
                   <p>No events</p>

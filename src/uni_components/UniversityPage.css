@@ -118,7 +118,7 @@
   left: 0;
   right: 0;
   top: 20vh;
-  bottom: 10%;
+  bottom: 3%;
   margin: 0 auto;
   width: var(--uni-content-width);
   opacity: 0;
@@ -197,6 +197,8 @@
 
   .uni-calendar-inline {
     top: 11vh;
+    bottom: 10%;
+    width: 90%;
   }
 
 }
