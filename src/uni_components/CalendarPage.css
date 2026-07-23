@@ -677,8 +677,12 @@
 
 @media (min-width: 1400px) {
   .calpg-dual-grid-row {
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: minmax(0, 500px) 1fr minmax(0, 500px);
+    align-items: start;
+    justify-content: center;
     padding: 0 34px;
+    gap: 0;
   }
 }
 
@@ -695,6 +699,7 @@
   display: none;
   width: 1px;
   align-self: stretch;
+  justify-self: center;
   background: #ccc;
 }
 
@@ -741,6 +746,9 @@
   }
   .calpg-month-abbr {
     display: inline;
+  }
+  .calpg-month {
+    font-size: 5rem;
   }
 }
 
