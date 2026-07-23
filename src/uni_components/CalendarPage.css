@@ -409,6 +409,14 @@
   background: #f0c800;
 }
 
+.calpg-grid-panel .cal-day-today-events {
+  width: 34px;
+  height: 34px;
+  aspect-ratio: 1;
+  justify-self: center;
+  align-self: center;
+}
+
 .cal-day-has-events {
   color: #e8793a;
   font-weight: 700;
@@ -566,7 +574,7 @@
   position: relative;
   background: #fff;
   border: 1px solid black;
-  padding: 20px 20x 64px;
+  padding: 20px 20px 64px;
   width: 100%;
  
   height: 100%;
@@ -642,16 +650,55 @@
   display: flex;
   justify-content: center;
   width: 100%;
-  padding: 0 20px;
+  padding: 0 34px;
   box-sizing: border-box;
-}
-
-.calpg-align-row > .cal-grid {
-  width: 100%;
 }
 
 .calpg-month-row.calpg-align-row {
   justify-content: flex-start;
+}
+
+/* ===== INLINE CALENDAR MONTH GRID(S) ===== */
+.calpg-dual-grid-row {
+  justify-content: center;
+  gap: 24px;
+}
+
+@media (max-width: 700px) {
+  .calpg-dual-grid-row {
+    padding: 0 8px;
+  }
+}
+
+@media (min-width: 1400px) {
+  .calpg-dual-grid-row {
+    justify-content: space-between;
+  }
+}
+
+.calpg-grid-panel {
+  width: 100%;
+  max-width: 500px;
+}
+
+.calpg-grid-panel-next {
+  display: none;
+}
+
+.calpg-grid-divider {
+  display: none;
+  width: 1px;
+  align-self: stretch;
+  background: #ccc;
+}
+
+@media (min-width: 1400px) {
+  .calpg-grid-panel-next {
+    display: grid;
+  }
+  .calpg-grid-divider {
+    display: block;
+  }
 }
 
 .calpg-month {
@@ -660,8 +707,13 @@
   letter-spacing: 1px;
   color: #3b3c3c;
   margin: 0;
-  padding-left: 14px;
   line-height: 1;
+}
+
+@media (min-width: 1400px) {
+  .calpg-month-monthly {
+    padding-left: 36px;
+  }
 }
 
 .calpg-month-full {
@@ -672,11 +724,26 @@
   display: none;
 }
 
+.calpg-month-range {
+  display: none;
+  font-size: 3rem;
+}
+
 @media (max-width: 700px) {
   .calpg-month-full {
     display: none;
   }
   .calpg-month-abbr {
+    display: inline;
+  }
+}
+
+@media (min-width: 1400px) {
+  .calpg-month-monthly .calpg-month-full,
+  .calpg-month-monthly .calpg-month-abbr {
+    display: none;
+  }
+  .calpg-month-range {
     display: inline;
   }
 }
