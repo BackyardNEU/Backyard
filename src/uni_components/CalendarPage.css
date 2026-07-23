@@ -785,8 +785,15 @@
 
 /* ===== INLINE CALENDAR WEEK VIEW ALIGNMENT ===== */
 .calpg-week-row {
-  justify-content: center;
+  justify-content: flex-start;
+  overflow-x: auto;
+  overflow-y: hidden;
   box-sizing: border-box;
+  scrollbar-width: none;
+}
+
+.calpg-week-row::-webkit-scrollbar {
+  display: none;
 }
 
 /* ===== INLINE CALENDAR WEEK VIEW DAY LABELS ===== */
