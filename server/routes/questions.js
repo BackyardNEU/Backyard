@@ -1,6 +1,8 @@
 import express from 'express';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { checkMuted } from '../middleware/checkMuted.js';
+import textModerator from '../lib/textModerator.js';
 
 const router = express.Router();
 
@@ -40,10 +42,15 @@ async function isApprovedFor(userId, clubId) {
 
 // POST /api/clubs/:clubId/questions
 // Submit a question. One per club per user (DB unique constraint → 409 on repeat).
-router.post('/:clubId/questions', async (req, res) => {
+router.post('/:clubId/questions', checkMuted, async (req, res) => {
   const { clubId } = req.params;
   const question = (req.body?.question || '').trim();
   if (!question) return res.status(400).json({ error: 'question required' });
+
+  const textCheck = textModerator.check(question);
+  if (!textCheck.clean) {
+    return res.status(400).json({ error: textCheck.message });
+  }
 
   const { data, error } = await supabaseAdmin
     .from('user_faqs')

@@ -422,6 +422,15 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     body: { club_id: id, ext: pendingLogoFile.type.split('/')[1] },
                 });
                 await fetch(signedUrl, { method: 'PUT', body: pendingLogoFile });
+
+                const verification = await apiFetch('/storage/verify-image', {
+                    method: 'POST',
+                    body: { publicUrl },
+                });
+                if (!verification.ok) {
+                    throw new Error(verification.error || 'Logo rejected by content policy');
+                }
+
                 finalDraft = draft.map(m =>
                     m.type === 'basic_info' ? { ...m, data: { ...m.data, logo_url: publicUrl } } : m
                 );

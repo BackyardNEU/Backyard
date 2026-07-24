@@ -1,6 +1,7 @@
 import express from 'express';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { checkMuted } from '../middleware/checkMuted.js';
 
 const router = express.Router();
 
@@ -44,7 +45,7 @@ router.get('/', async (req, res) => {
 // will race — last write wins. Per-friend POST/DELETE with array_append would
 // be safer; PUT-the-whole-array matches BACKEND_PLAN.md and the current
 // frontend pattern, so sticking with it.
-router.put('/', async (req, res) => {
+router.put('/', checkMuted, async (req, res) => {
     const { friend_list } = req.body || {};
     if (!Array.isArray(friend_list)) {
         return res.status(400).json({ error: 'friend_list must be an array' });

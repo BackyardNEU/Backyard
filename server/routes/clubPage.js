@@ -1,6 +1,8 @@
 import express from 'express';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { checkMuted } from '../middleware/checkMuted.js';
+import textModerator from '../lib/textModerator.js';
 
 const router = express.Router();
 
@@ -236,15 +238,62 @@ router.post('/:clubId/page/init', requireAuth, async (req, res) => {
   res.status(201).json(data);
 });
 
+function extractModuleText(modules) {
+  const texts = {};
+  let i = 0;
+  const add = (prefix, value) => { if (value) texts[`${prefix}_${i++}`] = value; };
+  for (const mod of modules) {
+    const d = mod.data || {};
+    if (mod.type === 'basic_info') {
+      add('club_name', d.club_name);
+      add('description', d.description);
+    } else if (mod.type === 'join') {
+      for (const tab of d.tabs || []) {
+        add('tab_title', tab.title);
+        add('tab_body', tab.body);
+      }
+    } else if (mod.type === 'faqs') {
+      for (const faq of d.faqs || []) {
+        add('faq_q', faq.q);
+        add('faq_a', faq.a);
+      }
+    } else if (mod.type === 'member_roster') {
+      for (const m of d.members || []) {
+        add('member_name', m.name);
+        add('member_bio', m.bio);
+      }
+    } else if (mod.type === 'club_media') {
+      for (const p of d.posters || []) {
+        add('poster_text', p.poster_text);
+        for (const c of p.content || []) {
+          add('poster_content', c.value);
+        }
+      }
+    } else if (mod.type === 'stats') {
+      for (const s of d.stats || []) {
+        add('stat_label', s.label);
+        add('stat_unit', s.unit1);
+      }
+    }
+  }
+  return texts;
+}
+
 // PUT /api/clubs/:clubId/page
 // Authenticated. Approved club account only.
 // Upserts the modules array for this club's page.
-router.put('/:clubId/page', requireAuth, async (req, res) => {
+router.put('/:clubId/page', requireAuth, checkMuted, async (req, res) => {
   const { clubId } = req.params;
   const { modules } = req.body;
 
   if (!Array.isArray(modules)) {
     return res.status(400).json({ error: 'modules must be an array' });
+  }
+
+  const moduleTexts = extractModuleText(modules);
+  const textCheck = textModerator.checkFields(moduleTexts);
+  if (!textCheck.clean) {
+    return res.status(400).json({ error: textCheck.message, field: textCheck.field });
   }
 
   // Verify the authenticated user is an approved account for this club.

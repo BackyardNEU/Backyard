@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import imageCompression from 'browser-image-compression'
 import { supabase } from '../lib/supabase'
 import { apiFetch } from '../lib/api'
+import textModerator from '../lib/textModerator'
 import './ProfileSetupPage.css'
 
 const ProfileSetupPage = () => {
@@ -194,6 +195,14 @@ const ProfileSetupPage = () => {
             });
             if (!putRes.ok) throw new Error(`Upload failed (${putRes.status})`);
 
+            const verification = await apiFetch('/storage/verify-image', {
+                method: 'POST',
+                body: { publicUrl },
+            });
+            if (!verification.ok) {
+                throw new Error(verification.error || 'Photo rejected by content policy');
+            }
+
             urls.push(publicUrl);
         }
         return urls;
@@ -223,6 +232,16 @@ const ProfileSetupPage = () => {
             return;
         }
 
+        const textCheck = textModerator.checkFields({
+            first_name: firstName,
+            last_name: lastName,
+            biography,
+        });
+        if (!textCheck.clean) {
+            setError(textCheck.message);
+            return;
+        }
+
         if (!selectedUniversity) {
             setError('Please choose a school from the dropdown list.');
             return;
@@ -245,6 +264,14 @@ const ProfileSetupPage = () => {
                     headers: { 'Content-Type': 'image/webp' },
                 });
                 if (!putRes.ok) throw new Error(`Upload failed (${putRes.status})`);
+
+                const verification = await apiFetch('/storage/verify-image', {
+                    method: 'POST',
+                    body: { publicUrl },
+                });
+                if (!verification.ok) {
+                    throw new Error(verification.error || 'Avatar rejected by content policy');
+                }
 
                 avatarUrl = publicUrl;
             }

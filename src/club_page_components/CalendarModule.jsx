@@ -229,6 +229,15 @@ export function CalendarModule({
           headers: { 'Content-Type': imageFile.type || 'application/octet-stream' },
         });
         if (!uploadRes.ok) throw new Error('Image upload failed.');
+
+        const verification = await apiFetch('/storage/verify-image', {
+          method: 'POST',
+          body: { publicUrl },
+        });
+        if (!verification.ok) {
+          throw new Error(verification.error || 'Image rejected by content policy');
+        }
+
         imageUrl = publicUrl;
       }
       await onAddEvent?.({
