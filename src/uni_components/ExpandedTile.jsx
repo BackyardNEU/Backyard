@@ -16,7 +16,6 @@ import ClubMediaModule from '../club_page_components/ClubMediaModule';
 import FaqModule from '../club_page_components/FaqModule';
 import MemberRosterModule from '../club_page_components/MemberRosterModule';
 import { CalendarModule } from '../club_page_components/CalendarModule';
-import { CalendarModule as LegacyCalendarModule } from './CalendarPage';
 import ModuleAccordion from '../club_page_components/accordion';
 import { useClubData } from '../context/useClubData';
 import { useGlobalStore } from '../lib/store';
@@ -180,7 +179,6 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const [questionDeletes, setQuestionDeletes] = useState(() => new Set());
     // club events (for the calendar module)
     const [clubEvents, setClubEvents] = useState([]);
-    const [clubWeeklyEvents, setClubWeeklyEvents] = useState([]);
     const [clubMyRsvpSet, setClubMyRsvpSet] = useState(new Set());
     const [clubFriendRsvpMap, setClubFriendRsvpMap] = useState(new Map());
     // club members (for comments module authorized/unauthorized tabs)
@@ -244,7 +242,6 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 apiFetch(`/clubs/${id}/top-tags`, { auth: false }),
                 apiFetch(`/clubs/${id}/events/upcoming`), // optional auth: sends token if logged in
                 apiFetch(`/clubs/${id}/members`, { auth: false }),
-                apiFetch(`/clubs/${id}/events`), // weekly events for legacy calendar
             ];
             const authFetches = authUser ? [
                 apiFetch('/me/membership'),
@@ -253,13 +250,12 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
             console.log("Awaiting info...");
 
-            const [reviewsResult, pageResult, topTagsResult, eventsResult, membersResult, weeklyEventsResult, membershipResult, approvedResult] =
+            const [reviewsResult, pageResult, topTagsResult, eventsResult, membersResult, membershipResult, approvedResult] =
                 await Promise.allSettled([...publicFetches, ...authFetches]);
 
             if (reviewsResult.status === 'fulfilled') set_reviews(reviewsResult.value);
             if (topTagsResult.status === 'fulfilled') setTopTags((topTagsResult.value || []).map(r => r.tag));
             if (membersResult.status === 'fulfilled') setClubMembers(membersResult.value || []);
-            if (weeklyEventsResult?.status === 'fulfilled') setClubWeeklyEvents(weeklyEventsResult.value || []);
             if (eventsResult.status === 'fulfilled') {
                 const eventsData = eventsResult.value || [];
                 setClubEvents(eventsData);
@@ -698,21 +694,6 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                         ))}
                     </>
                 )}
-                <div className="module-view-divider"><div className="divider" /></div>
-                <LegacyCalendarModule
-                    club={club}
-                    data={draft.find((m) => m.type === 'calendar')?.data ?? {}}
-                    editing={isEditing}
-                    isApproved={isApproved}
-                    onChange={(updatedData) => handleModuleChange('calendar', updatedData)}
-                    warning={moduleWarnings.calendar ?? null}
-                    events={clubWeeklyEvents}
-                    myRsvpSet={clubMyRsvpSet}
-                    friendRsvpMap={clubFriendRsvpMap}
-                    onRsvp={handleClubRsvp}
-                    onAddEvent={handleAddEvent}
-                    userId={user?.id ?? null}
-                />
             </div>
 
             {isApproved && isEditing && (

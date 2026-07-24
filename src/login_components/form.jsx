@@ -64,7 +64,10 @@ function Form({ isSignUp = false, onAuth }) {
             emailRedirectTo: `${window.location.origin}/auth/callback?flow=signup`,
           },
         });
-        if (signUpError) throw signUpError;
+        
+        if (signUpError) {
+          throw signUpError; 
+        }
 
         if (signUpData?.session) {
           await apiFetch("/me/profile", {
