@@ -7,7 +7,8 @@ import { sendEmail } from './channels/email.js';
 import { sendPush } from './channels/push.js';
 
 const require = createRequire(import.meta.url);
-const PgBoss = require('pg-boss');
+const _PgBoss = require('pg-boss');
+const PgBoss = _PgBoss.default || _PgBoss;
 
 const HANDLERS = {
   friend_request:  () => import('./handlers/friendRequest.js'),
