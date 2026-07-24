@@ -39,5 +39,35 @@ router.get('/', async (req, res) => {
     res.json(data);
 });
 
+router.delete('/:friendId', async (req, res) => {
+    const { friendId } = req.params;
+
+    const { data: profile, error: fetchError } = await supabaseAdmin
+        .from('profiles')
+        .select('friend_list')
+        .eq('id', req.user.id)
+        .single();
+
+    if (fetchError) {
+        const err = new Error(fetchError.message);
+        err.status = 502;
+        throw err;
+    }
+
+    const newList = (profile?.friend_list || []).filter((id) => id !== friendId);
+
+    const { error } = await supabaseAdmin
+        .from('profiles')
+        .update({ friend_list: newList })
+        .eq('id', req.user.id);
+
+    if (error) {
+        const err = new Error(error.message);
+        err.status = 502;
+        throw err;
+    }
+
+    res.status(204).end();
+});
 
 export default router;
