@@ -323,7 +323,7 @@
   display: flex;
 
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 .cal-month-name {
@@ -624,7 +624,7 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  margin-bottom: 16px;
+
 }
 
 .calpg-tree-wrap {
@@ -829,4 +829,17 @@
     flex: 0 0 46%;
     min-width: 130px;
   }
+}
+
+@media (max-width: 400px) {
+ 
+  .calpg-month {
+    font-size: 4rem;
+  }
+
+  .calpg-tree-img {
+  width: 10rem;
+  height: auto;
+  object-fit: contain;
+}
 }
