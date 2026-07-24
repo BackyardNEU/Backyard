@@ -1,13 +1,13 @@
 import { createRequire } from 'module';
 import 'dotenv/config';
-
-const require = createRequire(import.meta.url);
-const PgBoss = require('pg-boss');
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { decide } from './decisionLayer.js';
 import { sendInApp } from './channels/inApp.js';
 import { sendEmail } from './channels/email.js';
 import { sendPush } from './channels/push.js';
+
+const require = createRequire(import.meta.url);
+const PgBoss = require('pg-boss');
 
 const HANDLERS = {
   friend_request:  () => import('./handlers/friendRequest.js'),
