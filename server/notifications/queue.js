@@ -1,5 +1,8 @@
-import PgBoss from 'pg-boss';
+import { createRequire } from 'module';
 import 'dotenv/config';
+
+const require = createRequire(import.meta.url);
+const PgBoss = require('pg-boss');
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { decide } from './decisionLayer.js';
 import { sendInApp } from './channels/inApp.js';
