@@ -133,12 +133,12 @@ async function verifyOwnership(bucket, objectPath, userId) {
     }
     if (bucket === 'club_logos') {
         const clubId = objectPath.split('.')[0];
-        const { data } = await supabaseAdmin
+        const { count } = await supabaseAdmin
             .from('approved_club_accounts')
             .select('id', { count: 'exact', head: true })
             .eq('club_id', clubId)
             .eq('user_id', userId);
-        return !!data;
+        return (count ?? 0) > 0;
     }
     return false;
 }
