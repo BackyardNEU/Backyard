@@ -38,7 +38,7 @@ const TAG_SYNONYMS = [
   { tag: 'Sorority', phrases: ['sorority'] },
 ];
 
-const FILLER_RE = /\b(show me|find me|i want|i need|looking for|search for|give me|get me|list|clubs? for|clubs? about|clubs? that are|clubs? with|clubs? in|some|the|a|an|all|any|me|my|please|can you|could you)\b/gi;
+const FILLER_RE = /\b(show me|find me|i want|i need|looking for|search for|give me|get me|list|clubs? for|clubs? about|clubs? that are|clubs? with|clubs? in|clubs?|organizations?|groups?|some|the|a|an|all|any|me|my|please|can you|could you|and|or)\b/gi;
 
 class NLSearchParser {
   constructor() {
