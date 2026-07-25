@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backyard — Coming Soon</title>
+  <meta name="description" content="Discover and join clubs, explore events, and connect with friends at your university. Coming soon.">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Backyard — Coming Soon">
+  <meta property="og:description" content="Discover and join clubs, explore events, and connect with friends at your university.">
+  <meta property="og:image" content="/assets/raccoon_pfp.png">
+  <meta property="og:type" content="website">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/assets/raccoon_pfp.png">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500&family=Barlow+Condensed:wght@600&family=Be+Vietnam+Pro:wght@400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <!-- Background layers -->
+  <div class="bg-wood" aria-hidden="true"></div>
+  <div class="bg-overlay" aria-hidden="true"></div>
+
+  <main class="page">
+    <div class="card" id="main-card">
+      <!-- Pins -->
+      <div class="pin pin-left" aria-hidden="true"></div>
+      <div class="pin pin-right" aria-hidden="true"></div>
+
+      <!-- Logo -->
+      <img src="/assets/header_logo.png" alt="Backyard" class="logo">
+
+      <!-- Mascot -->
+      <img src="/assets/raccoon_pfp.png" alt="Backyard mascot" class="mascot">
+
+      <!-- Headline -->
+      <h1 class="headline">Coming Soon</h1>
+      <p class="tagline">Discover clubs. Find your people. Explore your campus.</p>
+
+      <!-- Features -->
+      <div class="features">
+        <div class="feature">
+          <span class="feature-label">Browse Every Club</span>
+          <span class="feature-desc"> — See descriptions, events, and honest reviews</span>
+        </div>
+        <div class="feature">
+          <span class="feature-label">Connect With Friends</span>
+          <span class="feature-desc"> — Find out what your friends have joined</span>
+        </div>
+        <div class="feature">
+          <span class="feature-label">Never Miss an Event</span>
+          <span class="feature-desc"> — Calendar sync for everything happening on campus</span>
+        </div>
+      </div>
+
+      <div class="divider" aria-hidden="true"></div>
+
+      <!-- Email signup form -->
+      <form class="form-section" id="signup-form" novalidate>
+        <span class="form-label">Get notified when we launch</span>
+
+        <input
+          type="email"
+          name="email"
+          class="email-input"
+          placeholder="you@university.edu"
+          required
+          maxlength="254"
+          autocomplete="email"
+          aria-label="Email address"
+        >
+
+        <!-- Honeypot: invisible to real users, bots auto-fill it -->
+        <input
+          type="text"
+          name="website"
+          class="hp-field"
+          tabindex="-1"
+          autocomplete="off"
+          aria-hidden="true"
+        >
+
+        <div class="consent">
+          <input type="checkbox" id="consent-check" required>
+          <label for="consent-check">
+            I agree to receive email updates from Backyard. View our
+            <a href="/privacy" target="_blank" rel="noopener">privacy policy</a>.
+          </label>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submit-btn">Join the Waitlist</button>
+
+        <p class="form-msg" id="form-msg" role="status" aria-live="polite"></p>
+      </form>
+
+      <!-- Footer -->
+      <div class="footer">
+        <a href="/privacy">Privacy Policy</a><br>
+        Built with care at Northeastern
+      </div>
+    </div>
+  </main>
+
+  <noscript>
+    <style>.form-section { display: none; }</style>
+    <p style="text-align:center;font-family:sans-serif;padding:20px;color:#555;">
+      Please enable JavaScript to sign up for the waitlist.
+    </p>
+  </noscript>
+
+  <script>
+    (function () {
+      var form = document.getElementById('signup-form');
+      var msg = document.getElementById('form-msg');
+      var btn = document.getElementById('submit-btn');
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        msg.textContent = '';
+        msg.className = 'form-msg';
+
+        var email = form.email.value.trim();
+        var honeypot = form.website.value;
+        var consent = document.getElementById('consent-check').checked;
+
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          msg.textContent = 'Please enter a valid email address.';
+          msg.className = 'form-msg error';
+          return;
+        }
+
+        if (!consent) {
+          msg.textContent = 'Please check the consent box to continue.';
+          msg.className = 'form-msg error';
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Joining...';
+
+        fetch('/api/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, website: honeypot }),
+        })
+          .then(function (res) { return res.json().then(function (d) { return { ok: res.ok, data: d }; }); })
+          .then(function (result) {
+            if (result.ok) {
+              var card = document.getElementById('main-card');
+              card.innerHTML =
+                '<div class="pin pin-left" aria-hidden="true"></div>' +
+                '<div class="pin pin-right" aria-hidden="true"></div>' +
+                '<div class="success-state">' +
+                  '<img src="/assets/raccoon.png" alt="Backyard raccoon" style="width:180px;">' +
+                  '<h1 class="headline">You\'re on the list!</h1>' +
+                  '<p class="tagline">We\'ll let you know as soon as Backyard launches. See you on campus.</p>' +
+                '</div>' +
+                '<div class="footer">' +
+                  '<a href="/privacy">Privacy Policy</a><br>Built with care at Northeastern' +
+                '</div>';
+            } else {
+              msg.textContent = result.data.error || 'Something went wrong. Please try again.';
+              msg.className = 'form-msg error';
+              btn.disabled = false;
+              btn.textContent = 'Join the Waitlist';
+            }
+          })
+          .catch(function () {
+            msg.textContent = 'Something went wrong. Please try again.';
+            msg.className = 'form-msg error';
+            btn.disabled = false;
+            btn.textContent = 'Join the Waitlist';
+          });
+      });
+    })();
+  </script>
+</body>
+</html>

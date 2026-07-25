@@ -1,0 +1,395 @@
+/* ─── Reset ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+img { max-width: 100%; display: block; }
+
+/* ─── Page background ─── */
+.bg-wood {
+  position: fixed;
+  inset: 0;
+  background-image: url('./assets/ghibili_background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: saturate(0.82) brightness(1.03);
+  z-index: -2;
+}
+
+.bg-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(248, 245, 239, 0.58), rgba(237, 232, 224, 0.72));
+  z-index: -1;
+}
+
+/* ─── Page layout ─── */
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  font-family: "Barlow", sans-serif;
+  color: #29241d;
+}
+
+/* ─── Card ─── */
+.card {
+  position: relative;
+  width: min(560px, 92vw);
+  background: #f5f1ea;
+  padding: 40px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 18px 36px rgba(41, 36, 29, 0.22), 8px 10px 0 rgba(41, 36, 29, 0.12);
+  overflow: hidden;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url('./assets/white-paper-texture.jpg');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.58;
+  filter: contrast(0.92) brightness(1.05);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Pins ─── */
+.pin {
+  position: absolute;
+  top: 10px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #9b9386;
+  border: 1px solid #8a8174;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.pin-left { left: 14px; }
+.pin-right { right: 14px; }
+
+/* ─── Logo ─── */
+.logo {
+  max-width: 280px;
+  mix-blend-mode: multiply;
+}
+
+/* ─── Mascot ─── */
+.mascot {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 3px solid #2f2a22;
+  object-fit: cover;
+}
+
+/* ─── Typography ─── */
+.headline {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: clamp(2.5rem, 8vw, 3.5rem);
+  color: #29241d;
+  letter-spacing: 0.05em;
+  text-align: center;
+  line-height: 1;
+  margin-top: 4px;
+}
+
+.tagline {
+  font-family: "Barlow", sans-serif;
+  font-size: 1.15rem;
+  color: #29241d;
+  text-align: center;
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+/* ─── Feature bullets ─── */
+.features {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.feature {
+  text-align: center;
+}
+
+.feature-label {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #2f2a22;
+}
+
+.feature-desc {
+  font-family: "Barlow", sans-serif;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+/* ─── Divider ─── */
+.divider {
+  width: 60%;
+  height: 1px;
+  background: #c8c1b6;
+  margin: 6px 0;
+}
+
+/* ─── Form section ─── */
+.form-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.form-label {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #2f2a22;
+}
+
+.email-input {
+  width: 100%;
+  max-width: 380px;
+  padding: 12px 14px;
+  border: 3px solid #2f2a22;
+  background: #e9e4dc;
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-size: 1rem;
+  color: #29241d;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.email-input::placeholder {
+  color: #8a8174;
+}
+
+.email-input:focus {
+  border-color: rgb(46, 120, 139);
+}
+
+/* ─── Honeypot (invisible to humans) ─── */
+.hp-field {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  opacity: 0;
+  height: 0;
+  width: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* ─── Consent ─── */
+.consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 380px;
+  width: 100%;
+}
+
+.consent input[type="checkbox"] {
+  margin-top: 3px;
+  accent-color: rgb(46, 120, 139);
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.consent label {
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-size: 0.82rem;
+  color: #555;
+  line-height: 1.4;
+}
+
+.consent a {
+  color: rgb(46, 120, 139);
+  text-decoration: underline;
+}
+
+/* ─── Submit button ─── */
+.submit-btn {
+  width: 100%;
+  max-width: 380px;
+  padding: 14px;
+  background: rgb(46, 120, 139);
+  color: #fff;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.submit-btn:hover {
+  background: rgb(38, 100, 118);
+}
+
+.submit-btn:active {
+  transform: scale(0.98);
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ─── Form messages ─── */
+.form-msg {
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-size: 0.88rem;
+  text-align: center;
+  min-height: 1.3em;
+}
+
+.form-msg.success { color: rgb(46, 120, 139); }
+.form-msg.error { color: #b70000; }
+
+/* ─── Footer ─── */
+.footer {
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-size: 0.78rem;
+  color: #888;
+  text-align: center;
+  line-height: 1.6;
+  margin-top: 8px;
+}
+
+.footer a {
+  color: #888;
+  text-decoration: underline;
+}
+
+.footer a:hover {
+  color: rgb(46, 120, 139);
+}
+
+/* ─── Success state ─── */
+.success-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0;
+}
+
+.success-state .headline {
+  font-size: clamp(2rem, 6vw, 2.8rem);
+}
+
+.success-state .tagline {
+  font-size: 1.05rem;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 600px) {
+  .card {
+    width: 95vw;
+    padding: 32px 20px 24px;
+  }
+
+  .mascot {
+    width: 100px;
+    height: 100px;
+  }
+
+  .logo {
+    max-width: 220px;
+  }
+
+  .email-input,
+  .submit-btn,
+  .consent {
+    max-width: 100%;
+  }
+}
+
+/* ─── Privacy page ─── */
+.privacy-card {
+  width: min(680px, 92vw);
+  text-align: left;
+  align-items: flex-start;
+}
+
+.privacy-card h1 {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: clamp(1.8rem, 6vw, 2.5rem);
+  color: #29241d;
+  letter-spacing: 0.03em;
+  align-self: center;
+}
+
+.privacy-card h2 {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #2f2a22;
+  margin-top: 12px;
+}
+
+.privacy-card p,
+.privacy-card ul {
+  font-family: "Barlow", sans-serif;
+  font-size: 0.95rem;
+  color: #444;
+  line-height: 1.65;
+}
+
+.privacy-card ul {
+  padding-left: 20px;
+}
+
+.privacy-card li {
+  margin-bottom: 4px;
+}
+
+.privacy-card a {
+  color: rgb(46, 120, 139);
+  text-decoration: underline;
+}
+
+.back-link {
+  display: inline-block;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgb(46, 120, 139);
+  text-decoration: none;
+  margin-bottom: 8px;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
