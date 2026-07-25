@@ -14,7 +14,7 @@ export function NotificationBell() {
       <button className="notif-bell" onClick={() => setPanelOpen(true)} aria-label="Notifications">
         <Bell size={22} />
         {unreadCount > 0 && (
-          <span className="notif-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
+          <span className="notif-dot" />
         )}
       </button>
 

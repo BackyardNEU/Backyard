@@ -7,8 +7,7 @@ import { sendEmail } from './channels/email.js';
 import { sendPush } from './channels/push.js';
 
 const require = createRequire(import.meta.url);
-const _PgBoss = require('pg-boss');
-const PgBoss = _PgBoss.default || _PgBoss;
+const { PgBoss } = require('pg-boss');
 
 const HANDLERS = {
   friend_request:  () => import('./handlers/friendRequest.js'),
@@ -18,8 +17,12 @@ const HANDLERS = {
 export const boss = new PgBoss({ connectionString: process.env.DATABASE_URL });
 
 export async function startQueue() {
+  boss.on('error', (err) => console.error('[queue] pg-boss error:', err.message));
+
   await boss.start();
   console.log('[queue] pg-boss started');
+
+  await boss.createQueue('notifications.dispatch');
 
   await boss.work('notifications.dispatch', async ([job]) => {
     const event = job.data;
