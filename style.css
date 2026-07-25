@@ -2,6 +2,27 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 img { max-width: 100%; display: block; }
 
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ─── Animations ─── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
 /* ─── Page background ─── */
 .bg-wood {
   position: fixed;
@@ -17,17 +38,23 @@ img { max-width: 100%; display: block; }
 .bg-overlay {
   position: fixed;
   inset: 0;
-  background: linear-gradient(to bottom, rgba(248, 245, 239, 0.58), rgba(237, 232, 224, 0.72));
+  background: linear-gradient(
+    135deg,
+    rgba(248, 245, 239, 0.55) 0%,
+    rgba(237, 232, 224, 0.7) 50%,
+    rgba(228, 220, 210, 0.6) 100%
+  );
   z-index: -1;
 }
 
 /* ─── Page layout ─── */
 .page {
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 32px 16px;
+  padding: 20px;
   font-family: "Barlow", sans-serif;
   color: #29241d;
 }
@@ -35,15 +62,18 @@ img { max-width: 100%; display: block; }
 /* ─── Card ─── */
 .card {
   position: relative;
-  width: min(560px, 92vw);
+  width: min(520px, 94vw);
   background: #f5f1ea;
-  padding: 40px 32px 32px;
+  padding: 32px 30px 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  box-shadow: 0 18px 36px rgba(41, 36, 29, 0.22), 8px 10px 0 rgba(41, 36, 29, 0.12);
-  overflow: hidden;
+  gap: 0;
+  box-shadow:
+    0 18px 36px rgba(41, 36, 29, 0.22),
+    8px 10px 0 rgba(41, 36, 29, 0.12);
+  overflow: visible;
+  animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .card::before {
@@ -82,73 +112,81 @@ img { max-width: 100%; display: block; }
 
 /* ─── Logo ─── */
 .logo {
-  max-width: 280px;
+  max-width: 200px;
   mix-blend-mode: multiply;
+  animation: fadeIn 1s 0.2s both;
 }
 
 /* ─── Mascot ─── */
 .mascot {
-  width: 140px;
-  height: 140px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   border: 3px solid #2f2a22;
   object-fit: cover;
+  margin-top: 10px;
+  animation: fadeIn 1s 0.4s both;
 }
 
 /* ─── Typography ─── */
 .headline {
   font-family: "Bebas Neue", sans-serif;
-  font-size: clamp(2.5rem, 8vw, 3.5rem);
+  font-size: clamp(2.2rem, 7vw, 3rem);
   color: #29241d;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   text-align: center;
   line-height: 1;
-  margin-top: 4px;
+  margin-top: 10px;
+  animation: fadeUp 0.8s 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .tagline {
   font-family: "Barlow", sans-serif;
-  font-size: 1.15rem;
-  color: #29241d;
+  font-size: 1.05rem;
+  color: #555;
   text-align: center;
-  max-width: 400px;
-  line-height: 1.5;
+  max-width: 380px;
+  line-height: 1.45;
+  margin-top: 6px;
+  animation: fadeUp 0.8s 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* ─── Feature bullets ─── */
+/* ─── Features (compact horizontal) ─── */
 .features {
-  width: 100%;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 6px;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  animation: fadeUp 0.8s 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .feature {
   text-align: center;
+  flex: 0 1 auto;
+}
+
+.feature-icon {
+  font-size: 1.4rem;
+  margin-bottom: 2px;
 }
 
 .feature-label {
   font-family: "Barlow Condensed", sans-serif;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   color: #2f2a22;
-}
-
-.feature-desc {
-  font-family: "Barlow", sans-serif;
-  font-size: 0.95rem;
-  color: #555;
 }
 
 /* ─── Divider ─── */
 .divider {
-  width: 60%;
+  width: 50%;
   height: 1px;
-  background: #c8c1b6;
-  margin: 6px 0;
+  background: linear-gradient(90deg, transparent, #c8c1b6, transparent);
+  margin: 14px 0;
+  animation: fadeIn 1s 0.8s both;
 }
 
 /* ─── Form section ─── */
@@ -158,37 +196,77 @@ img { max-width: 100%; display: block; }
   flex-direction: column;
   align-items: center;
   gap: 10px;
+  animation: fadeUp 0.8s 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .form-label {
   font-family: "Barlow Condensed", sans-serif;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: #2f2a22;
 }
 
-.email-input {
+/* ─── Input row (input + button side by side) ─── */
+.input-row {
+  display: flex;
   width: 100%;
-  max-width: 380px;
-  padding: 12px 14px;
-  border: 3px solid #2f2a22;
+  max-width: 400px;
+  gap: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 2.5px solid #2f2a22;
   background: #e9e4dc;
-  font-family: "Be Vietnam Pro", sans-serif;
-  font-size: 1rem;
-  color: #29241d;
-  border-radius: 6px;
-  outline: none;
   transition: border-color 0.2s;
+}
+
+.input-row:focus-within {
+  border-color: rgb(46, 120, 139);
+}
+
+.email-input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-size: 0.95rem;
+  color: #29241d;
+  outline: none;
 }
 
 .email-input::placeholder {
   color: #8a8174;
 }
 
-.email-input:focus {
-  border-color: rgb(46, 120, 139);
+.submit-btn {
+  padding: 12px 22px;
+  background: rgb(46, 120, 139);
+  color: #fff;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.submit-btn:hover {
+  background: rgb(38, 100, 118);
+}
+
+.submit-btn:active {
+  background: rgb(30, 85, 100);
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* ─── Honeypot (invisible to humans) ─── */
@@ -207,23 +285,23 @@ img { max-width: 100%; display: block; }
 .consent {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  max-width: 380px;
+  gap: 6px;
+  max-width: 400px;
   width: 100%;
 }
 
 .consent input[type="checkbox"] {
-  margin-top: 3px;
+  margin-top: 2px;
   accent-color: rgb(46, 120, 139);
   flex-shrink: 0;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
 .consent label {
   font-family: "Be Vietnam Pro", sans-serif;
-  font-size: 0.82rem;
-  color: #555;
+  font-size: 0.72rem;
+  color: #777;
   line-height: 1.4;
 }
 
@@ -232,43 +310,12 @@ img { max-width: 100%; display: block; }
   text-decoration: underline;
 }
 
-/* ─── Submit button ─── */
-.submit-btn {
-  width: 100%;
-  max-width: 380px;
-  padding: 14px;
-  background: rgb(46, 120, 139);
-  color: #fff;
-  font-family: "Barlow Condensed", sans-serif;
-  font-weight: 600;
-  font-size: 1.05rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  border: none;
-  border-radius: 999px;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
-}
-
-.submit-btn:hover {
-  background: rgb(38, 100, 118);
-}
-
-.submit-btn:active {
-  transform: scale(0.98);
-}
-
-.submit-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 /* ─── Form messages ─── */
 .form-msg {
   font-family: "Be Vietnam Pro", sans-serif;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   text-align: center;
-  min-height: 1.3em;
+  min-height: 1.2em;
 }
 
 .form-msg.success { color: rgb(46, 120, 139); }
@@ -277,20 +324,38 @@ img { max-width: 100%; display: block; }
 /* ─── Footer ─── */
 .footer {
   font-family: "Be Vietnam Pro", sans-serif;
-  font-size: 0.78rem;
-  color: #888;
+  font-size: 0.7rem;
+  color: #aaa;
   text-align: center;
-  line-height: 1.6;
-  margin-top: 8px;
+  margin-top: 12px;
+  animation: fadeIn 1s 1s both;
 }
 
 .footer a {
-  color: #888;
-  text-decoration: underline;
+  color: #999;
+  text-decoration: none;
 }
 
 .footer a:hover {
   color: rgb(46, 120, 139);
+  text-decoration: underline;
+}
+
+.footer-sep {
+  margin: 0 6px;
+  color: #ccc;
+}
+
+/* ─── Raccoon peek (decorative) ─── */
+.raccoon-peek {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  width: 90px;
+  opacity: 0.92;
+  pointer-events: none;
+  z-index: 3;
+  animation: fadeIn 1s 1s both;
 }
 
 /* ─── Success state ─── */
@@ -298,42 +363,220 @@ img { max-width: 100%; display: block; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 20px 0;
+  gap: 10px;
+  padding: 16px 0;
+  animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.success-raccoon {
+  width: 150px;
+  animation: float 3s ease-in-out infinite;
 }
 
 .success-state .headline {
-  font-size: clamp(2rem, 6vw, 2.8rem);
+  font-size: clamp(1.8rem, 6vw, 2.5rem);
+  animation: none;
 }
 
 .success-state .tagline {
-  font-size: 1.05rem;
+  font-size: 1rem;
+  animation: none;
 }
 
 /* ─── Responsive ─── */
 @media (max-width: 600px) {
+  .page { padding: 12px; }
+
   .card {
-    width: 95vw;
-    padding: 32px 20px 24px;
+    width: 96vw;
+    padding: 28px 18px 20px;
   }
 
-  .mascot {
-    width: 100px;
-    height: 100px;
-  }
+  .logo { max-width: 160px; }
 
-  .logo {
-    max-width: 220px;
-  }
+  .mascot { width: 76px; height: 76px; }
 
-  .email-input,
-  .submit-btn,
-  .consent {
-    max-width: 100%;
+  .features { gap: 14px; }
+
+  .input-row { max-width: 100%; }
+
+  .raccoon-peek {
+    width: 65px;
+    bottom: -6px;
+    right: -8px;
   }
 }
 
-/* ─── Privacy page ─── */
+@media (max-height: 700px) {
+  .card { padding: 24px 24px 18px; }
+
+  .mascot {
+    width: 70px;
+    height: 70px;
+    margin-top: 6px;
+  }
+
+  .headline {
+    font-size: clamp(1.8rem, 6vw, 2.4rem);
+    margin-top: 6px;
+  }
+
+  .tagline { font-size: 0.95rem; margin-top: 4px; }
+  .features { margin-top: 8px; }
+  .divider { margin: 8px 0; }
+  .raccoon-peek { width: 70px; }
+}
+
+/* ─── Privacy Modal ─── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(41, 36, 29, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+
+.modal-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-card {
+  position: relative;
+  width: min(560px, 94vw);
+  max-height: 80vh;
+  background: #f5f1ea;
+  padding: 32px 28px 24px;
+  box-shadow:
+    0 20px 60px rgba(41, 36, 29, 0.35),
+    8px 10px 0 rgba(41, 36, 29, 0.12);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(20px) scale(0.97);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-overlay.open .modal-card {
+  transform: translateY(0) scale(1);
+}
+
+.modal-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url('./assets/white-paper-texture.jpg');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.58;
+  filter: contrast(0.92) brightness(1.05);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.modal-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  color: #555;
+  cursor: pointer;
+  z-index: 2;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 0.2s, background 0.2s;
+}
+
+.modal-close:hover {
+  color: #29241d;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.modal-card h1 {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 1.8rem;
+  color: #29241d;
+  letter-spacing: 0.03em;
+  text-align: center;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.modal-body {
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 8px;
+}
+
+.modal-body h2 {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #2f2a22;
+  margin-top: 14px;
+  margin-bottom: 4px;
+}
+
+.modal-body p,
+.modal-body ul {
+  font-family: "Barlow", sans-serif;
+  font-size: 0.9rem;
+  color: #444;
+  line-height: 1.6;
+}
+
+.modal-body ul {
+  padding-left: 18px;
+}
+
+.modal-body li {
+  margin-bottom: 3px;
+}
+
+.modal-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: #c8c1b6;
+  border-radius: 3px;
+}
+
+/* ─── Privacy page (scrollable, fallback for direct URL) ─── */
+html:has(.privacy-page),
+html:has(.privacy-page) body {
+  height: auto;
+  overflow: auto;
+}
+
+.privacy-page {
+  height: auto;
+  min-height: 100vh;
+  overflow-y: auto;
+  padding: 32px 16px;
+}
+
 .privacy-card {
   width: min(680px, 92vw);
   text-align: left;
@@ -366,13 +609,8 @@ img { max-width: 100%; display: block; }
   line-height: 1.65;
 }
 
-.privacy-card ul {
-  padding-left: 20px;
-}
-
-.privacy-card li {
-  margin-bottom: 4px;
-}
+.privacy-card ul { padding-left: 20px; }
+.privacy-card li { margin-bottom: 4px; }
 
 .privacy-card a {
   color: rgb(46, 120, 139);
@@ -390,6 +628,4 @@ img { max-width: 100%; display: block; }
   margin-bottom: 8px;
 }
 
-.back-link:hover {
-  text-decoration: underline;
-}
+.back-link:hover { text-decoration: underline; }

@@ -23,60 +23,54 @@
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <!-- Background layers -->
   <div class="bg-wood" aria-hidden="true"></div>
   <div class="bg-overlay" aria-hidden="true"></div>
 
   <main class="page">
     <div class="card" id="main-card">
-      <!-- Pins -->
       <div class="pin pin-left" aria-hidden="true"></div>
       <div class="pin pin-right" aria-hidden="true"></div>
 
-      <!-- Logo -->
       <img src="/assets/header_logo.png" alt="Backyard" class="logo">
-
-      <!-- Mascot -->
       <img src="/assets/raccoon_pfp.png" alt="Backyard mascot" class="mascot">
 
-      <!-- Headline -->
       <h1 class="headline">Coming Soon</h1>
       <p class="tagline">Discover clubs. Find your people. Explore your campus.</p>
 
-      <!-- Features -->
       <div class="features">
         <div class="feature">
-          <span class="feature-label">Browse Every Club</span>
-          <span class="feature-desc"> — See descriptions, events, and honest reviews</span>
+          <div class="feature-icon">&#x1F50D;</div>
+          <div class="feature-label">Browse Clubs</div>
         </div>
         <div class="feature">
-          <span class="feature-label">Connect With Friends</span>
-          <span class="feature-desc"> — Find out what your friends have joined</span>
+          <div class="feature-icon">&#x1F91D;</div>
+          <div class="feature-label">Find Friends</div>
         </div>
         <div class="feature">
-          <span class="feature-label">Never Miss an Event</span>
-          <span class="feature-desc"> — Calendar sync for everything happening on campus</span>
+          <div class="feature-icon">&#x1F4C5;</div>
+          <div class="feature-label">Track Events</div>
         </div>
       </div>
 
       <div class="divider" aria-hidden="true"></div>
 
-      <!-- Email signup form -->
       <form class="form-section" id="signup-form" novalidate>
         <span class="form-label">Get notified when we launch</span>
 
-        <input
-          type="email"
-          name="email"
-          class="email-input"
-          placeholder="you@university.edu"
-          required
-          maxlength="254"
-          autocomplete="email"
-          aria-label="Email address"
-        >
+        <div class="input-row">
+          <input
+            type="email"
+            name="email"
+            class="email-input"
+            placeholder="you@email.com"
+            required
+            maxlength="254"
+            autocomplete="email"
+            aria-label="Email address"
+          >
+          <button type="submit" class="submit-btn" id="submit-btn">Join</button>
+        </div>
 
-        <!-- Honeypot: invisible to real users, bots auto-fill it -->
         <input
           type="text"
           name="website"
@@ -90,22 +84,102 @@
           <input type="checkbox" id="consent-check" required>
           <label for="consent-check">
             I agree to receive email updates from Backyard. View our
-            <a href="/privacy" target="_blank" rel="noopener">privacy policy</a>.
+            <a href="#" class="privacy-link">privacy policy</a>.
           </label>
         </div>
-
-        <button type="submit" class="submit-btn" id="submit-btn">Join the Waitlist</button>
 
         <p class="form-msg" id="form-msg" role="status" aria-live="polite"></p>
       </form>
 
-      <!-- Footer -->
       <div class="footer">
-        <a href="/privacy">Privacy Policy</a><br>
+        <a href="#" class="privacy-link">Privacy Policy</a>
+        <span class="footer-sep">&#x2022;</span>
         Built with care at Northeastern
       </div>
+
+      <img src="/assets/raccoon.png" alt="" class="raccoon-peek" aria-hidden="true">
     </div>
   </main>
+
+  <!-- Privacy Policy Modal -->
+  <div class="modal-overlay" id="privacy-modal" aria-hidden="true" role="dialog" aria-label="Privacy Policy">
+    <div class="modal-card">
+      <button class="modal-close" id="modal-close" aria-label="Close">&times;</button>
+
+      <h1>Privacy Policy</h1>
+
+      <div class="modal-body">
+        <h2>Introduction</h2>
+        <p>
+          Backyard ("we", "us", "our") operates the website at explorethebackyard.com.
+          This policy explains how we handle your personal data when you sign up for our launch
+          waitlist. We are committed to protecting your privacy and being transparent about our practices.
+        </p>
+
+        <h2>What We Collect</h2>
+        <p>
+          We collect only your <strong>email address</strong>, provided voluntarily through our
+          newsletter signup form.
+        </p>
+
+        <h2>Why We Collect It</h2>
+        <p>
+          We use your email address solely to send you launch announcements and occasional product
+          updates about Backyard. We will never sell, rent, or share your email address with third
+          parties for marketing purposes.
+        </p>
+
+        <h2>How We Store It</h2>
+        <p>
+          Email addresses are stored securely by Resend, a third-party email service provider
+          based in the United States. Resend maintains industry-standard security practices to
+          protect your data.
+        </p>
+
+        <h2>Consent</h2>
+        <p>
+          We only collect your email address when you explicitly opt in by completing the signup
+          form and checking the consent box. You may withdraw your consent at any time.
+        </p>
+
+        <h2>Your Rights</h2>
+        <ul>
+          <li><strong>Unsubscribe:</strong> Every email we send includes an unsubscribe link. Click it to stop receiving emails immediately.</li>
+          <li><strong>Deletion:</strong> To request complete removal of your data, email us at explorethebackyard2025@gmail.com.</li>
+          <li><strong>Access:</strong> You may request a copy of the personal data we hold about you by contacting us at the same email address.</li>
+        </ul>
+
+        <h2>Third-Party Services</h2>
+        <ul>
+          <li><strong>Resend</strong> — email delivery and contact management</li>
+          <li><strong>Vercel</strong> — website hosting</li>
+        </ul>
+        <p>We do not use analytics, tracking pixels, or cookies on this website.</p>
+
+        <h2>Children's Privacy</h2>
+        <p>
+          Backyard is intended for university students aged 18 and older. We do not knowingly
+          collect personal data from anyone under the age of 13.
+        </p>
+
+        <h2>Changes to This Policy</h2>
+        <p>
+          We may update this privacy policy from time to time. Any changes will be posted on this
+          page with an updated effective date.
+        </p>
+
+        <h2>Contact</h2>
+        <p>
+          If you have questions about this privacy policy or your data, contact us at
+          explorethebackyard2025@gmail.com.
+        </p>
+
+        <p style="margin-top: 16px; font-size: 0.85rem; color: #888;">
+          <em>Last updated: July 25, 2026</em>
+        </p>
+      </div>
+    </div>
+  </div>
 
   <noscript>
     <style>.form-section { display: none; }</style>
@@ -116,6 +190,38 @@
 
   <script>
     (function () {
+      // Privacy modal
+      var modal = document.getElementById('privacy-modal');
+      var closeBtn = document.getElementById('modal-close');
+
+      document.addEventListener('click', function (e) {
+        if (e.target.classList.contains('privacy-link')) {
+          e.preventDefault();
+          modal.classList.add('open');
+          modal.setAttribute('aria-hidden', 'false');
+        }
+      });
+
+      closeBtn.addEventListener('click', function () {
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+      });
+
+      modal.addEventListener('click', function (e) {
+        if (e.target === modal) {
+          modal.classList.remove('open');
+          modal.setAttribute('aria-hidden', 'true');
+        }
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && modal.classList.contains('open')) {
+          modal.classList.remove('open');
+          modal.setAttribute('aria-hidden', 'true');
+        }
+      });
+
+      // Signup form
       var form = document.getElementById('signup-form');
       var msg = document.getElementById('form-msg');
       var btn = document.getElementById('submit-btn');
@@ -142,7 +248,7 @@
         }
 
         btn.disabled = true;
-        btn.textContent = 'Joining...';
+        btn.textContent = '...';
 
         fetch('/api/subscribe', {
           method: 'POST',
@@ -157,25 +263,27 @@
                 '<div class="pin pin-left" aria-hidden="true"></div>' +
                 '<div class="pin pin-right" aria-hidden="true"></div>' +
                 '<div class="success-state">' +
-                  '<img src="/assets/raccoon.png" alt="Backyard raccoon" style="width:180px;">' +
+                  '<img src="/assets/raccoon.png" alt="Backyard raccoon" class="success-raccoon">' +
                   '<h1 class="headline">You\'re on the list!</h1>' +
                   '<p class="tagline">We\'ll let you know as soon as Backyard launches. See you on campus.</p>' +
                 '</div>' +
                 '<div class="footer">' +
-                  '<a href="/privacy">Privacy Policy</a><br>Built with care at Northeastern' +
+                  '<a href="/privacy">Privacy Policy</a>' +
+                  '<span class="footer-sep">&#x2022;</span>' +
+                  'Built with care at Northeastern' +
                 '</div>';
             } else {
               msg.textContent = result.data.error || 'Something went wrong. Please try again.';
               msg.className = 'form-msg error';
               btn.disabled = false;
-              btn.textContent = 'Join the Waitlist';
+              btn.textContent = 'Join';
             }
           })
           .catch(function () {
             msg.textContent = 'Something went wrong. Please try again.';
             msg.className = 'form-msg error';
             btn.disabled = false;
-            btn.textContent = 'Join the Waitlist';
+            btn.textContent = 'Join';
           });
       });
     })();
