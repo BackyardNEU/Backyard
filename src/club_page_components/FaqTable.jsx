@@ -2,8 +2,8 @@ import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from
 
 /* palette pulled from the mockup */
 const BLUE = "#da0000ff";
-const ROW_A = "#16193C";
-const ROW_B = "#252951ff";
+const ROW_A = "#3b4b6c";
+const ROW_B = "#51658dff";
 const INK = "#CFD2E5";
 const MUTED = "#ffffffff";
 const VLINE = "#ffffffff";
@@ -135,7 +135,7 @@ export default function FaqTable({ faqs = [], onChange, userQuestions = [], onAc
       </div>
 
       <div style={{ overflowX: "auto" }}>
-        <div style={{ minWidth: 760, border: `2px solid ${VLINE}`, borderRadius: 15, overflow: "hidden", background: "#fff" }}>
+        <div style={{ minWidth: 760, border: `2px solid ${VLINE}`,  overflow: "hidden", background: "#fff" }}>
           {/* ===== user questions (submitted) ===== */}
           <Section visible={USER_VISIBLE}>
             {padTo(userQuestions, USER_VISIBLE).map((row, i) =>
