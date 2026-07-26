@@ -20,5 +20,14 @@ export async function uploadImage(file) {
     headers: { 'Content-Type': file.type || 'application/octet-stream' },
   });
   if (!res.ok) throw new Error(`Upload failed (${res.status})`);
+
+  const verification = await apiFetch('/storage/verify-image', {
+    method: 'POST',
+    body: { publicUrl },
+  });
+  if (!verification.ok) {
+    throw new Error(verification.error || 'Image rejected by content policy');
+  }
+
   return publicUrl;
 }
