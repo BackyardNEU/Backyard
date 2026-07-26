@@ -7,6 +7,7 @@ import { apiFetch } from '../lib/api';
 import { supabase } from '../lib/supabase';
 import '../club_page_components/CalendarModule.css';
 import './CalendarPage.css';
+import treeImg from '/src/assets/tree.png';
 
 const WEEK_DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
@@ -24,8 +25,10 @@ export function CalendarPage({ onClose }) {
   const [displayMonth, setDisplayMonth] = useState(todayDate.getMonth() + 1);
   const [monthlyEvents, setMonthlyEvents] = useState([]);
   const [monthlyMyRsvpSet, setMonthlyMyRsvpSet] = useState(new Set());
+  const [nextMonthlyEvents, setNextMonthlyEvents] = useState([]);
+  const [nextMonthlyMyRsvpSet, setNextMonthlyMyRsvpSet] = useState(new Set());
   const [monthlyLoading, setMonthlyLoading] = useState(false);
-  const [selectedDay, setSelectedDay] = useState(null);
+  const [selectedDayInfo, setSelectedDayInfo] = useState(null); // { year, month, day } | null
 
   const containerRef = useRef(null);
   const handleWheel = useCallback((e) => {
@@ -59,7 +62,6 @@ export function CalendarPage({ onClose }) {
     init();
   }, []);
 
-  console.log('weeklyEvents:', weeklyEvents);
   const weekDays = useMemo(() => {
     return Array.from({ length: 7 }, (_, i) => {
       const date = addDays(todayDate, i);
@@ -73,32 +75,54 @@ export function CalendarPage({ onClose }) {
   useEffect(() => {
     if (viewMode !== 'month' || !userId) return;
     let cancelled = false;
+    const nextDate = new Date(displayYear, displayMonth, 1); // displayMonth is 1-based, so this rolls to next month
+    const nextYear = nextDate.getFullYear();
+    const nextMonthNum = nextDate.getMonth() + 1;
+
+    async function fetchClubEventsForMonth(memberList, year, month) {
+      const settled = await Promise.allSettled(
+        memberList.map(clubId =>
+          apiFetch(`/clubs/${clubId}/events/monthly?year=${year}&month=${month}`)
+            .then(evts => (evts || []).map(e => ({ ...e, club_id: clubId })))
+        )
+      );
+      return settled.filter(r => r.status === 'fulfilled').flatMap(r => r.value);
+    }
+
+    async function buildRsvpSet(events) {
+      if (!events.length) return new Set();
+      const ids = events.map(e => e.id);
+      const rsvps = await apiFetch(`/events/rsvps?eventIds=${ids.join(',')}`);
+      return new Set((rsvps || []).filter(r => r.user_id === userId).map(r => r.event_id));
+    }
+
     async function fetchMonthly() {
       setMonthlyLoading(true);
       try {
         const profile = await apiFetch('/me/profile');
         const memberList = profile?.member_list || [];
         if (!memberList.length) {
-          if (!cancelled) { setMonthlyEvents([]); setMonthlyLoading(false); }
+          if (!cancelled) {
+            setMonthlyEvents([]);
+            setNextMonthlyEvents([]);
+            setMonthlyLoading(false);
+          }
           return;
         }
-        const settled = await Promise.allSettled(
-          memberList.map(clubId =>
-            apiFetch(`/clubs/${clubId}/events/monthly?year=${displayYear}&month=${displayMonth}`)
-              .then(evts => (evts || []).map(e => ({ ...e, club_id: clubId })))
-          )
-        );
+        const [currentEvents, nextEvents] = await Promise.all([
+          fetchClubEventsForMonth(memberList, displayYear, displayMonth),
+          fetchClubEventsForMonth(memberList, nextYear, nextMonthNum),
+        ]);
         if (cancelled) return;
-        const allEvents = settled.filter(r => r.status === 'fulfilled').flatMap(r => r.value);
-        setMonthlyEvents(allEvents);
-        if (allEvents.length) {
-          const ids = allEvents.map(e => e.id);
-          const rsvps = await apiFetch(`/events/rsvps?eventIds=${ids.join(',')}`);
-          if (!cancelled) {
-            setMonthlyMyRsvpSet(new Set(
-              (rsvps || []).filter(r => r.user_id === userId).map(r => r.event_id)
-            ));
-          }
+        setMonthlyEvents(currentEvents);
+        setNextMonthlyEvents(nextEvents);
+        const [currentRsvp, nextRsvp] = await Promise.all([
+          buildRsvpSet(currentEvents),
+          buildRsvpSet(nextEvents),
+        ]);
+        if (!cancelled) {
+          setMonthlyMyRsvpSet(currentRsvp);
+          setNextMonthlyMyRsvpSet(nextRsvp);
         }
       } catch (err) {
         console.error('Monthly events fetch failed:', err);
@@ -124,40 +148,45 @@ export function CalendarPage({ onClose }) {
     } catch (err) { console.error('Weekly RSVP failed:', err); }
   };
 
-  const handleMonthlyRsvp = async (eventId, isGoing) => {
-    const event = monthlyEvents.find(e => e.id === eventId);
+  const handleMonthlyRsvpFor = (eventsPool, setRsvpSet) => async (eventId, isGoing) => {
+    const event = eventsPool.find(e => e.id === eventId);
     if (!event?.club_id) return;
     try {
       if (isGoing) {
         await apiFetch(`/clubs/${event.club_id}/events/${eventId}/rsvp`, { method: 'DELETE' });
-        setMonthlyMyRsvpSet(prev => { const s = new Set(prev); s.delete(eventId); return s; });
+        setRsvpSet(prev => { const s = new Set(prev); s.delete(eventId); return s; });
       } else {
         await apiFetch(`/clubs/${event.club_id}/events/${eventId}/rsvp`, { method: 'POST' });
-        setMonthlyMyRsvpSet(prev => new Set([...prev, eventId]));
+        setRsvpSet(prev => new Set([...prev, eventId]));
       }
     } catch (err) { console.error('Monthly RSVP failed:', err); }
   };
+  const handleMonthlyRsvp = handleMonthlyRsvpFor(monthlyEvents, setMonthlyMyRsvpSet);
+  const handleNextMonthlyRsvp = handleMonthlyRsvpFor(nextMonthlyEvents, setNextMonthlyMyRsvpSet);
 
-  const monthlyEventsByDay = new Map();
-  for (const event of monthlyEvents) {
-    const d = parseISO(event.start_time);
-    if (d.getFullYear() === displayYear && d.getMonth() + 1 === displayMonth) {
-      const dayNum = d.getDate();
-      if (!monthlyEventsByDay.has(dayNum)) monthlyEventsByDay.set(dayNum, []);
-      monthlyEventsByDay.get(dayNum).push(event);
+  function buildEventsByDay(events, year, month) {
+    const map = new Map();
+    for (const event of events) {
+      const d = parseISO(event.start_time);
+      if (d.getFullYear() === year && d.getMonth() + 1 === month) {
+        const dayNum = d.getDate();
+        if (!map.has(dayNum)) map.set(dayNum, []);
+        map.get(dayNum).push(event);
+      }
     }
+    for (const [, evts] of map) evts.sort((a, b) => parseISO(a.start_time) - parseISO(b.start_time));
+    return map;
   }
-  for (const [, evts] of monthlyEventsByDay) evts.sort((a, b) => parseISO(a.start_time) - parseISO(b.start_time));
 
   function navigateMonth(delta) {
     const d = new Date(displayYear, displayMonth - 1 + delta, 1);
     setDisplayYear(d.getFullYear());
     setDisplayMonth(d.getMonth() + 1);
-    setSelectedDay(null);
+    setSelectedDayInfo(null);
   }
 
-  function getMonthGrid() {
-    const firstDay = new Date(displayYear, displayMonth - 1, 1);
+  function getMonthGrid(year, month) {
+    const firstDay = new Date(year, month - 1, 1);
     const offset = getDay(firstDay);
     const totalDays = getDaysInMonth(firstDay);
     return [...Array(offset).fill(null), ...Array.from({ length: totalDays }, (_, i) => i + 1)];
@@ -171,134 +200,153 @@ export function CalendarPage({ onClose }) {
     return hasEvents ? 'cal-day-has-events' : 'cal-day-normal';
   }
 
-  const cells = getMonthGrid();
   const monthDisplayDate = new Date(displayYear, displayMonth - 1, 1);
-  const selectedDayEvents = selectedDay ? (monthlyEventsByDay.get(selectedDay) || []) : [];
+  const nextMonthDate = new Date(displayYear, displayMonth, 1);
+  const nextYear = nextMonthDate.getFullYear();
+  const nextMonthNum = nextMonthDate.getMonth() + 1;
+
+  const monthlyEventsByDay = buildEventsByDay(monthlyEvents, displayYear, displayMonth);
+  const nextMonthlyEventsByDay = buildEventsByDay(nextMonthlyEvents, nextYear, nextMonthNum);
+
+  const cells = getMonthGrid(displayYear, displayMonth);
+  const nextCells = getMonthGrid(nextYear, nextMonthNum);
+
+  const isSelectedInNextMonth = selectedDayInfo && selectedDayInfo.year === nextYear && selectedDayInfo.month === nextMonthNum;
+  const selectedDayEvents = selectedDayInfo
+    ? (isSelectedInNextMonth
+        ? (nextMonthlyEventsByDay.get(selectedDayInfo.day) || [])
+        : (monthlyEventsByDay.get(selectedDayInfo.day) || []))
+    : [];
+  const selectedDayRsvpSet = isSelectedInNextMonth ? nextMonthlyMyRsvpSet : monthlyMyRsvpSet;
+  const selectedDayRsvpHandler = isSelectedInNextMonth ? handleNextMonthlyRsvp : handleMonthlyRsvp;
 
   if (status === 'loading') {
     return (
-      <div className="cal-page-overlay">
-        <div className="cal-page-card">
-          <p className="cal-loading">Loading events…</p>
-        </div>
+      <div className="calpg-card">
+        <p className="cal-loading">Loading events…</p>
       </div>
     );
   }
 
   if (status === 'unauthed') {
     return (
-      <div className="cal-page-overlay" onClick={onClose}>
-        <div className="cal-page-card" onClick={e => e.stopPropagation()}>
-          <button className="cal-page-close" onClick={onClose}>✕</button>
-          <p className="cal-unauthed-msg">Sign in to see your club events.</p>
-        </div>
+      <div className="calpg-card">
+        <button className="calpg-close" onClick={onClose}>✕</button>
+        <p className="cal-unauthed-msg">Sign in to see your club events.</p>
       </div>
     );
   }
 
+  const headerDate = viewMode === 'month' ? monthDisplayDate : todayDate;
+
   return (
-    <div className="cal-page-overlay" onClick={onClose}>
-      <div className="cal-page-card" onClick={e => e.stopPropagation()}>
-        <button className="cal-page-close" onClick={onClose}>✕</button>
-
-        <p className="divider-header">Events</p>
-
-        <div className="cal-view-toggle">
-          <button
-            className={`cal-toggle-btn${viewMode === 'week' ? ' cal-toggle-active' : ''}`}
-            onClick={() => setViewMode('week')}
-          >Week</button>
-          <button
-            className={`cal-toggle-btn${viewMode === 'month' ? ' cal-toggle-active' : ''}`}
-            onClick={() => setViewMode('month')}
-          >Month</button>
-        </div>
-
-        {viewMode === 'week' && (
-          <>
-            <h1 className="current-month">{format(todayDate, 'MMMM')}</h1>
-            <div
-              className="calendar-container"
-              ref={containerRef}
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-            >
-              {weekDays.map(day => (
-                <div key={day.date.toISOString()} className={`calendar-day${day.isToday ? ' today' : ''}`}>
-                  <div className="day-title-number">
-                    <span>{day.label}</span>
-                    <span>{day.sublabel}</span>
-                  </div>
-                  {day.events.length === 0 ? (
-                    <p>No events</p>
-                  ) : (
-                    day.events.map(event => (
-                      <div key={event.id} className="calendar-event">
-                        {event.event_image_url && <img className="club-img" src={event.event_image_url} alt="" />}
-                        <div className="club-name">{event.club_name}</div>
-                        <div className="event-description">
-                          <p>about<span className="club-info">{event.event_description}</span></p>
-                        </div>
-                        <div>
-                          <span>time </span>
-                          <span className="club-info">
-                            {format(parseISO(event.start_time), 'h:mm a')} – {format(parseISO(event.end_time), 'h:mm a')}
-                          </span>
-                        </div>
-                        {userId && event.club_id && (
-                          <button
-                            className="rsvp-button"
-                            onClick={() => handleWeeklyRsvp(event.id, myRsvpSet.has(event.id))}
-                          >
-                            {myRsvpSet.has(event.id) ? 'Going ✓' : "I'm going!"}
-                          </button>
-                        )}
-                      </div>
-                    ))
-                  )}
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        {viewMode === 'month' && (
-          <div className="cal-monthly-card">
-            <div className="cal-monthly-tree">
-              <img src="/raccoon_pfp.png" alt="seasonal tree" className="cal-tree-img" />
-            </div>
-            <div className="cal-monthly-header">
-              <span className="cal-month-name">{format(monthDisplayDate, 'MMM').toUpperCase()}</span>
+    <>
+      <div className="calpg-card">
+        <button className="calpg-close" onClick={onClose}>✕</button>
+        <div className="calpg-header">
+          <div className="calpg-tree-wrap">
+            <img src={treeImg} alt="" className="calpg-tree-img" />
+          </div>
+          <div className={`calpg-month-row calpg-align-row${viewMode === 'month' ? ' calpg-month-row-monthly' : ''}`}>
+            <h1 className={`calpg-month${viewMode === 'month' ? ' calpg-month-monthly' : ''}`}>
+              <span className="calpg-month-full">{format(headerDate, 'MMMM')}</span>
+              <span className="calpg-month-abbr">{format(headerDate, 'MMM').toUpperCase()}</span>
+              {viewMode === 'month' && (
+                <span className="calpg-month-range">
+                  {format(monthDisplayDate, 'MMMM')} – {format(nextMonthDate, 'MMMM')}
+                </span>
+              )}
+            </h1>
               <div className="cal-month-nav">
                 <button className="cal-nav-btn" onClick={() => navigateMonth(-1)}>‹</button>
                 <button className="cal-nav-btn" onClick={() => navigateMonth(1)}>›</button>
               </div>
-            </div>
-            {monthlyLoading ? (
-              <p className="cal-loading">Loading…</p>
-            ) : (
-              <div className="cal-grid">
-                {WEEK_DAYS.map((d, i) => <div key={i} className="cal-weekday-label">{d}</div>)}
+          </div>
+        </div>
+        {viewMode === 'week' && (
+          <div
+            className="calendar-container calpg-week-row"
+            ref={containerRef}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
+            {weekDays.map(day => (
+              <div key={day.date.toISOString()} className={`calendar-day calpg-week-day${day.isToday ? ' today' : ''}`}>
+                <div className="day-title-number calpg-day-title">
+                  <span className="calpg-day-label">{day.label}</span>
+                  <span className="calpg-day-num">{day.sublabel}</span>
+                </div>
+                {day.events.length === 0 ? (
+                  <p>No events</p>
+                ) : (
+                  day.events.map(event => (
+                    <div key={event.id} className="calendar-event">
+                      {event.event_image_url && <img className="club-img" src={event.event_image_url} alt="" />}
+                      <div className="club-name">{event.club_name}</div>
+                      <div className="event-description">
+                        <p>about<span className="club-info">{event.event_description}</span></p>
+                      </div>
+                      <div>
+                        <span>time </span>
+                        <span className="club-info">
+                          {format(parseISO(event.start_time), 'h:mm a')} – {format(parseISO(event.end_time), 'h:mm a')}
+                        </span>
+                      </div>
+                      {userId && event.club_id && (
+                        <button
+                          className="rsvp-button"
+                          onClick={() => handleWeeklyRsvp(event.id, myRsvpSet.has(event.id))}
+                        >
+                          {myRsvpSet.has(event.id) ? 'Going ✓' : "I'm going!"}
+                        </button>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        {viewMode === 'month' && (
+          monthlyLoading ? (
+            <p className="cal-loading">Loading…</p>
+          ) : (
+            <div className="calpg-align-row calpg-dual-grid-row">
+              <div className="cal-grid calpg-grid-panel">
+                {WEEK_DAYS.map((d, i) => <div key={i} className="cal-weekday-label calpg-weekday-label">{d}</div>)}
                 {cells.map((dayNum, i) => (
                   <div
                     key={i}
-                    className={`cal-day-cell${dayNum ? ` ${getDayClass(dayNum)}` : ' cal-day-empty'}`}
-                    onClick={dayNum && monthlyEventsByDay.has(dayNum) ? () => setSelectedDay(dayNum) : undefined}
+                    className={`cal-day-cell${dayNum ? ` ${getDayClass(displayYear, displayMonth, dayNum, monthlyEventsByDay)}` : ' cal-day-empty'}`}
+                    onClick={dayNum && monthlyEventsByDay.has(dayNum) ? () => setSelectedDayInfo({ year: displayYear, month: displayMonth, day: dayNum }) : undefined}
                   >
                     {dayNum || ''}
                   </div>
                 ))}
               </div>
-            )}
-          </div>
+              <div className="calpg-grid-divider" aria-hidden="true" />
+              <div className="cal-grid calpg-grid-panel calpg-grid-panel-next">
+                {WEEK_DAYS.map((d, i) => <div key={`next-${i}`} className="cal-weekday-label calpg-weekday-label">{d}</div>)}
+                {nextCells.map((dayNum, i) => (
+                  <div
+                    key={i}
+                    className={`cal-day-cell${dayNum ? ` ${getDayClass(nextYear, nextMonthNum, dayNum, nextMonthlyEventsByDay)}` : ' cal-day-empty'}`}
+                    onClick={dayNum && nextMonthlyEventsByDay.has(dayNum) ? () => setSelectedDayInfo({ year: nextYear, month: nextMonthNum, day: dayNum }) : undefined}
+                  >
+                    {dayNum || ''}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
         )}
 
-        {selectedDay !== null && (
-          <div className="cal-overlay-backdrop" onClick={() => setSelectedDay(null)}>
+        {selectedDayInfo !== null && (
+          <div className="cal-overlay-backdrop" onClick={() => setSelectedDayInfo(null)}>
             <div className="cal-overlay-portrait" onClick={e => e.stopPropagation()}>
-              <button className="cal-overlay-close" onClick={() => setSelectedDay(null)}>✕</button>
+              <button className="cal-overlay-close" onClick={() => setSelectedDayInfo(null)}>✕</button>
               <h2 className="cal-overlay-date">
-                {format(new Date(displayYear, displayMonth - 1, selectedDay), 'EEEE, MMMM d')}
+                {format(new Date(selectedDayInfo.year, selectedDayInfo.month - 1, selectedDayInfo.day), 'EEEE, MMMM d')}
               </h2>
               <div className="cal-portrait-scroll">
                 {selectedDayEvents.map(event => (
@@ -318,9 +366,9 @@ export function CalendarPage({ onClose }) {
                       {userId && event.club_id && (
                         <button
                           className="rsvp-button"
-                          onClick={() => handleMonthlyRsvp(event.id, monthlyMyRsvpSet.has(event.id))}
+                          onClick={() => selectedDayRsvpHandler(event.id, selectedDayRsvpSet.has(event.id))}
                         >
-                          {monthlyMyRsvpSet.has(event.id) ? 'Going ✓' : "I'm going!"}
+                          {selectedDayRsvpSet.has(event.id) ? 'Going ✓' : "I'm going!"}
                         </button>
                       )}
                     </div>
@@ -331,7 +379,15 @@ export function CalendarPage({ onClose }) {
           </div>
         )}
       </div>
-    </div>
+
+      <button
+        className="calpg-toggle-btn"
+        type="button"
+        onClick={() => setViewMode(v => (v === 'week' ? 'month' : 'week'))}
+      >
+        {viewMode === 'week' ? 'Month' : 'Week'}
+      </button>
+    </>
   );
 }
 

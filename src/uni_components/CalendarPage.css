@@ -308,8 +308,7 @@
 }
 
 .cal-monthly-tree {
-  display: flex;
-  justify-content: center;
+  
   margin-bottom: 10px;
 }
 
@@ -322,15 +321,15 @@
 
 .cal-monthly-header {
   display: flex;
-  align-items: center;
+
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 .cal-month-name {
   font-size: 38px;
-  font-weight: 900;
-  color: #1a1a1a;
+  font-weight: 400;
+  color: #911e1e;
   letter-spacing: -1px;
   font-family: Georgia, serif;
 }
@@ -408,6 +407,14 @@
 
 .cal-day-today-events:hover {
   background: #f0c800;
+}
+
+.calpg-grid-panel .cal-day-today-events {
+  width: 34px;
+  height: 34px;
+  aspect-ratio: 1;
+  justify-self: center;
+  align-self: center;
 }
 
 .cal-day-has-events {
@@ -562,38 +569,26 @@
   margin: 0;
 }
 
-/* ===== STANDALONE CALENDAR PAGE OVERLAY ===== */
-.cal-page-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  z-index: 500;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-end;
-  padding: 12px;
-  overflow-y: auto;
-  margin: 0;
-}
-
-.cal-page-card {
+/* ===== STANDALONE CALENDAR PAGE (university page inline calendar) ===== */
+.calpg-card {
   position: relative;
   background: #fff;
-  border-radius: 16px;
-  padding: 28px 28px 32px;
-  width: min(820px, 94vw);
-  max-height: calc(100vh - 24px);
+  border: 1px solid black;
+  padding: 20px 20px 64px;
+  width: 100%;
+ 
+  height: 100%;
+  box-sizing: border-box;
   overflow-y: auto;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25);
+  
   scrollbar-width: none;
-  flex-grow: 1;
 }
 
-.cal-page-card::-webkit-scrollbar {
+.calpg-card::-webkit-scrollbar {
   display: none;
 }
 
-.cal-page-close {
+.calpg-close {
   position: absolute;
   top: 14px;
   right: 16px;
@@ -612,7 +607,7 @@
   transition: background 0.15s;
 }
 
-.cal-page-close:hover {
+.calpg-close:hover {
   background: #e0e0e0;
 }
 
@@ -622,4 +617,229 @@
   font-size: 15px;
   padding: 40px 0;
   margin: 0;
+}
+
+/* ===== INLINE CALENDAR HEADER (tree + month name) ===== */
+.calpg-header {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+
+}
+
+.calpg-tree-wrap {
+  display: flex;
+  justify-content: center;
+  padding-top: 6px;
+  margin-bottom: 2px;
+}
+
+.calpg-tree-img {
+  width: 12rem;
+  height: auto;
+  object-fit: contain;
+}
+
+.calpg-month-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.calpg-align-row {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.calpg-month-row.calpg-align-row {
+  justify-content: flex-start;
+}
+
+@media (min-width: 1400px) {
+  .calpg-month-row-monthly.calpg-align-row {
+    padding: 0 34px;
+  }
+}
+
+/* ===== INLINE CALENDAR MONTH GRID(S) ===== */
+.calpg-dual-grid-row {
+  justify-content: center;
+  gap: 24px;
+}
+
+@media (max-width: 700px) {
+  .calpg-dual-grid-row {
+    padding: 0 8px;
+  }
+}
+
+@media (min-width: 1400px) {
+  .calpg-dual-grid-row {
+    display: grid;
+    grid-template-columns: minmax(0, 500px) 1fr minmax(0, 500px);
+    align-items: start;
+    justify-content: center;
+    padding: 0 34px;
+    gap: 0;
+  }
+}
+
+.calpg-grid-panel {
+  width: 100%;
+  max-width: 500px;
+}
+
+.calpg-grid-panel-next {
+  display: none;
+}
+
+.calpg-grid-divider {
+  display: none;
+  width: 1px;
+  align-self: stretch;
+  justify-self: center;
+  background: #ccc;
+}
+
+@media (min-width: 1400px) {
+  .calpg-grid-panel-next {
+    display: grid;
+  }
+  .calpg-grid-divider {
+    display: block;
+  }
+}
+
+.calpg-month {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 6rem;
+  letter-spacing: 1px;
+  color: #3b3c3c;
+  margin: 0;
+  line-height: 1;
+}
+
+@media (min-width: 1400px) {
+  .calpg-month-monthly {
+    padding-left: 36px;
+  }
+}
+
+.calpg-month-full {
+  display: inline;
+}
+
+.calpg-month-abbr {
+  display: none;
+}
+
+.calpg-month-range {
+  display: none;
+  font-size: 3rem;
+}
+
+@media (max-width: 700px) {
+  .calpg-month-full {
+    display: none;
+  }
+  .calpg-month-abbr {
+    display: inline;
+  }
+  .calpg-month {
+    font-size: 5rem;
+  }
+}
+
+@media (min-width: 1400px) {
+  .calpg-month-monthly .calpg-month-full,
+  .calpg-month-monthly .calpg-month-abbr {
+    display: none;
+  }
+  .calpg-month-range {
+    display: inline;
+  }
+}
+
+/* ===== INLINE CALENDAR VIEW TOGGLE (bottom-right of the card) ===== */
+.calpg-toggle-btn {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  background: none;
+  border: none;
+  padding: 0;
+  color: #1a1a1a;
+  font-family: "Barlow Condensed", sans-serif;
+  text-transform: uppercase;
+  font-size: 1.6rem;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  z-index: 20;
+  transition: color 0.15s;
+}
+
+.calpg-toggle-btn:hover {
+  color: #4e7da9;
+}
+
+@media (max-width: 700px) {
+  .calpg-toggle-btn {
+    font-size: 1.5rem;
+  }
+}
+
+/* ===== INLINE CALENDAR WEEK VIEW ALIGNMENT ===== */
+.calpg-week-row {
+  justify-content: flex-start;
+  overflow-x: auto;
+  overflow-y: hidden;
+  box-sizing: border-box;
+  scrollbar-width: none;
+}
+
+.calpg-week-row::-webkit-scrollbar {
+  display: none;
+}
+
+/* ===== INLINE CALENDAR WEEK VIEW DAY LABELS ===== */
+.calpg-day-label {
+  font-family: "Barlow Condensed", sans-serif;
+  text-transform: uppercase;
+}
+
+/* ===== INLINE CALENDAR MONTH VIEW WEEKDAY HEADER (S M T W T F S) ===== */
+.calpg-weekday-label {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 600;
+  font-size: 1.2rem;
+  color: #3b3c3c;
+}
+
+@media (max-width: 700px) {
+  .calpg-day-title {
+    justify-content: center;
+  }
+  .calpg-day-num {
+    display: none;
+  }
+  .calpg-week-day {
+    flex: 0 0 46%;
+    min-width: 130px;
+  }
+}
+
+@media (max-width: 400px) {
+ 
+  .calpg-month {
+    font-size: 4rem;
+  }
+
+  .calpg-tree-img {
+  width: 10rem;
+  height: auto;
+  object-fit: contain;
+}
 }

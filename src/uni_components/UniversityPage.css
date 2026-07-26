@@ -101,6 +101,37 @@
   display: none;
 }
 
+.uni-search-row,
+.uni-club-stage {
+  transition: opacity 0.4s ease;
+  opacity: 1;
+}
+
+.uni-search-row.uni-fade-hidden,
+.uni-club-stage.uni-fade-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.uni-calendar-inline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 20vh;
+  bottom: 3%;
+  margin: 0 auto;
+  width: var(--uni-content-width);
+  max-width: 1350px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.uni-calendar-inline.uni-calendar-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .uni-icon-row {
   display: flex;
   justify-content: center;
@@ -128,6 +159,10 @@
 
   .uni-header-logo {
     width: min(50vw, 520px);
+  }
+
+  .uni-calendar-inline {
+    top: 16vh;
   }
 }
 
@@ -159,6 +194,12 @@
     height: auto;
     top: 0;
     right: 0;
+  }
+
+  .uni-calendar-inline {
+    top: 11vh;
+    bottom: 10%;
+    width: 90%;
   }
 
 }

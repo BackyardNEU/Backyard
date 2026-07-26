@@ -21,8 +21,13 @@ export const UniversityPage = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   let GlobalValue = useGlobalStore((state) => state.GlobalValue);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [calendarMounted, setCalendarMounted] = useState(false);
 
   const { allData, favoritesCache } = useClubData();
+
+  useEffect(() => {
+    if (showCalendar) setCalendarMounted(true);
+  }, [showCalendar]);
 
   useEffect(() => {
     const html = document.documentElement;
@@ -114,23 +119,29 @@ export const UniversityPage = () => {
           <img src={headerLogo} alt="Backyard" className="uni-header-logo" />
         </header>
 
-        <div className="uni-search-row">
+        <div className={`uni-search-row${showCalendar ? ' uni-fade-hidden' : ''}`}>
           <div className="uni-search-shell">
             <UniSearchBar setResults={setResults} university={university.uni_name} calendarActive={showCalendar} />
           </div>
         </div>
-        
-          <main className="uni-club-stage">
-            <div className="uni-club-viewport">
-              <ClubList results={results} />
-            </div>
-          </main>
 
-        </div>
+        <main className={`uni-club-stage${showCalendar ? ' uni-fade-hidden' : ''}`}>
+          <div className="uni-club-viewport">
+            <ClubList results={results} />
+          </div>
+        </main>
 
-        {showCalendar && (
-          <CalendarPage onClose={() => { setShowCalendar(false); setSelectedCategory(null); }} />
+        {calendarMounted && (
+          <div
+            className={`uni-calendar-inline${showCalendar ? ' uni-calendar-visible' : ''}`}
+            onTransitionEnd={(e) => {
+              if (e.propertyName === 'opacity' && !showCalendar) setCalendarMounted(false);
+            }}
+          >
+            <CalendarPage onClose={() => { setShowCalendar(false); setSelectedCategory(null); }} />
+          </div>
         )}
+      </div>
     </div>
   );
 };
