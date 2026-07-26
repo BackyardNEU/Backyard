@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { sanitizeBioHtml } from '../lib/sanitizeHtml';
 import './JoinModule.css';
+import borderBlackImg from '/src/assets/border.svg';
+import borderHorizontalBlackImg from '/src/assets/border-horizontal.svg';
 
 /**
  * Join module — lets a club advertise recruiting info.
@@ -112,6 +114,18 @@ function JoinModule({ data, editing, onChange, warning }) {
           <div className="join-card-row">
             {tabs.map((t, idx) => (
               <div className="join-tab-card" key={idx}>
+                <img src={borderBlackImg} alt="" className="join-tab-border join-tab-border-left" />
+                <img src={borderBlackImg} alt="" className="join-tab-border join-tab-border-right" />
+                <div
+                  className="join-tab-border-h-wrap join-tab-border-top-wrap"
+                  style={{ backgroundImage: `url(${borderHorizontalBlackImg})` }}
+                  aria-hidden="true"
+                />
+                <div
+                  className="join-tab-border-h-wrap join-tab-border-bottom-wrap"
+                  style={{ backgroundImage: `url(${borderHorizontalBlackImg})` }}
+                  aria-hidden="true"
+                />
                 <button
                   className="join-tab-remove-btn"
                   onClick={() => removeTab(idx)}

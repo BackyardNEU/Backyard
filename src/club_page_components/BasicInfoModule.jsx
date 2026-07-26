@@ -3,7 +3,6 @@ import { useClubData } from '../context/useClubData';
 import ColorThief from 'colorthief';
 import { FaSearch, FaTimes } from 'react-icons/fa';
 import './BasicInfoModule.css';
-import LinksTable from './LinksTable';
 
 /**
  * @param {Object} props
@@ -19,7 +18,7 @@ import LinksTable from './LinksTable';
  * @param {string|null} props.warning - validation message shown in edit mode
  * @param {'full'|'hero'|'about'} props.part - which slice to render; hero is fixed above the accordion
  */
-function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange, actions, warning, part = 'full' }) {
+function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange, actions, warning, part = 'full', linksDisplayed = true }) {
   const [dominantColor, setDominantColor] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
   const [descOpen, setDescOpen] = useState(false);
@@ -229,7 +228,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
       <>
       <div className="action-links-wrapper">
         {actions}
-        {enabledLinks.length > 0 && (
+        {linksDisplayed && enabledLinks.length > 0 && (
           <>
             <span className="links-sep">|</span>
             <div className="links-bar">
@@ -252,15 +251,9 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
             </div>
           </>
         )}
-        {editing && (
-          <LinksTable
-            links={links}
-            onChange={(next) => onChange({ ...data, links: next })}
-          />
-        )}
       </div>
 
-      {linksExpanded && (
+      {linksDisplayed && linksExpanded && (
         <div className="links-expanded-row">
           {enabledLinks.slice(3).map((link, i) => (
             <a

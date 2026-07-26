@@ -1,0 +1,18 @@
+.links-module {
+  width: 100%;
+}
+
+.links-module-preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.links-module-empty {
+  margin-top: 8px;
+  color: #999;
+  font-size: 14px;
+  font-family: 'Barlow', sans-serif;
+}

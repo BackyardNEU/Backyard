@@ -47,8 +47,16 @@ const DEFAULT_MODULES = [
     },
   },
   {
-    type: 'club_media',
+    type: 'links',
     order: 1,
+    isDisplayed: true,
+    // No independent data of its own — reads/writes basic_info.data.links.
+    // This entry only exists so Links gets its own accordion slot (title, help text, visibility checkbox).
+    data: {},
+  },
+  {
+    type: 'club_media',
+    order: 2,
     isDisplayed: true,
     data: {
       posters: [
@@ -69,7 +77,7 @@ const DEFAULT_MODULES = [
   },
   {
     type: 'join',
-    order: 2,
+    order: 3,
     isDisplayed: true,
     data: {
       tabs: [
@@ -83,7 +91,7 @@ const DEFAULT_MODULES = [
   },
   {
     type: 'faqs',
-    order: 3,
+    order: 4,
     isDisplayed: true,
     data: {
       faqs: [
@@ -95,7 +103,7 @@ const DEFAULT_MODULES = [
   },
   {
     type: 'stats',
-    order: 4,
+    order: 5,
     isDisplayed: true,
     data: {
       stats: [
@@ -108,7 +116,7 @@ const DEFAULT_MODULES = [
   },
   {
     type: 'member_roster',
-    order: 5,
+    order: 6,
     isDisplayed: true,
     data: {
       members: [
@@ -120,7 +128,7 @@ const DEFAULT_MODULES = [
   },
   {
     type: 'calendar',
-    order: 6,
+    order: 7,
     isDisplayed: true,
     data: {
       filterByMembership: false,
@@ -128,7 +136,7 @@ const DEFAULT_MODULES = [
   },
   {
     type: 'comments',
-    order: 7,
+    order: 8,
     isDisplayed: true,
     data: {},
   },

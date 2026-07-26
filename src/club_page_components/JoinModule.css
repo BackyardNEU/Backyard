@@ -132,10 +132,62 @@
   min-height: 340px;
   display: flex;
   flex-direction: column;
-  background: #16193C;
-  border-radius: 1.25rem;
+  background: #2e4064;
+
   padding: 1rem 1rem 1rem;
-  border: 2px solid #CFD2E5;
+
+}
+
+/* Subtle noise/grain overlay on top of the solid background */
+.join-tab-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.19'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Decorative vine border (black, matches the calendar's) ── */
+.join-tab-border {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: auto;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.join-tab-border-left {
+  left: 0;
+  transform: scaleX(1.2);
+  transform-origin: left center;
+}
+
+.join-tab-border-right {
+  right: 0;
+  transform: scaleX(-1.2);
+  transform-origin: center;
+}
+
+.join-tab-border-h-wrap {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  background-size: auto 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.join-tab-border-top-wrap {
+  top: 0;
+}
+
+.join-tab-border-bottom-wrap {
+  bottom: 0;
 }
 
 .join-card-title {
@@ -162,7 +214,7 @@
   box-sizing: border-box;
   border: 2px solid #CFD2E5;
   color: #CFD2E5;
-  border-radius: 10px;
+
   padding: 5px;
   font-family: inherit;
   font-size: 15px;
@@ -231,7 +283,7 @@
 }
 
 .join-add-card:hover {
-  background: #16193C; border-color: #d9d9d9;  color: #CFD2E5; 
+  background: #2e4064; border-color: #d9d9d9;  color: #CFD2E5; 
 }
 
 /* ---- Edit mode: link inputs ---- */
@@ -254,7 +306,7 @@
   width: 100%;
   box-sizing: border-box;
   padding: 0.7rem 1rem;
-  border: 2px solid #16193C;
+  border: 2px solid #2e4064;
   outline: none;
   border-radius: 15px;
   font-weight: 500;

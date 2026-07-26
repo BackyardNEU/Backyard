@@ -193,7 +193,7 @@
   position: relative;
   width: 300px;
   box-sizing: border-box;
-  background: #3b4b6c;
+  background: #2e4064;
 
  
 
@@ -201,6 +201,16 @@
   color: #555;
   font-family: 'Barlow Condensed', sans-serif;
 
+}
+
+/* Subtle noise/grain overlay on top of the solid background */
+.cm-poster-edit::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.19'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* ── Decorative vine border (black, matches the calendar's) ── */
@@ -215,13 +225,13 @@
 
 .cm-edit-border-left {
   left: 0;
-  transform: scaleX(1);
+  transform: scaleX(1.2);
   transform-origin: left center;
 }
 
 .cm-edit-border-right {
   right: 0;
-  transform: scaleX(-1);
+  transform: scaleX(-1.2);
   transform-origin: center;
 }
 
@@ -305,7 +315,7 @@
 
   padding: 0 8px;
   box-sizing: border-box;
-  background: #3b4b6c;
+  background: #2e4064;
   font-family: inherit;
   cursor: pointer;
 }
@@ -351,7 +361,7 @@
   border: none;
   
   padding: 10px;
-  background: #3b4b6c;
+  background: #2e4064;
   border: 3px dashed #Ece7e5;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.18);
   font-family: inherit;
@@ -382,7 +392,7 @@
 }
 
 .cm-add-poster:hover {
-   background: #3b4b6c; border-color: #d9d9d9;  color: #Ece7e5;
+   background: #2e4064; border-color: #d9d9d9;  color: #Ece7e5;
 }
 
 /* ── Expanded portrait modal ── */
@@ -565,7 +575,7 @@
   right: 8px;
   
   display: flex;
-  background: #3b4b6c;
+  background: #2e4064;
   padding: 0px 5px;
     color: #ffffff;
     border-radius: 5px;

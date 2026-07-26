@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { uploadImage } from '../lib/uploadImage';
 import { sanitizeBioHtml } from '../lib/sanitizeHtml';
+import borderBlackImg from '/src/assets/border.svg';
+import borderHorizontalBlackImg from '/src/assets/border-horizontal.svg';
 
 const ADD_VALUE = '__add_category__';
 
@@ -119,6 +121,19 @@ function MemberCard({ member, categories, onRemove, onCategory, onName, onPhoto,
 
   return (
     <div className="mr-card">
+      <img src={borderBlackImg} alt="" className="mr-border mr-border-left" />
+      <img src={borderBlackImg} alt="" className="mr-border mr-border-right" />
+      <div
+        className="mr-border-h-wrap mr-border-top-wrap"
+        style={{ backgroundImage: `url(${borderHorizontalBlackImg})` }}
+        aria-hidden="true"
+      />
+      <div
+        className="mr-border-h-wrap mr-border-bottom-wrap"
+        style={{ backgroundImage: `url(${borderHorizontalBlackImg})` }}
+        aria-hidden="true"
+      />
+
       <button className="mr-remove" onClick={onRemove} aria-label="Remove member">✕</button>
 
       <div className="mr-category-wrap">

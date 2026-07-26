@@ -140,7 +140,7 @@
   background-repeat: no-repeat;
   filter: brightness(1.25) contrast(1.0);
   border: 2px solid #444444;
-  border-radius: 30px;
+
   padding: 28px 26px 26px;
   text-align: center;
 }
@@ -257,8 +257,8 @@
   align-items: center;
   gap: 4px;
   padding: 4px 6px 4px 12px;
-  background: #16193C;
-  border: 2px solid #CFD2E5;
+  background: #2e4064;
+  border: 2px solid #Ece7e5;
   border-radius: 999px;
 
 }
@@ -267,7 +267,7 @@
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: #CFD2E5;
+  color: #Ece7e5;
 }
 .mr-cat-chip-btn {
   width: 22px;
@@ -277,7 +277,7 @@
   border: none;
   border-radius: 50%;
   background: transparent;
-  color: #CFD2E5;
+  color: #Ece7e5;
   font-size: 13px;
   line-height: 1;
   cursor: pointer;
@@ -311,12 +311,64 @@
   align-items: center;
   gap: 18px;
   padding: 16px 12px;
-  background: #16193C;
-    border: 2px solid #CFD2E5;
-  border-radius: 15px;
+  background: #2e4064;
+    
+
   scroll-snap-align: start;
   font-family: 'Barlow Condensed', sans-serif;
 
+}
+
+/* Subtle noise/grain overlay on top of the solid background */
+.mr-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.19'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Decorative vine border (black, matches the calendar's) ── */
+.mr-border {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: auto;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.mr-border-left {
+  left: 0;
+  transform: scaleX(0.8);
+  transform-origin: left center;
+}
+
+.mr-border-right {
+  right: 0;
+  transform: scaleX(-0.8);
+  transform-origin: center;
+}
+
+.mr-border-h-wrap {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  background-size: auto 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.mr-border-top-wrap {
+  top: 0;
+}
+
+.mr-border-bottom-wrap {
+  bottom: 0;
 }
 
 .mr-remove {
@@ -347,9 +399,9 @@
   padding: 0 10px;
   font-family: inherit;
   font-size: 13px;
-  color: #CFD2E5;
-  background: #16193C;
-  border: 2px solid #CFD2E5;
+  color: #Ece7e5;
+  background: #2e4064;
+  border: 2px solid #Ece7e5;
   border-radius: 10px;
   cursor: pointer;
   outline: none;
@@ -364,14 +416,24 @@
   margin: 4px 0 2px;
   border-radius: 50%;
   overflow: hidden;
-  background: #16193C center / cover no-repeat;
-  border: 2px solid #CFD2E5;
-  color: #CFD2E5;
+  background: #2e4064 center / cover no-repeat;
+  border: 3px solid #Ece7e5;
+  color: #Ece7e5;
   font-weight: 700;
   display: grid;
   place-items: center;
   cursor: pointer;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.18);
+}
+
+/* Subtle noise/grain overlay on top of the solid background */
+.mr-photo::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.19'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
 }
 .mr-photo-hint {
   pointer-events: none;
@@ -396,10 +458,10 @@
   text-align: center;
   font-family: inherit;
   font-size: 18px;
-  color: #CFD2E5;
-  background: #16193C;
-  border: 2px solid #CFD2E5;
-  border-radius: 14px;
+  color: #Ece7e5;
+  background: #2e4064;
+  border: 3px solid #Ece7e5;
+
   outline: none;
 }
 .mr-name::placeholder { color: #1a1a1a; opacity: 1; }
@@ -412,10 +474,19 @@
   display: flex;
   flex-direction: column;
   padding: 10px 16px;
-  background: #16193C;
-  border: 2px solid #CFD2E5;
+  background: #2e4064;
+  border: 3px solid #Ece7e5;
 
-  border-radius: 20px;
+}
+
+/* Subtle noise/grain overlay on top of the solid background */
+.mr-bio::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.19'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
 }
 .mr-editor {
   flex: 1;
@@ -424,7 +495,7 @@
   font-family: 'Barlow', sans-serif;
   font-size: 15px;
   line-height: 1.6;
-  color: #CFD2E5;
+  color: #Ece7e5;
 }
 .mr-editor.is-empty::before {
   content: attr(data-ph);
@@ -439,7 +510,7 @@
   align-items: center;
   gap: 4px;
   padding: 6px 8px;
-  background: #CFD2E5;
+  background: #Ece7e5;
   border-radius: 14px;
 }
 .mr-toolbar button {
@@ -478,5 +549,5 @@
   transition: background 0.15s, color 0.15s, border-color 0.15s;
   background: #fcfcfc; color: #c4c4c4; border-color: #c4c4c4; 
 }
-.mr-add-card:hover { background: #16193C; border-color: #d9d9d9;  color: #CFD2E5; }
+.mr-add-card:hover { background: #2e4064; border-color: #d9d9d9;  color: #Ece7e5; }
 .mr-add-card svg { width: 84px; height: 84px; }

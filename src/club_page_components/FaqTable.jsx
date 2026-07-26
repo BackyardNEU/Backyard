@@ -1,13 +1,17 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
+import borderBlackImg from '/src/assets/border.svg';
+import borderHorizontalBlackImg from '/src/assets/border-horizontal.svg';
 
 /* palette pulled from the mockup */
 const BLUE = "#da0000ff";
+
 const ROW_A = "#3b4b6c";
 const ROW_B = "#51658dff";
 const INK = "#CFD2E5";
 const MUTED = "#ffffffff";
 const VLINE = "#ffffffff";
 const SECTION_LINE = "#CFD2E5";
+const GRID_LINE = "#Ece7e5";
 
 const ROW_H = 50;
 const USER_VISIBLE = 3;
@@ -135,7 +139,20 @@ export default function FaqTable({ faqs = [], onChange, userQuestions = [], onAc
       </div>
 
       <div style={{ overflowX: "auto" }}>
-        <div style={{ minWidth: 760, border: `2px solid ${VLINE}`,  overflow: "hidden", background: "#fff" }}>
+        <div className="faq-table-box" style={{ position: "relative", minWidth: 760, border: `2px solid ${VLINE}`,  overflow: "hidden", background: "#fff" }}>
+          <img src={borderBlackImg} alt="" className="faq-border faq-border-left" />
+          <img src={borderBlackImg} alt="" className="faq-border faq-border-right" />
+          <div
+            className="faq-border-h-wrap faq-border-top-wrap"
+            style={{ backgroundImage: `url(${borderHorizontalBlackImg})` }}
+            aria-hidden="true"
+          />
+          <div
+            className="faq-border-h-wrap faq-border-bottom-wrap"
+            style={{ backgroundImage: `url(${borderHorizontalBlackImg})` }}
+            aria-hidden="true"
+          />
+
           {/* ===== user questions (submitted) ===== */}
           <Section visible={USER_VISIBLE}>
             {padTo(userQuestions, USER_VISIBLE).map((row, i) =>
@@ -199,7 +216,7 @@ function Section({ visible, children }) {
 function Row({ i, children }) {
   return (
     <div style={{ display: "grid", gridTemplateColumns: COLS, height: ROW_H,
-      background: i % 2 === 0 ? ROW_A : ROW_B }}>
+      background: i % 2 === 0 ? ROW_A : ROW_B, borderBottom: `1px solid ${GRID_LINE}` }}>
       {children}
     </div>
   );
@@ -208,7 +225,7 @@ function Row({ i, children }) {
 function FillerRow({ i }) {
   return (
     <div style={{ display: "grid", gridTemplateColumns: COLS, height: ROW_H,
-      background: i % 2 === 0 ? ROW_A : ROW_B }}>
+      background: i % 2 === 0 ? ROW_A : ROW_B, borderBottom: `1px solid ${GRID_LINE}` }}>
       <div />
       <div />
       <div />
@@ -218,7 +235,7 @@ function FillerRow({ i }) {
 
 function XCell({ variant, onClick }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", borderRight: `1px solid ${GRID_LINE}` }}>
       {variant === "circle" ? (
         <button onClick={onClick} aria-label="Delete question" style={{ all: "unset", cursor: "pointer",
           width: 32, height: 32, borderRadius: 999, background: BLUE, color: "#ffffffff",
@@ -251,7 +268,7 @@ function AnswerCell({ ck, value, placeholder, activeKey, onSelect, accept }) {
   const active = activeKey === ck;
   return (
     <div data-cellkey={ck} onMouseDown={(e) => onSelect(ck, e.currentTarget)}
-      style={{ ...cellBase, position: "relative", paddingRight: accept ? 104 : 18,
+      style={{ ...cellBase, position: "relative", paddingRight: accept ? 104 : 18, borderRight: "none",
         boxShadow: active ? `inset 0 0 0 2px #000` : "none", cursor: "text" }}>
       {value
         ? <span style={cellText}>{value}</span>
@@ -268,7 +285,7 @@ function AnswerCell({ ck, value, placeholder, activeKey, onSelect, accept }) {
   );
 }
 
-const cellBase = { display: "flex", alignItems: "center", padding: "0 18px", overflow: "hidden", minWidth: 0 };
+const cellBase = { display: "flex", alignItems: "center", padding: "0 18px", overflow: "hidden", minWidth: 0, borderRight: `1px solid ${GRID_LINE}` };
 const cellText = { fontSize: 19, color: INK, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
 
 /* trailing "add" row + filler padding for the owner section */
@@ -334,4 +351,40 @@ const cssText = `
   .tbl-scroll::-webkit-scrollbar-thumb { background: #cfcfcf; border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
   .tbl-scroll::-webkit-scrollbar-track { background: transparent; }
   .cell-overlay textarea::placeholder { color: ${MUTED}; }
+
+  /* Subtle noise/grain overlay on top of the table's background */
+  .faq-table-box::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.19'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Decorative vine border (black, matches the calendar's) */
+  .faq-border {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: auto;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .faq-border-left { left: 0; transform: scaleX(0.8); transform-origin: left center; }
+  .faq-border-right { right: 0; transform: scaleX(-0.8); transform-origin: center; }
+
+  .faq-border-h-wrap {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background-repeat: repeat-x;
+    background-position: left center;
+    background-size: auto 100%;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .faq-border-top-wrap { top: 0; }
+  .faq-border-bottom-wrap { bottom: 0; }
 `;
