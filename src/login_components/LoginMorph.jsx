@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Logout from "./Logout";
+import { NotificationBell } from "../notifications/NotificationBell";
 import Form from "./form";
 import ForgotPasswordForm from "./ForgotPasswordForm";
 import "./LoginMorph.css";
@@ -66,6 +67,7 @@ function LoginMorph({ open, setOpen }) {
       {!open && !isProfilePage && (
         <div className="logged-in-controls">
           {GlobalValue && <Logout />}
+          {GlobalValue && <NotificationBell />}
           <motion.button
             layoutId="login"
             className="login-icon"

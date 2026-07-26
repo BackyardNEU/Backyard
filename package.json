@@ -35,6 +35,7 @@
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.8.0",
     "motion": "^12.38.0",
+    "pg-boss": "^12.26.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-helmet": "^6.1.0",

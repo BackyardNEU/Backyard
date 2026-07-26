@@ -11,6 +11,7 @@ export const FriendDiscoveryList = ({ userId }) => {
   const [searchInput, setSearchInput] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [addingId, setAddingId] = useState(null);
+  const [pendingIds, setPendingIds] = useState(new Set());
   const [modalOpen, setModalOpen] = useState(false);
 
   const fetchFriends = useCallback(async () => {
@@ -50,24 +51,18 @@ export const FriendDiscoveryList = ({ userId }) => {
   }, [searchInput, userId]);
 
   async function handleAddFriend(friendId) {
-    if (addingId) return;
+    if (addingId || pendingIds.has(friendId) || friendIds.includes(friendId)) return;
     setAddingId(friendId);
 
-    if (friendIds.includes(friendId)) {
-      setAddingId(null);
-      return;
-    }
-
-    // PUT replaces the whole friend_list. If two tabs add concurrently, last write wins
-    // — same behavior as the previous supabase-based code.
-    const newList = [...friendIds, friendId];
-
     try {
-      await apiFetch('/me/friends', { method: 'PUT', body: { friend_list: newList } });
-      setFriendIds(newList);
-      await fetchFriends();
+      await apiFetch('/friend-requests', { method: 'POST', body: { recipientId: friendId } });
+      setPendingIds((prev) => new Set([...prev, friendId]));
     } catch (err) {
-      console.error('Error adding friend:', err);
+      if (err.status === 409) {
+        setPendingIds((prev) => new Set([...prev, friendId]));
+      } else {
+        console.error('Error sending friend request:', err);
+      }
     }
     setAddingId(null);
   }
@@ -76,11 +71,9 @@ export const FriendDiscoveryList = ({ userId }) => {
     if (addingId) return;
     setAddingId(friendId);
 
-    const newList = friendIds.filter((id) => id !== friendId);
-
     try {
-      await apiFetch('/me/friends', { method: 'PUT', body: { friend_list: newList } });
-      setFriendIds(newList);
+      await apiFetch(`/me/friends/${friendId}`, { method: 'DELETE' });
+      setFriendIds((prev) => prev.filter((id) => id !== friendId));
       setFriends((prev) => prev.filter((f) => f.id !== friendId));
     } catch (err) {
       console.error('Error removing friend:', err);
@@ -164,6 +157,8 @@ export const FriendDiscoveryList = ({ userId }) => {
                       <span className="friend-result-name">{person.username}</span>
                       {alreadyFriend ? (
                         <span className="friend-already-tag">Added</span>
+                      ) : pendingIds.has(person.id) ? (
+                        <span className="friend-already-tag">Requested</span>
                       ) : (
                         <button
                           className="friend-add-btn"

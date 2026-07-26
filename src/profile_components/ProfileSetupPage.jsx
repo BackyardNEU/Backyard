@@ -79,10 +79,13 @@ const ProfileSetupPage = () => {
                 const { data, error } = await supabase.auth.getUser();
                 if (error) throw error;
 
-                const [uniData, profileData] = await Promise.all([
+                const [uniResult, profileResult] = await Promise.allSettled([
                     apiFetch('/universities', { auth: false }),
                     apiFetch('/me/profile'),
                 ]);
+
+                const uniData = uniResult.status === 'fulfilled' ? uniResult.value : [];
+                const profileData = profileResult.status === 'fulfilled' ? profileResult.value : null;
 
                 const authUser = data?.user || null;
                 setUser(authUser);
