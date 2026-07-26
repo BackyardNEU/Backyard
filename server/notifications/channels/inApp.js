@@ -1,9 +1,10 @@
+import { randomUUID } from 'crypto';
 import { supabaseAdmin } from '../../supabaseAdmin.js';
 
 export async function sendInApp(row) {
   const { data, error } = await supabaseAdmin
     .from('notifications')
-    .insert({ ...row, channel_status: {} })
+    .insert({ id: randomUUID(), ...row, channel_status: {} })
     .select('id')
     .single();
 
