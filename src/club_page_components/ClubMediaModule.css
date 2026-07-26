@@ -51,16 +51,58 @@
   justify-content: center;
   padding: 0;
   border: none;
-  border-radius: 10px;
+ 
   overflow: hidden;
   cursor: pointer;
   font-family: inherit;
-  border: 1.5px solid rgb(60, 35, 16);
+  
 
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 
+
+/* ── Decorative vine border (matches the university-page inline calendar) ── */
+.cm-poster-border {
+  position: absolute;
+  top: 0.1;
+  height: 100%;
+  width: auto;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.cm-poster-border-left {
+  left: 0;
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+
+.cm-poster-border-right {
+  right: -1px;
+  transform: scaleX(-1.0);
+  transform-origin: center;
+}
+
+.cm-poster-border-h-wrap {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  background-size: auto 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.cm-poster-border-top-wrap {
+  top: 0;
+}
+
+.cm-poster-border-bottom-wrap {
+  bottom: 0;
+}
 
 .cm-poster-card--editing {
   cursor: default;
@@ -148,16 +190,59 @@
 
 /* Edit card sits BELOW the poster. All text is Barlow Condensed. */
 .cm-poster-edit {
+  position: relative;
   width: 300px;
   box-sizing: border-box;
-  background: #16193C;
-  
-  border: 2px solid #CFD2E5;
-  border-radius: 15px;
+  background: #3b4b6c;
+
+ 
+
   padding: 12px;
   color: #555;
   font-family: 'Barlow Condensed', sans-serif;
-  
+
+}
+
+/* ── Decorative vine border (black, matches the calendar's) ── */
+.cm-edit-border {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: auto;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.cm-edit-border-left {
+  left: 0;
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+
+.cm-edit-border-right {
+  right: 0;
+  transform: scaleX(-1);
+  transform-origin: center;
+}
+
+.cm-edit-border-h-wrap {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  background-size: auto 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.cm-edit-border-top-wrap {
+  top: 0;
+}
+
+.cm-edit-border-bottom-wrap {
+  bottom: 0;
 }
 
 .cm-edit-hint {
@@ -168,9 +253,9 @@
 }
 
 @keyframes cmHintBlink {
-  0%, 40% { color: #CFD2E5; }
+  0%, 40% { color: #Ece7e5; }
   50% { color: #112b43; }
-  60%, 100% { color: #CFD2E5; }
+  60%, 100% { color: #Ece7e5; }
 }
 
 
@@ -197,9 +282,9 @@
 .cm-color {
   width: 45px;
   height: 38px;
-  border: 2px solid #CFD2E5;
-  border-radius: 12px;
-  background: #fff;
+  border: 2px solid #Ece7e5;
+
+  background: #Ece7e5;
   box-sizing: border-box;
   cursor: pointer;
 }
@@ -207,7 +292,7 @@
 .cm-label {
   margin-top: 5px;
   font-weight: 550;
-  color: #CFD2E5;
+  color: #Ece7e5;
   text-align: left;
   width: 100%;
 }
@@ -215,12 +300,12 @@
 .cm-order,
 .cm-aspect {
   height: 30px;
-  border: 2px solid #CFD2E5;
-  color: #CFD2E5;
-  border-radius: 10px;
+  border: 2px solid #Ece7e5;
+  color: #Ece7e5;
+
   padding: 0 8px;
   box-sizing: border-box;
-  background: #16193C;
+  background: #3b4b6c;
   font-family: inherit;
   cursor: pointer;
 }
@@ -230,7 +315,7 @@
 
 .cm-muted {
   margin-top: 5px;
-  color: #CFD2E5;
+  color: #Ece7e5;
   font-size: 14px;
   text-align: left;
   width: 100%;
@@ -240,9 +325,9 @@
   margin-top: 20px;
   width: 100%;
   box-sizing: border-box;
-  border: 2px solid #CFD2E5;
-  color: #CFD2E5;
-  border-radius: 14px;
+  border: 3px solid #Ece7e5;
+  color: #Ece7e5;
+
   padding: 10px;
   font-family: inherit;
   font-size: 16px;
@@ -264,15 +349,15 @@
   justify-content: center;
   text-align: center;
   border: none;
-  border-radius: 39px;
+  
   padding: 10px;
-  background: #16193C;
-  border: 2px solid #CFD2E5;
+  background: #3b4b6c;
+  border: 3px dashed #Ece7e5;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.18);
   font-family: inherit;
   font-weight: 700;
   font-size: 17px;
-  color: #CFD2E5;
+  color: #Ece7e5;
   cursor: pointer;
 }
 
@@ -297,7 +382,7 @@
 }
 
 .cm-add-poster:hover {
-   background: #16193C; border-color: #d9d9d9;  color: #CFD2E5;
+   background: #3b4b6c; border-color: #d9d9d9;  color: #Ece7e5;
 }
 
 /* ── Expanded portrait modal ── */
@@ -480,7 +565,7 @@
   right: 8px;
   
   display: flex;
-  background: #16193C;
+  background: #3b4b6c;
   padding: 0px 5px;
     color: #ffffff;
     border-radius: 5px;

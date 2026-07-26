@@ -4,6 +4,10 @@ import FeatheredBlob from './FeatheredBlob';
 import { apiFetch } from '../lib/api';
 import { uploadVideo } from '../lib/uploadVideo';
 import './ClubMediaModule.css';
+import borderImg from '/src/assets/border-green.svg';
+import borderHorizontalImg from '/src/assets/border-horizontal-green.svg';
+import borderBlackImg from '/src/assets/border.svg';
+import borderHorizontalBlackImg from '/src/assets/border-horizontal.svg';
 
 const REVEAL_MS = 1600;
 const MAX_VIDEO_SECONDS = 15;
@@ -240,6 +244,19 @@ function PosterCard({ poster, editing, rank, count, onOpen, isPosterOpen, onUpda
         className={`cm-poster-card ${editing ? 'cm-poster-card--editing' : ''}`}
         style={{ background: poster.poster_color || '#1e2630' }}
       >
+        <img src={borderImg} alt="" className="cm-poster-border cm-poster-border-left" />
+        <img src={borderImg} alt="" className="cm-poster-border cm-poster-border-right" />
+        <div
+          className="cm-poster-border-h-wrap cm-poster-border-top-wrap"
+          style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+          aria-hidden="true"
+        />
+        <div
+          className="cm-poster-border-h-wrap cm-poster-border-bottom-wrap"
+          style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+          aria-hidden="true"
+        />
+
         {editing && (
           <button
             className="cm-poster-delete"
@@ -292,6 +309,19 @@ function PosterCard({ poster, editing, rank, count, onOpen, isPosterOpen, onUpda
 
       {editing && (
         <div className="cm-poster-edit">
+          <img src={borderBlackImg} alt="" className="cm-edit-border cm-edit-border-left" />
+          <img src={borderBlackImg} alt="" className="cm-edit-border cm-edit-border-right" />
+          <div
+            className="cm-edit-border-h-wrap cm-edit-border-top-wrap"
+            style={{ backgroundImage: `url(${borderHorizontalBlackImg})` }}
+            aria-hidden="true"
+          />
+          <div
+            className="cm-edit-border-h-wrap cm-edit-border-bottom-wrap"
+            style={{ backgroundImage: `url(${borderHorizontalBlackImg})` }}
+            aria-hidden="true"
+          />
+
           <div className="cm-edit-hint">click poster to edit content</div>
 
           <div className="cm-row">

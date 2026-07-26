@@ -13,6 +13,8 @@ import ghibliBackground from '/src/assets/ghibili_background.jpg';
 import ghibliPlant from '/src/assets/ghibliPlant.png';
 import headerLogo from '/src/assets/header_logo.png';
 import neuFlag from '/src/assets/neu_flag.png';
+import borderImg from '/src/assets/border.svg';
+import borderHorizontalImg from '/src/assets/border-horizontal.svg';
 
 export const UniversityPage = () => {
   const { id } = useParams();
@@ -138,6 +140,18 @@ export const UniversityPage = () => {
               if (e.propertyName === 'opacity' && !showCalendar) setCalendarMounted(false);
             }}
           >
+            <img src={borderImg} alt="" className="uni-calendar-border uni-calendar-border-left" />
+            <img src={borderImg} alt="" className="uni-calendar-border uni-calendar-border-right" />
+            <div
+              className="uni-calendar-border-h-wrap uni-calendar-border-top-wrap"
+              style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+              aria-hidden="true"
+            />
+            <div
+              className="uni-calendar-border-h-wrap uni-calendar-border-bottom-wrap"
+              style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+              aria-hidden="true"
+            />
             <CalendarPage onClose={() => { setShowCalendar(false); setSelectedCategory(null); }} />
           </div>
         )}
