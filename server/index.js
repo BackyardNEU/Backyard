@@ -72,6 +72,5 @@ app.listen(port, () => {
 });
 
 startQueue().catch((err) => {
-  console.error('[queue] failed to start:', err);
-  process.exit(1);
+  console.error('[queue] failed to start — notifications disabled:', err.message);
 });
