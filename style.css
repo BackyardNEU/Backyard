@@ -31,7 +31,7 @@ html, body {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  filter: saturate(0.82) brightness(1.03);
+  filter: saturate(0.81) brightness(1.03);
   z-index: -2;
 }
 
