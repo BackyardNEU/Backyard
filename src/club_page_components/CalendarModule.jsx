@@ -7,12 +7,11 @@ import './CalendarModule.css';
  * Calendar / Events module — simplified "Coming Up" list.
  *
  * data shape: { filterByMembership: boolean }
- * @param {Object}   club          - club object
  * @param {Object}   data          - module data
  * @param {boolean}  editing       - page edit mode
  * @param {boolean}  isApproved    - true for approved club owners; shows add-event form
  * @param {Function} onChange      - (updatedData) => void
- * @param {string}   warning
+ * @param {string}   warning       - displays a warning for invalid fields not entered in by page editor
  * @param {Array}    events        - upcoming events fetched by ExpandedTile, sorted by start_time
  * @param {Set}      myRsvpSet     - event IDs the current user has RSVPd to
  * @param {Map}      friendRsvpMap - event ID → [{ username, ... }]
@@ -21,7 +20,6 @@ import './CalendarModule.css';
  * @param {string}   userId        - null if not logged in
  */
 export function CalendarModule({
-  club,
   data,
   editing,
   isApproved = false,
@@ -58,13 +56,19 @@ export function CalendarModule({
     setOverlayHasMore(el.scrollHeight - el.scrollTop - el.clientHeight > 10);
   };
 
+  // form for entering data for a new event
   const [showForm, setShowForm] = useState(false);
+  // set initial form data to empty
   const [formData, setFormData] = useState({ description: '', date: '', startTime: '', endTime: '' });
+  // image file for form
   const [imageFile, setImageFile] = useState(null);
+  // image preview for previewing the event in before posting it
   const [imagePreview, setImagePreview] = useState(null);
+  // warning for invalid fields in the form
   const [formWarning, setFormWarning] = useState('');
+  // for loading/data saving purposes
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  // sorting events passed in through events prop by closest to current date
   const sorted = [...events].sort((a, b) => parseISO(a.start_time) - parseISO(b.start_time));
 
   // ── add-event form helpers ─────────────────────────────────────────────
@@ -83,11 +87,13 @@ export function CalendarModule({
     return true;
   }
 
+  // simple updater
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  //necessary for when the image in the form changes as we need to change multiple different things
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -95,6 +101,7 @@ export function CalendarModule({
     setImagePreview(URL.createObjectURL(file));
   };
 
+  //submission handler
   const handleSubmit = async () => {
     if (!validateForm()) return;
     setIsSubmitting(true);
@@ -102,10 +109,12 @@ export function CalendarModule({
       let imageUrl = null;
       if (imageFile) {
         const ext = imageFile.name.split('.').pop() || 'jpg';
+        // request a newly generated uploard url for storage bucket in supabase using signed url for secure uploads
         const { signedUrl, publicUrl } = await apiFetch('/storage/event-poster-upload-url', {
           method: 'POST',
           body: { ext },
         });
+        // do the actual uploard with the image fil using the signed url
         const uploadRes = await fetch(signedUrl, {
           method: 'PUT',
           body: imageFile,
@@ -114,12 +123,14 @@ export function CalendarModule({
         if (!uploadRes.ok) throw new Error('Image upload failed.');
         imageUrl = publicUrl;
       }
+      // adds the rest of the data after the image upload succeeds
       await onAddEvent?.({
         description: formData.description,
         startTime: `${formData.date}T${formData.startTime}:00`,
         endTime: `${formData.date}T${formData.endTime}:00`,
         imageUrl,
       });
+      // reset form fields
       setShowForm(false);
       setFormData({ description: '', date: '', startTime: '', endTime: '' });
       setImageFile(null);
@@ -132,6 +143,7 @@ export function CalendarModule({
     }
   };
 
+  // in case of the user cancelling the upload or sudden page failure
   const handleCancelForm = () => {
     setShowForm(false);
     setFormData({ description: '', date: '', startTime: '', endTime: '' });
