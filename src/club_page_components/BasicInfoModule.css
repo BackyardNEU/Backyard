@@ -441,7 +441,12 @@
   .rectangle_min {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    /* Left-aligned (not centered) so club-img-exp's left edge stays pinned exactly
+       1% to the right of .rectangle's left edge (image-stack already sits flush
+       against .content-col's left edge, and .rectangle sits at left: -1%, so
+       flex-start here lands exactly at rectangle_left + 1%). This also means any
+       future width growth on club-img-exp extends to the right only. */
+    align-items: flex-start;
     gap: 8px;
     width: 100%;
   }
