@@ -94,19 +94,20 @@
 .add-events-btn {
   font-family: 'Barlow Condensed', sans-serif;
   display: inline-block;
-  padding: 10px 15px;
+  padding: 5px 10px;
   background-color: rgb(207, 87, 69);
   color: #fff;
   border: none;
-  border-radius: 90px;
+  border-radius: 10px;
   cursor: pointer;
   transition: transform 0.12s ease;
+}
+
+.add-events-btn:not(.duo-btn) {
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
 }
 
-.add-events-btn:hover {
-  transform: scale(1.05);
-}
+
 
 /* Sized to match the height of the pill buttons next to it */
 .exp-action-heart {
@@ -151,8 +152,12 @@
   border: none;
   border-radius: 90px;
   transition: transform 0.12s ease;
+}
+
+.review-btn:not(.duo-btn):not(.link-btn) {
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
 }
+
 
 .log-btn {
   width: 170px;
@@ -171,11 +176,18 @@
   margin-top: 10px;
   margin-bottom: 10px;
   transition: transform 0.12s ease, background-color 0.2s ease;
+}
+
+.membership-btn:not(.duo-btn) {
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
 }
 
 .membership-btn:hover {
   transform: scale(1.05);
+}
+
+.membership-btn.duo-btn:hover {
+  transform: none;
 }
 
 .membership-btn:disabled {

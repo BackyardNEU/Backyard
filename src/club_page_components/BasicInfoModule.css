@@ -130,8 +130,8 @@
 /* Separator dot between mutual-friend avatars and top tags — tighter horizontal
    spacing than .about-meta-row's normal gap gives it, since it's just a divider. */
 .tag-separator {
-  margin-left: -0.5rem;
-  margin-right: -0.5rem;
+  margin-left: -0.35rem;
+  margin-right: -0.35rem;
 }
 
 .separator {
@@ -877,27 +877,52 @@
   padding: 8px 0;
 }
 
-/* Base link button — inherits review-btn shape */
+/* Base link button — carries its own "duo button" press effect
+   (duplicated from .duo-btn in index.css, not shared via that class,
+   so link-specific per-keyword shadow colors can be stored alongside
+   each keyword's background-color below). */
 .link-btn {
+  position: relative;
+  z-index: 1;
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.95rem;
-  padding: 8px 16px;
+  font-size: 1rem;
+  padding: 5px 10px;
+  margin: 0;
+  border-radius: 10px;
   text-decoration: none;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  --duo-shadow: rgb(52, 32, 0); /* default: matches the base brown review-btn background */
+  box-shadow: 0 7px 0 var(--duo-shadow);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
-/* Keyword text-color variants (on the dark review-btn background) */
-.link-btn--instagram { background-color: rgb(194, 0, 181); color: #ffffff; }
-.link-btn--facebook  { background-color: rgb(66, 143, 187); color: #ffffff;  }
+.link-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.19'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+.link-btn:active {
+  box-shadow: none;
+  transform: translateY(10px);
+}
+
+/* Keyword variants: background-color and its matching box-shadow color
+   are stored together so they stay in sync. */
+.link-btn--instagram { background-color: rgb(194, 0, 181); color: #ffffff; --duo-shadow: rgb(116, 0, 109); }
+.link-btn--facebook  { background-color: rgb(66, 143, 187); color: #ffffff; --duo-shadow: rgb(43, 93, 122); }
 .link-btn--discord   { color: #B3BAF7; }
-.link-btn--youtube  { background-color: rgb(165, 39, 17); color: #ffffff;  }
+.link-btn--youtube  { background-color: rgb(165, 39, 17); color: #ffffff; --duo-shadow: rgb(107, 25, 11); }
 .link-btn--email     { color: #7DEDA7; }
 .link-btn--album     { color: #FFD275; }
 .link-btn--slack     { color: #7DE8F5; }
-.link-btn--tiktok    {background-color: rgb(0, 0, 0); color: #ffffff;}
+.link-btn--tiktok    { background-color: rgb(0, 0, 0); color: #ffffff; --duo-shadow: rgb(45, 45, 45); }
 .link-btn--linktree  { color: #A3F7B5; }
 
 /* Desktop inline expansion — extra links shown in a row below the action row */

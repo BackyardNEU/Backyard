@@ -234,20 +234,25 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
             <span className="links-sep">|</span>
             <div className="links-bar">
               {enabledLinks.slice(0, 3).map((link, i) => (
-                <a
-                  key={link.id || i}
-                  className={`review-btn link-btn link-btn--${getLinkKeyword(link.name)}`}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {link.name}
-                </a>
+                <div className="duo-btn-wrap" key={link.id || i}>
+                  <div className="duo-btn-pill" aria-hidden="true" />
+                  <a
+                    className={`review-btn link-btn link-btn--${getLinkKeyword(link.name)}`}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {link.name}
+                  </a>
+                </div>
               ))}
               {enabledLinks.length > 3 && (
-                <button className="review-btn link-btn links-toggle-btn" onClick={handleMoreLinks}>
-                  {linksExpanded ? 'Less' : 'More'}
-                </button>
+                <div className="duo-btn-wrap">
+                  <div className="duo-btn-pill" aria-hidden="true" />
+                  <button className="review-btn link-btn links-toggle-btn" onClick={handleMoreLinks}>
+                    {linksExpanded ? 'Less' : 'More'}
+                  </button>
+                </div>
               )}
             </div>
           </>
@@ -263,15 +268,17 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
       {linksExpanded && (
         <div className="links-expanded-row">
           {enabledLinks.slice(3).map((link, i) => (
-            <a
-              key={link.id || i}
-              className={`review-btn link-btn link-btn--${getLinkKeyword(link.name)}`}
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {link.name}
-            </a>
+            <div className="duo-btn-wrap" key={link.id || i}>
+              <div className="duo-btn-pill" aria-hidden="true" />
+              <a
+                className={`review-btn link-btn link-btn--${getLinkKeyword(link.name)}`}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {link.name}
+              </a>
+            </div>
           ))}
         </div>
       )}
@@ -453,15 +460,17 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
             </div>
             <div className="links-modal-grid">
               {enabledLinks.map((link, i) => (
-                <a
-                  key={link.id || i}
-                  className={`review-btn link-btn link-btn--${getLinkKeyword(link.name)}`}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {link.name}
-                </a>
+                <div className="duo-btn-wrap" key={link.id || i}>
+                  <div className="duo-btn-pill" aria-hidden="true" />
+                  <a
+                    className={`review-btn link-btn link-btn--${getLinkKeyword(link.name)}`}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {link.name}
+                  </a>
+                </div>
               ))}
             </div>
           </div>

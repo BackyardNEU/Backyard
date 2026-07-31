@@ -487,21 +487,45 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             <div className="exp-action-row-inner">
                 {isClicked
                     ? <img src={logImage} className="log-btn" alt="Clicked state" />
-                    : <button className="review-btn" onClick={handleClick}>Share your experience</button>
+                    : (
+                        <div className="duo-btn-wrap">
+                            <div className="duo-btn-pill" aria-hidden="true" />
+                            <button
+                                className="review-btn duo-btn"
+                                style={{ '--duo-shadow': 'rgb(52, 32, 0)' }}
+                                onClick={handleClick}
+                            >
+                                Share your experience
+                            </button>
+                        </div>
+                    )
                 }
 
                 {user && (
-                    <button
-                        className={`membership-btn ${isMember ? 'leave' : 'join'}`}
-                        onClick={handleMembership}
-                        disabled={memberLoading}
-                    >
-                        {memberLoading ? '...' : isMember ? 'Leave Club' : 'Join Club'}
-                    </button>
+                    <div className="duo-btn-wrap">
+                        <div className="duo-btn-pill" aria-hidden="true" />
+                        <button
+                            className={`membership-btn duo-btn ${isMember ? 'leave' : 'join'}`}
+                            style={{ '--duo-shadow': isMember ? 'rgb(90, 20, 20)' : 'rgb(0, 45, 8)' }}
+                            onClick={handleMembership}
+                            disabled={memberLoading}
+                        >
+                            {memberLoading ? '...' : isMember ? 'Leave Club' : 'Join Club'}
+                        </button>
+                    </div>
                 )}
 
                 {/* Placeholder — event creation to be wired up later */}
-                <button className="add-events-btn" type="button">Add Events</button>
+                <div className="duo-btn-wrap">
+                    <div className="duo-btn-pill" aria-hidden="true" />
+                    <button
+                        className="add-events-btn duo-btn"
+                        style={{ '--duo-shadow': 'rgb(157, 62, 47)' }}
+                        type="button"
+                    >
+                        Add Events
+                    </button>
+                </div>
 
                 {GlobalValue && (
                     <img
