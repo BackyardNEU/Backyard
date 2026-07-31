@@ -117,7 +117,7 @@
 }
 
 .tag {
- 
+
   border-radius: 999px;
   padding: 0.15rem 0.4rem;
   margin-top: 1px;
@@ -125,6 +125,13 @@
   font-weight: 400;
   color: #000000;
     text-transform: uppercase;
+}
+
+/* Separator dot between mutual-friend avatars and top tags — tighter horizontal
+   spacing than .about-meta-row's normal gap gives it, since it's just a divider. */
+.tag-separator {
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
 }
 
 .separator {
