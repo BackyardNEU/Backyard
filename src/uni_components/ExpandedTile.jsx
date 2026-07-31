@@ -639,7 +639,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
             onAnimationComplete={() => setAnimationDone(true)}
         >
-            <button className="close-btn" onClick={handleClose}>x</button>
+            <button className="close-btn" onClick={handleClose}>×</button>
 
             {isApproved && !isEditing && (
                 <div className="exp-editor-toolbar">
