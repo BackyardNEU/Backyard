@@ -20,6 +20,7 @@ import ModuleAccordion from '../club_page_components/accordion';
 import { useClubData } from '../context/useClubData';
 import { useGlobalStore } from '../lib/store';
 import InviteLinkButton from '../club_page_components/InviteLinkButton';
+import dividerLineImg from '/src/assets/border-horizontal-gray.svg';
 
 // --- Validation helpers ---
 const isValidUrl = (url) => {
@@ -700,14 +701,14 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     <>
                         {viewModules.length > 0 && (
                             <div className="module-view-divider">
-                                <div className="divider" />
+                                <div className="divider" style={{ backgroundImage: `url(${dividerLineImg})` }} aria-hidden="true" />
                             </div>
                         )}
                         {viewModules.map((module, index) => (
                             <React.Fragment key={module.type}>
                                 {index > 0 && (
                                     <div className="module-view-divider">
-                                        <div className="divider" />
+                                        <div className="divider" style={{ backgroundImage: `url(${dividerLineImg})` }} aria-hidden="true" />
                                     </div>
                                 )}
                                 {renderModule(
