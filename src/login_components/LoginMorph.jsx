@@ -44,7 +44,7 @@ function LoginMorph({ open, setOpen }) {
   // first-name field is committed (blurred) on the signup view
   useEffect(() => {
     if (!signupFirstName) { setTypedGreeting(""); return; }
-    const full = `, ${signupFirstName}!`;
+    const full = `, ${signupFirstName}!`.toUpperCase();
     setTypedGreeting("");
     let i = 0;
     const timer = setInterval(() => {
@@ -126,6 +126,7 @@ function LoginMorph({ open, setOpen }) {
           <button className="close-btn" onClick={() => setOpen(false)}>
             &times;
           </button>
+          <div className="login-card-scroll">
           <img className="raccoon" src="/raccoon_pfp.png" />
           <h2>{viewHeading[view]}{view === "signup" ? typedGreeting : ""}</h2>
 
@@ -181,6 +182,7 @@ function LoginMorph({ open, setOpen }) {
               FORGOT PASSWORD
             </button>
           )}
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
