@@ -59,7 +59,7 @@ export function CalendarModule({
   // form for entering data for a new event
   const [showForm, setShowForm] = useState(false);
   // set initial form data to empty
-  const [formData, setFormData] = useState({ description: '', date: '', startTime: '', endTime: '' });
+  const [formData, setFormData] = useState({ description: '', date: '', startTime: '', endTime: '', membersOnly: false });
   // image file for form
   const [imageFile, setImageFile] = useState(null);
   // image preview for previewing the event in before posting it
@@ -129,10 +129,11 @@ export function CalendarModule({
         startTime: `${formData.date}T${formData.startTime}:00`,
         endTime: `${formData.date}T${formData.endTime}:00`,
         imageUrl,
+        isMembersOnly: formData.membersOnly,
       });
       // reset form fields
       setShowForm(false);
-      setFormData({ description: '', date: '', startTime: '', endTime: '' });
+      setFormData({ description: '', date: '', startTime: '', endTime: '', membersOnly: false });
       setImageFile(null);
       setImagePreview(null);
       setFormWarning('');
@@ -146,7 +147,7 @@ export function CalendarModule({
   // in case of the user cancelling the upload or sudden page failure
   const handleCancelForm = () => {
     setShowForm(false);
-    setFormData({ description: '', date: '', startTime: '', endTime: '' });
+    setFormData({ description: '', date: '', startTime: '', endTime: '', membersOnly: false });
     setImageFile(null);
     setImagePreview(null);
     setFormWarning('');
@@ -184,6 +185,9 @@ export function CalendarModule({
                     {format(start, 'h:mm a')} – {format(end, 'h:mm a')}
                   </p>
                   <p className="cal-event-desc">{event.event_description}</p>
+                  {event.is_members_only && (
+                    <span className="cal-members-badge">Members only</span>
+                  )}
                   {friends && friends.length > 0 && (
                     <p className="friend-rsvp-callout">
                       {friends.length === 1
@@ -203,20 +207,6 @@ export function CalendarModule({
               </div>
             );
           })}
-        </div>
-      )}
-
-      {/* Edit settings */}
-      {editing && (
-        <div className="cal-edit-section">
-          <label className="cal-toggle-label">
-            <input
-              type="checkbox"
-              checked={data?.filterByMembership ?? false}
-              onChange={(e) => onChange?.({ ...data, filterByMembership: e.target.checked })}
-            />
-            {' '}Restrict members-only events to club members
-          </label>
         </div>
       )}
 
@@ -264,6 +254,9 @@ export function CalendarModule({
                         {format(evStart, 'h:mm a')} – {format(evEnd, 'h:mm a')}
                       </p>
                       <p className="cal-overlay-desc">{ev.event_description}</p>
+                      {ev.is_members_only && (
+                        <span className="cal-members-badge">Members only</span>
+                      )}
                       {evFriends && evFriends.length > 0 && (
                         <p className="friend-rsvp-callout">
                           {evFriends.length === 1
@@ -375,6 +368,16 @@ export function CalendarModule({
                   />
                 </div>
               </div>
+
+              <label className="cal-label cal-members-only-label">
+                Members only
+                <input
+                  type="checkbox"
+                  name="membersOnly"
+                  checked={formData.membersOnly}
+                  onChange={(e) => setFormData(prev => ({ ...prev, membersOnly: e.target.checked }))}
+                />
+              </label>
 
               {/* Live card preview */}
               {(imagePreview || formData.description || formData.date) && (

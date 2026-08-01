@@ -69,7 +69,7 @@ router.post('/', async (req, res) => {
     const validationError = validateEvent(req.body);
     if (validationError) return res.status(400).json({ error: validationError });
 
-    const { clubId, clubName, description, startTime, endTime, imageUrl } = req.body;
+    const { clubId, clubName, description, startTime, endTime, imageUrl, isMembersOnly } = req.body;
 
     const { data: profile } = await supabaseAdmin
         .from('profiles')
@@ -88,6 +88,7 @@ router.post('/', async (req, res) => {
         event_description: description,
         start_time: startTime,
         end_time: endTime,
+        is_members_only: isMembersOnly === true,
     };
     if (imageUrl) insert.event_image_url = imageUrl;
 

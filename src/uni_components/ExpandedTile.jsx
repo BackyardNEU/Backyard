@@ -96,7 +96,6 @@ function validateMemberRoster(data) {
 }
 
 function validateCalendar(_data) {
-    // module.data stores only settings (filterByMembership); events live in the DB
     return null;
 }
 
@@ -387,6 +386,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 startTime: eventData.startTime,
                 endTime: eventData.endTime,
                 imageUrl: eventData.imageUrl ?? undefined,
+                isMembersOnly: eventData.isMembersOnly ?? false,
             },
         });
         setClubEvents((prev) =>

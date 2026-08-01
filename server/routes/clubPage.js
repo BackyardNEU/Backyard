@@ -122,9 +122,7 @@ const DEFAULT_MODULES = [
     type: 'calendar',
     order: 6,
     isDisplayed: true,
-    data: {
-      filterByMembership: false,
-    },
+    data: {},
   },
   {
     type: 'comments',

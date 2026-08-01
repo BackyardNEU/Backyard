@@ -657,6 +657,12 @@
   justify-content: flex-start;
 }
 
+.cal-members-only-label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
 @media (min-width: 1400px) {
   .calpg-month-row-monthly.calpg-align-row {
     padding: 0 34px;
