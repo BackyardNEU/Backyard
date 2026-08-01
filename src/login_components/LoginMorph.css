@@ -98,7 +98,7 @@
   position: fixed;
   inset: 0;               /* ← fills viewport */
   margin: auto;           /* ← centers */
-  width: 120vh;
+  width: min(120vh, 96vw); /* never wider than the viewport — fits down to ~300px */
   height: fit-content;
 
   font-family: 'Barlow Condensed', sans-serif;
@@ -177,9 +177,8 @@
 .login-card h2 {
   font-family: 'Barlow Condensed', sans-serif;
   margin-bottom: 1%;
-  font-size: 2rem;
   font-weight: 6=800;
-  font-size: 60px;
+  font-size: clamp(28px, 10vw, 60px);
 }
 
 /* --- Close button --- */
@@ -239,22 +238,27 @@
   background: #f5f5f5;
 }
 
-/* Overrides .duo-btn's shared !important padding, just for this button */
+/* Overrides .duo-btn's shared !important padding/font-size, just for this button —
+   matches .auth-submit-btn's clamp exactly so "Sign in with Google" and "Login"
+   render at the same size/weight */
 .oauth-btn.duo-btn {
   padding-top: 14px !important;
   padding-bottom: 14px !important;
+  padding-left: clamp(0px, 3vw, 10px) !important;
+  padding-right: clamp(0px, 3vw, 10px) !important;
+  font-size: clamp(0.85rem, 4vw, 1.25rem) !important;
 }
 
 /* Keeps the same width the plain oauth-btn used to have, now on the duo-btn wrap */
 .google-btn-wrap {
-  width: 70vh;
+  width: min(70vh, 88vw);
 }
 
 /* --- Divider --- */
 .auth-divider {
   display: flex;
   align-items: center;
-  width: 70vh;
+  width: min(70vh, 88vw);
   margin: 1.5rem 0;
 }
 
@@ -269,6 +273,7 @@
   padding: 0 12px;
   color: #999;
   font-size: 0.85rem;
+  font-family: 'Barlow Condensed', sans-serif;
 }
 
 /* --- Forgot password link --- */
@@ -278,8 +283,14 @@
   color: #888;
   cursor: pointer;
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.85rem;
-  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+@media (min-width: 501px) {
+  .forgot-password-btn {
+    font-size: 0.9375rem;
+  }
 }
 
 .forgot-password-btn:hover {

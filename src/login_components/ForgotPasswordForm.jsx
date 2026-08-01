@@ -50,9 +50,17 @@ function ForgotPasswordForm({ onBack, needHelpButton }) {
         disabled={loading}
         required
       />
-      <button type="submit" disabled={loading}>
-        {loading ? "Sending..." : "Send Reset Link"}
-      </button>
+      <div className="duo-btn-wrap reset-submit-wrap">
+        <div className="duo-btn-pill" aria-hidden="true" />
+        <button
+          type="submit"
+          disabled={loading}
+          className="reset-submit-btn duo-btn"
+          style={{ '--duo-shadow': 'rgb(30, 80, 95)' }}
+        >
+          {loading ? "Sending..." : "Send Reset Link"}
+        </button>
+      </div>
       {error && <div className="form-error">{error}</div>}
       <div className="submit-row">
         {needHelpButton}
