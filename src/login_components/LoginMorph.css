@@ -101,18 +101,69 @@
   width: 120vh;
   height: fit-content;
 
+  font-family: 'Barlow Condensed', sans-serif;
   background: rgb(252, 252, 252);
-  border-radius: 0px;
+  border-radius: 0;
+  padding: 2rem 0;
 
   display: flex;
   flex-direction: column;
   align-items: center;
 
-  border: 1px solid rgb(162, 162, 162);
-  border-radius: 15px;
-  box-shadow: 0 20px 80px rgba(0,0,0,0.4), 
+  box-shadow: 0 20px 80px rgba(0,0,0,0.4),
             0 0 0 9999px rgba(0,0,0,0.65);
-  z-index: 9999;   
+  z-index: 9999;
+}
+
+.login-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.19'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+/* ===== Ink-line border (same assets as cm-poster / comment-card) ===== */
+.login-card-border {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: auto;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.login-card-border-left {
+  left: -1px;
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+
+.login-card-border-right {
+  right: -2px;
+  transform: scaleX(-1.0);
+  transform-origin: center;
+}
+
+.login-card-border-h-wrap {
+  position: absolute;
+  left: -1px;
+  width: 100%;
+  height: 5px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  background-size: auto 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.login-card-border-top-wrap {
+  top: -1px;
+}
+
+.login-card-border-bottom-wrap {
+  bottom: -1px;
 }
 
 /* --- Avatar --- */
@@ -124,7 +175,7 @@
 
 /* --- Heading --- */
 .login-card h2 {
-  font-family: "Be Vietnam Pro", sans-serif;
+  font-family: 'Barlow Condensed', sans-serif;
   margin-bottom: 1%;
   font-size: 2rem;
   font-weight: 6=800;
@@ -139,6 +190,7 @@
 
   background: none;
   border: none;
+  font-family: 'Barlow Condensed', sans-serif;
   font-size: 2rem;
   cursor: pointer;
   line-height: 1;
@@ -148,11 +200,19 @@
 .toggle-auth-btn {
   background: none;
   border: none;
-  color: #555;
+  color: #000;
   cursor: pointer;
-  font-size: 0.95rem;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1rem;
+  font-weight: 300;
   margin: 0.75rem 0 1.5rem;
-  text-decoration: underline;
+
+}
+
+@media (min-width: 501px) {
+  .toggle-auth-btn {
+    font-size: 1.25rem;
+  }
 }
 
 .toggle-auth-btn:hover {
@@ -165,13 +225,12 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  width: 70vh;
+  width: 100%;
   padding: 10px 12px;
-  border: 2px solid #ddd;
-  border-radius: 6px;
+  border: none;
   background: #fff;
   font-size: 1rem;
-  font-family: "Be Vietnam Pro", sans-serif;
+  font-family: 'Barlow Condensed', sans-serif;
   cursor: pointer;
   font-weight: 500;
 }
@@ -180,12 +239,23 @@
   background: #f5f5f5;
 }
 
+/* Overrides .duo-btn's shared !important padding, just for this button */
+.oauth-btn.duo-btn {
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
+}
+
+/* Keeps the same width the plain oauth-btn used to have, now on the duo-btn wrap */
+.google-btn-wrap {
+  width: 70vh;
+}
+
 /* --- Divider --- */
 .auth-divider {
   display: flex;
   align-items: center;
   width: 70vh;
-  margin: 0.5rem 0;
+  margin: 1.5rem 0;
 }
 
 .auth-divider::before,
@@ -207,6 +277,7 @@
   border: none;
   color: #888;
   cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif;
   font-size: 0.85rem;
   margin-top: 0.25rem;
 }
@@ -220,10 +291,18 @@
 .need-help-btn {
   background: none;
   border: none;
-  color: #aaa;
+  color: #000;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1rem;
+  font-weight: 300;
   margin-bottom: 1.5rem;
+}
+
+@media (min-width: 501px) {
+  .need-help-btn {
+    font-size: 1.25rem;
+  }
 }
 
 .need-help-btn:hover {

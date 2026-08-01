@@ -74,6 +74,12 @@
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
+@media (min-width: 501px) {
+  .duo-btn {
+    font-size: 1.25rem !important;
+  }
+}
+
 .duo-btn:active {
   box-shadow: none;
   transform: translateY(10px);

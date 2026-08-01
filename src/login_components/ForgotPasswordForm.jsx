@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
+import BorderedInput from "./BorderedInput";
 import "./form.css";
 
-function ForgotPasswordForm({ onBack }) {
+function ForgotPasswordForm({ onBack, needHelpButton }) {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -30,7 +31,7 @@ function ForgotPasswordForm({ onBack }) {
       <div className="forgot-success">
         <p>Check your email for a password reset link.</p>
         <button type="button" className="toggle-auth-btn" onClick={onBack}>
-          Back to login
+          BACK TO LOGIN
         </button>
       </div>
     );
@@ -41,7 +42,7 @@ function ForgotPasswordForm({ onBack }) {
       <p className="forgot-instructions">
         Enter the email you signed up with and we'll send you a reset link.
       </p>
-      <input
+      <BorderedInput
         type="email"
         placeholder="Email"
         value={email}
@@ -53,9 +54,12 @@ function ForgotPasswordForm({ onBack }) {
         {loading ? "Sending..." : "Send Reset Link"}
       </button>
       {error && <div className="form-error">{error}</div>}
-      <button type="button" className="toggle-auth-btn" onClick={onBack}>
-        Back to login
-      </button>
+      <div className="submit-row">
+        {needHelpButton}
+        <button type="button" className="toggle-auth-btn" onClick={onBack}>
+          BACK TO LOGIN
+        </button>
+      </div>
     </form>
   );
 }

@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import "./ReviewList.css";
 import { apiFetch } from "../lib/api";
 import { useClubData } from "../context/useClubData";
+import borderImg from '/src/assets/border-green.svg';
+import borderHorizontalImg from '/src/assets/border-horizontal-green.svg';
+import borderHorizontalGrayImg from '/src/assets/border-horizontal-gray.svg';
 
 /* ── Helpers ── */
 
@@ -28,101 +31,6 @@ function getImages(review) {
     if (Array.isArray(review.review_images) && review.review_images.length > 0) return review.review_images;
     if (review.review_image) return [review.review_image];
     return [];
-}
-
-/* ── Wiggly SVG border helpers ── */
-
-const SVG_AMP = 0.2;
-const SVG_FREQ = 4;
-const SVG_SMOOTH = 35;
-const SVG_RADIUS = 10;
-const SVG_STROKE = 1;
-const SVG_SEED = 1000;
-
-function svgNoise(x) {
-    return (
-        Math.sin(x * 1.13 + SVG_SEED * 0.7) * 0.55 +
-        Math.sin(x * 2.77 + SVG_SEED * 1.1) * 0.30 +
-        Math.sin(x * 6.21 + SVG_SEED * 0.3) * 0.15
-    );
-}
-
-function rrPoints(x, y, w, h, r, s) {
-    const pts = [];
-    const arc = (cx, cy, a0, a1) => {
-        for (let i = 0; i <= s; i++) {
-            const a = a0 + (a1 - a0) * (i / s);
-            pts.push({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r });
-        }
-    };
-    for (let i = 0; i <= s; i++) pts.push({ x: x + r + (w - r * 2) * (i / s), y });
-    arc(x + w - r, y + r, -Math.PI / 2, 0);
-    for (let i = 0; i <= s; i++) pts.push({ x: x + w, y: y + r + (h - r * 2) * (i / s) });
-    arc(x + w - r, y + h - r, 0, Math.PI / 2);
-    for (let i = 0; i <= s; i++) pts.push({ x: x + w - r - (w - r * 2) * (i / s), y: y + h });
-    arc(x + r, y + h - r, Math.PI / 2, Math.PI);
-    for (let i = 0; i <= s; i++) pts.push({ x, y: y + h - r - (h - r * 2) * (i / s) });
-    arc(x + r, y + r, Math.PI, Math.PI * 1.5);
-    return pts;
-}
-
-function wigglePts(pts) {
-    return pts.map((p, i) => {
-        const prev = pts[(i - 1 + pts.length) % pts.length];
-        const next = pts[(i + 1) % pts.length];
-        const dx = next.x - prev.x;
-        const dy = next.y - prev.y;
-        const len = Math.hypot(dx, dy) || 1;
-        const n = svgNoise(i * SVG_FREQ * 0.1) * SVG_AMP;
-        return { x: p.x + (-dy / len) * n, y: p.y + (dx / len) * n };
-    });
-}
-
-function ptsToPath(pts) {
-    let d = `M ${pts[0].x} ${pts[0].y}`;
-    for (let i = 0; i < pts.length - 1; i++) {
-        const p0 = pts[i - 1] || pts[i];
-        const p1 = pts[i];
-        const p2 = pts[i + 1];
-        const p3 = pts[i + 2] || p2;
-        const cp1x = p1.x + (p2.x - p0.x) / 6;
-        const cp1y = p1.y + (p2.y - p0.y) / 6;
-        const cp2x = p2.x - (p3.x - p1.x) / 6;
-        const cp2y = p2.y - (p3.y - p1.y) / 6;
-        d += ` C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${p2.x} ${p2.y}`;
-    }
-    return d + ' Z';
-}
-
-function wavyDivPath(y, w) {
-    let d = '';
-    const steps = SVG_SMOOTH * 4;
-    for (let i = 0; i <= steps; i++) {
-        const t = i / steps;
-        const px = 6 + t * (w - 12);
-        const py = y + svgNoise(i * SVG_FREQ * 0.1) * SVG_AMP;
-        d += i === 0 ? `M ${px} ${py}` : ` L ${px} ${py}`;
-    }
-    return d;
-}
-
-function drawCardSvg(cardEl, svgEl) {
-    const w = cardEl.offsetWidth;
-    const h = cardEl.offsetHeight;
-    if (!w || !h) return;
-    svgEl.setAttribute('viewBox', `0 0 ${w} ${h}`);
-
-    const outerPts = wigglePts(rrPoints(SVG_STROKE, SVG_STROKE, w - SVG_STROKE * 2, h - SVG_STROKE * 2, SVG_RADIUS, SVG_SMOOTH));
-    let markup = `<path class="border-rect" d="${ptsToPath(outerPts)}"></path>`;
-
-    const cardRect = cardEl.getBoundingClientRect();
-    cardEl.querySelectorAll('.comment-divider').forEach(div => {
-        const dr = div.getBoundingClientRect();
-        const y = dr.top - cardRect.top + dr.height / 2;
-        markup += `<path class="divider-line" d="${wavyDivPath(y, w)}"></path>`;
-    });
-
-    svgEl.innerHTML = markup;
 }
 
 /* ── Image with fallback ── */
@@ -206,33 +114,12 @@ function CommentCard({ review, userVote, onVote, onToggleHide, editing }) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [needsExpand, setNeedsExpand] = useState(false);
     const [imageOrientation, setImageOrientation] = useState('');
-    const cardRef = useRef(null);
     const bodyRef = useRef(null);
-    const svgRef = useRef(null);
 
     const title = review.review_title?.trim() || '';
     const text = review.review_text?.trim() || '';
     const images = getImages(review);
     const date = review.created_at;
-
-    // Draw/redraw SVG border + dividers, triggered by any layout change
-    useEffect(() => {
-        const card = cardRef.current;
-        const svg = svgRef.current;
-        if (!card || !svg) return;
-        const draw = () => drawCardSvg(card, svg);
-        draw();
-        const ro = new ResizeObserver(draw);
-        ro.observe(card);
-        return () => ro.disconnect();
-    }, []);
-
-    // Redraw when expand toggles (card height animates) or image loads
-    useEffect(() => {
-        if (cardRef.current && svgRef.current) {
-            drawCardSvg(cardRef.current, svgRef.current);
-        }
-    }, [isExpanded, imageOrientation]);
 
     // Measure body height after render to decide if More button is needed
     useEffect(() => {
@@ -246,22 +133,36 @@ function CommentCard({ review, userVote, onVote, onToggleHide, editing }) {
     return (
         <div
             className={`comment-card${review._pendingHidden && editing ? ' comment-card--hidden' : ''}`}
-            ref={cardRef}
             data-expanded={isExpanded || undefined}
         >
-            <svg ref={svgRef} className="comment-border-svg" />
+            <img src={borderImg} alt="" className="comment-border comment-border-left" />
+            <img src={borderImg} alt="" className="comment-border comment-border-right" />
+            <div
+                className="comment-border-h-wrap comment-border-top-wrap"
+                style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+                aria-hidden="true"
+            />
+            <div
+                className="comment-border-h-wrap comment-border-bottom-wrap"
+                style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+                aria-hidden="true"
+            />
 
             {/* Body shrinks/expands; footer stays visible */}
             <div className="comment-card__body" ref={bodyRef}>
                 {title && <h4 className="comment-title">{title}</h4>}
-                {title && (images.length > 0 || text) && <div className="comment-divider" />}
+                {title && (images.length > 0 || text) && (
+                    <div className="comment-divider" style={{ backgroundImage: `url(${borderHorizontalGrayImg})` }} />
+                )}
 
                 {images.length > 0 && (
                     <div className={`comment-image${imageOrientation ? ` ${imageOrientation}` : ''}`}>
                         <ImageCarousel images={images} onOrientationChange={setImageOrientation} />
                     </div>
                 )}
-                {images.length > 0 && text && <div className="comment-divider" />}
+                {images.length > 0 && text && (
+                    <div className="comment-divider" style={{ backgroundImage: `url(${borderHorizontalGrayImg})` }} />
+                )}
 
                 {text && <p className="comment-text">{text}</p>}
 

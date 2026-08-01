@@ -913,6 +913,12 @@
   transform: translateY(10px);
 }
 
+@media (min-width: 501px) {
+  .link-btn {
+    font-size: 1.25rem;
+  }
+}
+
 /* Keyword variants: background-color and its matching box-shadow color
    are stored together so they stay in sync. */
 .link-btn--instagram { background-color: rgb(194, 0, 181); color: #ffffff; --duo-shadow: rgb(116, 0, 109); }
