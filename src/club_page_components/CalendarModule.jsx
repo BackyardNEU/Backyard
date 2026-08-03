@@ -1,4 +1,4 @@
-import React, { useState, useRef, useLayoutEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import { apiFetch } from '../lib/api';
 import newEventBtnImg from '../assets/New_Event_Btn.png';
@@ -13,6 +13,8 @@ import './CalendarModule.css';
  * Calendar / Events module — simplified "Coming Up" list.
  *
  * data shape: { filterByMembership: boolean }
+ * @param {Object}   club          - club record (used for its image_url, as a
+ *                                    poster placeholder for events with no image)
  * @param {Object}   data          - module data
  * @param {boolean}  editing       - page edit mode
  * @param {boolean}  isApproved    - true for approved club owners; shows add-event form
@@ -26,6 +28,7 @@ import './CalendarModule.css';
  * @param {string}   userId        - null if not logged in
  */
 export function CalendarModule({
+  club,
   editing,
   isApproved = false,
   warning,
@@ -74,8 +77,23 @@ export function CalendarModule({
   const [isSubmitting, setIsSubmitting] = useState(false);
   // scale/crop modal for the poster, open only while editing an already-selected image
   const [showCropModal, setShowCropModal] = useState(false);
+  // the add-btn/cal-form share one row slot; its height is animated between
+  // the button's compact size and the form's real (measured) height — same
+  // technique as the comment card's More/Less, itself derived from the
+  // module accordion's grid-template-rows 0fr/1fr trick.
+  const addSlotRef = useRef(null);
+  const [addSlotHeight, setAddSlotHeight] = useState(null);
   // sorting events passed in through events prop by closest to current date
   const sorted = [...events].sort((a, b) => parseISO(a.start_time) - parseISO(b.start_time));
+
+  // Re-measure whenever the form's own content changes shape (image
+  // added/removed, warning appears, etc.) so the slot always grows/shrinks to
+  // fit — not just once when it first opens.
+  useEffect(() => {
+    if (showForm && addSlotRef.current) {
+      setAddSlotHeight(addSlotRef.current.scrollHeight);
+    }
+  }, [showForm, imagePreview, formWarning]);
 
   // ── add-event form helpers ─────────────────────────────────────────────
   function validateForm() {
@@ -173,17 +191,194 @@ export function CalendarModule({
     setFormWarning('');
   };
 
+  // The add-btn and cal-form occupy the same row slot — clicking the button
+  // morphs it into the form in place (see .cal-add-slot below).
+  const addEventButton = (
+    <button
+      className="cal-add-btn"
+      onClick={() => setShowForm(true)}
+      style={{ '--cal-add-btn-bg': `url(${newEventBtnImg})`, '--cal-add-btn-bg-hover': `url(${newEventBtnHoverImg})` }}
+    >
+      <img src={borderImg} alt="" className="cal-add-btn-border cal-add-btn-border-left" />
+      <img src={borderImg} alt="" className="cal-add-btn-border cal-add-btn-border-right" />
+      <div
+        className="cal-add-btn-border-h cal-add-btn-border-h-top"
+        style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+      />
+      <div
+        className="cal-add-btn-border-h cal-add-btn-border-h-bottom"
+        style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+      />
+    </button>
+  );
+
+  const addEventForm = (
+    <div className="cal-form">
+      <img src={borderImg} alt="" className="cal-form-border cal-form-border-left" />
+      <img src={borderImg} alt="" className="cal-form-border cal-form-border-right" />
+      <div
+        className="cal-form-border-h cal-form-border-h-top"
+        style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+      />
+      <div
+        className="cal-form-border-h cal-form-border-h-bottom"
+        style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+      />
+
+      <div className="cal-form-header">
+        <button
+          type="button"
+          className="cal-form-close-btn"
+          onClick={handleCancelForm}
+          disabled={isSubmitting}
+          aria-label="Close"
+        >
+          ×
+        </button>
+      </div>
+
+      {/* Sits above the upload tile, not overlaid on it — same reasoning as the
+          comment carousel's toolbar (avoids swallowing the tile's own click) */}
+      {imageFile && (
+        <div className="cal-image-toolbar">
+          <button
+            type="button"
+            className="cal-image-scale-btn"
+            onClick={() => setShowCropModal(true)}
+            aria-label="Scale poster"
+          >
+            SCALE
+          </button>
+          <button
+            type="button"
+            className="cal-image-remove-btn"
+            onClick={handleRemoveImage}
+            aria-label="Remove poster"
+          >
+            REMOVE
+          </button>
+        </div>
+      )}
+
+      <button
+        type="button"
+        className="cal-image-trigger"
+        onClick={() => imageInputRef.current?.click()}
+      >
+        {imagePreview ? (
+          <img className="cal-poster-preview" src={imagePreview} alt="" />
+        ) : (
+          <div className="cal-poster-placeholder-wrap">
+            <img className="cal-poster-placeholder" src={newAddPosterImg} alt="Upload event poster" />
+            <span className="cal-poster-plus">+</span>
+          </div>
+        )}
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/*"
+          style={{ display: 'none' }}
+          onChange={handleImageChange}
+        />
+      </button>
+
+      <div className="cal-divider" />
+
+      <input
+        className="cal-input"
+        type="text"
+        name="eventName"
+        value={formData.eventName}
+        onChange={handleFormChange}
+        placeholder="Event Name (Optional)"
+      />
+      <div className="cal-datetime-field">
+        <span className="cal-datetime-label">Start</span>
+        <input
+          className="cal-input"
+          type="datetime-local"
+          name="start"
+          value={formData.start}
+          onChange={handleFormChange}
+        />
+      </div>
+      <div className="cal-datetime-field">
+        <span className="cal-datetime-label">End</span>
+        <input
+          className="cal-input"
+          type="datetime-local"
+          name="end"
+          value={formData.end}
+          onChange={handleFormChange}
+        />
+      </div>
+      <input
+        className="cal-input"
+        type="text"
+        name="where"
+        value={formData.where}
+        onChange={handleFormChange}
+        placeholder="Where (Optional)"
+      />
+      <input
+        className="cal-input"
+        type="text"
+        name="description"
+        value={formData.description}
+        onChange={handleFormChange}
+        placeholder="About (Optional)"
+        maxLength={200}
+      />
+
+      {formWarning && <p className="cal-form-warning">{formWarning}</p>}
+
+      <div className="cal-form-footer">
+        <label className="cal-members-only-label">
+          <input
+            type="checkbox"
+            name="membersOnly"
+            checked={formData.membersOnly}
+            onChange={(e) => setFormData(prev => ({ ...prev, membersOnly: e.target.checked }))}
+          />
+          <span>Members Only</span>
+        </label>
+
+        <div className="duo-btn-wrap cal-submit-wrap">
+          <div className="duo-btn-pill" aria-hidden="true" />
+          <button
+            className="cal-submit-btn duo-btn"
+            style={{ '--duo-shadow': 'rgb(150, 150, 150)' }}
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Adding...' : 'Add Event'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   // ── render ─────────────────────────────────────────────────────────────
   return (
     <div className="cal-module">
       <p className="divider-header">Coming Up</p>
       {editing && warning && <p className="module-warning">{warning}</p>}
 
-      {/* Event list */}
-      {sorted.length === 0 ? (
+      {/* Event list — the add-event button (approved owners only) sits first in
+          the row, sized to match the event cards, so it's exclusive to club pages */}
+      {sorted.length === 0 && !isApproved ? (
         <p className="cal-empty">No upcoming events.</p>
       ) : (
         <div className="cal-event-list">
+          {isApproved && (
+            <div
+              className="cal-add-slot"
+              ref={addSlotRef}
+              style={showForm && addSlotHeight ? { maxHeight: `${addSlotHeight}px` } : undefined}
+            >
+              {showForm ? addEventForm : addEventButton}
+            </div>
+          )}
           {sorted.map((event) => {
             const start = parseISO(event.start_time);
             const end = parseISO(event.end_time);
@@ -196,9 +391,11 @@ export function CalendarModule({
                 className="cal-event-item cal-event-item--clickable"
                 onClick={() => setOverlayEvent(event)}
               >
-                {event.event_image_url && (
-                  <img className="cal-event-img" src={event.event_image_url} alt="" />
-                )}
+                <img
+                  className="cal-event-img"
+                  src={event.event_image_url || club?.image_url || '/raccoon_pfp.png'}
+                  alt=""
+                />
                 <div className="cal-event-body">
                   <p className="cal-event-date">{format(start, 'EEE, MMM d').toUpperCase()}</p>
                   <p className="cal-event-time">
@@ -301,181 +498,12 @@ export function CalendarModule({
         </div>
       )}
 
-      {/* Add event (approved accounts only) */}
-      {isApproved && (
-        <div className="cal-add-event-section">
-          {!showForm && (
-            <button
-              className="cal-add-btn"
-              onClick={() => setShowForm(true)}
-              style={{ '--cal-add-btn-bg': `url(${newEventBtnImg})`, '--cal-add-btn-bg-hover': `url(${newEventBtnHoverImg})` }}
-            >
-              <img src={borderImg} alt="" className="cal-add-btn-border cal-add-btn-border-left" />
-              <img src={borderImg} alt="" className="cal-add-btn-border cal-add-btn-border-right" />
-              <div
-                className="cal-add-btn-border-h cal-add-btn-border-h-top"
-                style={{ backgroundImage: `url(${borderHorizontalImg})` }}
-              />
-              <div
-                className="cal-add-btn-border-h cal-add-btn-border-h-bottom"
-                style={{ backgroundImage: `url(${borderHorizontalImg})` }}
-              />
-            </button>
-          )}
-          {showForm && (
-            <div className="cal-form">
-              <img src={borderImg} alt="" className="cal-form-border cal-form-border-left" />
-              <img src={borderImg} alt="" className="cal-form-border cal-form-border-right" />
-              <div
-                className="cal-form-border-h cal-form-border-h-top"
-                style={{ backgroundImage: `url(${borderHorizontalImg})` }}
-              />
-              <div
-                className="cal-form-border-h cal-form-border-h-bottom"
-                style={{ backgroundImage: `url(${borderHorizontalImg})` }}
-              />
-
-              <div className="cal-form-header">
-                <button
-                  type="button"
-                  className="cal-form-close-btn"
-                  onClick={handleCancelForm}
-                  disabled={isSubmitting}
-                  aria-label="Close"
-                >
-                  ×
-                </button>
-              </div>
-
-              {/* Sits above the upload tile, not overlaid on it — same reasoning as the
-                  comment carousel's toolbar (avoids swallowing the tile's own click) */}
-              {imageFile && (
-                <div className="cal-image-toolbar">
-                  <button
-                    type="button"
-                    className="cal-image-scale-btn"
-                    onClick={() => setShowCropModal(true)}
-                    aria-label="Scale poster"
-                  >
-                    SCALE
-                  </button>
-                  <button
-                    type="button"
-                    className="cal-image-remove-btn"
-                    onClick={handleRemoveImage}
-                    aria-label="Remove poster"
-                  >
-                    REMOVE
-                  </button>
-                </div>
-              )}
-
-              <button
-                type="button"
-                className="cal-image-trigger"
-                onClick={() => imageInputRef.current?.click()}
-              >
-                {imagePreview ? (
-                  <img className="cal-poster-preview" src={imagePreview} alt="" />
-                ) : (
-                  <div className="cal-poster-placeholder-wrap">
-                    <img className="cal-poster-placeholder" src={newAddPosterImg} alt="Upload event poster" />
-                    <span className="cal-poster-plus">+</span>
-                  </div>
-                )}
-                <input
-                  ref={imageInputRef}
-                  type="file"
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                  onChange={handleImageChange}
-                />
-              </button>
-
-              <div className="cal-divider" />
-
-              <input
-                className="cal-input"
-                type="text"
-                name="eventName"
-                value={formData.eventName}
-                onChange={handleFormChange}
-                placeholder="Event Name (Optional)"
-              />
-              <div className="cal-datetime-field">
-                <span className="cal-datetime-label">Start</span>
-                <input
-                  className="cal-input"
-                  type="datetime-local"
-                  name="start"
-                  value={formData.start}
-                  onChange={handleFormChange}
-                />
-              </div>
-              <div className="cal-datetime-field">
-                <span className="cal-datetime-label">End</span>
-                <input
-                  className="cal-input"
-                  type="datetime-local"
-                  name="end"
-                  value={formData.end}
-                  onChange={handleFormChange}
-                />
-              </div>
-              <input
-                className="cal-input"
-                type="text"
-                name="where"
-                value={formData.where}
-                onChange={handleFormChange}
-                placeholder="Where (Optional)"
-              />
-              <input
-                className="cal-input"
-                type="text"
-                name="description"
-                value={formData.description}
-                onChange={handleFormChange}
-                placeholder="About (Optional)"
-                maxLength={200}
-              />
-
-              {formWarning && <p className="cal-form-warning">{formWarning}</p>}
-
-              <div className="cal-form-footer">
-                <label className="cal-members-only-label">
-                  <input
-                    type="checkbox"
-                    name="membersOnly"
-                    checked={formData.membersOnly}
-                    onChange={(e) => setFormData(prev => ({ ...prev, membersOnly: e.target.checked }))}
-                  />
-                  <span>Members Only</span>
-                </label>
-
-                <div className="duo-btn-wrap cal-submit-wrap">
-                  <div className="duo-btn-pill" aria-hidden="true" />
-                  <button
-                    className="cal-submit-btn duo-btn"
-                    style={{ '--duo-shadow': 'rgb(150, 150, 150)' }}
-                    onClick={handleSubmit}
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? 'Adding...' : 'Add Event'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showCropModal && imageFile && (
-            <EventPosterCropModal
-              file={imageFile}
-              onCancel={() => setShowCropModal(false)}
-              onConfirm={handleCropConfirm}
-            />
-          )}
-        </div>
+      {showCropModal && imageFile && (
+        <EventPosterCropModal
+          file={imageFile}
+          onCancel={() => setShowCropModal(false)}
+          onConfirm={handleCropConfirm}
+        />
       )}
     </div>
   );
