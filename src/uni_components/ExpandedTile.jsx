@@ -16,6 +16,7 @@ import ClubMediaModule from '../club_page_components/ClubMediaModule';
 import FaqModule from '../club_page_components/FaqModule';
 import MemberRosterModule from '../club_page_components/MemberRosterModule';
 import { CalendarModule } from '../club_page_components/CalendarModule';
+import AddEventPanel from '../club_page_components/AddEventPanel';
 import ModuleAccordion from '../club_page_components/accordion';
 import { useClubData } from '../context/useClubData';
 import { useGlobalStore } from '../lib/store';
@@ -396,6 +397,30 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
         );
     };
 
+    const handleEditEvent = async (eventId, eventData) => {
+        const updated = await apiFetch(`/events/${eventId}`, {
+            method: 'PUT',
+            body: {
+                eventName: eventData.eventName ?? undefined,
+                description: eventData.description,
+                where: eventData.where ?? undefined,
+                startTime: eventData.startTime,
+                endTime: eventData.endTime,
+                imageUrl: eventData.imageUrl ?? undefined,
+                isMembersOnly: eventData.isMembersOnly ?? false,
+            },
+        });
+        setClubEvents((prev) =>
+            prev.map((e) => (e.id === eventId ? updated : e))
+                .sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
+        );
+    };
+
+    const handleDeleteEvent = async (eventId) => {
+        await apiFetch(`/events/${eventId}`, { method: 'DELETE' });
+        setClubEvents((prev) => prev.filter((e) => e.id !== eventId));
+    };
+
     const moduleWarnings = isEditing ? getModuleWarnings(draft) : {};
     const isDraftValid = Object.values(moduleWarnings).every(w => w == null);
     // Accept a user question: append {q,a} to the faqs module draft and mark the row to delete on Save.
@@ -628,14 +653,12 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     club={club}
                     data={module.data}
                     editing={isEditing}
-                    isApproved={isApproved}
                     onChange={(updatedData) => handleModuleChange('calendar', updatedData)}
                     warning={moduleWarnings.calendar ?? null}
                     events={clubEvents}
                     myRsvpSet={clubMyRsvpSet}
                     friendRsvpMap={clubFriendRsvpMap}
                     onRsvp={handleClubRsvp}
-                    onAddEvent={handleAddEvent}
                     userId={user?.id ?? null}
                 />
             );
@@ -690,6 +713,14 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
             <div className="club-modules">
                 {basicInfoModule && renderModule(basicInfoModule, 'hero')}
+                <AddEventPanel
+                    isApproved={isApproved}
+                    club={club}
+                    events={clubEvents}
+                    onAddEvent={handleAddEvent}
+                    onEditEvent={handleEditEvent}
+                    onDeleteEvent={handleDeleteEvent}
+                />
                 {isEditing ? (
                     <ModuleAccordion
                         modules={accordionModules}
