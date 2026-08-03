@@ -145,7 +145,7 @@
 }
 
 .club-description-exp {
-  font-size: 1.3rem;
+  font-size: 1.5rem;
   align-self: flex-start;
   color: rgb(75, 74, 74);
   text-align: left;
@@ -331,7 +331,7 @@
   }
 
   .club-description-exp {
-  font-size: 0.95rem;
+  font-size: 1rem;
   line-height: -1em;
   
 

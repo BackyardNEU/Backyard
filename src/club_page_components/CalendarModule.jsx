@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import { apiFetch } from '../lib/api';
 import newEventBtnImg from '../assets/New_Event_Btn.png';
-import newEventBtnHoverImg from '../assets/New_Event_Btn:_On_Hover.png';
+import newEventBtnHoverImg from '../assets/New_Event_Btn_On_Hover.png';
 import newAddPosterImg from '../assets/New_add_poster.png';
 import borderImg from '../assets/border.svg';
 import borderHorizontalImg from '../assets/border-horizontal.svg';
