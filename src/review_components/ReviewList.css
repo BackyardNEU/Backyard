@@ -122,11 +122,7 @@
     position: relative;
     max-height: 500px;
     overflow: hidden;
-    transition: max-height 0.4s ease;
-}
-
-.comment-card[data-expanded] .comment-card__body {
-    max-height: 4000px;
+    transition: max-height 0.3s ease;
 }
 
 /* Compose mode has no expand/collapse "More" button — never clip, so a
@@ -265,6 +261,14 @@
 .comment-carousel__nav--left  { left: 8px; }
 .comment-carousel__nav--right { right: 8px; }
 
+/* Read-only carousel only (not the compose/editable carousel) — lighter,
+   ink-line-matched treatment instead of the solid brown fill */
+.commentCarousel:not(.comment-carousel--editable) .comment-carousel__nav {
+    background: rgba(255, 253, 251, 0.95);
+    border: 1px solid #9C8E8C;
+    color: #5a4b40;
+}
+
 .comment-carousel__dots {
     display: flex;
     justify-content: center;
@@ -288,6 +292,7 @@
     justify-content: space-between;
     padding: 6px 10px;
     flex-shrink: 0;
+    margin-bottom: 3px;
 }
 
 .comment-date {
@@ -355,8 +360,8 @@
     font-size: 0.85rem;
     background: rgba(255,253,251,0.95);
     border: 1px solid #9C8E8C;
-    border-radius: 999px;
-    padding: 3px 14px;
+    border-radius: 10px;
+    padding: 5px 10px;
     cursor: pointer;
     color: #5a4b40;
     transition: background 0.15s;

@@ -283,6 +283,7 @@ function LikeButton({ count, isLiked, onToggle }) {
 export function CommentCard({ review, userVote, onVote, onToggleHide, editing, composeProps }) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [needsExpand, setNeedsExpand] = useState(false);
+    const [expandedHeight, setExpandedHeight] = useState(null);
     const [imageOrientation, setImageOrientation] = useState('');
     const bodyRef = useRef(null);
     const isCompose = !!composeProps;
@@ -291,6 +292,16 @@ export function CommentCard({ review, userVote, onVote, onToggleHide, editing, c
     const text = isCompose ? composeProps.text : (review.review_text?.trim() || '');
     const images = isCompose ? composeProps.images : getImages(review);
     const date = isCompose ? null : review.created_at;
+
+    // Re-measure once expanded: the expand button switches from an absolute
+    // overlay to static/in-flow at that point (see .comment-card[data-expanded]
+    // .comment-expand-btn in the CSS), adding its own height to the content —
+    // measuring before that switch would clip the "Less" button itself under
+    // the old max-height.
+    useEffect(() => {
+        if (isCompose || !isExpanded || !bodyRef.current) return;
+        setExpandedHeight(bodyRef.current.scrollHeight);
+    }, [isCompose, isExpanded]);
 
     // Measure body height after render to decide if More button is needed
     useEffect(() => {
@@ -320,8 +331,16 @@ export function CommentCard({ review, userVote, onVote, onToggleHide, editing, c
                 aria-hidden="true"
             />
 
-            {/* Body shrinks/expands; footer stays visible */}
-            <div className={`comment-card__body${isCompose ? ' comment-card__body--compose' : ''}`} ref={bodyRef}>
+            {/* Body shrinks/expands; footer stays visible. Transitions max-height
+                between two real measured pixel values (like the module accordion's
+                grid-template-rows 0fr/1fr trick) instead of an arbitrary large
+                ceiling, so the motion tracks the actual content height evenly
+                instead of snapping early and coasting through empty space. */}
+            <div
+                className={`comment-card__body${isCompose ? ' comment-card__body--compose' : ''}`}
+                ref={bodyRef}
+                style={!isCompose && isExpanded && expandedHeight ? { maxHeight: `${expandedHeight}px` } : undefined}
+            >
                 {isCompose ? (
                     <input
                         type="text"
@@ -372,7 +391,7 @@ export function CommentCard({ review, userVote, onVote, onToggleHide, editing, c
                 {!isCompose && needsExpand && (
                     <button
                         className="comment-expand-btn"
-                        onClick={(e) => { e.stopPropagation(); setIsExpanded(v => !v); }}
+                        onClick={(e) => { e.stopPropagation(); setIsExpanded((v) => !v); }}
                     >
                         {isExpanded ? 'Less' : 'More'}
                     </button>

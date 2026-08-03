@@ -4,18 +4,22 @@
   margin: auto;
   width: 75%;
   max-width: 1800px;
-  min-width: 380px;
   height: 95vh;
   font-family: 'Barlow Condensed', sans-serif;
   background: rgb(255, 255, 255);
 
-
   box-shadow: 0 20px 80px rgba(0,0,0,0.4),
     0 0 0 9999px rgba(46, 46, 46, 0.65);
-  overflow-y: auto;
-  overflow-x: hidden;
   z-index: 9000;
-  padding: clamp(1.5rem, 5vw, 4rem) clamp(1rem, 4vw, 3rem);
+}
+
+/* min-width only makes sense once the page is no longer full-bleed —
+   at <=500px it forced the box wider than very narrow viewports (e.g. 300px),
+   pushing it off-screen instead of shrinking to fit */
+@media (min-width: 501px) {
+  .review-page {
+    min-width: 380px;
+  }
 }
 
 @media (max-width: 500px) {
@@ -26,10 +30,23 @@
   }
 }
 
+/* Scrolling lives here, not on .review-page — so .review-close-btn (a sibling
+   of this, positioned relative to .review-page) stays pinned to the corner
+   instead of scrolling away with tall content. */
+.review-page-scroll {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  padding: clamp(0.5rem, 5vw, 4rem) clamp(0.5rem, 4vw, 3rem);
+}
+
 .review-content {
   width: 100%;
   max-width: 900px;
   margin: 0 auto;
+  padding-top: clamp(1rem, 6vw, 3.5rem);
 }
 
 .review-section {
@@ -55,6 +72,7 @@
   font-size: clamp(4rem, 6vw, 7rem);
   font-weight: 300;
   color: #111;
+  margin-top: 0.5rem;
   margin-bottom: 2rem;
   line-height: 1;
   letter-spacing: -0.02em;
@@ -290,12 +308,13 @@
 
 .review-close-btn {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: -5px;
+  right: 5px;
   z-index: 20;
   background: none;
   border: none;
   font-size: 3rem;
+  padding: 10px 12px;
   cursor: pointer;
   line-height: 1;
   color: #111;

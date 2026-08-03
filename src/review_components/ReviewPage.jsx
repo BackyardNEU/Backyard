@@ -182,51 +182,56 @@ export default function ReviewPage({clubId, onClose}) {
     <div className='review-page'>
         <button className="review-close-btn" onClick={handleClose}>×</button>
 
-        {!reviewPosted ? (
-            <div className="review-content">
-                <section className={`review-section animate-on-scroll ${sectionVisible ? 'visible' : ''}`}>
-                    <h1 className="instruction-txt">Write a comment</h1>
+        {/* Scroll happens in here, not on .review-page itself — keeps the close
+            button (a sibling, outside this box) pinned to the corner instead of
+            scrolling away with tall content. */}
+        <div className="review-page-scroll">
+            {!reviewPosted ? (
+                <div className="review-content">
+                    <section className={`review-section animate-on-scroll ${sectionVisible ? 'visible' : ''}`}>
+                        <h1 className="instruction-txt">Write a comment</h1>
 
-                    {warning && <p className="module-warning">{warning}</p>}
+                        {warning && <p className="module-warning">{warning}</p>}
 
-                    <CommentCard
-                        composeProps={{
-                            title: user_title,
-                            onTitleChange: set_user_title,
-                            text: user_review,
-                            onTextChange: set_user_review,
-                            bodyPlaceholder: `Tell others about your experience in ${club?.club_name}...`,
-                            images: previewImages,
-                            onAddFiles: addFiles,
-                            onRemove: removeImage,
-                            onReorder: reorderImages,
-                            onScale: setCropId,
-                        }}
-                    />
+                        <CommentCard
+                            composeProps={{
+                                title: user_title,
+                                onTitleChange: set_user_title,
+                                text: user_review,
+                                onTextChange: set_user_review,
+                                bodyPlaceholder: `Tell others about your experience in ${club?.club_name}...`,
+                                images: previewImages,
+                                onAddFiles: addFiles,
+                                onRemove: removeImage,
+                                onReorder: reorderImages,
+                                onScale: setCropId,
+                            }}
+                        />
 
-                    <div className="duo-btn-wrap post-review-wrap">
-                        <div className="duo-btn-pill" aria-hidden="true" />
-                        <button
-                            onClick={post_review}
-                            disabled={posting}
-                            className="post duo-btn"
-                            style={{ '--duo-shadow': 'rgb(30, 80, 95)' }}
-                        >
-                            {posting ? 'Posting...' : 'Post Review'}
-                        </button>
-                    </div>
-                </section>
-            </div>
-        ) : (
-            /* Thanks Section - Takes full page */
-            <ThanksPage
-        username={username}
-        clubName={club?.club_name}
-        clubImage={club?.image_url}
-        thanksImage={thanksImage}
-        onClose={handleClose}
-    />
-        )}
+                        <div className="duo-btn-wrap post-review-wrap">
+                            <div className="duo-btn-pill" aria-hidden="true" />
+                            <button
+                                onClick={post_review}
+                                disabled={posting}
+                                className="post duo-btn"
+                                style={{ '--duo-shadow': 'rgb(30, 80, 95)' }}
+                            >
+                                {posting ? 'Posting...' : 'Post Review'}
+                            </button>
+                        </div>
+                    </section>
+                </div>
+            ) : (
+                /* Thanks Section - Takes full page */
+                <ThanksPage
+                    username={username}
+                    clubName={club?.club_name}
+                    clubImage={club?.image_url}
+                    thanksImage={thanksImage}
+                    onClose={handleClose}
+                />
+            )}
+        </div>
 
         {cropFile && (
             <ImageScaleCropModal
