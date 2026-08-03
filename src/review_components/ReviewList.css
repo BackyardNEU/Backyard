@@ -122,11 +122,14 @@
     position: relative;
     max-height: 500px;
     overflow: hidden;
-    transition: max-height 0.4s ease;
+    transition: max-height 0.3s ease;
 }
 
-.comment-card[data-expanded] .comment-card__body {
-    max-height: 4000px;
+/* Compose mode has no expand/collapse "More" button — never clip, so a
+   portrait photo + full title/body text are always visible while editing */
+.comment-card__body--compose {
+    max-height: none;
+    overflow: visible;
 }
 
 /* ===== Card content ===== */
@@ -171,16 +174,44 @@
 .comment-image.landscape { aspect-ratio: 4/3; }
 .comment-image.square    { aspect-ratio: 1/1; }
 
-.comment-carousel {
-    position: relative;
-    width: 100%;
+/* Compose mode adds a toolbar row above the carousel (remove/scale buttons),
+   so the fixed aspect-ratio has to live on the carousel itself instead of the
+   outer wrapper — otherwise the toolbar would be squeezed out of a box sized
+   for the image alone. Defaults to square before any photo's orientation is
+   known (matches the square add-photo button). */
+.comment-image:has(.comment-carousel--editable) {
+    aspect-ratio: auto;
+    display: flex;
+    flex-direction: column;
 }
 
-/* When aspect-ratio class constrains the container, fill it */
-.comment-image.portrait .comment-carousel,
-.comment-image.landscape .comment-carousel,
-.comment-image.square .comment-carousel {
-    height: 100%;
+.comment-carousel--editable {
+    aspect-ratio: 1/1;
+}
+
+.comment-image.portrait .comment-carousel--editable  { aspect-ratio: 3/4; }
+.comment-image.landscape .comment-carousel--editable { aspect-ratio: 4/3; }
+.comment-image.square .comment-carousel--editable    { aspect-ratio: 1/1; }
+
+.commentCarousel {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin: 3px 0;
+}
+
+.comment-carousel__frame {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+}
+
+/* When aspect-ratio class constrains the container, fill it (minus the
+   carousel's own 3px top/bottom margin, so it doesn't overflow the box) */
+.comment-image.portrait .commentCarousel,
+.comment-image.landscape .commentCarousel,
+.comment-image.square .commentCarousel {
+    height: calc(100% - 6px);
 }
 
 .comment-carousel__img {
@@ -214,11 +245,11 @@
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    width: 28px;
-    height: 28px;
-    border-radius: 999px;
-    border: 1px solid rgba(0,0,0,0.2);
-    background: rgba(255,255,255,0.88);
+    padding: 5px 10px;
+    border-radius: 10px;
+    border: 1.2px solid rgb(112, 84, 29);
+    background: #37291E;
+    color: #fff;
     cursor: pointer;
     font-size: 20px;
     line-height: 1;
@@ -230,14 +261,19 @@
 .comment-carousel__nav--left  { left: 8px; }
 .comment-carousel__nav--right { right: 8px; }
 
+/* Read-only carousel only (not the compose/editable carousel) — lighter,
+   ink-line-matched treatment instead of the solid brown fill */
+.commentCarousel:not(.comment-carousel--editable) .comment-carousel__nav {
+    background: rgba(255, 253, 251, 0.95);
+    border: 1px solid #9C8E8C;
+    color: #5a4b40;
+}
+
 .comment-carousel__dots {
-    position: absolute;
-    bottom: 6px;
-    left: 50%;
-    transform: translateX(-50%);
     display: flex;
+    justify-content: center;
     gap: 5px;
-    z-index: 3;
+    margin-bottom: 1px;
 }
 .comment-carousel__dot {
     width: 6px;
@@ -256,6 +292,7 @@
     justify-content: space-between;
     padding: 6px 10px;
     flex-shrink: 0;
+    margin-bottom: 3px;
 }
 
 .comment-date {
@@ -323,8 +360,8 @@
     font-size: 0.85rem;
     background: rgba(255,253,251,0.95);
     border: 1px solid #9C8E8C;
-    border-radius: 999px;
-    padding: 3px 14px;
+    border-radius: 10px;
+    padding: 5px 10px;
     cursor: pointer;
     color: #5a4b40;
     transition: background 0.15s;

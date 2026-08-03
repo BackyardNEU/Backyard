@@ -152,7 +152,7 @@
   width: 95%;
   max-width: 1200px;
   box-sizing: border-box;
-  font-family: 'Barlow', sans-serif;
+  font-family: 'Barlow Condensed', sans-serif;
 }
 
 .text-flex {
@@ -593,11 +593,11 @@
   padding: 0;
   margin-left: 2px;
   font: inherit;
-  font-weight: 500;
+  font-weight: 400;
   letter-spacing: 0.3px;
-  color: rgb(62, 42, 9);
+  color: rgb(0, 0, 0);
   cursor: pointer;
-  font-family: 'Barlow', sans-serif;
+  font-family: 'Barlow Condensed', sans-serif;
 
 }
 
