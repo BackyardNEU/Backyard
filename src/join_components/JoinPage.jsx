@@ -17,6 +17,9 @@ export default function JoinPage() {
   const [view, setView] = useState('login');
 
   const [redeemState, setRedeemState] = useState(null); // null | 'loading' | 'success' | 'already' | string (error)
+  const [isEditorGrant, setIsEditorGrant] = useState(false);
+
+  const neuID = '/university/38500bfc-e606-46a7-840d-720b11ad2e8b'
 
   // Store token so AuthCallbackPage and ProfileSetupPage can redirect back here after auth
   useEffect(() => {
@@ -40,7 +43,12 @@ export default function JoinPage() {
     try {
       const result = await apiFetch(`/invite/${token}/redeem`, { method: 'POST' });
       sessionStorage.removeItem('pendingJoinToken');
-      setRedeemState(result.already_member ? 'already' : 'success');
+      if (result.already_member || result.already_editor) {
+        setRedeemState('already');
+      } else {
+        setIsEditorGrant(result.is_editor === true);
+        setRedeemState('success');
+      }
     } catch (err) {
       setRedeemState(err.message || 'Something went wrong');
     }
@@ -84,20 +92,7 @@ export default function JoinPage() {
         <div className="join-card join-card--error">
           <h2>Link unavailable</h2>
           <p>{inviteError}</p>
-          <button className="join-home-btn" onClick={() => navigate('/')}>Go home</button>
-        </div>
-      </div>
-    );
-  }
-
-  if (redeemState === 'success') {
-    return (
-      <div className="join-page">
-        <div className="join-card join-card--success">
-          {invite.club_image && <img className="join-club-logo" src={invite.club_image} alt={invite.club_name} />}
-          <h2>You've joined {invite.club_name}!</h2>
-          <p>You're now a member. Check them out on Backyard.</p>
-          <button className="join-home-btn" onClick={() => navigate('/')}>Explore clubs</button>
+          <button className="join-home-btn" onClick={() => navigate(neuID)}>Go home</button>
         </div>
       </div>
     );
@@ -109,8 +104,37 @@ export default function JoinPage() {
         <div className="join-card">
           {invite.club_image && <img className="join-club-logo" src={invite.club_image} alt={invite.club_name} />}
           <h2>{invite.club_name}</h2>
-          <p>You're already a member of this club.</p>
-          <button className="join-home-btn" onClick={() => navigate('/')}>Go home</button>
+          <p>
+            {invite.link_type === 'editor'
+              ? 'You already have editor access to this club.'
+              : 'You\'re already a member of this club.'}
+          </p>
+          <button className="join-home-btn" onClick={() => navigate(neuID)}>Go home</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (redeemState === 'success') {
+    return (
+      <div className="join-page">
+        <div className="join-card join-card--success">
+          {invite.club_image && <img className="join-club-logo" src={invite.club_image} alt={invite.club_name} />}
+          {isEditorGrant ? (
+            <>
+              <h2>You now have editor access to {invite.club_name}!</h2>
+              <p>Head to the club page to start managing it.</p>
+              <button className="join-home-btn" onClick={() => navigate(neuID)}>
+                Go to your club
+              </button>
+            </>
+          ) : (
+            <>
+              <h2>You've joined {invite.club_name}!</h2>
+              <p>You're now a member. Check them out on Backyard.</p>
+              <button className="join-home-btn" onClick={() => navigate(neuID)}>Explore clubs</button>
+            </>
+          )}
         </div>
       </div>
     );
@@ -123,14 +147,20 @@ export default function JoinPage() {
         <div className="join-card">
           {invite.club_image && <img className="join-club-logo" src={invite.club_image} alt={invite.club_name} />}
           <h2>{invite.club_name}</h2>
-          <p className="join-subtitle">You've been invited to join this club on Backyard.</p>
+          <p className="join-subtitle">
+            {invite.link_type === 'editor'
+              ? `You've been invited to manage ${invite.club_name} on Backyard.`
+              : `You've been invited to join this club on Backyard.`}
+          </p>
           {typeof redeemState === 'string' && <p className="join-error">{redeemState}</p>}
           <button
             className="join-confirm-btn"
             onClick={redeem}
             disabled={redeemState === 'loading'}
           >
-            {redeemState === 'loading' ? 'Joining...' : 'Join Club'}
+            {redeemState === 'loading'
+              ? (invite.link_type === 'editor' ? 'Activating...' : 'Joining...')
+              : (invite.link_type === 'editor' ? 'Accept Editor Invite' : 'Join Club')}
           </button>
         </div>
       </div>

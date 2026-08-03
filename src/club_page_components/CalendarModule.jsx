@@ -20,10 +20,8 @@ import './CalendarModule.css';
  * @param {string}   userId        - null if not logged in
  */
 export function CalendarModule({
-  data,
   editing,
   isApproved = false,
-  onChange,
   warning,
   events = [],
   myRsvpSet = new Set(),
