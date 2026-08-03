@@ -382,7 +382,9 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             body: {
                 clubId: id,
                 clubName: club.club_name,
+                eventName: eventData.eventName ?? undefined,
                 description: eventData.description,
+                where: eventData.where ?? undefined,
                 startTime: eventData.startTime,
                 endTime: eventData.endTime,
                 imageUrl: eventData.imageUrl ?? undefined,

@@ -50,10 +50,10 @@ router.get('/rsvps', async (req, res) => {
 // Server-side validation — the frontend does this too, but never trust it.
 function validateEvent(body) {
     const { clubId, clubName, description, startTime, endTime } = body || {};
-    if (!clubId || !clubName || !description || !startTime || !endTime) {
-        return 'Missing required fields: clubId, clubName, description, startTime, endTime';
+    if (!clubId || !clubName || !startTime || !endTime) {
+        return 'Missing required fields: clubId, clubName, startTime, endTime';
     }
-    if (description.length > 200) return 'Description must be 200 characters or fewer';
+    if (description && description.length > 200) return 'Description must be 200 characters or fewer';
 
     const start = new Date(startTime);
     const end = new Date(endTime);
@@ -69,7 +69,7 @@ router.post('/', async (req, res) => {
     const validationError = validateEvent(req.body);
     if (validationError) return res.status(400).json({ error: validationError });
 
-    const { clubId, clubName, description, startTime, endTime, imageUrl, isMembersOnly } = req.body;
+    const { clubId, clubName, eventName, description, where, startTime, endTime, imageUrl, isMembersOnly } = req.body;
 
     const { data: profile } = await supabaseAdmin
         .from('profiles')
@@ -91,6 +91,8 @@ router.post('/', async (req, res) => {
         is_members_only: isMembersOnly === true,
     };
     if (imageUrl) insert.event_image_url = imageUrl;
+    if (eventName) insert.event_name = eventName;
+    if (where) insert.where = where;
 
     const { data, error } = await supabaseAdmin
         .from('club_events')

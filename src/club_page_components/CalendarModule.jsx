@@ -1,6 +1,12 @@
 import React, { useState, useRef, useLayoutEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import { apiFetch } from '../lib/api';
+import newEventBtnImg from '../assets/New_Event_Btn.png';
+import newEventBtnHoverImg from '../assets/New_Event_Btn:_On_Hover.png';
+import newAddPosterImg from '../assets/New_add_poster.png';
+import borderImg from '../assets/border.svg';
+import borderHorizontalImg from '../assets/border-horizontal.svg';
+import EventPosterCropModal from './EventPosterCropModal';
 import './CalendarModule.css';
 
 /**
@@ -16,7 +22,7 @@ import './CalendarModule.css';
  * @param {Set}      myRsvpSet     - event IDs the current user has RSVPd to
  * @param {Map}      friendRsvpMap - event ID → [{ username, ... }]
  * @param {Function} onRsvp        - (eventId, isCurrentlyGoing) => void
- * @param {Function} onAddEvent    - ({ description, startTime, endTime, imageUrl }) => Promise<void>
+ * @param {Function} onAddEvent    - ({ eventName, description, where, startTime, endTime, imageUrl, isMembersOnly }) => Promise<void>
  * @param {string}   userId        - null if not logged in
  */
 export function CalendarModule({
@@ -57,7 +63,7 @@ export function CalendarModule({
   // form for entering data for a new event
   const [showForm, setShowForm] = useState(false);
   // set initial form data to empty
-  const [formData, setFormData] = useState({ description: '', date: '', startTime: '', endTime: '', membersOnly: false });
+  const [formData, setFormData] = useState({ eventName: '', start: '', end: '', where: '', description: '', membersOnly: false });
   // image file for form
   const [imageFile, setImageFile] = useState(null);
   // image preview for previewing the event in before posting it
@@ -66,17 +72,18 @@ export function CalendarModule({
   const [formWarning, setFormWarning] = useState('');
   // for loading/data saving purposes
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // scale/crop modal for the poster, open only while editing an already-selected image
+  const [showCropModal, setShowCropModal] = useState(false);
   // sorting events passed in through events prop by closest to current date
   const sorted = [...events].sort((a, b) => parseISO(a.start_time) - parseISO(b.start_time));
 
   // ── add-event form helpers ─────────────────────────────────────────────
   function validateForm() {
-    const { description, date, startTime, endTime } = formData;
-    if (!description.trim()) { setFormWarning('Description is required.'); return false; }
+    const { start: startVal, end: endVal, description } = formData;
     if (description.length > 200) { setFormWarning('Description must be 200 characters or fewer.'); return false; }
-    if (!date || !startTime || !endTime) { setFormWarning('Please fill in all date and time fields.'); return false; }
-    const start = new Date(`${date}T${startTime}:00`);
-    const end = new Date(`${date}T${endTime}:00`);
+    if (!startVal || !endVal) { setFormWarning('Please fill in the start and end times.'); return false; }
+    const start = new Date(startVal);
+    const end = new Date(endVal);
     if (isNaN(start) || isNaN(end)) { setFormWarning('Invalid date or time format.'); return false; }
     if (start < new Date()) { setFormWarning('Event cannot begin in the past.'); return false; }
     if (start >= end) { setFormWarning('Start time must be before end time.'); return false; }
@@ -97,6 +104,19 @@ export function CalendarModule({
     if (!file) return;
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
+  };
+
+  // clears the selected poster and resets the file input so re-picking the same file still fires onChange
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (imageInputRef.current) imageInputRef.current.value = '';
+  };
+
+  const handleCropConfirm = (newFile) => {
+    setImageFile(newFile);
+    setImagePreview(URL.createObjectURL(newFile));
+    setShowCropModal(false);
   };
 
   //submission handler
@@ -123,15 +143,17 @@ export function CalendarModule({
       }
       // adds the rest of the data after the image upload succeeds
       await onAddEvent?.({
+        eventName: formData.eventName,
         description: formData.description,
-        startTime: `${formData.date}T${formData.startTime}:00`,
-        endTime: `${formData.date}T${formData.endTime}:00`,
+        where: formData.where,
+        startTime: `${formData.start}:00`,
+        endTime: `${formData.end}:00`,
         imageUrl,
         isMembersOnly: formData.membersOnly,
       });
       // reset form fields
       setShowForm(false);
-      setFormData({ description: '', date: '', startTime: '', endTime: '', membersOnly: false });
+      setFormData({ eventName: '', start: '', end: '', where: '', description: '', membersOnly: false });
       setImageFile(null);
       setImagePreview(null);
       setFormWarning('');
@@ -145,7 +167,7 @@ export function CalendarModule({
   // in case of the user cancelling the upload or sudden page failure
   const handleCancelForm = () => {
     setShowForm(false);
-    setFormData({ description: '', date: '', startTime: '', endTime: '', membersOnly: false });
+    setFormData({ eventName: '', start: '', end: '', where: '', description: '', membersOnly: false });
     setImageFile(null);
     setImagePreview(null);
     setFormWarning('');
@@ -283,140 +305,175 @@ export function CalendarModule({
       {isApproved && (
         <div className="cal-add-event-section">
           {!showForm && (
-            <button className="cal-add-btn" onClick={() => setShowForm(true)}>＋ Add Event</button>
+            <button
+              className="cal-add-btn"
+              onClick={() => setShowForm(true)}
+              style={{ '--cal-add-btn-bg': `url(${newEventBtnImg})`, '--cal-add-btn-bg-hover': `url(${newEventBtnHoverImg})` }}
+            >
+              <img src={borderImg} alt="" className="cal-add-btn-border cal-add-btn-border-left" />
+              <img src={borderImg} alt="" className="cal-add-btn-border cal-add-btn-border-right" />
+              <div
+                className="cal-add-btn-border-h cal-add-btn-border-h-top"
+                style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+              />
+              <div
+                className="cal-add-btn-border-h cal-add-btn-border-h-bottom"
+                style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+              />
+            </button>
           )}
           {showForm && (
             <div className="cal-form">
-              <p className="cal-form-title">New Event</p>
+              <img src={borderImg} alt="" className="cal-form-border cal-form-border-left" />
+              <img src={borderImg} alt="" className="cal-form-border cal-form-border-right" />
+              <div
+                className="cal-form-border-h cal-form-border-h-top"
+                style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+              />
+              <div
+                className="cal-form-border-h cal-form-border-h-bottom"
+                style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+              />
 
-              <label className="cal-label">
-                Description *
-                <div>
-                  <textarea
-                    className="cal-input cal-textarea"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleFormChange}
-                    placeholder="What's happening?"
-                    maxLength={200}
-                    rows={3}
-                  />
-                  <div className="char-counter-wrap">
-                    <span className="char-counter">{formData.description.length}/200</span>
-                  </div>
-                </div>
-              </label>
-
-              <label className="cal-label">
-                Date *
-                <input
-                  className="cal-input"
-                  type="date"
-                  name="date"
-                  value={formData.date}
-                  onChange={handleFormChange}
-                />
-              </label>
-
-              <div className="cal-time-row">
-                <label className="cal-label">
-                  Start time *
-                  <input
-                    className="cal-input"
-                    type="time"
-                    name="startTime"
-                    value={formData.startTime}
-                    onChange={handleFormChange}
-                  />
-                </label>
-                <label className="cal-label">
-                  End time *
-                  <input
-                    className="cal-input"
-                    type="time"
-                    name="endTime"
-                    value={formData.endTime}
-                    onChange={handleFormChange}
-                  />
-                </label>
-              </div>
-
-              <div className="cal-label">
-                Event image (optional)
-                <p className="cal-image-hint">For the best display, use a portrait-style image — 3:4 ratio or 750 × 1,000 px</p>
-                <div
-                  className="cal-image-trigger"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => imageInputRef.current?.click()}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      imageInputRef.current?.click();
-                    }
-                  }}
+              <div className="cal-form-header">
+                <button
+                  type="button"
+                  className="cal-form-close-btn"
+                  onClick={handleCancelForm}
+                  disabled={isSubmitting}
+                  aria-label="Close"
                 >
-                  {imageFile ? `✓ ${imageFile.name}` : 'Click to upload image'}
-                  <input
-                    ref={imageInputRef}
-                    type="file"
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    onChange={handleImageChange}
-                  />
-                </div>
+                  ×
+                </button>
               </div>
 
-              <label className="cal-label cal-members-only-label">
-                Members only
-                <input
-                  type="checkbox"
-                  name="membersOnly"
-                  checked={formData.membersOnly}
-                  onChange={(e) => setFormData(prev => ({ ...prev, membersOnly: e.target.checked }))}
-                />
-              </label>
-
-              {/* Live card preview */}
-              {(imagePreview || formData.description || formData.date) && (
-                <div className="cal-form-preview-wrap">
-                  <p className="cal-form-preview-label">Preview</p>
-                  <div className="cal-event-item cal-form-preview-card">
-                    {imagePreview && (
-                      <img className="cal-event-img" src={imagePreview} alt="" />
-                    )}
-                    <div className="cal-event-body">
-                      {formData.date && (
-                        <p className="cal-event-date">
-                          {format(new Date(`${formData.date}T00:00:00`), 'EEE, MMM d').toUpperCase()}
-                        </p>
-                      )}
-                      {(formData.startTime || formData.endTime) && (
-                        <p className="cal-event-time">
-                          {formData.startTime ? format(new Date(`${formData.date || '2000-01-01'}T${formData.startTime}:00`), 'h:mm a') : '?'}
-                          {' – '}
-                          {formData.endTime ? format(new Date(`${formData.date || '2000-01-01'}T${formData.endTime}:00`), 'h:mm a') : '?'}
-                        </p>
-                      )}
-                      {formData.description && (
-                        <p className="cal-event-desc">{formData.description}</p>
-                      )}
-                    </div>
-                  </div>
+              {/* Sits above the upload tile, not overlaid on it — same reasoning as the
+                  comment carousel's toolbar (avoids swallowing the tile's own click) */}
+              {imageFile && (
+                <div className="cal-image-toolbar">
+                  <button
+                    type="button"
+                    className="cal-image-scale-btn"
+                    onClick={() => setShowCropModal(true)}
+                    aria-label="Scale poster"
+                  >
+                    SCALE
+                  </button>
+                  <button
+                    type="button"
+                    className="cal-image-remove-btn"
+                    onClick={handleRemoveImage}
+                    aria-label="Remove poster"
+                  >
+                    REMOVE
+                  </button>
                 </div>
               )}
 
+              <button
+                type="button"
+                className="cal-image-trigger"
+                onClick={() => imageInputRef.current?.click()}
+              >
+                {imagePreview ? (
+                  <img className="cal-poster-preview" src={imagePreview} alt="" />
+                ) : (
+                  <div className="cal-poster-placeholder-wrap">
+                    <img className="cal-poster-placeholder" src={newAddPosterImg} alt="Upload event poster" />
+                    <span className="cal-poster-plus">+</span>
+                  </div>
+                )}
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handleImageChange}
+                />
+              </button>
+
+              <div className="cal-divider" />
+
+              <input
+                className="cal-input"
+                type="text"
+                name="eventName"
+                value={formData.eventName}
+                onChange={handleFormChange}
+                placeholder="Event Name (Optional)"
+              />
+              <div className="cal-datetime-field">
+                <span className="cal-datetime-label">Start</span>
+                <input
+                  className="cal-input"
+                  type="datetime-local"
+                  name="start"
+                  value={formData.start}
+                  onChange={handleFormChange}
+                />
+              </div>
+              <div className="cal-datetime-field">
+                <span className="cal-datetime-label">End</span>
+                <input
+                  className="cal-input"
+                  type="datetime-local"
+                  name="end"
+                  value={formData.end}
+                  onChange={handleFormChange}
+                />
+              </div>
+              <input
+                className="cal-input"
+                type="text"
+                name="where"
+                value={formData.where}
+                onChange={handleFormChange}
+                placeholder="Where (Optional)"
+              />
+              <input
+                className="cal-input"
+                type="text"
+                name="description"
+                value={formData.description}
+                onChange={handleFormChange}
+                placeholder="About (Optional)"
+                maxLength={200}
+              />
+
               {formWarning && <p className="cal-form-warning">{formWarning}</p>}
 
-              <div className="cal-form-actions">
-                <button className="cal-cancel-btn" onClick={handleCancelForm} disabled={isSubmitting}>
-                  Cancel
-                </button>
-                <button className="cal-submit-btn" onClick={handleSubmit} disabled={isSubmitting}>
-                  {isSubmitting ? 'Adding...' : 'Add Event'}
-                </button>
+              <div className="cal-form-footer">
+                <label className="cal-members-only-label">
+                  <input
+                    type="checkbox"
+                    name="membersOnly"
+                    checked={formData.membersOnly}
+                    onChange={(e) => setFormData(prev => ({ ...prev, membersOnly: e.target.checked }))}
+                  />
+                  <span>Members Only</span>
+                </label>
+
+                <div className="duo-btn-wrap cal-submit-wrap">
+                  <div className="duo-btn-pill" aria-hidden="true" />
+                  <button
+                    className="cal-submit-btn duo-btn"
+                    style={{ '--duo-shadow': 'rgb(150, 150, 150)' }}
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Adding...' : 'Add Event'}
+                  </button>
+                </div>
               </div>
             </div>
+          )}
+
+          {showCropModal && imageFile && (
+            <EventPosterCropModal
+              file={imageFile}
+              onCancel={() => setShowCropModal(false)}
+              onConfirm={handleCropConfirm}
+            />
           )}
         </div>
       )}
