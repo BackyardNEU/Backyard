@@ -38,6 +38,7 @@
 }
 
 .cal-event-item {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -45,12 +46,45 @@
   width: 300px;
   min-height: 450px;
   background: #fff;
-  border: 1px solid #e8e8e8;
 
   overflow: hidden;
   padding: 12px;
   align-items: center;
 }
+
+/* Ink-line border overlay (same assets/technique as .comment-border) —
+   replaces the plain grey CSS border */
+.cal-event-item-border {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: auto;
+  pointer-events: none;
+  z-index: 2;
+}
+.cal-event-item-border-left {
+  left: 0;
+  transform: scaleX(0.5);
+  transform-origin: left center;
+}
+.cal-event-item-border-right {
+  right: -1px;
+  transform: scaleX(-0.5);
+  transform-origin: center;
+}
+.cal-event-item-border-h {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2.5px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  background-size: auto 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+.cal-event-item-border-h-top { top: 0; }
+.cal-event-item-border-h-bottom { bottom: 0; }
 
 .cal-event-img {
   width: calc(100% + 24px);
@@ -177,6 +211,7 @@
   background-image: var(--cal-add-btn-bg);
   background-size: cover;
   background-position: center;
+  animation: fadeIn 0.3s ease;
 }
 .cal-add-btn:hover {
   background-image: var(--cal-add-btn-bg-hover);
@@ -223,6 +258,7 @@
   color: #ECE7E5;
   display: flex;
   flex-direction: column;
+  animation: fadeIn 0.3s ease;
 }
 
 /* Grain texture — same noise data-uri as .duo-btn::before */

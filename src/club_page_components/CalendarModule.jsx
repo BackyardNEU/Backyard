@@ -391,6 +391,16 @@ export function CalendarModule({
                 className="cal-event-item cal-event-item--clickable"
                 onClick={() => setOverlayEvent(event)}
               >
+                <img src={borderImg} alt="" className="cal-event-item-border cal-event-item-border-left" />
+                <img src={borderImg} alt="" className="cal-event-item-border cal-event-item-border-right" />
+                <div
+                  className="cal-event-item-border-h cal-event-item-border-h-top"
+                  style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+                />
+                <div
+                  className="cal-event-item-border-h cal-event-item-border-h-bottom"
+                  style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+                />
                 <img
                   className="cal-event-img"
                   src={event.event_image_url || club?.image_url || '/raccoon_pfp.png'}
