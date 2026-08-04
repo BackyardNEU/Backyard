@@ -220,10 +220,11 @@
 
 .mr-d-name {
   margin-top: 20px;
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'Barlow Condensed', sans-serif;
   font-size: 40px;
   line-height: 0.8;
   letter-spacing: 0.02em;
+  font-weight: 500;
   text-transform: uppercase;
   color: #3e3e3e;
 }
@@ -240,7 +241,7 @@
 .mr-d-bio {
   margin-top: 16px;
   text-align: left;
-  font-family: 'Barlow', sans-serif;
+  font-family: 'Barlow Condensed', sans-serif;
   font-size: 20px;
   line-height: 1.55;
   color: #333;
