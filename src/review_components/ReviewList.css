@@ -325,25 +325,52 @@
 }
 
 /* ===== Edit mode: hide checkbox ===== */
+
+.comment-hide-label::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.19'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
 .comment-hide-label {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-family: 'Barlow', sans-serif;
+    font-family: 'Barlow Condesed', sans-serif;
     font-size: 0.78rem;
-    color: rgb(207, 210, 229);
+    color: #Ece7e5;
     padding: 8px 14px 10px;
-    border-radius: 0px 0px 15px 15px;
+
     border-top: 1px solid #ede8e6;
-    background-color: rgb(22, 25, 60);
+    background-color: #2e4064;
     cursor: pointer;
     -webkit-user-select: none;
     user-select: none;
     flex-shrink: 0;
 }
 .comment-hide-label input[type="checkbox"] {
+    position: relative;
     cursor: pointer;
     width: 14px;
     height: 14px;
-    fill: #3A201F;
+    margin: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid #fff;
+    background-color: transparent;
+    border-radius: 2px;
+}
+
+.comment-hide-label input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: -1px;
+    width: 3px;
+    height: 7px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
 }

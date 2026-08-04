@@ -154,44 +154,43 @@ export default function FaqTable({ faqs = [], onChange, userQuestions = [], onAc
           />
 
           {/* ===== user questions (submitted) ===== */}
-          <Section visible={USER_VISIBLE}>
-            {padTo(userQuestions, USER_VISIBLE).map((row, i) =>
-              row ? (
-                <Row key={row.id} i={i}>
-                  <XCell variant="circle" onClick={() => deleteUser(row.id)} />
-                  <Cell ck={`u:${i}:q`} value={row.question} activeKey={activeKey} onSelect={select} />
-                  <AnswerCell
-                    ck={`u:${i}:a`} value={answers[row.id] || ""} placeholder="enter answer here"
-                    activeKey={activeKey} onSelect={select}
-                    accept={(answers[row.id] || "").trim() ? () => acceptUser(row.id) : null}
-                  />
-                </Row>
-              ) : <FillerRow key={`uf${i}`} i={i} />
-            )}
+          {/* Height tracks the actual question count (1 question = 1 row tall) instead of
+              always padding to USER_VISIBLE with filler rows — caps at USER_VISIBLE, then scrolls. */}
+          <Section visible={Math.min(userQuestions.length, USER_VISIBLE)}>
+            {userQuestions.map((row, i) => (
+              <Row key={row.id} i={i}>
+                <XCell variant="circle" onClick={() => deleteUser(row.id)} />
+                <Cell ck={`u:${i}:q`} value={row.question} activeKey={activeKey} onSelect={select} />
+                <AnswerCell
+                  ck={`u:${i}:a`} value={answers[row.id] || ""} placeholder="enter answer here"
+                  activeKey={activeKey} onSelect={select}
+                  accept={(answers[row.id] || "").trim() ? () => acceptUser(row.id) : null}
+                />
+              </Row>
+            ))}
           </Section>
 
           {/* divider between the two sets */}
           <div style={{ height: 2, background: SECTION_LINE }} />
 
           {/* ===== owner FAQs (editable) ===== */}
-          <Section visible={OWNER_VISIBLE}>
-            {ownerRows(faqs, OWNER_VISIBLE).map((row, i) =>
-              row.kind === "filler" ? (
-                <FillerRow key={`of${i}`} i={i} />
-              ) : (
-                <Row key={`o${i}`} i={i}>
-                  {row.kind === "data"
-                    ? <XCell variant="plain" onClick={() => deleteFaq(i)} />
-                    : <div />}
-                  <Cell ck={`f:${i}:q`} value={row.q}
-                    placeholder={row.kind === "add" ? "enter a common question here" : ""}
-                    activeKey={activeKey} onSelect={select} />
-                  <AnswerCell ck={`f:${i}:a`} value={row.a}
-                    placeholder={row.kind === "add" ? "enter answer here" : ""}
-                    activeKey={activeKey} onSelect={select} accept={null} />
-                </Row>
-              )
-            )}
+          {/* Height tracks real faqs + the trailing "add" row (3 questions = 4 rows tall)
+              instead of always padding to OWNER_VISIBLE with filler rows — caps at
+              OWNER_VISIBLE, then scrolls. */}
+          <Section visible={Math.min(faqs.length + 1, OWNER_VISIBLE)}>
+            {ownerRows(faqs).map((row, i) => (
+              <Row key={`o${i}`} i={i}>
+                {row.kind === "data"
+                  ? <XCell variant="plain" onClick={() => deleteFaq(i)} />
+                  : <div />}
+                <Cell ck={`f:${i}:q`} value={row.q}
+                  placeholder={row.kind === "add" ? "enter a common question here" : ""}
+                  activeKey={activeKey} onSelect={select} />
+                <AnswerCell ck={`f:${i}:a`} value={row.a}
+                  placeholder={row.kind === "add" ? "enter answer here" : ""}
+                  activeKey={activeKey} onSelect={select} accept={null} />
+              </Row>
+            ))}
           </Section>
         </div>
       </div>
@@ -222,23 +221,12 @@ function Row({ i, children }) {
   );
 }
 
-function FillerRow({ i }) {
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: COLS, height: ROW_H,
-      background: i % 2 === 0 ? ROW_A : ROW_B, borderBottom: `1px solid ${GRID_LINE}` }}>
-      <div />
-      <div />
-      <div />
-    </div>
-  );
-}
-
 function XCell({ variant, onClick }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", borderRight: `1px solid ${GRID_LINE}` }}>
       {variant === "circle" ? (
         <button onClick={onClick} aria-label="Delete question" style={{ all: "unset", cursor: "pointer",
-          width: 32, height: 32, borderRadius: 999, background: BLUE, color: "#ffffffff",
+          width: 25, height: 30, borderRadius: 8, background: BLUE, color: "#ffffffff",
           display: "grid", placeItems: "center", fontSize: 15, fontWeight: 600,
           boxShadow: "0 2px 5px rgba(0,0,0,0.2)" }}
           onMouseDown={(e) => e.stopPropagation()}>x</button>
@@ -289,16 +277,10 @@ const cellBase = { display: "flex", alignItems: "center", padding: "0 18px", ove
 const cellText = { fontSize: 19, color: INK, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
 
 /* trailing "add" row + filler padding for the owner section */
-function ownerRows(faqs, visible) {
+function ownerRows(faqs) {
   const rows = faqs.map((f) => ({ kind: "data", ...f }));
   rows.push({ kind: "add", q: "", a: "" });           // editable add row
-  while (rows.length < visible) rows.push({ kind: "filler" });
   return rows;
-}
-function padTo(arr, n) {
-  const out = arr.slice();
-  while (out.length < n) out.push(null);
-  return out;
 }
 
 /* ---------- Google-Sheets style overflow overlay ---------- */
@@ -346,7 +328,7 @@ function Overlay({ rect, meta, onClose }) {
 const cssText = `
   .faq-table-wrap { width: 100%; margin-top: 16px; font-family: 'Barlow Condensed', sans-serif; }
   .faq-count-pill { display: inline-flex; align-items: center; margin-bottom: 14px; padding: 8px 18px;
-    border-radius: 999px; color: #fff; font-weight: 600; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
+    border-radius: 10px; color: #fff; font-weight: 400; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
   .tbl-scroll::-webkit-scrollbar { width: 12px; }
   .tbl-scroll::-webkit-scrollbar-thumb { background: #cfcfcf; border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
   .tbl-scroll::-webkit-scrollbar-track { background: transparent; }
