@@ -11,6 +11,7 @@ import './accordion.css';
 
 export const MODULE_TITLES = {
   basic_info: 'About',
+  links: 'Links',
   club_media: 'Media',
   join: 'How to Join',
   faqs: 'FAQs',

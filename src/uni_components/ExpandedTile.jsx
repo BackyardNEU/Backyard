@@ -10,6 +10,7 @@ import logImage from '/src/assets/logImage.png';
 import heartEmpty from '/src/assets/empty_heart.png';
 import heartFull from '/src/assets/full_heart.png';
 import BasicInfoModule from '../club_page_components/BasicInfoModule';
+import LinksModule from '../club_page_components/LinksModule';
 import JoinModule from '../club_page_components/JoinModule';
 import StatsModule from '../club_page_components/StatsModule';
 import ClubMediaModule from '../club_page_components/ClubMediaModule';
@@ -34,6 +35,14 @@ function validateBasicInfo(data) {
     if (data.club_name.trim().length > 80) return 'Club name must be 80 characters or fewer.';
     if (!data?.description?.trim()) return 'Description cannot be empty.';
     for (const l of (data?.links ?? [])) {
+        if (l.name.length > 15) return 'Link names must be 15 characters or fewer.';
+        if (l.url && !isValidUrl(l.url)) return 'One or more link URLs are invalid.';
+    }
+    return null;
+}
+
+function validateLinks(basicInfoData) {
+    for (const l of (basicInfoData?.links ?? [])) {
         if (l.name.length > 15) return 'Link names must be 15 characters or fewer.';
         if (l.url && !isValidUrl(l.url)) return 'One or more link URLs are invalid.';
     }
@@ -120,8 +129,10 @@ function validateClubMedia(data) {
 
 function getModuleWarnings(draft) {
     const w = {};
+    const basicInfo = draft.find((m) => m.type === 'basic_info');
     for (const m of draft) {
         if (m.type === 'basic_info') w.basic_info = validateBasicInfo(m.data);
+        if (m.type === 'links') w.links = validateLinks(basicInfo?.data);
         if (m.type === 'join') w.join = validateJoin(m.data);
         if (m.type === 'stats') w.stats = validateStats(m.data);
         if (m.type === 'faqs') w.faqs = validateFaq(m.data);
@@ -134,11 +145,18 @@ function getModuleWarnings(draft) {
 }
 
 function normalizeModules(modules) {
-    return (modules ?? []).map((m, i) => ({
+    const normalized = (modules ?? []).map((m, i) => ({
         ...m,
         order: m.order ?? i,
         isDisplayed: m.isDisplayed !== false,
     }));
+    // Older club pages saved before the Links module existed won't have one yet — give them
+    // one now so Links gets its own accordion slot (title, help text, visibility checkbox).
+    // It has no data of its own; it edits basic_info.data.links.
+    if (normalized.length > 0 && !normalized.some((m) => m.type === 'links')) {
+        normalized.push({ type: 'links', order: normalized.length, isDisplayed: true, data: {} });
+    }
+    return normalized;
 }
 
 function applyAccordionOrder(reorderedModules) {
@@ -507,7 +525,12 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const sortedDraft = [...(draft ?? [])].sort((a, b) => a.order - b.order);
     const basicInfoModule = sortedDraft.find((m) => m.type === 'basic_info');
     const accordionModules = sortedDraft;
-    const viewModules = sortedDraft.filter((m) => m.isDisplayed !== false);
+    // Links has no separate public section of its own (see renderModule) — exclude it from the
+    // view-mode stream entirely so it doesn't leave a stray divider where its content would be.
+    const viewModules = sortedDraft.filter((m) => m.isDisplayed !== false && m.type !== 'links');
+    // Its checkbox instead controls whether the action-bar link buttons show at all.
+    const linksModuleEntry = sortedDraft.find((m) => m.type === 'links');
+    const linksDisplayed = linksModuleEntry ? linksModuleEntry.isDisplayed !== false : true;
 
     // Action row rendered inside the basic_info module (between the banner and the About text)
     const actionRow = (
@@ -581,6 +604,23 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     actions={actionRow}
                     warning={moduleWarnings.basic_info ?? null}
                     part={part}
+                    linksDisplayed={linksDisplayed}
+                />
+            );
+        }
+        if (module.type === 'links') {
+            // Links has no separate public "full" section of its own — the actual link
+            // buttons always live in the action bar (rendered via basic_info's hero), so its
+            // order in the module stream is irrelevant. Only show its editing UI/preview here.
+            if (!isEditing) return null;
+            const basicInfo = draft.find((m) => m.type === 'basic_info');
+            return (
+                <LinksModule
+                    key="links"
+                    data={basicInfo?.data}
+                    editing={isEditing}
+                    onChange={(updatedData) => handleModuleChange('basic_info', updatedData)}
+                    warning={moduleWarnings.links ?? null}
                 />
             );
         }

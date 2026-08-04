@@ -3,7 +3,6 @@ import { useClubData } from '../context/useClubData';
 import ColorThief from 'colorthief';
 import { FaSearch, FaTimes } from 'react-icons/fa';
 import './BasicInfoModule.css';
-import LinksTable from './LinksTable';
 
 /**
  * @param {Object} props
@@ -18,8 +17,9 @@ import LinksTable from './LinksTable';
  * @param {React.ReactNode} props.actions - action row slot rendered between hero and about in full/hero mode
  * @param {string|null} props.warning - validation message shown in edit mode
  * @param {'full'|'hero'|'about'} props.part - which slice to render; hero is fixed above the accordion
+ * @param {boolean} props.linksDisplayed - whether the Links module's visibility checkbox is on; hides the action-bar link buttons entirely when false
  */
-function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange, actions, warning, part = 'full' }) {
+function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange, actions, warning, part = 'full', linksDisplayed = true }) {
   const [dominantColor, setDominantColor] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
   const [descOpen, setDescOpen] = useState(false);
@@ -229,7 +229,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
       <>
       <div className="action-links-wrapper">
         {actions}
-        {enabledLinks.length > 0 && (
+        {linksDisplayed && enabledLinks.length > 0 && (
           <>
             <span className="links-sep">|</span>
             <div className="links-bar">
@@ -257,15 +257,9 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
             </div>
           </>
         )}
-        {editing && (
-          <LinksTable
-            links={links}
-            onChange={(next) => onChange({ ...data, links: next })}
-          />
-        )}
       </div>
 
-      {linksExpanded && (
+      {linksDisplayed && linksExpanded && (
         <div className="links-expanded-row">
           {enabledLinks.slice(3).map((link, i) => (
             <div className="duo-btn-wrap" key={link.id || i}>
@@ -449,7 +443,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
         </div>
       )}
 
-      {showHero && linksModalOpen && (
+      {showHero && linksDisplayed && linksModalOpen && (
         <div className="links-modal-overlay" onClick={() => setLinksModalOpen(false)}>
           <div className="links-modal" onClick={(e) => e.stopPropagation()}>
             <div className="friends-modal-header">
