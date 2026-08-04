@@ -15,7 +15,6 @@ import JoinModule from '../club_page_components/JoinModule';
 import StatsModule from '../club_page_components/StatsModule';
 import ClubMediaModule from '../club_page_components/ClubMediaModule';
 import FaqModule from '../club_page_components/FaqModule';
-import LinksModule from '../club_page_components/LinksModule';
 import MemberRosterModule from '../club_page_components/MemberRosterModule';
 import { CalendarModule } from '../club_page_components/CalendarModule';
 import AddEventPanel from '../club_page_components/AddEventPanel';
