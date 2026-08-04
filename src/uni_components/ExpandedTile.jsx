@@ -10,6 +10,7 @@ import logImage from '/src/assets/logImage.png';
 import heartEmpty from '/src/assets/empty_heart.png';
 import heartFull from '/src/assets/full_heart.png';
 import BasicInfoModule from '../club_page_components/BasicInfoModule';
+import LinksModule from '../club_page_components/LinksModule';
 import JoinModule from '../club_page_components/JoinModule';
 import StatsModule from '../club_page_components/StatsModule';
 import ClubMediaModule from '../club_page_components/ClubMediaModule';
@@ -17,10 +18,12 @@ import FaqModule from '../club_page_components/FaqModule';
 import LinksModule from '../club_page_components/LinksModule';
 import MemberRosterModule from '../club_page_components/MemberRosterModule';
 import { CalendarModule } from '../club_page_components/CalendarModule';
+import AddEventPanel from '../club_page_components/AddEventPanel';
 import ModuleAccordion from '../club_page_components/accordion';
 import { useClubData } from '../context/useClubData';
 import { useGlobalStore } from '../lib/store';
 import InviteLinkButton from '../club_page_components/InviteLinkButton';
+import dividerLineImg from '/src/assets/border-horizontal-gray.svg';
 
 // --- Validation helpers ---
 const isValidUrl = (url) => {
@@ -104,7 +107,6 @@ function validateMemberRoster(data) {
 }
 
 function validateCalendar(_data) {
-    // module.data stores only settings (filterByMembership); events live in the DB
     return null;
 }
 
@@ -400,15 +402,42 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             body: {
                 clubId: id,
                 clubName: club.club_name,
+                eventName: eventData.eventName ?? undefined,
                 description: eventData.description,
+                where: eventData.where ?? undefined,
                 startTime: eventData.startTime,
                 endTime: eventData.endTime,
                 imageUrl: eventData.imageUrl ?? undefined,
+                isMembersOnly: eventData.isMembersOnly ?? false,
             },
         });
         setClubEvents((prev) =>
             [...prev, newEvent].sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
         );
+    };
+
+    const handleEditEvent = async (eventId, eventData) => {
+        const updated = await apiFetch(`/events/${eventId}`, {
+            method: 'PUT',
+            body: {
+                eventName: eventData.eventName ?? undefined,
+                description: eventData.description,
+                where: eventData.where ?? undefined,
+                startTime: eventData.startTime,
+                endTime: eventData.endTime,
+                imageUrl: eventData.imageUrl ?? undefined,
+                isMembersOnly: eventData.isMembersOnly ?? false,
+            },
+        });
+        setClubEvents((prev) =>
+            prev.map((e) => (e.id === eventId ? updated : e))
+                .sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
+        );
+    };
+
+    const handleDeleteEvent = async (eventId) => {
+        await apiFetch(`/events/${eventId}`, { method: 'DELETE' });
+        setClubEvents((prev) => prev.filter((e) => e.id !== eventId));
     };
 
     const moduleWarnings = isEditing ? getModuleWarnings(draft) : {};
@@ -497,9 +526,10 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const sortedDraft = [...(draft ?? [])].sort((a, b) => a.order - b.order);
     const basicInfoModule = sortedDraft.find((m) => m.type === 'basic_info');
     const accordionModules = sortedDraft;
-    const viewModules = sortedDraft.filter((m) => m.isDisplayed !== false);
-    // Links doesn't get its own section in the module stream (see renderModule) — its
-    // visibility checkbox instead controls whether the action-bar link buttons show at all.
+    // Links has no separate public section of its own (see renderModule) — exclude it from the
+    // view-mode stream entirely so it doesn't leave a stray divider where its content would be.
+    const viewModules = sortedDraft.filter((m) => m.isDisplayed !== false && m.type !== 'links');
+    // Its checkbox instead controls whether the action-bar link buttons show at all.
     const linksModuleEntry = sortedDraft.find((m) => m.type === 'links');
     const linksDisplayed = linksModuleEntry ? linksModuleEntry.isDisplayed !== false : true;
 
@@ -509,21 +539,45 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             <div className="exp-action-row-inner">
                 {isClicked
                     ? <img src={logImage} className="log-btn" alt="Clicked state" />
-                    : <button className="review-btn" onClick={handleClick}>Share your experience</button>
+                    : (
+                        <div className="duo-btn-wrap">
+                            <div className="duo-btn-pill" aria-hidden="true" />
+                            <button
+                                className="review-btn duo-btn"
+                                style={{ '--duo-shadow': 'rgb(52, 32, 0)' }}
+                                onClick={handleClick}
+                            >
+                                Share your experience
+                            </button>
+                        </div>
+                    )
                 }
 
                 {user && (
-                    <button
-                        className={`membership-btn ${isMember ? 'leave' : 'join'}`}
-                        onClick={handleMembership}
-                        disabled={memberLoading}
-                    >
-                        {memberLoading ? '...' : isMember ? 'Leave Club' : 'Join Club'}
-                    </button>
+                    <div className="duo-btn-wrap">
+                        <div className="duo-btn-pill" aria-hidden="true" />
+                        <button
+                            className={`membership-btn duo-btn ${isMember ? 'leave' : 'join'}`}
+                            style={{ '--duo-shadow': isMember ? 'rgb(90, 20, 20)' : 'rgb(0, 45, 8)' }}
+                            onClick={handleMembership}
+                            disabled={memberLoading}
+                        >
+                            {memberLoading ? '...' : isMember ? 'Leave Club' : 'Join Club'}
+                        </button>
+                    </div>
                 )}
 
                 {/* Placeholder — event creation to be wired up later */}
-                <button className="add-events-btn" type="button">Add Events</button>
+                <div className="duo-btn-wrap">
+                    <div className="duo-btn-pill" aria-hidden="true" />
+                    <button
+                        className="add-events-btn duo-btn"
+                        style={{ '--duo-shadow': 'rgb(157, 62, 47)' }}
+                        type="button"
+                    >
+                        Add Events
+                    </button>
+                </div>
 
                 {GlobalValue && (
                     <img
@@ -640,14 +694,12 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     club={club}
                     data={module.data}
                     editing={isEditing}
-                    isApproved={isApproved}
                     onChange={(updatedData) => handleModuleChange('calendar', updatedData)}
                     warning={moduleWarnings.calendar ?? null}
                     events={clubEvents}
                     myRsvpSet={clubMyRsvpSet}
                     friendRsvpMap={clubFriendRsvpMap}
                     onRsvp={handleClubRsvp}
-                    onAddEvent={handleAddEvent}
                     userId={user?.id ?? null}
                 />
             );
@@ -678,7 +730,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
             onAnimationComplete={() => setAnimationDone(true)}
         >
-            <button className="close-btn" onClick={handleClose}>x</button>
+            <button className="close-btn" onClick={handleClose}>×</button>
 
             {isApproved && !isEditing && (
                 <div className="exp-editor-toolbar">
@@ -702,6 +754,14 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
             <div className="club-modules">
                 {basicInfoModule && renderModule(basicInfoModule, 'hero')}
+                <AddEventPanel
+                    isApproved={isApproved}
+                    club={club}
+                    events={clubEvents}
+                    onAddEvent={handleAddEvent}
+                    onEditEvent={handleEditEvent}
+                    onDeleteEvent={handleDeleteEvent}
+                />
                 {isEditing ? (
                     <ModuleAccordion
                         modules={accordionModules}
@@ -715,14 +775,14 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     <>
                         {viewModules.length > 0 && (
                             <div className="module-view-divider">
-                                <div className="divider" />
+                                <div className="divider" style={{ backgroundImage: `url(${dividerLineImg})` }} aria-hidden="true" />
                             </div>
                         )}
                         {viewModules.map((module, index) => (
                             <React.Fragment key={module.type}>
                                 {index > 0 && (
                                     <div className="module-view-divider">
-                                        <div className="divider" />
+                                        <div className="divider" style={{ backgroundImage: `url(${dividerLineImg})` }} aria-hidden="true" />
                                     </div>
                                 )}
                                 {renderModule(

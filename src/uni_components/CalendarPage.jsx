@@ -281,7 +281,7 @@ export function CalendarPage({ onClose }) {
                 ) : (
                   day.events.map(event => (
                     <div key={event.id} className="calendar-event">
-                      {event.event_image_url && <img className="club-img" src={event.event_image_url} alt="" />}
+                      {event.image_url && <img className="club-img" src={event.image_url} alt="" />}
                       <div className="club-name">{event.club_name}</div>
                       <div className="event-description">
                         <p>about<span className="club-info">{event.event_description}</span></p>

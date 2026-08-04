@@ -122,21 +122,16 @@
 
 .profile-close-btn {
   position: fixed;
-  top: 0.5rem;
-  right: 1rem;
+  top: 32px;
+  right: 32px;
   z-index: 20;
   background: none;
   border: none;
   font-size: 2rem;
   line-height: 1;
-  color: #999;
+  color: black;
   cursor: pointer;
   padding: 4px 6px;
-  transition: color 0.15s ease;
-}
-
-.profile-close-btn:hover {
-  color: #222;
 }
 
 .profile-divider {

@@ -84,26 +84,34 @@ function JoinModule({ data, editing, onChange, warning }) {
       {(applicationLink || contactLink) && (
         <div className="join-actions">
           {applicationLink && (
-            <a
-              className="apply-link-btn"
-              href={applicationLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={editing ? (e) => e.preventDefault() : undefined}
-            >
-              Apply
-            </a>
+            <div className="duo-btn-wrap">
+              <div className="duo-btn-pill" aria-hidden="true" />
+              <a
+                className="apply-link-btn duo-btn"
+                style={{ '--duo-shadow': 'rgb(52, 32, 0)' }}
+                href={applicationLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={editing ? (e) => e.preventDefault() : undefined}
+              >
+                Apply
+              </a>
+            </div>
           )}
           {contactLink && (
-            <a
-              className="contact-link-btn"
-              href={contactLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={editing ? (e) => e.preventDefault() : undefined}
-            >
-              Contact recruiter
-            </a>
+            <div className="duo-btn-wrap">
+              <div className="duo-btn-pill" aria-hidden="true" />
+              <a
+                className="contact-link-btn duo-btn"
+                style={{ '--duo-shadow': 'rgb(30, 85, 125)' }}
+                href={contactLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={editing ? (e) => e.preventDefault() : undefined}
+              >
+                Contact recruiter
+              </a>
+            </div>
           )}
         </div>
       )}

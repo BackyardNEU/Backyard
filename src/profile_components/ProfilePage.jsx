@@ -15,13 +15,12 @@ import { PolaroidCards } from './PolaroidCards'
 //if the user logs out form this page, boot them from the page back to the home page.
 
 export const ProfilePage = () => {
-  const { id } = useParams()
   const navigate = useNavigate();
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
-  const [status, setStatus]     = useState('idle')
+  const setStatus = useState('idle')
   const [preview, setPreview]   = useState(null)
-  const [imageUrl, setImageUrl] = useState(null)
+  const setImageUrl = useState(null)
   //const inputRef = useRef(null)
 
   const BUCKET = 'profile_images'
@@ -62,7 +61,7 @@ export const ProfilePage = () => {
   const lastPath = useGlobalStore((state) => state.lastPath);
 
   useEffect(() => {
-    const handleBack = (event) => {
+    const handleBack = () => {
       // When users hit the browser back button on the profile page,
       // send them back to where they were right before logging in.
       if (lastPath && lastPath !== window.location.pathname) {
@@ -143,7 +142,7 @@ export const ProfilePage = () => {
           </div>
           <button
             className="profile-close-btn"
-            onClick={() => navigate(lastPath && lastPath !== '/profile' ? lastPath : '/')}
+            onClick={() => {navigate(/*lastPath && lastPath !== '/profile' ? lastPath : '/'*/ `/university/38500bfc-e606-46a7-840d-720b11ad2e8b`)}} //neu id
             aria-label="Close profile"
           >
             ×

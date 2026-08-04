@@ -17,7 +17,7 @@ export const MODULE_TITLES = {
   faqs: 'FAQs',
   stats: 'Stats',
   member_roster: 'Members',
-  calendar: 'Events',
+  calendar: 'Coming Up',
   comments: 'Comments',
 };
 
@@ -94,7 +94,6 @@ function SortableModule({
   children,
 }) {
   const isDisplayed = module.isDisplayed !== false;
-  const isEvents = module.type === 'calendar';
 
   const {
     attributes,
@@ -137,7 +136,7 @@ function SortableModule({
               onChange={onToggleDisplayed}
             />
             <span
-              className={`module-name ${!isDisplayed ? 'muted' : ''} ${isEvents ? 'events-emphasis' : ''}`}
+              className={`module-name ${!isDisplayed ? 'muted' : ''}`}
             >
               {title}
             </span>
