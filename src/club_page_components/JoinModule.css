@@ -204,8 +204,8 @@
   margin-top: 15px;
   width: 100%;
   box-sizing: border-box;
-  border: 2px solid #CFD2E5;
-  color: #CFD2E5;
+  border: 2px solid #Ece7e5;
+  color: #Ece7e5;
 
   padding: 5px;
   font-family: inherit;
@@ -257,15 +257,17 @@
 
 /* Add-a-tab card — vertical playing card with a plus */
 .join-add-card {
+  position: relative;
   flex: 0 0 auto;
   width: 300px;
   min-height: 340px;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   background: transparent;
-  border: 2px solid #c4c4c4;
-  border-radius: 1.25rem;
+
+
   color: #c4c4c4;
   font-size: 10rem;
   font-weight: 300;
@@ -275,7 +277,49 @@
 }
 
 .join-add-card:hover {
-  background: #2e4064; border-color: #d9d9d9;  color: #CFD2E5; 
+  background: #2e4064; border-color: #d9d9d9;  color: #CFD2E5;
+}
+
+/* Ink-line border overlay (black) — visible in both normal and hover states */
+.join-add-card-border {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: auto;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.join-add-card-border-left {
+  left: 0;
+  transform: scaleX(0.5);
+  transform-origin: left center;
+}
+
+.join-add-card-border-right {
+  right: -1px;
+  transform: scaleX(-0.5);
+  transform-origin: center;
+}
+
+.join-add-card-border-h-wrap {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2.5px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  background-size: auto 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.join-add-card-border-top-wrap {
+  top: 0;
+}
+
+.join-add-card-border-bottom-wrap {
+  bottom: 0;
 }
 
 /* ---- Edit mode: link inputs ---- */
@@ -300,7 +344,7 @@
   padding: 0.7rem 1rem;
   border: 2px solid #2e4064;
   outline: none;
-  border-radius: 15px;
+  border-radius: 8px;
   font-weight: 500;
   color: #16193C;
   background:#A7CCEE;
@@ -316,7 +360,7 @@
   border: 1px solid #ccc;
   border-radius: 8px;
   outline: none;
-  border-radius: 15px;
+
   font-weight: 500;
   color: #473400;
   background:#93834E;

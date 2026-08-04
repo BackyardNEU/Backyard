@@ -3,7 +3,7 @@ import borderBlackImg from '/src/assets/border.svg';
 import borderHorizontalBlackImg from '/src/assets/border-horizontal.svg';
 
 /* palette pulled from the mockup */
-const BLUE = "#da0000ff";
+const BLUE = "#2f73a4ff";
 
 const ROW_A = "#3b4b6c";
 const ROW_B = "#51658dff";

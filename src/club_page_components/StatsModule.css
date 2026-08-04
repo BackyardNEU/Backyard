@@ -131,7 +131,7 @@
     flex-direction: row;
     overflow-x: auto;
     overflow-y: hidden;
-    width: 70vw;
+    width: 100%;
     gap: 8px;
     scrollbar-width: thin;
     border-bottom: 0.9px dashed rgb(175, 175, 175);
@@ -165,6 +165,7 @@
     max-width: 100%;
     margin: 0;
     padding: 0;
+    gap: 10px;
   }
 
   .slider {

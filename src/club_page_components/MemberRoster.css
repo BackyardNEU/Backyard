@@ -233,7 +233,7 @@
   margin-top: 2px;
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 20px;
-  font-weight: 500;
+  font-weight: 300;
   text-transform: uppercase;
   color: #8c8c8c;
 }
@@ -275,64 +275,6 @@
   width: 100%;
   
 }
-
-/* Category management bar: rename (✎) / delete (×) existing categories */
-.mr-cat-manage {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 0 2px 6px;
-}
-.mr-cat-manage-label {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 1.5rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #323232;
-  
-  margin-right: 4px;
-}
-.mr-cat-empty {
-  font-family: 'Barlow', sans-serif;
-  font-size: 13px;
-  color: #aaa;
-}
-.mr-cat-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 6px 4px 12px;
-  background: #2e4064;
-  border: 2px solid #Ece7e5;
-  border-radius: 999px;
-
-}
-.mr-cat-chip-name {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: #Ece7e5;
-}
-.mr-cat-chip-btn {
-  width: 22px;
-  height: 22px;
-  display: grid;
-  place-items: center;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-  color: #Ece7e5;
-  font-size: 13px;
-  line-height: 1;
-  cursor: pointer;
-  transition: background 0.12s, color 0.12s;
-}
-.mr-cat-chip-btn:hover { background: rgba(0, 0, 0, 0.08); color: #1a1a1a; }
-.mr-cat-chip-btn.del:hover { background: rgba(180, 40, 40, 0.85); color: #fff; }
 
 .mr-edit-row {
   display: flex;
@@ -420,41 +362,45 @@
 }
 
 .mr-remove {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 26px;
-  height: 26px;
+  align-self: flex-end;
+
+
   display: flex;
-  place-items: center;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-  color: #8a8a8a;
+  background: #2e4064;
+  padding: 0px 5px;
+  color: #ffffff;
+  border-radius: 5px;
   font-size: 1rem;
-  line-height: 1;
+  justify-content: center;
+  align-items: flex-end;
+  transition: transform 0.1s ease-in;
+
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.15s, background 0.15s, color 0.15s;
+  border: none;
 }
-.mr-card:hover .mr-remove { opacity: 1; }
-.mr-remove:hover { background: #f2f2f1; color: #1a1a1a; }
+.mr-remove:hover {
+  transform: scale(1.1);
+  background: rgba(180, 40, 40);
+}
 
 .mr-category-wrap { width: 250px; max-width: 100%; }
 .mr-category {
+  margin-top: -5px;
   width: 100%;
-  height: 30px;
-  padding: 0 10px;
-  font-family: inherit;
-  font-size: 13px;
-  color: #Ece7e5;
-  background: #2e4064;
+  box-sizing: border-box;
   border: 2px solid #Ece7e5;
-  border-radius: 10px;
-  cursor: pointer;
+  color: #Ece7e5;
+
+  padding: 5px;
+  font-family: inherit;
+  font-size: 15px;
   outline: none;
-  text-align: center;
-  text-align-last: center;
+  margin-bottom: 10px;
+}
+
+.mr-category::placeholder {
+  color: #Ece7e5;
+  opacity: 0.6;
 }
 
 .mr-photo {
@@ -585,17 +531,61 @@
 .mr-toolbar .u { text-decoration: underline; }
 
 .mr-add-card {
+  position: relative;
   flex: 0 0 300px;
   width: 300px;
-  border: 2px solid;
-  border-radius: 15px;
-  
+ 
+
+  overflow: hidden;
+
   cursor: pointer;
   display: grid;
   place-items: center;
 
   transition: background 0.15s, color 0.15s, border-color 0.15s;
-  background: #fcfcfc; color: #c4c4c4; border-color: #c4c4c4; 
+  background: #fcfcfc; color: #c4c4c4; border-color: #c4c4c4;
 }
 .mr-add-card:hover { background: #2e4064; border-color: #d9d9d9;  color: #Ece7e5; }
 .mr-add-card svg { width: 84px; height: 84px; }
+
+/* Ink-line border overlay (black) — visible in both normal and hover states */
+.mr-add-card-border {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: auto;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.mr-add-card-border-left {
+  left: 0;
+  transform: scaleX(0.5);
+  transform-origin: left center;
+}
+
+.mr-add-card-border-right {
+  right: -1px;
+  transform: scaleX(-0.5);
+  transform-origin: center;
+}
+
+.mr-add-card-border-h-wrap {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2.5px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  background-size: auto 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.mr-add-card-border-top-wrap {
+  top: 0;
+}
+
+.mr-add-card-border-bottom-wrap {
+  bottom: 0;
+}

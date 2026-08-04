@@ -156,6 +156,18 @@ function JoinModule({ data, editing, onChange, warning }) {
               </div>
             ))}
             <button className="join-add-card" onClick={addTab} aria-label="Add a tab">
+              <img src={borderBlackImg} alt="" className="join-add-card-border join-add-card-border-left" />
+              <img src={borderBlackImg} alt="" className="join-add-card-border join-add-card-border-right" />
+              <div
+                className="join-add-card-border-h-wrap join-add-card-border-top-wrap"
+                style={{ backgroundImage: `url(${borderHorizontalBlackImg})` }}
+                aria-hidden="true"
+              />
+              <div
+                className="join-add-card-border-h-wrap join-add-card-border-bottom-wrap"
+                style={{ backgroundImage: `url(${borderHorizontalBlackImg})` }}
+                aria-hidden="true"
+              />
               +
             </button>
           </div>
