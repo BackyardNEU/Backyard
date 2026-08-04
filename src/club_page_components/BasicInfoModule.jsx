@@ -17,6 +17,7 @@ import './BasicInfoModule.css';
  * @param {React.ReactNode} props.actions - action row slot rendered between hero and about in full/hero mode
  * @param {string|null} props.warning - validation message shown in edit mode
  * @param {'full'|'hero'|'about'} props.part - which slice to render; hero is fixed above the accordion
+ * @param {boolean} props.linksDisplayed - whether the Links module's visibility checkbox is on; hides the action-bar link buttons entirely when false
  */
 function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange, actions, warning, part = 'full', linksDisplayed = true }) {
   const [dominantColor, setDominantColor] = useState(null);
@@ -233,20 +234,25 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
             <span className="links-sep">|</span>
             <div className="links-bar">
               {enabledLinks.slice(0, 3).map((link, i) => (
-                <a
-                  key={link.id || i}
-                  className={`review-btn link-btn link-btn--${getLinkKeyword(link.name)}`}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {link.name}
-                </a>
+                <div className="duo-btn-wrap" key={link.id || i}>
+                  <div className="duo-btn-pill" aria-hidden="true" />
+                  <a
+                    className={`review-btn link-btn link-btn--${getLinkKeyword(link.name)}`}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {link.name}
+                  </a>
+                </div>
               ))}
               {enabledLinks.length > 3 && (
-                <button className="review-btn link-btn links-toggle-btn" onClick={handleMoreLinks}>
-                  {linksExpanded ? 'Less' : 'More'}
-                </button>
+                <div className="duo-btn-wrap">
+                  <div className="duo-btn-pill" aria-hidden="true" />
+                  <button className="review-btn link-btn links-toggle-btn" onClick={handleMoreLinks}>
+                    {linksExpanded ? 'Less' : 'More'}
+                  </button>
+                </div>
               )}
             </div>
           </>
@@ -256,15 +262,17 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
       {linksDisplayed && linksExpanded && (
         <div className="links-expanded-row">
           {enabledLinks.slice(3).map((link, i) => (
-            <a
-              key={link.id || i}
-              className={`review-btn link-btn link-btn--${getLinkKeyword(link.name)}`}
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {link.name}
-            </a>
+            <div className="duo-btn-wrap" key={link.id || i}>
+              <div className="duo-btn-pill" aria-hidden="true" />
+              <a
+                className={`review-btn link-btn link-btn--${getLinkKeyword(link.name)}`}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {link.name}
+              </a>
+            </div>
           ))}
         </div>
       )}
@@ -319,7 +327,9 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
               </span>
             </button>
           )}
-  <p className = "tag">•</p>
+  {friendsInClub.length > 0 && topTags.length > 0 && (
+    <p className="tag tag-separator">•</p>
+  )}
           {topTags.length > 0 && (
             <div className="club-tag2">
               {topTags.map((tag) => (
@@ -433,7 +443,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
         </div>
       )}
 
-      {showHero && linksModalOpen && (
+      {showHero && linksDisplayed && linksModalOpen && (
         <div className="links-modal-overlay" onClick={() => setLinksModalOpen(false)}>
           <div className="links-modal" onClick={(e) => e.stopPropagation()}>
             <div className="friends-modal-header">
@@ -444,15 +454,17 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
             </div>
             <div className="links-modal-grid">
               {enabledLinks.map((link, i) => (
-                <a
-                  key={link.id || i}
-                  className={`review-btn link-btn link-btn--${getLinkKeyword(link.name)}`}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {link.name}
-                </a>
+                <div className="duo-btn-wrap" key={link.id || i}>
+                  <div className="duo-btn-pill" aria-hidden="true" />
+                  <a
+                    className={`review-btn link-btn link-btn--${getLinkKeyword(link.name)}`}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {link.name}
+                  </a>
+                </div>
               ))}
             </div>
           </div>

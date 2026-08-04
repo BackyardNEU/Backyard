@@ -1,0 +1,160 @@
+.crop-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.crop-modal {
+    position: relative;
+    background: #FFFDFB;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    max-width: 92vw;
+    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.4);
+}
+
+.crop-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    color: #3A201F;
+}
+
+.crop-close-btn:hover {
+    color: #000;
+}
+
+.crop-modal-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.5rem;
+    color: #3A201F;
+    margin: 0;
+}
+
+/* Same plain-text tab treatment as .mr-cat-tab (member roster category tabs) */
+.crop-aspect-row {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.crop-aspect-btn {
+    flex: 0 0 auto;
+    border: none;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(18px, 4vw, 24px);
+    font-weight: 400;
+    text-transform: uppercase;
+    color: #cdcdcd;
+    white-space: nowrap;
+    transition: color 0.15s ease;
+}
+
+.crop-aspect-btn:hover { color: #8c8c8c; }
+.crop-aspect-btn.active { color: #1a1a1a; }
+
+.crop-frame {
+    position: relative;
+    overflow: hidden;
+    background: #111;
+    cursor: grab;
+    touch-action: none;
+    flex-shrink: 0;
+}
+
+.crop-frame:active {
+    cursor: grabbing;
+}
+
+.crop-frame-img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    max-width: none;
+    transform-origin: center center;
+    pointer-events: none;
+    user-select: none;
+}
+
+/* Rubberband snap-back — only transition while settling after a drag/pinch/slider
+   release, so live dragging itself stays 1:1 with the pointer (no lag) */
+.crop-frame-img.is-snapping {
+    transition: transform 0.2s ease;
+}
+
+/* Rule-of-thirds grid — fades in while interacting, fades out at rest */
+.crop-grid {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+}
+
+.crop-grid.is-visible {
+    opacity: 1;
+}
+
+.crop-grid-line {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.6);
+}
+
+.crop-grid-line--v {
+    top: 0;
+    bottom: 0;
+    width: 1px;
+}
+
+.crop-grid-line--h {
+    left: 0;
+    right: 0;
+    height: 1px;
+}
+
+.crop-zoom-slider {
+    width: 100%;
+    max-width: 320px;
+    accent-color: #000;
+    border-radius: 10px;
+}
+
+/* accent-color covers most browsers; explicit thumb overrides for the rest */
+.crop-zoom-slider::-webkit-slider-thumb {
+    background: #000;
+}
+
+.crop-zoom-slider::-moz-range-thumb {
+    background: #000;
+    border: none;
+}
+
+.crop-modal-actions {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.crop-apply-btn {
+    font-family: 'Barlow Condensed', sans-serif;
+    border: none;
+    cursor: pointer;
+    color: #333;
+    text-transform: uppercase;
+    background-color: rgb(227, 227, 227);
+}

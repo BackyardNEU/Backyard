@@ -1,41 +1,37 @@
 import React, { useState, useRef, useLayoutEffect } from 'react';
 import { format, parseISO } from 'date-fns';
-import { apiFetch } from '../lib/api';
+import borderImg from '../assets/border.svg';
+import borderHorizontalImg from '../assets/border-horizontal.svg';
 import './CalendarModule.css';
 
 /**
- * Calendar / Events module — simplified "Coming Up" list.
+ * Calendar / Events module — simplified "Coming Up" list. Read-only display
+ * (RSVP + lightbox) only — adding events lives in the separate, always-on-top
+ * AddEventPanel so the two can't be confused with each other.
  *
  * data shape: { filterByMembership: boolean }
- * @param {Object}   club          - club object
+ * @param {Object}   club          - club record (used for its image_url, as a
+ *                                    poster placeholder for events with no image)
  * @param {Object}   data          - module data
  * @param {boolean}  editing       - page edit mode
- * @param {boolean}  isApproved    - true for approved club owners; shows add-event form
  * @param {Function} onChange      - (updatedData) => void
- * @param {string}   warning
+ * @param {string}   warning       - displays a warning for invalid fields not entered in by page editor
  * @param {Array}    events        - upcoming events fetched by ExpandedTile, sorted by start_time
  * @param {Set}      myRsvpSet     - event IDs the current user has RSVPd to
  * @param {Map}      friendRsvpMap - event ID → [{ username, ... }]
  * @param {Function} onRsvp        - (eventId, isCurrentlyGoing) => void
- * @param {Function} onAddEvent    - ({ description, startTime, endTime, imageUrl }) => Promise<void>
  * @param {string}   userId        - null if not logged in
  */
 export function CalendarModule({
   club,
-  data,
   editing,
-  isApproved = false,
-  onChange,
   warning,
   events = [],
   myRsvpSet = new Set(),
   friendRsvpMap = new Map(),
   onRsvp,
-  onAddEvent,
   userId,
 }) {
-  const imageInputRef = useRef(null);
-
   const [overlayEvent, setOverlayEvent] = useState(null);
   const [overlayHasMore, setOverlayHasMore] = useState(false);
   const overlayScrollRef = useRef(null);
@@ -58,87 +54,8 @@ export function CalendarModule({
     setOverlayHasMore(el.scrollHeight - el.scrollTop - el.clientHeight > 10);
   };
 
-  const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ description: '', date: '', startTime: '', endTime: '' });
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [formWarning, setFormWarning] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
+  // sorting events passed in through events prop by closest to current date
   const sorted = [...events].sort((a, b) => parseISO(a.start_time) - parseISO(b.start_time));
-
-  // ── add-event form helpers ─────────────────────────────────────────────
-  function validateForm() {
-    const { description, date, startTime, endTime } = formData;
-    if (!description.trim()) { setFormWarning('Description is required.'); return false; }
-    if (description.length > 200) { setFormWarning('Description must be 200 characters or fewer.'); return false; }
-    if (!date || !startTime || !endTime) { setFormWarning('Please fill in all date and time fields.'); return false; }
-    const start = new Date(`${date}T${startTime}:00`);
-    const end = new Date(`${date}T${endTime}:00`);
-    if (isNaN(start) || isNaN(end)) { setFormWarning('Invalid date or time format.'); return false; }
-    if (start < new Date()) { setFormWarning('Event cannot begin in the past.'); return false; }
-    if (start >= end) { setFormWarning('Start time must be before end time.'); return false; }
-    if (end - start > 12 * 60 * 60 * 1000) { setFormWarning('Event cannot last more than 12 hours.'); return false; }
-    setFormWarning('');
-    return true;
-  }
-
-  const handleFormChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-  };
-
-  const handleSubmit = async () => {
-    if (!validateForm()) return;
-    setIsSubmitting(true);
-    try {
-      let imageUrl = null;
-      if (imageFile) {
-        const ext = imageFile.name.split('.').pop() || 'jpg';
-        const { signedUrl, publicUrl } = await apiFetch('/storage/event-poster-upload-url', {
-          method: 'POST',
-          body: { ext },
-        });
-        const uploadRes = await fetch(signedUrl, {
-          method: 'PUT',
-          body: imageFile,
-          headers: { 'Content-Type': imageFile.type || 'application/octet-stream' },
-        });
-        if (!uploadRes.ok) throw new Error('Image upload failed.');
-        imageUrl = publicUrl;
-      }
-      await onAddEvent?.({
-        description: formData.description,
-        startTime: `${formData.date}T${formData.startTime}:00`,
-        endTime: `${formData.date}T${formData.endTime}:00`,
-        imageUrl,
-      });
-      setShowForm(false);
-      setFormData({ description: '', date: '', startTime: '', endTime: '' });
-      setImageFile(null);
-      setImagePreview(null);
-      setFormWarning('');
-    } catch (err) {
-      setFormWarning(err.message || 'Failed to add event. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleCancelForm = () => {
-    setShowForm(false);
-    setFormData({ description: '', date: '', startTime: '', endTime: '' });
-    setImageFile(null);
-    setImagePreview(null);
-    setFormWarning('');
-  };
 
   // ── render ─────────────────────────────────────────────────────────────
   return (
@@ -146,7 +63,6 @@ export function CalendarModule({
       <p className="divider-header">Coming Up</p>
       {editing && warning && <p className="module-warning">{warning}</p>}
 
-      {/* Event list */}
       {sorted.length === 0 ? (
         <p className="cal-empty">No upcoming events.</p>
       ) : (
@@ -163,15 +79,30 @@ export function CalendarModule({
                 className="cal-event-item cal-event-item--clickable"
                 onClick={() => setOverlayEvent(event)}
               >
-                {event.event_image_url && (
-                  <img className="cal-event-img" src={event.event_image_url} alt="" />
-                )}
+                <img src={borderImg} alt="" className="cal-event-item-border cal-event-item-border-left" />
+                <img src={borderImg} alt="" className="cal-event-item-border cal-event-item-border-right" />
+                <div
+                  className="cal-event-item-border-h cal-event-item-border-h-top"
+                  style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+                />
+                <div
+                  className="cal-event-item-border-h cal-event-item-border-h-bottom"
+                  style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+                />
+                <img
+                  className="cal-event-img"
+                  src={event.event_image_url || club?.image_url || '/raccoon_pfp.png'}
+                  alt=""
+                />
                 <div className="cal-event-body">
                   <p className="cal-event-date">{format(start, 'EEE, MMM d').toUpperCase()}</p>
                   <p className="cal-event-time">
                     {format(start, 'h:mm a')} – {format(end, 'h:mm a')}
                   </p>
                   <p className="cal-event-desc">{event.event_description}</p>
+                  {event.is_members_only && (
+                    <span className="cal-members-badge">Members only</span>
+                  )}
                   {friends && friends.length > 0 && (
                     <p className="friend-rsvp-callout">
                       {friends.length === 1
@@ -191,20 +122,6 @@ export function CalendarModule({
               </div>
             );
           })}
-        </div>
-      )}
-
-      {/* Edit settings */}
-      {editing && (
-        <div className="cal-edit-section">
-          <label className="cal-toggle-label">
-            <input
-              type="checkbox"
-              checked={data?.filterByMembership ?? false}
-              onChange={(e) => onChange?.({ ...data, filterByMembership: e.target.checked })}
-            />
-            {' '}Restrict members-only events to club members
-          </label>
         </div>
       )}
 
@@ -252,6 +169,9 @@ export function CalendarModule({
                         {format(evStart, 'h:mm a')} – {format(evEnd, 'h:mm a')}
                       </p>
                       <p className="cal-overlay-desc">{ev.event_description}</p>
+                      {ev.is_members_only && (
+                        <span className="cal-members-badge">Members only</span>
+                      )}
                       {evFriends && evFriends.length > 0 && (
                         <p className="friend-rsvp-callout">
                           {evFriends.length === 1
@@ -273,138 +193,6 @@ export function CalendarModule({
               })}
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Add event (approved accounts only) */}
-      {isApproved && (
-        <div className="cal-add-event-section">
-          {!showForm && (
-            <button className="cal-add-btn" onClick={() => setShowForm(true)}>＋ Add Event</button>
-          )}
-          {showForm && (
-            <div className="cal-form">
-              <p className="cal-form-title">New Event</p>
-
-              <label className="cal-label">
-                Description *
-                <div>
-                  <textarea
-                    className="cal-input cal-textarea"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleFormChange}
-                    placeholder="What's happening?"
-                    maxLength={200}
-                    rows={3}
-                  />
-                  <div className="char-counter-wrap">
-                    <span className="char-counter">{formData.description.length}/200</span>
-                  </div>
-                </div>
-              </label>
-
-              <label className="cal-label">
-                Date *
-                <input
-                  className="cal-input"
-                  type="date"
-                  name="date"
-                  value={formData.date}
-                  onChange={handleFormChange}
-                />
-              </label>
-
-              <div className="cal-time-row">
-                <label className="cal-label">
-                  Start time *
-                  <input
-                    className="cal-input"
-                    type="time"
-                    name="startTime"
-                    value={formData.startTime}
-                    onChange={handleFormChange}
-                  />
-                </label>
-                <label className="cal-label">
-                  End time *
-                  <input
-                    className="cal-input"
-                    type="time"
-                    name="endTime"
-                    value={formData.endTime}
-                    onChange={handleFormChange}
-                  />
-                </label>
-              </div>
-
-              <div className="cal-label">
-                Event image (optional)
-                <p className="cal-image-hint">For the best display, use a portrait-style image — 3:4 ratio or 750 × 1,000 px</p>
-                <div
-                  className="cal-image-trigger"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => imageInputRef.current?.click()}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      imageInputRef.current?.click();
-                    }
-                  }}
-                >
-                  {imageFile ? `✓ ${imageFile.name}` : 'Click to upload image'}
-                  <input
-                    ref={imageInputRef}
-                    type="file"
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    onChange={handleImageChange}
-                  />
-                </div>
-              </div>
-
-              {/* Live card preview */}
-              {(imagePreview || formData.description || formData.date) && (
-                <div className="cal-form-preview-wrap">
-                  <p className="cal-form-preview-label">Preview</p>
-                  <div className="cal-event-item cal-form-preview-card">
-                    {imagePreview && (
-                      <img className="cal-event-img" src={imagePreview} alt="" />
-                    )}
-                    <div className="cal-event-body">
-                      {formData.date && (
-                        <p className="cal-event-date">
-                          {format(new Date(`${formData.date}T00:00:00`), 'EEE, MMM d').toUpperCase()}
-                        </p>
-                      )}
-                      {(formData.startTime || formData.endTime) && (
-                        <p className="cal-event-time">
-                          {formData.startTime ? format(new Date(`${formData.date || '2000-01-01'}T${formData.startTime}:00`), 'h:mm a') : '?'}
-                          {' – '}
-                          {formData.endTime ? format(new Date(`${formData.date || '2000-01-01'}T${formData.endTime}:00`), 'h:mm a') : '?'}
-                        </p>
-                      )}
-                      {formData.description && (
-                        <p className="cal-event-desc">{formData.description}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {formWarning && <p className="cal-form-warning">{formWarning}</p>}
-
-              <div className="cal-form-actions">
-                <button className="cal-cancel-btn" onClick={handleCancelForm} disabled={isSubmitting}>
-                  Cancel
-                </button>
-                <button className="cal-submit-btn" onClick={handleSubmit} disabled={isSubmitting}>
-                  {isSubmitting ? 'Adding...' : 'Add Event'}
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>

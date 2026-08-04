@@ -95,14 +95,6 @@
   color: #aaa;
 }
 
-.accordion .module-name.events-emphasis {
-  color: #b45309;
-}
-
-.accordion .module-name.events-emphasis.muted {
-  color: #d4a574;
-}
-
 .accordion .icon {
   font-size: 24px;
   flex-shrink: 0;

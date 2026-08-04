@@ -1,0 +1,131 @@
+.epc-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.epc-modal {
+    position: relative;
+    background: #2e4064;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    max-width: 92vw;
+    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.4);
+}
+
+.epc-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    color: #ECE7E5;
+}
+
+.epc-close-btn:hover {
+    color: #fff;
+}
+
+.epc-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.5rem;
+    color: #ECE7E5;
+    margin: 0;
+}
+
+.epc-frame {
+    position: relative;
+    overflow: hidden;
+    background: #111;
+    cursor: grab;
+    touch-action: none;
+    flex-shrink: 0;
+}
+
+.epc-frame:active {
+    cursor: grabbing;
+}
+
+.epc-frame-img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    max-width: none;
+    transform-origin: center center;
+    pointer-events: none;
+    user-select: none;
+}
+
+.epc-frame-img.is-snapping {
+    transition: transform 0.2s ease;
+}
+
+.epc-grid {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+}
+
+.epc-grid.is-visible {
+    opacity: 1;
+}
+
+.epc-grid-line {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.6);
+}
+
+.epc-grid-line--v {
+    top: 0;
+    bottom: 0;
+    width: 1px;
+}
+
+.epc-grid-line--h {
+    left: 0;
+    right: 0;
+    height: 1px;
+}
+
+.epc-zoom-slider {
+    width: 100%;
+    max-width: 320px;
+    accent-color: #ECE7E5;
+    border-radius: 10px;
+}
+
+.epc-zoom-slider::-webkit-slider-thumb {
+    background: #ECE7E5;
+}
+
+.epc-zoom-slider::-moz-range-thumb {
+    background: #ECE7E5;
+    border: none;
+}
+
+.epc-actions {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.epc-apply-btn {
+    font-family: 'Barlow Condensed', sans-serif;
+    border: none;
+    cursor: pointer;
+    color: #2e4064;
+    text-transform: uppercase;
+    background-color: #ECE7E5;
+}

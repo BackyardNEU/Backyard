@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import BorderedInput from "./BorderedInput";
 import "./form.css";
 
 function ResetPasswordPage() {
@@ -81,7 +82,7 @@ function ResetPasswordPage() {
         <img className="raccoon" src="/raccoon_pfp.png" alt="Backyard" />
         <h2>Set a New Password</h2>
         <form className="input-field" onSubmit={handleSubmit}>
-          <input
+          <BorderedInput
             type="password"
             placeholder="New password"
             value={password}
@@ -90,7 +91,7 @@ function ResetPasswordPage() {
             required
             minLength={6}
           />
-          <input
+          <BorderedInput
             type="password"
             placeholder="Confirm password"
             value={confirmPassword}
