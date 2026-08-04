@@ -833,14 +833,36 @@
 
 /* ── Action row + links ── */
 
-/* Outer wrapper that puts the action row and links bar on the same flex line */
+/* Outer wrapper that puts the action row and links bar on ONE continuous,
+   horizontally-scrollable line — never wraps to a second row. Extra links
+   revealed by "More" just extend this same row (and its scroll range)
+   instead of appearing in a row/modal of their own. */
 .action-links-wrapper {
+  overflow-x: auto;
+  overflow-y: hidden;
+  width: 100%;
+  padding-left: var(--mod-pad, 0.4rem); /* lines up with the rectangle's left edge */
+  box-sizing: border-box;
+}
+
+.action-links-wrapper::-webkit-scrollbar {
+  height: 6px;
+}
+
+.action-links-wrapper::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+/* Inner track sizes to its content: centered when it fits within the
+   wrapper, left-aligned + scrollable (via the wrapper's overflow-x) when
+   it overflows — same trick used by .exp-action-row-inner. */
+.action-links-track {
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  
-  width: 100%;
+  flex-wrap: nowrap;
+  width: max-content;
+  margin: 0 auto;
   gap: 0;
 }
 
@@ -868,13 +890,19 @@
   padding: 0px 10px;
 }
 
-/* Row of link buttons (first 3 + More) */
+/* Row of link buttons (collapsed count + More) — nowrap so it only ever
+   extends .action-links-wrapper's single scrollable row, never wraps on its own */
 .links-bar {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
   gap: 0.5rem;
   padding: 8px 0;
+}
+
+.links-bar > * {
+  flex-shrink: 0;
 }
 
 /* Base link button — carries its own "duo button" press effect
@@ -917,65 +945,24 @@
   .link-btn {
     font-size: 1.25rem;
   }
+
+  .action-links-wrapper {
+    padding-left: 0;
+    margin-left: 3%; 
+  }
 }
 
 /* Keyword variants: background-color and its matching box-shadow color
    are stored together so they stay in sync. */
-.link-btn--instagram { background-color: rgb(194, 0, 181); color: #ffffff; --duo-shadow: rgb(116, 0, 109); }
+.link-btn--instagram { background-color: #d45c80; color: #ffffff; --duo-shadow: #cf416c; }
 .link-btn--facebook  { background-color: rgb(66, 143, 187); color: #ffffff; --duo-shadow: rgb(43, 93, 122); }
-.link-btn--discord   { color: #B3BAF7; }
+.link-btn--discord   { background-color: #6D75E5; color: #ffffff;  --duo-shadow: #5B65EA;}
 .link-btn--youtube  { background-color: rgb(165, 39, 17); color: #ffffff; --duo-shadow: rgb(107, 25, 11); }
-.link-btn--email     { color: #7DEDA7; }
-.link-btn--album     { color: #FFD275; }
-.link-btn--slack     { color: #7DE8F5; }
-.link-btn--tiktok    { background-color: rgb(0, 0, 0); color: #ffffff; --duo-shadow: rgb(45, 45, 45); }
-.link-btn--linktree  { color: #A3F7B5; }
-
-/* Desktop inline expansion — extra links shown in a row below the action row */
-.links-expanded-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 0 0 10px 10px;
-  width: 100%;
-}
-
-/* On mobile the expanded row is never shown (More opens the modal instead) */
-@media (max-width: 500px) {
-  .links-expanded-row {
-    display: none;
-  }
-}
-
-/* Mobile "All Links" modal */
-.links-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10000;
-}
-
-.links-modal {
-  background: #fff;
-  border-radius: 16px;
-  padding: 24px;
-  width: 92vw;
-  max-width: 440px;
-  max-height: 80vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.links-modal-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-}
+.link-btn--email     { background-color: #5F93F6; color: white; --duo-shadow: #3B77E9; }
+.link-btn--spotify   { background-color: rgb(37, 37, 37); color: #65D46E; --duo-shadow: rgb(0, 0, 0); }
+.link-btn--slack     { background-color: #5F3B62; color: white; --duo-shadow: #552E57 }
+.link-btn--tiktok    { background-color: rgb(37, 37, 37); color: #ffffff; --duo-shadow: rgb(0, 0, 0); }
+.link-btn--linktree  { background-color: #94F58F; color: black; --duo-shadow: #73DB6E;}
 
 /* ── Edit mode: links table ── */
 

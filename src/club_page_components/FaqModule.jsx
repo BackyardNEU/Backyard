@@ -46,7 +46,7 @@ function FaqModule({
         )}
       {editing && warning && <p className="module-warning">{warning}</p>}
 
-      <FaqCards clubId={club?.id} faqs={faqs} canAsk={canAsk && !editing} />
+      <FaqCards clubId={club?.id} clubName={club?.club_name} faqs={faqs} canAsk={canAsk && !editing} />
 
       {editing && (
         <FaqTable
