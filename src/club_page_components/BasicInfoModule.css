@@ -228,14 +228,14 @@
   overflow: hidden;
 
   flex-shrink: 0;
-  border: 3px solid #16193C;
+  border: 3px solid #2e4064 ;
 
  
   color: black;
 }
 
 .club-desc-input:hover {
-  border-color: #4F83B4;
+  border-color: #2e4064 ;
   border-radius: 5px;
 }
 
@@ -679,9 +679,9 @@
   padding: 1rem;
   max-width: 800px;
   font-size: 1.1rem;
-  color: #4c4c4c;
+  color: #Ece7e5;
   line-height: 1.2;
-  background: rgb(186, 197, 219);
+  background: #2e4064;
   border-radius:15px;
 }
 
