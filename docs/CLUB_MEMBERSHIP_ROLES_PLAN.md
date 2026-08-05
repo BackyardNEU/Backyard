@@ -236,7 +236,7 @@ No backend changes in this phase.
 
 ## Phase 4 — Custom Roles System
 
-Top moderators can create privileged custom role labels; any moderator can create non-privileged ones. Assignment rules mirror creation rules.
+Top moderators can create priivleged custom role labels; any moderator can create non-privileged ones. Assignment rules mirror creation rules.
 
 ### Permission helpers — `server/lib/clubPermissions.js`
 
