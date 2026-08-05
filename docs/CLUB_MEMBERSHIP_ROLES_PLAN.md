@@ -2,10 +2,15 @@
 
 ## Context
 
-Backyard currently tracks club membership as a flat UUID array (`member_list`) on the `profiles` table, with edit permissions handled by a separate manual `approved_club_accounts` table. This makes it impossible to support role-based permissions, a live roster of real members, or an invite/approval workflow. The goal is to make each club function like a Discord server: members, roles (owner / admin / member), and admin-gated actions (approving join requests, creating events, editing the page).
+Backyard currently tracks club membership as a flat UUID array (`member_list`) on the `profiles` table, with edit permissions handled by a separate manual `approved_club_accounts` table. This makes it impossible to support role-based permissions, a live roster, or an invite/approval workflow. The goal is to rebuild membership with a proper role hierarchy and, eventually, moderator-defined custom roles.
 
-**Join flow:** Request + approval (users send a request; admins/owners approve or decline).  
-**Migration:** Existing `member_list` members carry over as `member` role; existing `approved_club_accounts` holders carry over as `admin`.
+**Role hierarchy (fixed):** `moderator > officer > member`  
+Custom roles will slot between `officer` and `member` as display labels — no mechanical distinction yet.
+
+**Join flow:** One-click open join, school-gated (user's `profiles.school` must match club's `demo_club_data.school`).  
+**Join requests / notifications:** Deferred — see Phase 5.
+
+**Migration:** Existing `member_list` members → `member`; existing `approved_club_accounts` holders → `officer`. Moderators must be designated manually after migration (no automatic inference).
 
 ---
 
@@ -16,30 +21,61 @@ Backyard currently tracks club membership as a flat UUID array (`member_list`) o
 **Tables to create:**
 
 ```sql
-CREATE TYPE club_role AS ENUM ('owner', 'admin', 'member');
+CREATE TYPE club_role AS ENUM ('moderator', 'officer', 'member');
 
 CREATE TABLE club_memberships (
-  user_id    uuid       NOT NULL REFERENCES auth.users(id)    ON DELETE CASCADE,
-  club_id    uuid       NOT NULL REFERENCES demo_club_data(id) ON DELETE CASCADE,
-  role       club_role  NOT NULL DEFAULT 'member',
+  user_id    uuid        NOT NULL REFERENCES auth.users(id)     ON DELETE CASCADE,
+  club_id    uuid        NOT NULL REFERENCES demo_club_data(id) ON DELETE CASCADE,
+  role       club_role   NOT NULL DEFAULT 'member',
   joined_at  timestamptz NOT NULL DEFAULT now(),
-  invited_by uuid       REFERENCES auth.users(id) ON DELETE SET NULL,
   PRIMARY KEY (user_id, club_id)
 );
 
-CREATE TABLE club_join_requests (
-  id           uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id      uuid        NOT NULL REFERENCES auth.users(id)    ON DELETE CASCADE,
-  club_id      uuid        NOT NULL REFERENCES demo_club_data(id) ON DELETE CASCADE,
-  status       text        NOT NULL DEFAULT 'pending'
-                           CHECK (status IN ('pending','approved','declined')),
-  message      text,
-  reviewed_by  uuid        REFERENCES auth.users(id) ON DELETE SET NULL,
-  created_at   timestamptz NOT NULL DEFAULT now(),
-  responded_at timestamptz,
-  UNIQUE (user_id, club_id)
+-- Custom roles are display labels created per-club by the moderator.
+-- They have no mechanical permissions at this stage.
+CREATE TABLE club_custom_roles (
+  id         uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  club_id    uuid        NOT NULL REFERENCES demo_club_data(id) ON DELETE CASCADE,
+  name       text        NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (club_id, name)
+);
+
+-- Added after club_custom_roles exists; nullable — not every member has a custom role label.
+ALTER TABLE club_memberships
+  ADD COLUMN custom_role_id uuid REFERENCES club_custom_roles(id) ON DELETE SET NULL;
+```
+
+**Row-level security — school-scoped membership:**
+
+```sql
+ALTER TABLE club_memberships ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "members can only join clubs at their own school"
+ON club_memberships
+FOR INSERT
+WITH CHECK (
+  (SELECT school FROM profiles WHERE id = user_id) =
+  (SELECT school FROM demo_club_data WHERE id = club_id)
+);
+
+ALTER TABLE club_custom_roles ENABLE ROW LEVEL SECURITY;
+
+-- Only the club's moderator may create custom roles (enforced at API layer too).
+CREATE POLICY "only moderator can create custom roles"
+ON club_custom_roles
+FOR INSERT
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM club_memberships
+    WHERE user_id = auth.uid()
+      AND club_id = club_custom_roles.club_id
+      AND role = 'moderator'
+  )
 );
 ```
+
+> **Note:** `supabaseAdmin` bypasses RLS — API-layer guards (Phases 2 & 4) are the primary enforcement. RLS is defense-in-depth.
 
 **Seed data migration (run at end of same migration file):**
 
@@ -50,42 +86,58 @@ SELECT p.id, unnest(p.member_list)::uuid, 'member'
 FROM profiles p WHERE array_length(p.member_list, 1) > 0
 ON CONFLICT (user_id, club_id) DO NOTHING;
 
--- Approved editors → upgrade to 'admin'
+-- Approved editors → upgrade to 'officer'
 INSERT INTO club_memberships (user_id, club_id, role)
-SELECT user_id, club_id, 'admin'
+SELECT user_id, club_id, 'officer'
 FROM approved_club_accounts
-ON CONFLICT (user_id, club_id) DO UPDATE SET role = 'admin';
+ON CONFLICT (user_id, club_id) DO UPDATE SET role = 'officer';
 ```
 
-**Keep `profiles.member_list` intact** during transition (dual-write); drop it in Phase 5 cleanup after all callsites are migrated.
+> Moderators are not auto-assigned during migration. Designate them manually via the DB or a one-time script after verifying the seeded data.
+
+**Keep `profiles.member_list` intact** during transition (dual-write); drop in Phase 6 cleanup after all callsites are migrated.
 
 ---
 
-## Phase 2 — Backend
+## Phase 2 — Public Member List + Open Join/Leave
 
-### New file: `server/lib/clubPermissions.js`
-
-Reusable helpers for every protected route:
-
-- `getClubRole(userId, clubId)` → `'owner' | 'admin' | 'member' | null`
-- `requireClubRole(userId, clubId, minRole)` → throws 403 if insufficient
-- `canManage(actorRole, targetRole)` → boolean (owner can manage anyone; admin can manage members only)
-
-Role rank: `owner > admin > member`.
+The first user-visible feature: a public roster on each club page, plus a one-click join/leave button for school-matched users.
 
 ### New file: `server/routes/clubMembers.js` → mounted at `/api/clubs`
 
 | Method | Path | Auth | Permission | Description |
 |--------|------|------|------------|-------------|
-| GET | `/:clubId/members` | optional | public | List members with username + avatar; role visible to admins/owners only |
-| GET | `/:clubId/members/me` | required | any | Fast check: `{ role }` for caller |
-| DELETE | `/:clubId/members/me` | required | any member | Leave club; owners must transfer first; dual-writes `member_list` |
-| PATCH | `/:clubId/members/:userId` | required | admin/owner | Change role; admin can't promote to admin, owner can (not to owner) |
-| DELETE | `/:clubId/members/:userId` | required | admin/owner | Remove member; `canManage` check; dual-writes `member_list` |
-| POST | `/:clubId/members/transfer-ownership` | required | owner | Atomically makes `newOwnerId` owner, demotes self to admin |
-| GET | `/:clubId/join-requests` | required | admin/owner | List pending requests with requester profile |
-| POST | `/:clubId/join-requests` | required | non-member | Submit join request; 409 if already member or request pending |
-| PATCH | `/:clubId/join-requests/:reqId` | required | admin/owner | `{ status: 'approved' \| 'declined' }`; on approval inserts into `club_memberships` + dual-writes `member_list` |
+| GET | `/:clubId/members` | none | public | List members with username, avatar, role, and custom role name (if any); sorted moderator → officer → member |
+| POST | `/:clubId/members/me` | required | any | One-click join; school-match guard; 409 if already a member; dual-writes `member_list` |
+| DELETE | `/:clubId/members/me` | required | any member | Leave club; moderator must transfer ownership first; dual-writes `member_list` |
+| POST | `/:clubId/members/transfer-moderator` | required | moderator | Atomically promotes `newModeratorId` to moderator, demotes self to officer |
+
+**School-match guard (apply in `POST /:clubId/members/me` before inserting):**
+
+```js
+const [{ data: userProfile }, { data: club }] = await Promise.all([
+  supabaseAdmin.from('profiles').select('school').eq('id', req.user.id).single(),
+  supabaseAdmin.from('demo_club_data').select('school').eq('id', clubId).single(),
+]);
+if (!userProfile?.school || userProfile.school !== club?.school) {
+  return res.status(403).json({ error: 'You can only join clubs at your own school.' });
+}
+```
+
+**`GET /:clubId/members` query (join custom role name):**
+
+```js
+const { data } = await supabaseAdmin
+  .from('club_memberships')
+  .select(`
+    role,
+    custom_role_id,
+    club_custom_roles ( name ),
+    profiles ( username, avatar_url )
+  `)
+  .eq('club_id', clubId)
+  .order('role'); // enum order: moderator, officer, member
+```
 
 **Register in `server/index.js`:**
 ```js
@@ -95,12 +147,27 @@ app.use('/api/clubs', writeLimiter, clubMembersRouter);
 
 ### Modify `server/routes/clubPage.js`
 
-- Replace `approved_club_accounts` checks in `POST /:id/page/init` and `PUT /:id/page` with `await requireClubRole(req.user.id, clubId, 'admin')`
-- Keep `GET /:id/is-approved` working but derive from `club_memberships` (return `{ approved: role === 'admin' || role === 'owner' }`) — backward compat shim
+Replace `approved_club_accounts` checks in `POST /:id/page/init` and `PUT /:id/page` with:
+```js
+const { data } = await supabaseAdmin
+  .from('club_memberships')
+  .select('role')
+  .eq('user_id', req.user.id)
+  .eq('club_id', clubId)
+  .maybeSingle();
+if (!data || !['moderator', 'officer'].includes(data.role)) {
+  return res.status(403).json({ error: 'Forbidden' });
+}
+```
+
+Keep `GET /:id/is-approved` working but derive from `club_memberships`:
+```js
+{ approved: ['moderator', 'officer'].includes(role) }
+```
 
 ### Modify `server/routes/clubEvents.js`
 
-Replace the `profiles.select('member_list')` membership check with a `club_memberships` row lookup:
+Replace the `profiles.select('member_list')` membership check:
 ```js
 const { data } = await supabaseAdmin
   .from('club_memberships')
@@ -111,155 +178,107 @@ const { data } = await supabaseAdmin
 isMember = !!data;
 ```
 
-### Modify `server/routes/events.js`
-
-Upgrade the membership check for event creation to require `admin` role:
-```js
-await requireClubRole(req.user.id, clubId, 'admin');
-```
-
-### Modify `server/routes/reviews.js`
-
-Replace membership check in `PATCH /:reviewId` (review hide/show) with `admin` role check.
-
 ### Modify `server/routes/profiles.js`
 
 - `GET /membership` (line 114): read from `club_memberships` instead of `profiles.member_list`, reconstruct array for backward compat
-- `PUT /membership` (line 130): keep working for now (callers will be replaced in Phase 5)
-
----
-
-## Phase 3 — Frontend
-
-### Modify `src/uni_components/ExpandedTile.jsx`
-
-1. Add `myRole` state: `const [myRole, setMyRole] = useState(null)`
-2. In `fetchAll()`, add call to `GET /api/clubs/:id/members/me` → set `myRole`
-3. Replace `handleMembership()` join path: call `POST /clubs/:id/join-requests` (creates a pending request); update UI to show "Request sent" state
-4. Leave path: call `DELETE /clubs/:id/members/me`
-5. Replace `isApproved` check with `myRole === 'admin' || myRole === 'owner'`
-6. Add tab switcher between current page content and new `ClubMembersPanel`:
-   - `'page'` tab — existing module content
-   - `'members'` tab — renders `ClubMembersPanel`; tab visible to all, admin-only actions gated inside
+- `PUT /membership` (line 130): keep for now; removed in Phase 6
 
 ### New file: `src/club_page_components/ClubMembersPanel.jsx`
 
 Props: `{ clubId, myRole, currentUserId }`
 
-**What it renders:**
-- Member list: avatar + username + role badge; sorted owners → admins → members
-- For admins/owners: role dropdown and "Remove" button per member card (respecting `canManage`)
-- For owners only: "Transfer Ownership" option
-- Pending join requests section (admin/owner only) — each request shows requester profile + Approve/Decline buttons
-- Join request count badge on the tab label when there are pending requests
+**What it renders (Phase 2 scope):**
+- Member list: avatar + username + role badge + custom role label (if set); sorted moderator → officer → member
+- Join / Leave button (gated by school match; leave blocked for moderator without transferring)
 
 **Data fetching:**
 ```js
 const [members, setMembers] = useState([]);
-const [requests, setRequests] = useState([]);
-// Fetch both in parallel on mount; refresh after any mutation
+// fetch GET /api/clubs/:clubId/members on mount; refresh after join/leave
 ```
 
-**Mutations (all via `apiFetch`):**
-- `PATCH /clubs/:clubId/members/:userId` — role change
-- `DELETE /clubs/:clubId/members/:userId` — remove member
-- `PATCH /clubs/:clubId/join-requests/:reqId` — approve/decline
-- `POST /clubs/:clubId/members/transfer-ownership` — transfer
+### Modify `src/uni_components/ExpandedTile.jsx`
+
+1. Add `myRole` state: `const [myRole, setMyRole] = useState(null)`
+2. Add tab switcher between existing page content and `ClubMembersPanel`:
+   - `'page'` tab — existing module content
+   - `'members'` tab — renders `ClubMembersPanel`
+3. Replace `isApproved` check with `myRole === 'officer' || myRole === 'moderator'`
 
 ---
 
-## Phase 4 — Notifications
+## Phase 3 — Role Display (Internal Distinction, No Mechanical Gates)
 
-Two new notification types fired from `server/routes/clubMembers.js`, using the existing `NotificationService.dispatch()` pattern from `server/notifications/service.js`.
+The three roles are visually distinct in the member list UI. No permission gates are changed yet — this phase is purely presentational so the data model is visible to users before mechanical differences are enforced.
 
-### New file: `server/notifications/handlers/clubJoinRequest.js`
+**What to add in `ClubMembersPanel`:**
+- Role badge component: `moderator` → distinct colour/label, `officer` → second colour/label, `member` → default
+- Custom role label displayed as a subtitle under the member's name (if `custom_role_id` is set)
 
-Fired when a user submits a join request (`POST /:clubId/join-requests`).
+No backend changes in this phase.
 
-- **Recipients:** all `admin` and `owner` members of the club — query `club_memberships` for the club, then loop and dispatch one job per admin/owner
-- **Actor:** the requester (`req.user.id`)
-- **Entity:** `{ id: request.id, clubId, clubName }`
+---
+
+## Phase 4 — Custom Roles System
+
+Moderators can create named role labels per club and assign them to members. Labels have no mechanical permissions at this stage — they are display-only titles that slot between `officer` and `member` in the UI.
+
+### New endpoints (add to `server/routes/clubMembers.js`)
+
+| Method | Path | Auth | Permission | Description |
+|--------|------|------|------------|-------------|
+| GET | `/:clubId/roles` | none | public | List all custom roles for the club |
+| POST | `/:clubId/roles` | required | moderator | Create a custom role (`{ name }`); 409 if name already exists for club |
+| DELETE | `/:clubId/roles/:roleId` | required | moderator | Delete custom role; any member holding it has `custom_role_id` set to NULL (ON DELETE SET NULL) |
+| PATCH | `/:clubId/members/:userId` | required | moderator | Assign or remove a custom role (`{ customRoleId: uuid \| null }`); moderator cannot assign/remove roles from other moderators |
+
+**Permission helper — add to `server/lib/clubPermissions.js`:**
 
 ```js
-// In clubMembers.js, after inserting the join request row:
-const { data: admins } = await supabaseAdmin
-  .from('club_memberships')
-  .select('user_id')
-  .eq('club_id', clubId)
-  .in('role', ['admin', 'owner']);
-
-for (const { user_id } of admins ?? []) {
-  await NotificationService.dispatch({
-    type: 'club_join_request',
-    recipientId: user_id,
-    actorId: req.user.id,
-    entity: { id: joinRequest.id, clubId, clubName },
-  });
+export async function requireModerator(userId, clubId) {
+  const { data } = await supabaseAdmin
+    .from('club_memberships')
+    .select('role')
+    .eq('user_id', userId)
+    .eq('club_id', clubId)
+    .maybeSingle();
+  if (data?.role !== 'moderator') throw { status: 403, message: 'Moderator only' };
 }
 ```
 
-Handler `buildRow`:
+### Modify `src/club_page_components/ClubMembersPanel.jsx`
+
+Add moderator-only controls (visible only when `myRole === 'moderator'`):
+- "Manage roles" button → opens a panel listing existing custom roles with a delete button per role and an "Add role" input
+- Per-member card: role dropdown showing available custom roles (+ "None"); updates via `PATCH /:clubId/members/:userId`
+
+**Data fetching additions:**
 ```js
-export function buildRow(event) {
-  return {
-    recipient_id: event.recipientId,
-    actor_id: event.actorId,
-    type: 'club_join_request',
-    entity_type: 'club_join_request',
-    entity_id: event.entity?.id ?? null,
-  };
-}
-export const emailTemplate = null;
-```
-
-### New file: `server/notifications/handlers/clubJoinApproved.js`
-
-Fired when an admin/owner approves a join request (`PATCH /:clubId/join-requests/:reqId` with `status: 'approved'`).
-
-- **Recipient:** the original requester (`joinRequest.user_id`)
-- **Actor:** the approving admin/owner (`req.user.id`)
-- **Entity:** `{ clubId, clubName }`
-
-```js
-// In clubMembers.js, after approving the request:
-await NotificationService.dispatch({
-  type: 'club_join_approved',
-  recipientId: joinRequest.user_id,
-  actorId: req.user.id,
-  entity: { clubId, clubName },
-});
-```
-
-Handler `buildRow`:
-```js
-export function buildRow(event) {
-  return {
-    recipient_id: event.recipientId,
-    actor_id: event.actorId,
-    type: 'club_join_approved',
-    entity_type: 'club_membership',
-    entity_id: event.entity?.clubId ?? null,
-  };
-}
-export const emailTemplate = null;
-```
-
-### Register both in `server/notifications/queue.js`
-
-```js
-const HANDLERS = {
-  friend_request:    () => import('./handlers/friendRequest.js'),
-  friend_accepted:   () => import('./handlers/friendAccepted.js'),
-  club_join_request: () => import('./handlers/clubJoinRequest.js'),   // new
-  club_join_approved: () => import('./handlers/clubJoinApproved.js'), // new
-};
+const [customRoles, setCustomRoles] = useState([]);
+// fetch GET /api/clubs/:clubId/roles on mount (alongside members)
 ```
 
 ---
 
-## Phase 5 — Cleanup (after Phase 3 is stable)
+## Phase 5 — Join Requests & Notifications (Deferred)
 
-- Remove `profiles.member_list` column (requires updating `friends.js` to join `club_memberships` for member data)
+Design this phase once Phases 1–4 are stable. Scope will include:
+- `club_join_requests` table with `pending / approved / declined` status
+- Request submission flow (replaces one-click join for clubs that opt in)
+- Approval/decline UI for moderators and officers
+- In-app notifications: `club_join_request` (to admins) and `club_join_approved` (to requester)
+
+---
+
+## Phase 6 — Mechanical Permissions (Deferred)
+
+Wire up actual permission gates based on role. Scope TBD — depends on what actions each role tier should be able to perform.
+
+---
+
+## Phase 7 — Cleanup (After Phase 3 is stable)
+
+- Remove `profiles.member_list` column
 - Remove `approved_club_accounts` table and the `is-approved` shim endpoint
 - Remove `PUT /me/membership` endpoint
 
@@ -267,14 +286,14 @@ const HANDLERS = {
 
 ## Verification Checklist
 
-1. Run migration; verify seeding with `SELECT count(*) FROM club_memberships`
-2. Existing member-only event filtering still works
-3. Existing club page editors can still edit (seeded as admins)
-4. New user submits a join request → pending row in `club_join_requests`; all admins/owners receive a `club_join_request` in-app notification
-5. Admin approves request → row in `club_memberships`, `member_list` dual-written, user sees member-only events, requester receives a `club_join_approved` notification
-6. Admin removes a member → row deleted from both tables
-7. Owner changes role → reflected in DB and UI
-8. Non-admin member cannot create events (403)
+1. Run migration; verify seeding with `SELECT role, count(*) FROM club_memberships GROUP BY role`
+2. `GET /api/clubs/:id/members` returns full roster with no auth required
+3. User from the same school can one-click join; user from a different school receives 403
+4. Existing club page editors (seeded as officers) can still edit the page
+5. Officer cannot access moderator-only endpoints (403)
+6. Moderator can create a custom role, assign it to a member, see it in the list
+7. Deleting a custom role sets affected members' `custom_role_id` to NULL (no orphan references)
+8. Moderator transfer works atomically; original moderator becomes officer
 9. `GET /me/membership` still returns correct club IDs (backward compat)
 
 ---
@@ -289,11 +308,6 @@ const HANDLERS = {
 | `server/index.js` | Modify (register new router) |
 | `server/routes/clubPage.js` | Modify (swap permission check, update is-approved) |
 | `server/routes/clubEvents.js` | Modify (swap member check) |
-| `server/routes/events.js` | Modify (tighten to admin role) |
-| `server/routes/reviews.js` | Modify (tighten to admin role) |
 | `server/routes/profiles.js` | Modify (GET /membership reads from new table) |
-| `src/uni_components/ExpandedTile.jsx` | Modify (myRole state, tab switcher, new join flow) |
+| `src/uni_components/ExpandedTile.jsx` | Modify (myRole state, tab switcher) |
 | `src/club_page_components/ClubMembersPanel.jsx` | New |
-| `server/notifications/handlers/clubJoinRequest.js` | New |
-| `server/notifications/handlers/clubJoinApproved.js` | New |
-| `server/notifications/queue.js` | Modify (register 2 new handlers) |
