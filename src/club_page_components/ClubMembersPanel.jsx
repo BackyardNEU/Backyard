@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { apiFetch } from '../lib/api';
+import './ClubMembersPanel.css';
 
 const ROLE_LABEL = {
   top_moderator: 'Owner',
@@ -7,16 +8,8 @@ const ROLE_LABEL = {
   member: 'Member',
 };
 
-const ROLE_BADGE_CLASS = {
-  top_moderator: 'role-badge role-badge--owner',
-  moderator: 'role-badge role-badge--moderator',
-  member: 'role-badge role-badge--member',
-};
-
 function MemberCard({ entry }) {
   const { role, profiles, club_custom_roles } = entry;
-  const displayLabel = club_custom_roles?.name ?? ROLE_LABEL[role];
-  const badgeClass = ROLE_BADGE_CLASS[role] ?? 'role-badge';
 
   return (
     <div className="member-card">
@@ -27,7 +20,10 @@ function MemberCard({ entry }) {
       )}
       <div className="member-info">
         <span className="member-username">{profiles?.username ?? 'Unknown'}</span>
-        <span className={badgeClass}>{displayLabel}</span>
+        {club_custom_roles?.name && (
+          <span className="member-custom-role">{club_custom_roles.name}</span>
+        )}
+        <span className={`role-badge role-badge--${role}`}>{ROLE_LABEL[role]}</span>
       </div>
     </div>
   );

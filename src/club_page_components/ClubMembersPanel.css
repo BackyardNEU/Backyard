@@ -1,0 +1,166 @@
+/* ── Panel shell ─────────────────────────────────────────────────────────── */
+
+.club-members-panel {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 1.25rem 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.club-members-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.club-members-panel__count {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.1rem;
+  color: #37291E;
+  font-weight: 500;
+}
+
+.club-members-panel__error {
+  font-family: 'Barlow Condensed', sans-serif;
+  color: rgb(150, 30, 30);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.club-members-panel__loading,
+.club-members-panel__empty {
+  font-family: 'Barlow Condensed', sans-serif;
+  color: #888;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* ── Member list ─────────────────────────────────────────────────────────── */
+
+.club-members-panel__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* ── Member card ─────────────────────────────────────────────────────────── */
+
+.member-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
+}
+
+.member-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.member-avatar--placeholder {
+  background: #ddd;
+}
+
+.member-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.member-username {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #37291E;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Custom role: subtitle shown above the mechanical badge; takes visual priority */
+.member-custom-role {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #555;
+  font-style: italic;
+}
+
+/* ── Role badges ─────────────────────────────────────────────────────────── */
+
+.role-badge {
+  display: inline-block;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 90px;
+  width: fit-content;
+}
+
+/* Owner — warm amber */
+.role-badge--top_moderator {
+  background: #f5e4b0;
+  color: #7a5000;
+  border: 1px solid #e5c96a;
+}
+
+/* Moderator — cool slate blue */
+.role-badge--moderator {
+  background: #dce8f7;
+  color: #1a4a80;
+  border: 1px solid #a8c8ef;
+}
+
+/* Member — neutral gray */
+.role-badge--member {
+  background: #ebebeb;
+  color: #555;
+  border: 1px solid #ccc;
+}
+
+/* ── Tab switcher (lives in ExpandedTile but scoped here) ────────────────── */
+
+.club-tab-switcher {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.club-tab-btn {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 6px 20px;
+  border: 1px solid #ccc;
+  border-radius: 90px;
+  background: transparent;
+  color: #666;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.club-tab-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.club-tab-btn--active {
+  background: rgb(62, 42, 9);
+  color: #fff;
+  border-color: rgb(62, 42, 9);
+}
