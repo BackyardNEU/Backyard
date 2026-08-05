@@ -132,7 +132,7 @@ html, body {
 .headline {
   font-family: "Barlow Condensed", sans-serif;
   font-size: clamp(2.2rem, 7vw, 3rem);
-  font-weight: 300;
+  font-weight: 400;
   color: #29241d;
   letter-spacing: 0.06em;
   text-align: center;
@@ -197,8 +197,9 @@ html, body {
 .form-label {
   font-family: "Barlow Condensed", sans-serif;
   font-size: 1.05rem;
-  text-transform: uppercase;
   color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 /* ─── Input row (input + button side by side) ─── */
@@ -208,7 +209,7 @@ html, body {
   align-items: center;
   width: 100%;
   max-width: 400px;
-  gap: 16px;
+  gap: 8px;
 }
 
 .input-row-field {
@@ -274,8 +275,9 @@ html, body {
    onto the pill on press, plus a subtle grain texture. */
 .duo-btn-wrap {
   position: relative;
-  display: inline-flex;
+  display: flex;
   flex-shrink: 0;
+  width: 100%;
 }
 
 .duo-btn-pill {
@@ -313,7 +315,8 @@ html, body {
 }
 
 .submit-btn {
-  padding: 12px 40px;
+  width: 100%;
+  padding: 12px 22px;
   background: #C53B3F;
   color: #fff;
   font-family: "Barlow Condensed", sans-serif;
@@ -353,9 +356,11 @@ html, body {
 .consent {
   display: flex;
   align-items: flex-start;
+  justify-content: center;
   gap: 6px;
   max-width: 400px;
   width: 100%;
+  margin-top: 10px;
 }
 
 .consent input[type="checkbox"] {
@@ -368,9 +373,9 @@ html, body {
 
 .consent label {
   font-family: "Barlow Condensed", sans-serif;
-  font-size: 1.05rem;
-  color: #555;
-  line-height: 1.45;
+  font-size: 0.72rem;
+  color: #777;
+  line-height: 1.4;
 }
 
 .consent a {
@@ -395,7 +400,7 @@ html, body {
   font-size: 0.7rem;
   color: #aaa;
   text-align: center;
-  margin-top: 12px;
+  margin-top: 0px;
   animation: fadeIn 1s 1s both;
 }
 
@@ -578,8 +583,9 @@ html, body {
 .modal-card h1 {
   font-family: "Barlow Condensed", sans-serif;
   font-size: 1.8rem;
+  font-weight: 300;
   color: #29241d;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.06em;
   text-align: center;
   margin-bottom: 12px;
   flex-shrink: 0;
@@ -596,8 +602,8 @@ html, body {
   font-weight: 600;
   font-size: 0.95rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #2f2a22;
+  letter-spacing: 0.04em;
+  color: #555;
   margin-top: 14px;
   margin-bottom: 4px;
 }
@@ -606,7 +612,7 @@ html, body {
 .modal-body ul {
   font-family: "Barlow Condensed", sans-serif;
   font-size: 0.9rem;
-  color: #444;
+  color: #555;
   line-height: 1.6;
 }
 
@@ -654,8 +660,9 @@ html:has(.privacy-page) body {
 .privacy-card h1 {
   font-family: "Barlow Condensed", sans-serif;
   font-size: clamp(1.8rem, 6vw, 2.5rem);
+  font-weight: 300;
   color: #29241d;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.06em;
   align-self: center;
 }
 
@@ -664,8 +671,8 @@ html:has(.privacy-page) body {
   font-weight: 600;
   font-size: 1.05rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #2f2a22;
+  letter-spacing: 0.04em;
+  color: #555;
   margin-top: 12px;
 }
 
@@ -673,7 +680,7 @@ html:has(.privacy-page) body {
 .privacy-card ul {
   font-family: "Barlow Condensed", sans-serif;
   font-size: 0.95rem;
-  color: #444;
+  color: #555;
   line-height: 1.65;
 }
 
