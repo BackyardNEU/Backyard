@@ -165,10 +165,10 @@ router.get('/:clubId/page', async (req, res) => {
 router.post('/:clubId/page/init', requireAuth, async (req, res) => {
   const { clubId } = req.params;
 
-  // Verify approval
-  const { data: approval, error: approvalError } = await supabaseAdmin
-    .from('approved_club_accounts')
-    .select('user_id')
+  // Verify moderator or top_moderator role
+  const { data: membership, error: approvalError } = await supabaseAdmin
+    .from('club_memberships')
+    .select('role')
     .eq('user_id', req.user.id)
     .eq('club_id', clubId)
     .maybeSingle();
@@ -178,8 +178,8 @@ router.post('/:clubId/page/init', requireAuth, async (req, res) => {
     err.status = 502;
     throw err;
   }
-  if (!approval) {
-    return res.status(403).json({ error: 'Not an approved account for this club' });
+  if (!membership || !['top_moderator', 'moderator'].includes(membership.role)) {
+    return res.status(403).json({ error: 'Forbidden' });
   }
 
   // Check for existing data
@@ -296,10 +296,10 @@ router.put('/:clubId/page', requireAuth, checkMuted, async (req, res) => {
     return res.status(400).json({ error: textCheck.message, field: textCheck.field });
   }
 
-  // Verify the authenticated user is an approved account for this club.
-  const { data: approval, error: approvalError } = await supabaseAdmin
-    .from('approved_club_accounts')
-    .select('user_id')
+  // Verify moderator or top_moderator role.
+  const { data: membership, error: approvalError } = await supabaseAdmin
+    .from('club_memberships')
+    .select('role')
     .eq('user_id', req.user.id)
     .eq('club_id', clubId)
     .maybeSingle();
@@ -310,8 +310,8 @@ router.put('/:clubId/page', requireAuth, checkMuted, async (req, res) => {
     throw err;
   }
 
-  if (!approval) {
-    return res.status(403).json({ error: 'Not an approved account for this club' });
+  if (!membership || !['top_moderator', 'moderator'].includes(membership.role)) {
+    return res.status(403).json({ error: 'Forbidden' });
   }
 
   const { data, error } = await supabaseAdmin
@@ -356,10 +356,9 @@ router.get('/:clubId/top-tags', async (req, res) => {
 router.get('/:clubId/is-approved', requireAuth, async (req, res) => {
   const { clubId } = req.params;
 
-  // Requires the approved_club_accounts table described above.
   const { data, error } = await supabaseAdmin
-    .from('approved_club_accounts')
-    .select('user_id')
+    .from('club_memberships')
+    .select('role')
     .eq('user_id', req.user.id)
     .eq('club_id', clubId)
     .maybeSingle();
@@ -370,7 +369,8 @@ router.get('/:clubId/is-approved', requireAuth, async (req, res) => {
     throw err;
   }
 
-  res.json({ approved: !!data });
+  const role = data?.role ?? null;
+  res.json({ approved: ['top_moderator', 'moderator'].includes(role), role });
 });
 
 export default router;

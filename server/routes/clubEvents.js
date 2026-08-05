@@ -33,12 +33,13 @@ router.get('/:clubId/events/monthly', optionalAuth, async (req, res) => {
 
   let isMember = false;
   if (req.user) {
-    const { data: profile } = await supabaseAdmin
-      .from('profiles')
-      .select('member_list')
-      .eq('id', req.user.id)
-      .single();
-    isMember = (profile?.member_list || []).includes(clubId);
+    const { data: membership } = await supabaseAdmin
+      .from('club_memberships')
+      .select('role')
+      .eq('user_id', req.user.id)
+      .eq('club_id', clubId)
+      .maybeSingle();
+    isMember = !!membership;
   }
 
   const { data, error } = await supabaseAdmin
@@ -69,12 +70,13 @@ router.get('/:clubId/events', optionalAuth, async (req, res) => {
 
   let isMember = false;
   if (req.user) {
-    const { data: profile } = await supabaseAdmin
-      .from('profiles')
-      .select('member_list')
-      .eq('id', req.user.id)
-      .single();
-    isMember = (profile?.member_list || []).includes(clubId);
+    const { data: membership } = await supabaseAdmin
+      .from('club_memberships')
+      .select('role')
+      .eq('user_id', req.user.id)
+      .eq('club_id', clubId)
+      .maybeSingle();
+    isMember = !!membership;
   }
 
   let query = supabaseAdmin

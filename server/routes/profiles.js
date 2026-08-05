@@ -113,10 +113,9 @@ router.post('/profile', checkMuted, async (req, res) => {
 
 router.get('/membership', async (req, res) => {
     const { data, error } = await supabaseAdmin
-        .from('profiles')
-        .select('member_list')
-        .eq('id', req.user.id)
-        .single();
+        .from('club_memberships')
+        .select('club_id')
+        .eq('user_id', req.user.id);
 
     if (error) {
         const err = new Error(error.message);
@@ -124,7 +123,7 @@ router.get('/membership', async (req, res) => {
         throw err;
     }
 
-    res.json({ member_list: data?.member_list || [] });
+    res.json({ member_list: (data || []).map((r) => r.club_id) });
 });
 
 router.put('/membership', async (req, res) => {

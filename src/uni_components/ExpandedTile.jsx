@@ -17,6 +17,7 @@ import FaqModule from '../club_page_components/FaqModule';
 import MemberRosterModule from '../club_page_components/MemberRosterModule';
 import { CalendarModule } from '../club_page_components/CalendarModule';
 import ModuleAccordion from '../club_page_components/accordion';
+import ClubMembersPanel from '../club_page_components/ClubMembersPanel';
 import { useClubData } from '../context/useClubData';
 import { useGlobalStore } from '../lib/store';
 
@@ -153,12 +154,12 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const [isClicked, setIsClicked] = useState(false);
     // records the user itself
     const [user, setUser] = useState(null);
-    // determines if someone is a member of a club- derived from supabase table
-    const [isMember, setIsMember] = useState(false);
+    // null = not a member; 'member' | 'moderator' | 'top_moderator' = current role
+    const [myRole, setMyRole] = useState(null);
     // NOTE2SELF: THIS WILL BECOME IRRELEVANT LATER AS A LOADING STATE ACROSS ALL MODULES/INFO IS PUT IN PLACE
     const [memberLoading, setMemberLoading] = useState(false);
-    // determines if a user is an approved club account- derived from auth
-    const [isApproved, setIsApproved] = useState(false);
+    // active tab: 'page' | 'members'
+    const [activeTab, setActiveTab] = useState('page');
     // info from modules data to be displayed from db
     const [pageData, setPageData] = useState(null);
     // top tags derived from reviews
@@ -184,6 +185,9 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const [clubMembers, setClubMembers] = useState([]);
     // pending hide/show changes for comments — keyed by reviewId, only committed on Save
     const [hideDraft, setHideDraft] = useState({});
+
+    const isMember = myRole !== null;
+    const isApproved = myRole === 'moderator' || myRole === 'top_moderator';
 
     const id = club.id;
 
@@ -243,13 +247,12 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 apiFetch(`/clubs/${id}/members`, { auth: false }),
             ];
             const authFetches = authUser ? [
-                apiFetch('/me/membership'),
                 apiFetch(`/clubs/${id}/is-approved`),
             ] : [];
 
             console.log("Awaiting info...");
 
-            const [reviewsResult, pageResult, topTagsResult, eventsResult, membersResult, membershipResult, approvedResult] =
+            const [reviewsResult, pageResult, topTagsResult, eventsResult, membersResult, approvedResult] =
                 await Promise.allSettled([...publicFetches, ...authFetches]);
 
             if (reviewsResult.status === 'fulfilled') set_reviews(reviewsResult.value);
@@ -300,10 +303,8 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 ]));
                 console.log("Success retrieving data!");
             }
-            if (membershipResult?.status === 'fulfilled')
-                setIsMember((membershipResult.value?.member_list || []).includes(id));
             if (approvedResult?.status === 'fulfilled')
-                setIsApproved(approvedResult.value?.approved ?? false);
+                setMyRole(approvedResult.value?.role ?? null);
         }
 
         fetchAll();
@@ -323,21 +324,15 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
         if (!user || memberLoading) return;
         setMemberLoading(true);
         try {
-            const { member_list } = await apiFetch('/me/membership');
-            let list = member_list || [];
-            // check if user is currently a member of the club (if the club's id can be found in the list of club id's under 
-            // the member_list arrary column in profiles).
             if (isMember) {
-                list = list.filter((cid) => cid !== club.id);
+                await apiFetch(`/clubs/${club.id}/members/me`, { method: 'DELETE' });
+                setMyRole(null);
+                if (onMembershipChange) onMembershipChange(club.id, false);
             } else {
-                // otherwise, add clubId to user's membership list of clubs they belong to
-                list = [...list, club.id];
+                const result = await apiFetch(`/clubs/${club.id}/members/me`, { method: 'POST' });
+                setMyRole(result?.role ?? 'member');
+                if (onMembershipChange) onMembershipChange(club.id, true);
             }
-            // updates user member_list
-            await apiFetch('/me/membership', { method: 'PUT', body: { member_list: list } });
-            const wasJoined = isMember;
-            setIsMember(!isMember);
-            if (onMembershipChange) onMembershipChange(club.id, !wasJoined);
         } catch (err) {
             console.error('Error updating membership:', err);
         }
@@ -666,6 +661,33 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 }}>Edit Page</button>
             )}
 
+            <div className="club-tab-switcher">
+                <button
+                    className={`club-tab-btn${activeTab === 'page' ? ' club-tab-btn--active' : ''}`}
+                    onClick={() => setActiveTab('page')}
+                >
+                    Page
+                </button>
+                <button
+                    className={`club-tab-btn${activeTab === 'members' ? ' club-tab-btn--active' : ''}`}
+                    onClick={() => setActiveTab('members')}
+                >
+                    Members
+                </button>
+            </div>
+
+            {activeTab === 'members' ? (
+                <ClubMembersPanel
+                    clubId={id}
+                    myRole={myRole}
+                    currentUserId={user?.id ?? null}
+                    onMembershipChange={(newRole) => {
+                        setMyRole(newRole);
+                        if (onMembershipChange) onMembershipChange(club.id, newRole !== null);
+                    }}
+                />
+            ) : (
+
             <div className="club-modules">
                 {basicInfoModule && renderModule(basicInfoModule, 'hero')}
                 {isEditing ? (
@@ -700,6 +722,8 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     </>
                 )}
             </div>
+
+            )} {/* end activeTab === 'page' */}
 
             {isApproved && isEditing && (
                 <div className="expanded-edit-actions">

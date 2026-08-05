@@ -21,6 +21,7 @@ import questionsRouter from './routes/questions.js';
 import { startQueue } from './notifications/queue.js';
 import friendRequestsRouter from './routes/friend-requests.js';
 import notificationsRouter from './routes/notifications.js';
+import clubMembersRouter from './routes/clubMembers.js';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -41,6 +42,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Public reads
+app.use('/api/clubs', clubMembersRouter);
 app.use('/api/clubs', clubsRouter);
 app.use('/api/clubs', clubPageRouter);
 app.use('/api/clubs', questionsRouter);
