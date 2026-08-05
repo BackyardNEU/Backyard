@@ -15,12 +15,14 @@ import profilesRouter from './routes/profiles.js';
 import usersRouter from './routes/users.js';
 import storageRouter from './routes/storage.js';
 import eventsRouter from './routes/events.js';
+import supportRouter from './routes/support.js';
 import clubEventsRouter from './routes/clubEvents.js';
 import clubPageRouter from './routes/clubPage.js';
 import questionsRouter from './routes/questions.js';
 import { startQueue } from './notifications/queue.js';
 import friendRequestsRouter from './routes/friend-requests.js';
 import notificationsRouter from './routes/notifications.js';
+
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -61,6 +63,9 @@ app.use('/api/events', writeLimiter, eventsRouter);
 
 // Signed upload URLs (auth required; service role stays on the server)
 app.use('/api/storage', writeLimiter, storageRouter);
+
+// Support tickets
+app.use('/api/support', writeLimiter, supportRouter);
 
 app.use((err, req, res, _next) => {
   console.error('[api error]', err);
