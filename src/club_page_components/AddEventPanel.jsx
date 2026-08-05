@@ -428,7 +428,7 @@ export default function AddEventPanel({
                   </div>
 
                   <img
-                    className="add-event-card-img"
+                    className={`add-event-card-img${!event.event_image_url ? ' add-event-card-img--default' : ''}`}
                     src={event.event_image_url || club?.image_url || '/raccoon_pfp.png'}
                     alt=""
                   />

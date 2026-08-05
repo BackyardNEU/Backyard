@@ -95,6 +95,13 @@
   display: block;
 }
 
+/* Fallback (club logo / default avatar) is square — keep it square instead
+   of stretching/cropping it to the 3:4 poster ratio. */
+.add-event-card-img--default {
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+}
+
 .add-event-card-body {
   display: flex;
   flex-direction: column;
