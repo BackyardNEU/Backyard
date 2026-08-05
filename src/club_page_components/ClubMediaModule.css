@@ -1,7 +1,7 @@
 .club-media-module {
   width: 100%;
   box-sizing: border-box;
-  padding-left: 1.5%;   /* mobile 0.4rem, web 0 (rectangle's left) */
+  padding-left: 1.5%;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -527,7 +527,7 @@
   
   border: none;
   border-radius: 8px;
-  background: rgb(234, 234, 230);
+ 
   color: #37291E;
   font-size: 1.5rem;
   line-height: 1;
@@ -879,5 +879,11 @@
 
   .cm-modal-overlay {
     padding: 0;
+  }
+}
+
+@media (max-width: 500px) {
+  .club-media-module {
+    padding-left: 0.3rem;
   }
 }

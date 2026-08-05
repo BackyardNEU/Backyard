@@ -192,6 +192,7 @@
     right: 0.5rem;
     justify-content: center;
   }
+  
 }
 
 .exp-edit-btn {
@@ -272,9 +273,9 @@
   z-index: 2;
   cursor: pointer;
   font-size: 1.5rem;
-  font-family: 'bebas neue', sans-serif;
+  font-family: 'barlow condensed', sans-serif;
   color: #ffffff;
-  font-weight: 700;
+  font-weight: 500;
   padding: 0.3rem 0.7rem;
   border-radius: 6px;
   background: #16193c70;
@@ -311,15 +312,15 @@
     --name-size: clamp(45px, calc(22.5px + 7.5vw), 60px);
   }
   .content-col {
-    
+
     width: 100%;
-    padding: 0.3rem 0.15rem;
+    padding: 0.3rem 0.35rem;
     display: flex;
     flex-direction: column;
     align-items: stretch;
   }
-  .about-section{
-    padding-left: 4%;
+    .about-section {
+    padding-left: 0.3rem;
   }
   .friend-avatar-img-bio {
   width: 1.8rem;
@@ -362,7 +363,7 @@
     padding: 1px 1rem 20px;     /* ⬅ ADJUST name↔tag gap (mobile, part 2/2: top value = space above the tag) */
     background-color: var(--dominant-color);
     z-index: 8000;
-    border-radius: 15px;
+    border-radius: 10px;
     position: relative;
   }
 
@@ -420,7 +421,7 @@
     position: relative;
     margin-right: -5%;
     margin-bottom: 50px;
-    padding-left: var(--mod-pad, 0.4rem);   /* web: 0 → hero starts where the rectangle starts */
+    padding-left: var(--mod-pad, 0.3rem);   /* web: 0 → hero starts where the rectangle starts */
     box-sizing: border-box;
   }
 
@@ -615,8 +616,9 @@
 }
 
 .desc-modal {
+  position: relative;
   background: #fff;
-  border-radius: 16px;
+
   padding: 24px;
   width: 520px;
   max-width: 92vw;
@@ -625,6 +627,48 @@
   flex-direction: column;
   gap: 14px;
   overflow: hidden;
+}
+
+/* Ink-line border overlay (brown) */
+.desc-modal-border {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: auto;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.desc-modal-border-left {
+  left: 0;
+  transform: scaleX(0.8);
+  transform-origin: left center;
+}
+
+.desc-modal-border-right {
+  right: 0;
+  transform: scaleX(-0.8);
+  transform-origin: center;
+}
+
+.desc-modal-border-h-wrap {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  background-size: auto 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.desc-modal-border-top-wrap {
+  top: 0;
+}
+
+.desc-modal-border-bottom-wrap {
+  bottom: 0;
 }
 
 .desc-modal-header {
@@ -837,7 +881,7 @@
   overflow-x: auto;
   overflow-y: hidden;
   width: 100%;
-  padding-left: var(--mod-pad, 0.4rem); /* lines up with the rectangle's left edge */
+  padding-left: var(--mod-pad, 0.3rem); /* lines up with the rectangle's left edge */
   box-sizing: border-box;
 }
 

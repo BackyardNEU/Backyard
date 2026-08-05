@@ -2,6 +2,8 @@ import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useClubData } from '../context/useClubData';
 import ColorThief from 'colorthief';
 import { FaSearch, FaTimes } from 'react-icons/fa';
+import borderImg from '/src/assets/border-green.svg';
+import borderHorizontalImg from '/src/assets/border-horizontal-green.svg';
 import './BasicInfoModule.css';
 
 /**
@@ -361,6 +363,18 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
       {showAbout && descOpen && (
         <div className="desc-modal-overlay" onClick={() => setDescOpen(false)}>
           <div className="desc-modal" onClick={(e) => e.stopPropagation()}>
+            <img src={borderImg} alt="" className="desc-modal-border desc-modal-border-left" />
+            <img src={borderImg} alt="" className="desc-modal-border desc-modal-border-right" />
+            <div
+              className="desc-modal-border-h-wrap desc-modal-border-top-wrap"
+              style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+              aria-hidden="true"
+            />
+            <div
+              className="desc-modal-border-h-wrap desc-modal-border-bottom-wrap"
+              style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+              aria-hidden="true"
+            />
             <div className="desc-modal-header">
               <h3 className="desc-modal-title">{displayName}</h3>
               <button

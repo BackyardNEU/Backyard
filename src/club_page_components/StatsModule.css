@@ -1,7 +1,13 @@
 .stats-module {
     width: 100%;
-    
-    padding-left: 1.5%; 
+
+    padding-left: 1.5%;
+}
+
+@media (max-width: 500px) {
+  .stats-module {
+    padding-left: 0.3rem;
+  }
 }
 
 .rendered-part {

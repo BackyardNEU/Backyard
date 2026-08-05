@@ -1,7 +1,7 @@
 .join-module {
   width: 100%;
   box-sizing: border-box;
-  padding-left: 1.5%;   /* mobile 0.4rem, web 0 (rectangle's left) */
+  padding-left: 1.5%;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -382,4 +382,10 @@
   }
 
   
+}
+
+@media (max-width: 500px) {
+  .join-module {
+    padding-left: 0.3rem;
+  }
 }

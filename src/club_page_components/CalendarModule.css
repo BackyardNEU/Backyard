@@ -334,3 +334,9 @@
   line-height: 1.45;
 }
 
+
+@media (max-width: 500px) {
+  .cal-module {
+    padding-left: 0.3rem;
+  }
+}
