@@ -534,9 +534,6 @@
   cursor: pointer;
 }
 
-.cm-modal-close:hover {
-  background: rgba(0, 0, 0, 0.7);
-}
 
 /* No image — just the poster text centered along the top */
 .cm-modal-header {

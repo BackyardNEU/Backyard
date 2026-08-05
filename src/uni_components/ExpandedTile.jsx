@@ -105,10 +105,6 @@ function validateMemberRoster(data) {
     return null;
 }
 
-function validateCalendar(_data) {
-    return null;
-}
-
 function validateComments() { return null; }
 
 function validateClubMedia(data) {
@@ -138,7 +134,6 @@ function getModuleWarnings(draft) {
         if (m.type === 'faqs') w.faqs = validateFaq(m.data);
         if (m.type === 'member_roster') w.member_roster = validateMemberRoster(m.data);
         if (m.type === 'club_media') w.club_media = validateClubMedia(m.data);
-        if (m.type === 'calendar') w.calendar = validateCalendar(m.data);
         if (m.type === 'comments') w.comments = validateComments(m.data);
     }
     return w;
@@ -524,10 +519,12 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
     const sortedDraft = [...(draft ?? [])].sort((a, b) => a.order - b.order);
     const basicInfoModule = sortedDraft.find((m) => m.type === 'basic_info');
-    const accordionModules = sortedDraft;
+    // Calendar ("Coming Up") is pinned above the accordion/view stream and rendered
+    // unconditionally, not toggleable/reorderable like the other modules — exclude it here.
+    const accordionModules = sortedDraft.filter((m) => m.type !== 'calendar');
     // Links has no separate public section of its own (see renderModule) — exclude it from the
     // view-mode stream entirely so it doesn't leave a stray divider where its content would be.
-    const viewModules = sortedDraft.filter((m) => m.isDisplayed !== false && m.type !== 'links');
+    const viewModules = sortedDraft.filter((m) => m.isDisplayed !== false && m.type !== 'links' && m.type !== 'calendar');
     // Its checkbox instead controls whether the action-bar link buttons show at all.
     const linksModuleEntry = sortedDraft.find((m) => m.type === 'links');
     const linksDisplayed = linksModuleEntry ? linksModuleEntry.isDisplayed !== false : true;
@@ -686,23 +683,6 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 />
             );
         }
-        if (module.type === 'calendar') {
-            return (
-                <CalendarModule
-                    key="calendar"
-                    club={club}
-                    data={module.data}
-                    editing={isEditing}
-                    onChange={(updatedData) => handleModuleChange('calendar', updatedData)}
-                    warning={moduleWarnings.calendar ?? null}
-                    events={clubEvents}
-                    myRsvpSet={clubMyRsvpSet}
-                    friendRsvpMap={clubFriendRsvpMap}
-                    onRsvp={handleClubRsvp}
-                    userId={user?.id ?? null}
-                />
-            );
-        }
         if (module.type === 'comments') {
             return (
                 <ReviewList
@@ -753,6 +733,17 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
             <div className="club-modules">
                 {basicInfoModule && renderModule(basicInfoModule, 'hero')}
+                {!isApproved && (
+                    <CalendarModule
+                        club={club}
+                        editing={false}
+                        events={clubEvents}
+                        myRsvpSet={clubMyRsvpSet}
+                        friendRsvpMap={clubFriendRsvpMap}
+                        onRsvp={handleClubRsvp}
+                        userId={user?.id ?? null}
+                    />
+                )}
                 <AddEventPanel
                     isApproved={isApproved}
                     club={club}
@@ -760,6 +751,10 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     onAddEvent={handleAddEvent}
                     onEditEvent={handleEditEvent}
                     onDeleteEvent={handleDeleteEvent}
+                    myRsvpSet={clubMyRsvpSet}
+                    friendRsvpMap={clubFriendRsvpMap}
+                    onRsvp={handleClubRsvp}
+                    userId={user?.id ?? null}
                 />
                 {isEditing ? (
                     <ModuleAccordion

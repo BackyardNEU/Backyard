@@ -4,13 +4,6 @@
   margin-bottom: 24px;
 }
 
-.add-event-note {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 1.2rem;
-  color: #555;
-  margin: 4px 0 12px;
-}
-
 /* New-event slot + existing-event cards, side by side */
 .add-event-row {
   display: flex;
@@ -35,7 +28,7 @@
 
 .add-event-card-actions .cal-image-scale-btn,
 .add-event-card-actions .cal-image-remove-btn {
-  background: rgba(46, 64, 100, 0.75);
+  background: rgba(46, 64, 100);
 }
 
 /* An existing event's read-only card — sits inside a .cal-add-slot (same as
@@ -134,7 +127,10 @@
 .cal-add-slot {
   flex: 0 0 auto;
   width: 300px;
-  max-height: 450px;
+  /* Collapsed resting height — must fit the tallest collapsed content: the
+     fixed-450px add-button, or an existing-event card (image + date/time/desc
+     + optional members-badge/friend-callout + the RSVP button). */
+  max-height: 620px;
   overflow: hidden;
   transition: max-height 0.3s ease;
 }
@@ -267,7 +263,7 @@
 
 .cal-image-scale-btn,
 .cal-image-remove-btn {
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid #ECE7E5;
   background: transparent;
   color: #ECE7E5;
@@ -280,7 +276,7 @@
 
 .cal-image-scale-btn:hover,
 .cal-image-remove-btn:hover {
-  background: rgba(236, 231, 229, 0.18);
+  background: rgba(236, 231, 229);
 }
 
 .cal-image-scale-btn:disabled {

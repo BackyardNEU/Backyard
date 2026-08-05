@@ -17,7 +17,6 @@ export const MODULE_TITLES = {
   faqs: 'FAQs',
   stats: 'Stats',
   member_roster: 'Members',
-  calendar: 'Coming Up',
   comments: 'Comments',
 };
 
