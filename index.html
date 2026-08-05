@@ -4,21 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Backyard — Coming Soon</title>
-  <meta name="description" content="Discover and join clubs, explore events, and connect with friends at your university. Coming soon.">
+  <meta name="description" content="DISCOVER AND JOIN CLUBS • FIND EVENTS •  EXPLORE YOUR CAMPUS>
 
   <!-- Open Graph -->
   <meta property="og:title" content="Backyard — Coming Soon">
   <meta property="og:description" content="Discover and join clubs, explore events, and connect with friends at your university.">
-  <meta property="og:image" content="/assets/raccoon_pfp.png">
+  <meta property="og:image" content="/assets/neu_flag.png">
   <meta property="og:type" content="website">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="/assets/raccoon_pfp.png">
+  <link rel="icon" type="image/png" href="/assets/neu_flag.png">
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500&family=Barlow+Condensed:wght@600&family=Be+Vietnam+Pro:wght@400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="/style.css">
 </head>
@@ -32,23 +32,17 @@
       <div class="pin pin-right" aria-hidden="true"></div>
 
       <img src="/assets/header_logo.png" alt="Backyard" class="logo">
-      <img src="/assets/raccoon_pfp.png" alt="Backyard mascot" class="mascot">
+      <img src="/assets/neu_flag.png" alt="Backyard mascot" class="mascot">
 
-      <h1 class="headline">Coming Soon</h1>
-      <p class="tagline">Discover clubs. Find your people. Explore your campus.</p>
+      <h1 class="headline">COMING SOON</h1>
+      <p class="tagline">Discover clubs. Find Events. Explore your campus.</p>
 
       <div class="features">
         <div class="feature">
-          <div class="feature-icon">&#x1F50D;</div>
-          <div class="feature-label">Browse Clubs</div>
+          <img src="/assets/Nav_bar_clubs_active.png" alt="Browse Clubs" class="feature-icon">
         </div>
         <div class="feature">
-          <div class="feature-icon">&#x1F91D;</div>
-          <div class="feature-label">Find Friends</div>
-        </div>
-        <div class="feature">
-          <div class="feature-icon">&#x1F4C5;</div>
-          <div class="feature-label">Track Events</div>
+          <img src="/assets/Nav_bar_calendar_active.png" alt="Track Events" class="feature-icon">
         </div>
       </div>
 
@@ -58,17 +52,28 @@
         <span class="form-label">Get notified when we launch</span>
 
         <div class="input-row">
-          <input
-            type="email"
-            name="email"
-            class="email-input"
-            placeholder="you@email.com"
-            required
-            maxlength="254"
-            autocomplete="email"
-            aria-label="Email address"
-          >
-          <button type="submit" class="submit-btn" id="submit-btn">Join</button>
+          <div class="input-row-field">
+            <input
+              type="email"
+              name="email"
+              class="email-input"
+              placeholder="you@email.com"
+              required
+              maxlength="254"
+              autocomplete="email"
+              aria-label="Email address"
+            >
+
+            <img src="/assets/border-black.svg" alt="" class="input-row-border input-row-border-left">
+            <img src="/assets/border-black.svg" alt="" class="input-row-border input-row-border-right">
+            <div class="input-row-border-h-wrap input-row-border-top" style="background-image: url('/assets/border-horizontal-black.svg')" aria-hidden="true"></div>
+            <div class="input-row-border-h-wrap input-row-border-bottom" style="background-image: url('/assets/border-horizontal-black.svg')" aria-hidden="true"></div>
+          </div>
+
+          <div class="duo-btn-wrap">
+            <div class="duo-btn-pill" aria-hidden="true"></div>
+            <button type="submit" class="submit-btn duo-btn" id="submit-btn">Join</button>
+          </div>
         </div>
 
         <input
@@ -83,8 +88,7 @@
         <div class="consent">
           <input type="checkbox" id="consent-check" required>
           <label for="consent-check">
-            I agree to receive email updates from Backyard. View our
-            <a href="#" class="privacy-link">privacy policy</a>.
+            I agree to receive email updates from Backyard.
           </label>
         </div>
 
@@ -97,7 +101,7 @@
         Built with care at Northeastern
       </div>
 
-      <img src="/assets/raccoon.png" alt="" class="raccoon-peek" aria-hidden="true">
+     
     </div>
   </main>
 
