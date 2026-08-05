@@ -55,7 +55,7 @@ html, body {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  font-family: "Barlow", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   color: #29241d;
 }
 
@@ -112,7 +112,7 @@ html, body {
 
 /* ─── Logo ─── */
 .logo {
-  max-width: 200px;
+  max-width: 300px;
   mix-blend-mode: multiply;
   animation: fadeIn 1s 0.2s both;
 }
@@ -121,8 +121,8 @@ html, body {
 .mascot {
   width: 100px;
   height: 100px;
-  border-radius: 50%;
-  border: 3px solid #2f2a22;
+
+
   object-fit: cover;
   margin-top: 10px;
   animation: fadeIn 1s 0.4s both;
@@ -130,7 +130,7 @@ html, body {
 
 /* ─── Typography ─── */
 .headline {
-  font-family: "Bebas Neue", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: clamp(2.2rem, 7vw, 3rem);
   color: #29241d;
   letter-spacing: 0.06em;
@@ -141,7 +141,7 @@ html, body {
 }
 
 .tagline {
-  font-family: "Barlow", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 1.05rem;
   color: #555;
   text-align: center;
@@ -167,17 +167,9 @@ html, body {
 }
 
 .feature-icon {
-  font-size: 1.4rem;
-  margin-bottom: 2px;
-}
-
-.feature-label {
-  font-family: "Barlow Condensed", sans-serif;
-  font-weight: 600;
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #2f2a22;
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
 }
 
 /* ─── Divider ─── */
@@ -211,19 +203,54 @@ html, body {
 /* ─── Input row (input + button side by side) ─── */
 .input-row {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   width: 100%;
   max-width: 400px;
-  gap: 0;
-  border-radius: 999px;
-  overflow: hidden;
-  border: 2.5px solid #2f2a22;
-  background: #e9e4dc;
-  transition: border-color 0.2s;
+  gap: 16px;
 }
 
-.input-row:focus-within {
-  border-color: rgb(46, 120, 139);
+.input-row-field {
+  position: relative;
+  width: 100%;
+ 
 }
+
+.input-row-border {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 6px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.input-row-border-left {
+  left: -15px;
+  transform: scaleX(5);
+  transform-origin: left center;
+}
+
+.input-row-border-right {
+  right: -2px;
+  transform: scaleX(-5);
+  transform-origin: center;
+}
+
+.input-row-border-h-wrap {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  background-size: auto 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.input-row-border-top { top: 0; }
+.input-row-border-bottom { bottom: 0; }
 
 .email-input {
   flex: 1;
@@ -231,7 +258,7 @@ html, body {
   padding: 12px 16px;
   border: none;
   background: transparent;
-  font-family: "Be Vietnam Pro", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 0.95rem;
   color: #29241d;
   outline: none;
@@ -241,9 +268,52 @@ html, body {
   color: #8a8174;
 }
 
+/* ── Duo-styled "Join" button ──
+   Offset pill sits behind the button and lifts via box-shadow, flattening
+   onto the pill on press, plus a subtle grain texture. */
+.duo-btn-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.duo-btn-pill {
+  position: absolute;
+  top: 1px;
+  left: 0;
+  right: 0;
+  bottom: 0.5px;
+  z-index: 0;
+  background: #7A2528;
+  border-radius: 999px;
+  transform: translate(0px, 5px);
+  pointer-events: none;
+}
+
+.duo-btn {
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 5px 0 #942C2F;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.2s;
+}
+
+.duo-btn:active {
+  box-shadow: none;
+  transform: translateY(5px);
+}
+
+.duo-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.19'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
 .submit-btn {
   padding: 12px 22px;
-  background: rgb(46, 120, 139);
+  background: #C53B3F;
   color: #fff;
   font-family: "Barlow Condensed", sans-serif;
   font-weight: 600;
@@ -251,17 +321,14 @@ html, body {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   border: none;
+  border-radius: 10px;
   cursor: pointer;
   transition: background 0.2s;
   white-space: nowrap;
 }
 
 .submit-btn:hover {
-  background: rgb(38, 100, 118);
-}
-
-.submit-btn:active {
-  background: rgb(30, 85, 100);
+  background: #AD3236;
 }
 
 .submit-btn:disabled {
@@ -299,7 +366,7 @@ html, body {
 }
 
 .consent label {
-  font-family: "Be Vietnam Pro", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 0.72rem;
   color: #777;
   line-height: 1.4;
@@ -312,7 +379,7 @@ html, body {
 
 /* ─── Form messages ─── */
 .form-msg {
-  font-family: "Be Vietnam Pro", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 0.82rem;
   text-align: center;
   min-height: 1.2em;
@@ -323,7 +390,7 @@ html, body {
 
 /* ─── Footer ─── */
 .footer {
-  font-family: "Be Vietnam Pro", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 0.7rem;
   color: #aaa;
   text-align: center;
@@ -508,7 +575,7 @@ html, body {
 }
 
 .modal-card h1 {
-  font-family: "Bebas Neue", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 1.8rem;
   color: #29241d;
   letter-spacing: 0.03em;
@@ -536,7 +603,7 @@ html, body {
 
 .modal-body p,
 .modal-body ul {
-  font-family: "Barlow", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 0.9rem;
   color: #444;
   line-height: 1.6;
@@ -584,7 +651,7 @@ html:has(.privacy-page) body {
 }
 
 .privacy-card h1 {
-  font-family: "Bebas Neue", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: clamp(1.8rem, 6vw, 2.5rem);
   color: #29241d;
   letter-spacing: 0.03em;
@@ -603,7 +670,7 @@ html:has(.privacy-page) body {
 
 .privacy-card p,
 .privacy-card ul {
-  font-family: "Barlow", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 0.95rem;
   color: #444;
   line-height: 1.65;
