@@ -712,21 +712,30 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             <button className="close-btn" onClick={handleClose}>×</button>
 
             {isApproved && !isEditing && (
-                <div className="exp-editor-toolbar">
-                    <button className="exp-edit-btn" onClick={async () => {
-                        if (!pageData?.modules?.length) {
-                            try {
-                                const result = await apiFetch(`/clubs/${id}/page/init`, { method: 'POST' });
-                                if (result?.modules?.length) {
-                                    setPageData(result);
-                                    setDraft(normalizeModules(result.modules));
+                <div className="exp-toolbar">
+                    <div className="duo-btn-wrap">
+                        <div className="duo-btn-pill" aria-hidden="true" />
+                        <button
+                            className="exp-edit-btn duo-btn"
+                            style={{ '--duo-shadow': 'rgb(30, 60, 90)' }}
+                            onClick={async () => {
+                                if (!pageData?.modules?.length) {
+                                    try {
+                                        const result = await apiFetch(`/clubs/${id}/page/init`, { method: 'POST' });
+                                        if (result?.modules?.length) {
+                                            setPageData(result);
+                                            setDraft(normalizeModules(result.modules));
+                                        }
+                                    } catch (err) {
+                                        console.error('Failed to initialize page defaults:', err);
+                                    }
                                 }
-                            } catch (err) {
-                                console.error('Failed to initialize page defaults:', err);
-                            }
-                        }
-                        setIsEditing(true);
-                    }}>Edit Page</button>
+                                setIsEditing(true);
+                            }}
+                        >
+                            Edit Page
+                        </button>
+                    </div>
                     <InviteLinkButton clubId={id} />
                 </div>
             )}
@@ -790,11 +799,29 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             </div>
 
             {isApproved && isEditing && (
-                <div className="expanded-edit-actions">
-                    <button onClick={handleCancel} disabled={isSaving}>Cancel</button>
-                    <button className="save-btn" onClick={handleSave} disabled={isSaving || !isDraftValid}>
-                        {isSaving ? 'Saving...' : 'Save'}
-                    </button>
+                <div className="exp-toolbar exp-toolbar--start">
+                    <div className="duo-btn-wrap">
+                        <div className="duo-btn-pill" aria-hidden="true" />
+                        <button
+                            className="save-btn duo-btn"
+                            style={{ '--duo-shadow': 'rgb(0, 0, 0)' }}
+                            onClick={handleSave}
+                            disabled={isSaving || !isDraftValid}
+                        >
+                            {isSaving ? 'Saving...' : 'Save'}
+                        </button>
+                    </div>
+                    <div className="duo-btn-wrap">
+                        <div className="duo-btn-pill" aria-hidden="true" />
+                        <button
+                            className="cancel-btn duo-btn"
+                            style={{ '--duo-shadow': 'rgb(120, 120, 120)' }}
+                            onClick={handleCancel}
+                            disabled={isSaving}
+                        >
+                            Cancel
+                        </button>
+                    </div>
                 </div>
             )}
 

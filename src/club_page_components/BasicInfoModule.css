@@ -164,29 +164,56 @@
 
 /* Edit mode */
 
-.exp-editor-toolbar {
+/* Shared fixed toolbar for Edit Page/Invite Link and Save/Cancel (mutually
+   exclusive, but styled identically) — top-right on desktop, centered top
+   on mobile so it never competes with .close-btn's fixed viewport corner. */
+.exp-toolbar {
   position: fixed;
-  top: 15px;
-  right: calc(50% - 22vw + 1rem);
+  bottom: 5%;
+  right: 2%;
+  background: white;
+  padding: 20px 5px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 0.5rem;
   z-index: 8300;
 }
 
+.exp-toolbar--start {
+  justify-content: flex-start;
+}
+
+@media (max-width: 500px) {
+  .exp-toolbar {
+    left: 0.5rem;
+    right: 0.5rem;
+    justify-content: center;
+  }
+}
+
 .exp-edit-btn {
   background: #4F83B4;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 0.3rem 0.8rem;
-  cursor: pointer;
-  font-size: 0.85rem;
   color: #ffffff;
 }
 
-.exp-edit-btn:hover {
-  border-color: #888;
-  color: #000;
+.cancel-btn {
+  background: #ccc;
+  color: #222;
+}
+
+.save-btn {
+  background: #2d2d2d;
+  color: #ffffff;
+}
+
+.exp-edit-btn.duo-btn:disabled,
+.cancel-btn.duo-btn:disabled,
+.save-btn.duo-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .club-name-input {  
@@ -255,37 +282,6 @@
 }
 
 
-
-.expanded-edit-actions {
-  display: flex;
-  justify-content: center;
-  gap: 0.75rem;
-  margin: 0.75rem 0;
-}
-
-.expanded-edit-actions button {
-  padding: 0.4rem 1.4rem;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-family: 'Barlow', sans-serif;
-}
-
-.expanded-edit-actions .save-btn {
-  background: #2d2d2d;
-  color: white;
-  border-color: #2d2d2d;
-}
-
-.expanded-edit-actions .save-btn:hover {
-  background: #000;
-}
-
-.expanded-edit-actions button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
 
 .about-label {
   font-size: 50px;
