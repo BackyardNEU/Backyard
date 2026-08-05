@@ -346,7 +346,7 @@ export function CalendarPage({ onClose }) {
             <div className="cal-overlay-portrait" onClick={e => e.stopPropagation()}>
               <button className="cal-overlay-close" onClick={() => setSelectedDayInfo(null)}>✕</button>
               <h2 className="cal-overlay-date">
-                {format(new Date(selectedDayInfo.year, selectedDayInfo.month - 1, selectedDayInfo.day), 'EEEE, MMMM d')}
+                {format(new Date(selectedDayInfo.year, selectedDayInfo.month - 1, selectedDayInfo.day), 'EEE d').toUpperCase()}
               </h2>
               <div className="cal-portrait-scroll">
                 {selectedDayEvents.map(event => (

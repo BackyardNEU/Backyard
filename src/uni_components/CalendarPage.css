@@ -313,13 +313,20 @@
 .cal-overlay-portrait {
   --header-h: 56px;
   position: relative;
-  width: min(390px, 88vw);
-  max-height: 92vh;
-  border-radius: 40px;
+  width: 390px;
+  max-height: 100vh;
+  border-radius: 0;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgb(255 255 255 / 100%);
   display: flex;
   flex-direction: column;
+}
+
+@media (max-width: 500px) {
+  .cal-overlay-portrait {
+    width: 100vw;
+    height: 100%;
+  }
 }
 
 .cal-overlay-close {
@@ -332,7 +339,7 @@
   width: 30px;
   height: 30px;
   font-size: 14px;
-  color: #fff;
+  color: #000000;
   cursor: pointer;
   z-index: 10;
   display: flex;
@@ -350,10 +357,13 @@
 /* Date heading at the top of the portrait card */
 .cal-overlay-date {
   height: var(--header-h);
-  padding: 16px 48px 0 20px; /* right pad leaves room for close btn */
-  font-size: 16px;
-  font-weight: 700;
-  color: #fff;
+  padding: 16px 20px 0;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 1.75rem;
+  font-weight: 300;
+  color: #000000;
+  background: #ffffff;
+  text-align: center;
   margin: 0;
   flex-shrink: 0;
   white-space: nowrap;
