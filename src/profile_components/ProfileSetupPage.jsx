@@ -1,8 +1,9 @@
-﻿import React, { useEffect, useMemo, useState } from 'react'
+﻿import React, { useEffect, useMemo, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import imageCompression from 'browser-image-compression'
 import { supabase } from '../lib/supabase'
 import { apiFetch } from '../lib/api'
+import textModerator from '../lib/textModerator'
 import './ProfileSetupPage.css'
 
 const ProfileSetupPage = () => {
@@ -10,6 +11,10 @@ const ProfileSetupPage = () => {
     const [user, setUser] = useState(null)
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
+    const [firstName, setFirstName] = useState('')
+    const [lastName, setLastName] = useState('')
+    const [username, setUsername] = useState('')
+    const [usernameStatus, setUsernameStatus] = useState(null)
     const [biography, setBiography] = useState('')
     const [schoolInput, setSchoolInput] = useState('')
     const [universities, setUniversities] = useState([])
@@ -36,6 +41,28 @@ const ProfileSetupPage = () => {
         fileType: 'image/webp',
     }
 
+    const checkUsername = useCallback(async (value) => {
+        if (!value || value.length < 3 || !/^[a-zA-Z0-9_]+$/.test(value)) {
+            setUsernameStatus(null);
+            return;
+        }
+        try {
+            const { available, reason } = await apiFetch(
+                `/users/check-username?username=${encodeURIComponent(value)}`,
+                { auth: false }
+            );
+            setUsernameStatus(available ? 'available' : reason || 'taken');
+        } catch {
+            setUsernameStatus(null);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!username) { setUsernameStatus(null); return; }
+        const timer = setTimeout(() => checkUsername(username), 400);
+        return () => clearTimeout(timer);
+    }, [username, checkUsername]);
+
     const filteredUniversities = useMemo(() => {
         if (!schoolInput.trim()) return universities
         return universities.filter((uni) =>
@@ -52,15 +79,24 @@ const ProfileSetupPage = () => {
                 const { data, error } = await supabase.auth.getUser();
                 if (error) throw error;
 
-                const [uniData, profileData] = await Promise.all([
+                const [uniResult, profileResult] = await Promise.allSettled([
                     apiFetch('/universities', { auth: false }),
                     apiFetch('/me/profile'),
                 ]);
+
+                const uniData = uniResult.status === 'fulfilled' ? uniResult.value : [];
+                const profileData = profileResult.status === 'fulfilled' ? profileResult.value : null;
 
                 const authUser = data?.user || null;
                 setUser(authUser);
                 setUniversities(uniData || []);
 
+                setFirstName(profileData?.first_name || '');
+                setLastName(profileData?.last_name || '');
+                const existingUsername = profileData?.username || '';
+                if (existingUsername && /^[a-zA-Z0-9_]+$/.test(existingUsername)) {
+                    setUsername(existingUsername);
+                }
                 setBiography(profileData?.biography || '');
                 setAvatarPreview(profileData?.avatar_url || null);
                 setExistingPhotos(Array.isArray(profileData?.photos) ? profileData.photos : []);
@@ -162,6 +198,14 @@ const ProfileSetupPage = () => {
             });
             if (!putRes.ok) throw new Error(`Upload failed (${putRes.status})`);
 
+            const verification = await apiFetch('/storage/verify-image', {
+                method: 'POST',
+                body: { publicUrl },
+            });
+            if (!verification.ok) {
+                throw new Error(verification.error || 'Photo rejected by content policy');
+            }
+
             urls.push(publicUrl);
         }
         return urls;
@@ -171,8 +215,33 @@ const ProfileSetupPage = () => {
         event.preventDefault();
         setError(null);
 
+        if (!firstName.trim() || !lastName.trim()) {
+            setError('First and last name are required.');
+            return;
+        }
+
+        if (!/^[a-zA-Z0-9_]{3,30}$/.test(username)) {
+            setError('Username must be 3-30 alphanumeric or underscore characters.');
+            return;
+        }
+
+        if (usernameStatus && usernameStatus !== 'available') {
+            setError('That username is already taken.');
+            return;
+        }
+
         if (!biography.trim()) {
             setError('Please enter a short biography.');
+            return;
+        }
+
+        const textCheck = textModerator.checkFields({
+            first_name: firstName,
+            last_name: lastName,
+            biography,
+        });
+        if (!textCheck.clean) {
+            setError(textCheck.message);
             return;
         }
 
@@ -199,6 +268,14 @@ const ProfileSetupPage = () => {
                 });
                 if (!putRes.ok) throw new Error(`Upload failed (${putRes.status})`);
 
+                const verification = await apiFetch('/storage/verify-image', {
+                    method: 'POST',
+                    body: { publicUrl },
+                });
+                if (!verification.ok) {
+                    throw new Error(verification.error || 'Avatar rejected by content policy');
+                }
+
                 avatarUrl = publicUrl;
             }
 
@@ -212,6 +289,9 @@ const ProfileSetupPage = () => {
             await apiFetch('/me/profile', {
                 method: 'PUT',
                 body: {
+                    first_name: firstName.trim(),
+                    last_name: lastName.trim(),
+                    username: username.trim(),
                     [URL_COL]: avatarUrl,
                     biography: biography.trim(),
                     school: selectedUniversity.uni_name,
@@ -241,6 +321,49 @@ const ProfileSetupPage = () => {
                 <span className="setup-pin setup-pin-left" aria-hidden="true" />
                 <span className="setup-pin setup-pin-right" aria-hidden="true" />
                 <h1 className="setup-title">Finish Your Profile</h1>
+
+                <label className="setup-field-label">name</label>
+                <div className="setup-name-row">
+                    <input
+                        className="setup-school-input"
+                        type="text"
+                        placeholder="First name"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        required
+                    />
+                    <input
+                        className="setup-school-input"
+                        type="text"
+                        placeholder="Last name"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        required
+                    />
+                </div>
+
+                <label className="setup-field-label" htmlFor="setup-username">username</label>
+                <div className="setup-username-wrap">
+                    <input
+                        id="setup-username"
+                        className="setup-school-input"
+                        type="text"
+                        placeholder="Choose a username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
+                        required
+                        minLength={3}
+                        maxLength={30}
+                    />
+                    {usernameStatus === 'available' && (
+                        <span className="setup-username-ok">Available</span>
+                    )}
+                    {usernameStatus && usernameStatus !== 'available' && (
+                        <span className="setup-username-taken">
+                            {usernameStatus === 'taken' ? 'Taken' : usernameStatus}
+                        </span>
+                    )}
+                </div>
 
                 <label htmlFor="setup-avatar" className="setup-avatar-label">
                     <img

@@ -1,6 +1,7 @@
 ﻿import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { apiFetch } from '../lib/api';
 
 export default function AuthCallbackPage() {
   const location = useLocation();
@@ -25,7 +26,14 @@ export default function AuthCallbackPage() {
         return;
       }
 
-      navigate('/profile', { replace: true });
+      try {
+        const profile = await apiFetch('/me/profile');
+        const username = (profile?.username || '').trim();
+        const needsSetup = !username || /\s/.test(username);
+        navigate(needsSetup ? '/profile-setup' : '/profile', { replace: true });
+      } catch {
+        navigate('/profile-setup', { replace: true });
+      }
     }
 
     resolveAuthReturn();

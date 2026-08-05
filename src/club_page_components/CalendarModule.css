@@ -1,0 +1,564 @@
+/* The div that holds all of the days together */
+.calendar-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    overflow-x: auto;
+    overflow: hidden;
+}
+
+/* Each day of the calendar */
+.calendar-day {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 350px;
+    min-width: 300px;
+    padding: 5px;
+}
+
+.day-title-number {
+    font-size: 30px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.current-month {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    font-size: 60px;
+}
+
+.calendar-event {
+    position: relative;
+    padding: 10px;
+    margin: 10px;
+    border-radius: 2px;
+    box-shadow: 8px 5px 8px rgba(0, 0, 0, 0.22);
+    margin-bottom: 6px;
+    z-index: 0;
+}
+
+.calendar-event::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url('/src/assets/white-paper-texture.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: inherit;
+    filter: brightness(1.25) contrast(0.9);
+    z-index: -1;
+}
+
+/* --- module wrapper --- */
+.cal-module {
+    width: 100%;
+    padding-left: 1.5%;
+}
+
+/* --- edit section --- */
+.cal-edit-section {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.cal-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #555;
+    cursor: pointer;
+}
+
+.cal-add-btn {
+    align-self: flex-start;
+    background: #4e7da9;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.cal-add-btn:hover {
+    background: #3d6a96;
+}
+
+/* --- add event form --- */
+.cal-form {
+    background: #f8f8f8;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.cal-form-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    color: #2b3440;
+}
+
+.cal-label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    color: #555;
+    font-weight: 500;
+}
+
+.cal-input {
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #fff;
+    box-shadow: inset 0 0 0 1px transparent;
+    transition: box-shadow 0.15s;
+}
+.cal-input:hover {
+    box-shadow: inset 0 0 0 1.5px #4e7da9;
+}
+.cal-input:focus {
+    outline: none;
+    box-shadow: inset 0 0 0 2px #4e7da9;
+}
+
+.cal-textarea {
+    resize: vertical;
+    min-height: 72px;
+}
+
+.cal-time-row {
+    display: flex;
+    gap: 16px;
+}
+.cal-time-row .cal-label {
+    flex: 1;
+}
+
+.cal-image-hint {
+  color: rgb(67, 133, 67);
+  font-weight: bold;
+}
+
+.cal-image-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border: 1.5px dashed #ccc;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #666;
+    cursor: pointer;
+    background: #fff;
+    transition: border-color 0.15s, color 0.15s;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.cal-image-trigger:hover {
+    border-color: #4e7da9;
+    color: #4e7da9;
+}
+
+/* ===== EVENT PREVIEWS ===== */
+.cal-preview-section {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.cal-preview-title {
+  flex-basis: 100%;
+  font-size: 15px;
+  font-weight: 700;
+  color: #2b3440;
+  margin: 0;
+}
+
+.cal-preview-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0;
+}
+
+.cal-preview-week-card {
+    max-width: 350px;
+    pointer-events: none;
+}
+
+/* Portrait preview — inline (no backdrop) */
+.cal-portrait-preview {
+    width: min(390px, 88vw);
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.55);
+}
+
+.cal-form-warning {
+    color: #c0392b;
+    font-size: 13px;
+    margin: 0;
+}
+
+.cal-form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.cal-cancel-btn {
+    background: none;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 7px 18px;
+    font-size: 14px;
+    cursor: pointer;
+    color: #555;
+}
+.cal-cancel-btn:hover {
+    border-color: #999;
+}
+
+.cal-submit-btn {
+    background: #4e7da9;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.cal-submit-btn:hover:not(:disabled) {
+    background: #3d6a96;
+}
+.cal-submit-btn:disabled,
+.cal-cancel-btn:disabled {
+    opacity: 0.55;
+    cursor: default;
+}
+
+/* ===== VIEW TOGGLE ===== */
+.cal-view-toggle {
+  display: flex;
+  width: fit-content;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.cal-toggle-btn {
+  background: #fff;
+  border: none;
+  padding: 6px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.cal-toggle-btn:hover {
+  background: #f5f5f5;
+}
+
+.cal-toggle-active {
+  background: #2b3440;
+  color: #fff;
+}
+
+.cal-toggle-active:hover {
+  background: #2b3440;
+}
+
+/* ===== MONTHLY CARD ===== */
+.cal-monthly-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  padding: 20px 24px 24px;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.cal-monthly-tree {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.cal-tree-img {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.cal-monthly-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.cal-month-name {
+  font-size: 38px;
+  font-weight: 900;
+  color: #1a1a1a;
+  letter-spacing: -1px;
+  font-family: Georgia, serif;
+}
+
+.cal-month-nav {
+  display: flex;
+  gap: 2px;
+}
+
+.cal-nav-btn {
+  background: none;
+  border: none;
+  font-size: 26px;
+  color: #555;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 4px;
+  line-height: 1;
+}
+
+.cal-nav-btn:hover {
+  background: #f0f0f0;
+}
+
+/* ===== CALENDAR GRID ===== */
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.cal-weekday-label {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #999;
+  padding: 4px 0 6px;
+}
+
+.cal-day-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 50%;
+  user-select: none;
+}
+
+.cal-day-empty {
+  /* padding cell — intentionally blank */
+}
+
+.cal-day-past {
+  color: #c0c0c0;
+}
+
+.cal-day-normal {
+  color: #1a1a1a;
+}
+
+.cal-day-today {
+  color: #1a1a1a;
+  background: #fff9db;
+  font-weight: 700;
+}
+
+.cal-day-today-events {
+  color: #7a5100;
+  background: #ffd43b;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cal-day-today-events:hover {
+  background: #f0c800;
+}
+
+.cal-day-has-events {
+  color: #e8793a;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cal-day-has-events:hover {
+  background: #d4692b;
+  color: white;
+}
+
+.cal-loading {
+  text-align: center;
+  color: #aaa;
+  font-size: 14px;
+  padding: 20px 0;
+}
+
+/* ===== ADD EVENT SECTION ===== */
+.cal-add-event-section {
+  margin-top: 16px;
+}
+
+/* ===== DAY DETAIL OVERLAY ===== */
+.cal-overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* iPhone-style portrait card */
+.cal-overlay-portrait {
+  --header-h: 56px;
+  position: relative;
+  width: min(390px, 88vw);
+  max-height: 92vh;
+  border-radius: 40px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+}
+
+.cal-overlay-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-size: 14px;
+  color: #fff;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  transition: background 0.15s;
+}
+
+.cal-overlay-close:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* Date heading at the top of the portrait card */
+.cal-overlay-date {
+  height: var(--header-h);
+  padding: 16px 48px 0 20px; /* right pad leaves room for close btn */
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Scrollable stack — hides the scrollbar */
+.cal-portrait-scroll {
+  overflow-y: auto;
+  max-height: calc(92vh - var(--header-h));
+  scrollbar-width: none;
+  scroll-snap-type: y mandatory;
+}
+
+.cal-portrait-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Each event card — natural height, snaps into place */
+.cal-portrait-event {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  scroll-snap-align: start;
+}
+
+/* Image area: aspect-ratio drives the height so 3:4 images fill without letterboxing */
+.cal-portrait-img-wrap {
+  aspect-ratio: 3 / 4;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.cal-portrait-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.cal-portrait-no-img {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* Info panel — white background, sits below the image */
+.cal-portrait-info {
+  flex-shrink: 0;
+  background: #fff;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+}
+
+.cal-overlay-desc {
+  font-size: 14px;
+  color: #333;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.cal-overlay-time {
+  font-size: 13px;
+  color: #666;
+  margin: 0;
+}

@@ -8,12 +8,19 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "start": "node server/index.js",
     "dev:server": "node --watch server/index.js",
-    "dev:all": "concurrently \"npm run dev\" \"npm run dev:server\""
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:server\"",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@react-oauth/google": "^0.12.2",
     "@supabase/supabase-js": "^2.101.1",
+    "bad-words": "^4.0.0",
     "browser-image-compression": "^2.0.2",
     "colorthief": "^2.6.0",
     "concurrently": "^9.2.1",
@@ -28,11 +35,13 @@
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.8.0",
     "motion": "^12.38.0",
+    "pg-boss": "^12.26.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-helmet": "^6.1.0",
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.9.5",
+    "resend": "^6.12.3",
     "supabase": "^2.51.0",
     "zustand": "^5.0.9"
   },
@@ -50,7 +59,9 @@
     "eslint-plugin-react-refresh": "^0.4.22",
     "globals": "^16.4.0",
     "postcss": "^8.5.8",
+    "supertest": "^7.2.2",
     "tailwindcss": "^4.2.2",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "vitest": "^4.1.7"
   }
 }

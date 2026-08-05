@@ -1,0 +1,1084 @@
+.club-img-exp {
+  background-color: #f7f7f7;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  flex-shrink: 0;
+  margin-bottom: 20px;
+  border-radius: 5000px;
+  border: 0.5px solid grey;
+  z-index: 8200;
+  border-color: #909090;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.club-img-exp::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('/src/assets/white-paper-texture.jpg');
+  background-size: 200px 200px;
+  background-repeat: repeat;
+  background-position: 0 0;
+  filter: brightness(1.3) contrast(0.9);
+  border-radius: inherit;
+  mix-blend-mode: multiply;
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.rectangle {
+  z-index: 8000;
+  border-radius: 20px;
+  position: relative;
+}
+
+.rectangle::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('/src/assets/white-paper-texture.jpg');
+  background-size: 50% 50%;
+  background-repeat: repeat;
+  background-position: 0 0;
+  filter: brightness(1.2) contrast(0.9);
+  border-radius: inherit;
+  mix-blend-mode: multiply;
+  opacity: 0.3;
+  z-index: -1;
+}
+
+.club-name-exp {
+  font-family: "Bebas Neue", sans-serif;
+  margin-right: 5vh;
+  align-self: flex-start;
+  color: rgb(44, 27, 43);
+  font-weight: 400;
+  font-style: normal;
+  letter-spacing: 0px;
+  font-size: var(--name-size, 4rem);   /* --name-size is set per breakpoint on .content-col */
+  white-space: nowrap;       /* one line; overflow handled by the marquee */
+  z-index: 8200;
+}
+
+/* One-line club name; marquee-scrolls only when it overflows .club-name-wrap */
+.club-name-wrap {
+  width: 100%;
+  overflow: hidden;
+}
+.club-name-track {
+  display: flex;
+  width: max-content;
+}
+.club-name-track .club-name-exp {
+  margin: 0;
+}
+.club-name-track.on {
+  animation: nameMarquee var(--name-dur, 20s) linear infinite;
+}
+.club-name-track.on .club-name-exp {
+  padding-right: 3rem; /* gap between the repeated copies (part of the -50% loop) */
+}
+@keyframes nameMarquee {
+  0%, 10% { transform: translateX(0); }   /* brief pause so the start is readable */
+  100% { transform: translateX(-50%); }
+}
+
+.club-tag1 {
+  font-family: "Barlow Condensed", sans-serif;
+  text-transform: uppercase;
+  font-weight: 400;
+  align-self: flex-start;   /* left edge — lines up with the start of club-name-exp */
+  text-align: left;
+  font-size: calc(var(--name-size, 4rem) / 2);   /* always exactly half the club name */
+  z-index: 8200;
+  margin: 0;
+  letter-spacing: -1px;
+  color: grey;
+}
+
+/* Two copies of the tag exist (one under the name for web, one in the rectangle for mobile);
+   only the right one shows per breakpoint. */
+.club-tag1--inline,
+.club-tag1--block { display: none; }
+
+.club-tag2 {
+  font-family: "Barlow Condensed", sans-serif;
+
+  display: flex;
+  gap: 0.1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  
+}
+
+.tag {
+ 
+  border-radius: 999px;
+  padding: 0.15rem 0.4rem;
+  margin-top: 1px;
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: #000000;
+    text-transform: uppercase;
+}
+
+.separator {
+ 
+  border-radius: 999px;
+  margin-top: 1px;
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: #000000;
+    text-transform: uppercase;
+}
+
+.club-description-exp {
+  font-size: 1.3rem;
+  align-self: flex-start;
+  color: rgb(75, 74, 74);
+  text-align: left;
+  width: 95%;
+  max-width: 1200px;
+  box-sizing: border-box;
+  font-family: 'Barlow', sans-serif;
+}
+
+.text-flex {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  overflow: hidden;
+}
+
+/* Edit mode */
+
+.exp-edit-btn {
+  position: fixed;
+  top: 15px;
+  right: calc(50% - 22vw + 1rem);
+  background: #4F83B4;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 0.3rem 0.8rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #ffffff;
+  z-index: 8300;
+}
+
+.exp-edit-btn:hover {
+  border-color: #888;
+  color: #000;
+}
+
+.club-name-input {  
+  background: none;
+  border: none;
+  outline: none;
+  padding: 0;
+  margin: 0;
+  font-size: 4rem;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 15px;
+
+  box-shadow: 0 0 0 3px #16193C;
+  color: rgb(44, 27, 43);
+}
+.club-name-input:hover {
+  box-shadow: 0 0 0 3px #4F83B4;
+  border-radius: 5px;
+ }
+
+
+
+
+.club-desc-input {
+  background: transparent;
+  border: 2px solid transparent;
+  outline: none;
+  border-radius: 15px;
+  padding: 0.25rem 0.5rem;
+  font-family: inherit;
+  /* Reset margins inherited from .club-description-exp so width: 100% doesn't overflow */
+  align-self: start;
+  margin-left: 0;
+  margin-right: 0;
+  width: 100%;
+  box-sizing: border-box;
+  resize: none;
+  overflow: hidden;
+
+  flex-shrink: 0;
+  border: 3px solid #16193C;
+
+ 
+  color: black;
+}
+
+.club-desc-input:hover {
+  border-color: #4F83B4;
+  border-radius: 5px;
+}
+
+
+.logo-upload-label {
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+  font-size: 1.5rem;
+  font-family: 'bebas neue', sans-serif;
+  color: #ffffff;
+  font-weight: 700;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  background: #16193c70;
+
+}
+
+
+
+.expanded-edit-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.expanded-edit-actions button {
+  padding: 0.4rem 1.4rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-family: 'Barlow', sans-serif;
+}
+
+.expanded-edit-actions .save-btn {
+  background: #2d2d2d;
+  color: white;
+  border-color: #2d2d2d;
+}
+
+.expanded-edit-actions .save-btn:hover {
+  background: #000;
+}
+
+.expanded-edit-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.about-label {
+  font-size: 50px;
+}
+
+.friend-avatar-img-bio {
+  margin-right: -12px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  object-fit: cover;
+  
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.friend-names-text {
+  font-family: 'Barlow Condensed', sans-serif;
+  
+  font-size: 1.2rem;
+  color: #000000;
+  font-weight: 400;
+  margin-left: 1rem;
+  white-space: nowrap;
+}
+/* Mobile */
+@media (max-width: 500px) {
+  :root {
+    --name-size: clamp(45px, calc(22.5px + 7.5vw), 60px);
+  }
+  .content-col {
+    
+    width: 100%;
+    padding: 0.3rem 0.15rem;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .about-section{
+    padding-left: 4%;
+  }
+  .friend-avatar-img-bio {
+  width: 1.8rem;
+  height: 1.8rem;
+  }
+
+  .club-description-exp {
+  font-size: 0.95rem;
+  line-height: -1em;
+  
+
+  
+}
+
+  .text-flex {
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 43px;            /* top room so the × close button has space */
+    margin-bottom: 1px;          /* ⬅ ADJUST name↔tag gap (mobile, part 1/2: space below the name) */
+    padding-left: 1rem;          /* shared inset → name + tag start at the same x */
+  }
+
+  .club-name-exp {
+    line-height: 95%;
+    margin: 0;
+  }
+
+  .image-stack {
+    width: 100%;
+  }
+
+  /* Full-width rectangle: tag1 at the top-left (aligned with the name), logo centered below. */
+  .rectangle_min {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 1px 1rem 20px;     /* ⬅ ADJUST name↔tag gap (mobile, part 2/2: top value = space above the tag) */
+    background-color: var(--dominant-color);
+    z-index: 8000;
+    border-radius: 15px;
+    position: relative;
+  }
+
+  .rectangle_min::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url('/src/assets/white-paper-texture.jpg');
+    background-size: 250px 250px;
+    background-repeat: repeat;
+    background-position: 0 0;
+    filter: brightness(1.3) contrast(0.9);
+    border-radius: inherit;
+    mix-blend-mode: multiply;
+    opacity: 0.3;
+    z-index: -1;
+  }
+
+  .club-tag1--block { display: block; }
+  .club-tag1 {
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .club-img-exp {
+    width: 95vw;
+    height: 95vw;
+    align-self: center;          /* logo centered in the full-width rectangle */
+    margin: 0;
+    background-color: #ffffff;
+    flex-shrink: 0;
+    z-index: 8200;
+  }
+
+  .club-tag2 { z-index: 8200; }
+  .tag { z-index: 8200; }
+}
+
+/* Desktop */
+@media (min-width: 501px) {
+  :root {
+    --name-size: clamp(50px, calc(40px + 2vw), 90px);
+  }
+  .content-col {
+    
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    justify-content: left;
+    width: 100%;
+    margin-top: 9vh;            /* top room so the × close button has space */
+    gap: 3vw;
+    position: relative;
+    margin-right: -5%;
+    margin-bottom: 50px;
+    padding-left: var(--mod-pad, 0.4rem);   /* web: 0 → hero starts where the rectangle starts */
+    box-sizing: border-box;
+  }
+
+  .about-section {
+    padding-left: 1.5%;
+  }
+
+  .image-stack {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28vw;
+    max-width: 400px;
+    flex-shrink: 0;
+    z-index: 8200;
+    flex: 0 0 28vw;
+  }
+
+  /* tag1 sits above the logo on the right, same as mobile */
+  .rectangle_min {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .club-img-exp {
+    width: 28vw;
+    height: 28vw;
+    max-width: 430px;
+    max-height: 430px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    border: 0.5px solid #000;
+    margin-bottom: 0;
+  }
+
+  .rectangle {
+    position: absolute;
+    top: 53%;
+    left: -1%;
+    width: 99vw;
+    height: 55%;
+    max-height: 250px;
+    background-color: #fbf1fb;
+    border-radius: 20px;
+    z-index: 8000;
+  }
+
+  .rectangle::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url('/src/assets/white-paper-texture.jpg');
+    background-size: 300px 300px;
+    background-repeat: repeat;
+    background-position: 0 0;
+    filter: brightness(1.3) contrast(0.9);
+    border-radius: inherit;
+    mix-blend-mode: multiply;
+    opacity: 0.3;
+    z-index: -1;
+  }
+
+  .text-flex {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 50vw;
+    max-width: 50vw;
+    text-align: left;
+    z-index: 8200;
+    overflow: visible;
+  }
+
+  .club-name-exp {
+    margin: 0;
+    line-height: 1.1;
+  }
+
+  .club-tag1--inline { display: block; }
+  .club-tag1 {
+    /* half the name (calc in base); one row, overflow handled with … */
+    margin-top: 0.01rem;   /* ⬅ ADJUST web name↔tag vertical gap here */
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+
+.friend-avatar-img-bio {
+  width: 2.5rem;
+  height: 2.5rem;
+  
+}
+
+.tag {
+    font-size: 1.4rem;
+  }
+
+.friend-names-text {
+    font-size: 1.5rem;
+  }
+
+  p.club-description-exp {
+    text-align: left;
+    padding: 0;
+  }
+}
+
+/* ── About section: left-aligned, in line with stats/join ── */
+.about-section {
+  width: 100%;
+  box-sizing: border-box;
+ /* mobile 0.4rem, web 0 (rectangle's left) */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  
+}
+
+/* friend-avatars then club-tag2, in a horizontal row under the About heading */
+.about-meta-row {
+  display: flex;
+  flex-direction: row;
+  
+  flex-wrap: nowrap;
+   overflow-x: auto;
+  overflow-y: hidden;
+  gap: .5rem;
+  width: 100%;
+  
+}
+
+.about-meta-row .friend-avatars,
+.about-meta-row .friend-avatars-btn {
+    width: auto;
+
+ display: flex;
+ flex-wrap: nowrap;
+  flex-shrink: 0;
+  gap: 0;
+  margin: 0;
+}
+
+.about-meta-row .club-tag2 {
+  margin-bottom: 0;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+}
+
+/* "MORE" affordance at the end of a truncated description */
+.desc-more-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 2px;
+  font: inherit;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  color: rgb(62, 42, 9);
+  cursor: pointer;
+  font-family: 'Barlow', sans-serif;
+
+}
+
+.desc-more-btn:hover {
+  color: #000;
+}
+
+/* Full-description modal — modelled on .friends-modal-overlay, but layered
+   above the expanded tile's stacking context (which climbs to z-index 8300). */
+.desc-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 9000;
+}
+
+.desc-modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  width: 520px;
+  max-width: 92vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.desc-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.desc-modal-title {
+  font-family: "Bebas Neue", sans-serif;
+  font-weight: 400;
+  font-size: 2rem;
+  margin: 0;
+  color: rgb(44, 27, 43);
+}
+
+.desc-modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  font-size: 1.6rem;
+  line-height: 1;
+  padding: 0 0.4rem;
+  border-radius: 50%;
+}
+
+.desc-modal-close:hover {
+  color: #111;
+}
+
+.desc-modal-body {
+  margin: 0;
+  font-family: 'Barlow', sans-serif;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: rgb(66, 66, 66);
+  white-space: pre-wrap;
+  overflow-y: auto;
+}
+
+.divider-header {
+  font-size: calc(var(--name-size, 4rem) * 0.75);
+}
+
+.about-edit-help {
+  margin: 0.2rem 0 0.75rem;
+  padding: 1rem;
+  max-width: 800px;
+  font-size: 1.1rem;
+  color: #4c4c4c;
+  line-height: 1.2;
+  background: rgb(186, 197, 219);
+  border-radius:15px;
+}
+
+/* Friends-in-club clickable button */
+.friend-avatars-btn {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  gap: 4px;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.friend-avatars-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* Friends-in-club modal — z-index sits above the expanded tile stack (max 8300) */
+.friends-modal-overlay-basic-info {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+.friends-modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  width: 440px;
+  max-width: 92vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+}
+.friends-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.friends-modal-title {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 500;
+  font-size: 1.2rem;
+  margin: 0;
+  color: #1a1a1a;
+  white-space: normal;
+  word-break: break-word;
+  flex: 1;
+}
+.friends-modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  font-size: 1rem;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: color 0.15s ease;
+  flex-shrink: 0;
+}
+.friends-modal-close:hover {
+  color: #111;
+}
+.friend-search-wrapper {
+  width: 100%;
+  height: 2.5rem;
+  border-radius: 20px;
+  background-color: #fbfbfb;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  border: 1px solid rgb(202, 200, 200);
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+.friend-search-wrapper input {
+  background-color: transparent;
+  border: none;
+  outline: none;
+  font-family: "Barlow", sans-serif;
+  width: 100%;
+  height: 100%;
+  font-size: 1rem;
+  margin-left: 8px;
+  color: #333;
+}
+.friend-search-wrapper input::placeholder {
+  color: #999;
+  font-family: "Barlow", sans-serif;
+}
+.friend-search-icon {
+  fill: #888;
+  flex-shrink: 0;
+}
+.friends-modal-section-title {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 500;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #555;
+  flex-shrink: 0;
+}
+.friends-modal-list {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.friend-modal-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 4px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.friend-modal-row:last-child {
+  border-bottom: none;
+}
+.friend-avatar-sm {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.friend-result-name {
+  flex: 1;
+  font-family: "Barlow", sans-serif;
+  font-size: 0.9rem;
+  color: #333;
+}
+.friends-empty {
+  color: #999;
+  font-style: italic;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* ── Action row + links ── */
+
+/* Outer wrapper that puts the action row and links bar on the same flex line */
+.action-links-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  
+  width: 100%;
+  gap: 0;
+}
+
+/* Let the action row shrink to fit its content inside the wrapper */
+.action-links-wrapper .exp-action-row {
+  width: auto;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.action-links-wrapper .exp-action-row-inner {
+  margin: 0;
+}
+
+/* "|" divider between action buttons and link buttons */
+.links-sep {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 2rem;
+  color: #ccc;
+  line-height: 1;
+  padding: 0 0.4rem;
+  user-select: none;
+  flex-shrink: 0;
+  align-self: center;
+  padding: 0px 10px;
+}
+
+/* Row of link buttons (first 3 + More) */
+.links-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 8px 0;
+}
+
+/* Base link button — inherits review-btn shape */
+.link-btn {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.95rem;
+  padding: 8px 16px;
+  text-decoration: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Keyword text-color variants (on the dark review-btn background) */
+.link-btn--instagram { background-color: rgb(194, 0, 181); color: #ffffff; }
+.link-btn--facebook  { background-color: rgb(66, 143, 187); color: #ffffff;  }
+.link-btn--discord   { color: #B3BAF7; }
+.link-btn--youtube  { background-color: rgb(165, 39, 17); color: #ffffff;  }
+.link-btn--email     { color: #7DEDA7; }
+.link-btn--album     { color: #FFD275; }
+.link-btn--slack     { color: #7DE8F5; }
+.link-btn--tiktok    {background-color: rgb(0, 0, 0); color: #ffffff;}
+.link-btn--linktree  { color: #A3F7B5; }
+
+/* Desktop inline expansion — extra links shown in a row below the action row */
+.links-expanded-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0 0 10px 10px;
+  width: 100%;
+}
+
+/* On mobile the expanded row is never shown (More opens the modal instead) */
+@media (max-width: 500px) {
+  .links-expanded-row {
+    display: none;
+  }
+}
+
+/* Mobile "All Links" modal */
+.links-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.links-modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  width: 92vw;
+  max-width: 440px;
+  max-height: 80vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.links-modal-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+/* ── Edit mode: links table ── */
+
+.links-edit-section {
+  width: 100%;
+  margin-top: 0.5rem;
+  box-sizing: border-box;
+   padding-left: 1.5%;
+}
+
+.links-edit-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #444;
+  margin: 0 0 0.4rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.links-table {
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #ddd;
+}
+
+/* 4-column grid: checkbox | name | url | delete */
+.links-table-row {
+  display: grid;
+  grid-template-columns: 48px 1fr 2fr 40px;
+  min-height: 44px;
+  align-items: start;
+}
+
+.links-table-header {
+  background: rgb(44, 27, 43);
+  color: #fff;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-height: 36px;
+  align-items: center;
+}
+
+.links-table-header span {
+  padding: 0 10px;
+}
+
+/* Alternating row colors matching FaqTable palette */
+.links-row-even { background: hsla(209, 47%, 61%, 1.00); }
+.links-row-odd  { background: #48759fff; }
+
+.links-table-cell {
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-start;
+}
+
+.links-cell-check,
+.links-cell-del {
+  align-items: center;
+  justify-content: center;
+}
+
+.links-cell-check input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+.links-name-input,
+.links-url-input {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 0.9rem;
+  font-family: 'Barlow', sans-serif;
+  width: 100%;
+  box-sizing: border-box;
+  color: #1a1a1a;
+  outline: none;
+}
+
+.links-name-input:focus,
+.links-url-input:focus {
+  border-color: #4F83B4;
+}
+
+.links-input-warn {
+  border-color: #e53935 !important;
+  background: rgba(255, 230, 230, 0.95) !important;
+}
+
+.links-char-count {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.65);
+  align-self: flex-end;
+}
+
+.links-char-over {
+  color: #FFB3B3;
+  font-weight: 600;
+}
+
+.links-row-warning {
+  font-size: 0.7rem;
+  color: #FFD0D0;
+  font-family: 'Barlow', sans-serif;
+  line-height: 1.2;
+}
+
+.links-del-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  line-height: 1;
+  margin-top: 4px;
+}
+
+.links-del-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.links-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 16px;
+  background: rgba(79, 131, 180, 0.12);
+  border: none;
+  border-top: 1px solid #ddd;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4F83B4;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.links-add-btn:hover {
+  background: rgba(79, 131, 180, 0.22);
+}

@@ -159,6 +159,77 @@
   color: #000;
 }
 
+/* --- OAuth button --- */
+.oauth-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 70vh;
+  padding: 10px 12px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 1rem;
+  font-family: "Be Vietnam Pro", sans-serif;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.oauth-btn:hover {
+  background: #f5f5f5;
+}
+
+/* --- Divider --- */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  width: 70vh;
+  margin: 0.5rem 0;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #ccc;
+}
+
+.auth-divider span {
+  padding: 0 12px;
+  color: #999;
+  font-size: 0.85rem;
+}
+
+/* --- Forgot password link --- */
+.forgot-password-btn {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.forgot-password-btn:hover {
+  color: #000;
+  text-decoration: underline;
+}
+
+/* --- Need help link --- */
+.need-help-btn {
+  background: none;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 0.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.need-help-btn:hover {
+  color: #555;
+}
+
 @media (max-width: 600px) {
 .login-icon img {
   width: 1.5rem;

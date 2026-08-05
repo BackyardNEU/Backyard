@@ -13,8 +13,8 @@
   align-items: center;
   container-type: inline-size;
   gap: 0.5rem;
-  
-  box-shadow: 8px 5px 8px rgba(0, 0, 0, 0.22);
+ 
+  box-shadow: 2px 3px 6px rgba(0, 0, 0, 0.82);
   cursor: pointer;
   transition: transform 0.6s ease, border-color 0.3s ease;
   z-index: 100;

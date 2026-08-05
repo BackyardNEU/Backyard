@@ -16,6 +16,13 @@ import usersRouter from './routes/users.js';
 import storageRouter from './routes/storage.js';
 import eventsRouter from './routes/events.js';
 import supportRouter from './routes/support.js';
+import clubEventsRouter from './routes/clubEvents.js';
+import clubPageRouter from './routes/clubPage.js';
+import questionsRouter from './routes/questions.js';
+import { startQueue } from './notifications/queue.js';
+import friendRequestsRouter from './routes/friend-requests.js';
+import notificationsRouter from './routes/notifications.js';
+
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -37,6 +44,9 @@ app.get('/api/health', (req, res) => {
 
 // Public reads
 app.use('/api/clubs', clubsRouter);
+app.use('/api/clubs', clubPageRouter);
+app.use('/api/clubs', questionsRouter);
+app.use('/api/clubs', clubEventsRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/universities', universitiesRouter);
 
@@ -45,6 +55,8 @@ app.use('/api/reviews', writeLimiter, reviewsRouter);
 app.use('/api/me/favorites', writeLimiter, favoritesRouter);
 app.use('/api/me/votes', writeLimiter, votesRouter);
 app.use('/api/me/friends', writeLimiter, friendsRouter);
+app.use('/api/friend-requests', writeLimiter, friendRequestsRouter);
+app.use('/api/me/notifications', writeLimiter, notificationsRouter);
 app.use('/api/me', profilesRouter); // serves /profile and /membership
 app.use('/api/users', usersRouter);
 app.use('/api/events', writeLimiter, eventsRouter);
@@ -62,4 +74,8 @@ app.use((err, req, res, _next) => {
 
 app.listen(port, () => {
   console.log(`API listening on http://localhost:${port}`);
+});
+
+startQueue().catch((err) => {
+  console.error('[queue] failed to start — notifications disabled:', err.message);
 });

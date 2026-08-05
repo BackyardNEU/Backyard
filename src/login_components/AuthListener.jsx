@@ -10,11 +10,13 @@ import { useGlobalStore } from "../lib/store";
 async function ensureProfile(user) {
   if (!user) return;
   const meta = user.user_metadata || {};
-  // backend reads id from the JWT; email is not in the profile writable allowlist so it's dropped
   try {
     await apiFetch("/me/profile", {
       method: "POST",
-      body: { username: meta.full_name || meta.name || "" },
+      body: {
+        first_name: meta.first_name || meta.given_name || "",
+        last_name: meta.last_name || meta.family_name || "",
+      },
     });
   } catch (err) {
     console.error("Profile upsert failed:", err.message);

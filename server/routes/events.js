@@ -1,6 +1,8 @@
 import express from 'express';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { checkMuted } from '../middleware/checkMuted.js';
+import textModerator from '../lib/textModerator.js';
 
 const router = express.Router();
 
@@ -53,6 +55,7 @@ function validateEvent(body) {
     if (!clubId || !clubName || !description || !startTime || !endTime) {
         return 'Missing required fields: clubId, clubName, description, startTime, endTime';
     }
+    if (description.length > 200) return 'Description must be 200 characters or fewer';
 
     const start = new Date(startTime);
     const end = new Date(endTime);
@@ -64,11 +67,16 @@ function validateEvent(body) {
     return null;
 }
 
-router.post('/', async (req, res) => {
+router.post('/', checkMuted, async (req, res) => {
     const validationError = validateEvent(req.body);
     if (validationError) return res.status(400).json({ error: validationError });
 
-    const { clubId, clubName, description, startTime, endTime } = req.body;
+    const textCheck = textModerator.check(req.body.description);
+    if (!textCheck.clean) {
+        return res.status(400).json({ error: textCheck.message });
+    }
+
+    const { clubId, clubName, description, startTime, endTime, imageUrl } = req.body;
 
     const { data: profile } = await supabaseAdmin
         .from('profiles')
@@ -81,15 +89,18 @@ router.post('/', async (req, res) => {
         return res.status(403).json({ error: 'You must be a member of this club to create events' });
     }
 
+    const insert = {
+        id_of_club: clubId,
+        club_name: clubName,
+        event_description: description,
+        start_time: startTime,
+        end_time: endTime,
+    };
+    if (imageUrl) insert.event_image_url = imageUrl;
+
     const { data, error } = await supabaseAdmin
         .from('club_events')
-        .insert({
-            id_of_club: clubId,
-            club_name: clubName,
-            event_description: description,
-            start_time: startTime,
-            end_time: endTime,
-        })
+        .insert(insert)
         .select()
         .single();
 
@@ -102,7 +113,7 @@ router.post('/', async (req, res) => {
     res.status(201).json(data);
 });
 
-router.post('/:eventId/rsvp', async (req, res) => {
+router.post('/:eventId/rsvp', checkMuted, async (req, res) => {
     const { error } = await supabaseAdmin
         .from('event_rsvps')
         .upsert(

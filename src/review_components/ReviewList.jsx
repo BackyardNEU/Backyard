@@ -1,84 +1,179 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import "./ReviewList.css";
-import StatsCard from "./StatsCard.jsx";
-import { UpvoteWidget } from "./UpvoteWidget";
 import { apiFetch } from "../lib/api";
 import { useClubData } from "../context/useClubData";
 
-/**
- * Determine the comment type based on available data.
- */
-function getCommentType(review) {
-    const hasImages = review.review_images && review.review_images.length > 0;
-    const hasText = review.review_text && review.review_text.trim().length > 0;
-    if (hasImages && hasText) return 'normal';
-    if (hasImages && !hasText) return 'image_only';
-    return 'text_only';
+/* ── Helpers ── */
+
+function formatRelativeDate(dateStr) {
+    const diffMs = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 60) return `${mins}m`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h`;
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return `${days}d`;
+    if (days < 14) return '1 week';
+    const d = new Date(dateStr);
+    return `'${String(d.getFullYear()).slice(-2)} ${d.getMonth() + 1} ${d.getDate()}`;
 }
 
-/** Format date to "'YY M D" */
-function formatDate(dateStr) {
-    try {
-        const d = new Date(dateStr);
-        return `'${String(d.getFullYear()).slice(-2)} ${d.getMonth() + 1} ${d.getDate()}`;
-    } catch { return ''; }
+function formatLikeCount(n) {
+    if (n >= 1000000) return `${(n / 1000000).toFixed(1)}m`;
+    if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+    return String(n ?? 0);
 }
 
-/* ============================================================
-   Image with fallback
-   ============================================================ */
-function Img({ src, alt, className, onClick }) {
-    const [failed, setFailed] = useState(false);
-    if (failed || !src) {
-        return <div className={`rl-img-placeholder ${className || ''}`}>No image</div>;
+function getImages(review) {
+    if (Array.isArray(review.review_images) && review.review_images.length > 0) return review.review_images;
+    if (review.review_image) return [review.review_image];
+    return [];
+}
+
+/* ── Wiggly SVG border helpers ── */
+
+const SVG_AMP = 0.2;
+const SVG_FREQ = 4;
+const SVG_SMOOTH = 35;
+const SVG_RADIUS = 10;
+const SVG_STROKE = 1;
+const SVG_SEED = 1000;
+
+function svgNoise(x) {
+    return (
+        Math.sin(x * 1.13 + SVG_SEED * 0.7) * 0.55 +
+        Math.sin(x * 2.77 + SVG_SEED * 1.1) * 0.30 +
+        Math.sin(x * 6.21 + SVG_SEED * 0.3) * 0.15
+    );
+}
+
+function rrPoints(x, y, w, h, r, s) {
+    const pts = [];
+    const arc = (cx, cy, a0, a1) => {
+        for (let i = 0; i <= s; i++) {
+            const a = a0 + (a1 - a0) * (i / s);
+            pts.push({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r });
+        }
+    };
+    for (let i = 0; i <= s; i++) pts.push({ x: x + r + (w - r * 2) * (i / s), y });
+    arc(x + w - r, y + r, -Math.PI / 2, 0);
+    for (let i = 0; i <= s; i++) pts.push({ x: x + w, y: y + r + (h - r * 2) * (i / s) });
+    arc(x + w - r, y + h - r, 0, Math.PI / 2);
+    for (let i = 0; i <= s; i++) pts.push({ x: x + w - r - (w - r * 2) * (i / s), y: y + h });
+    arc(x + r, y + h - r, Math.PI / 2, Math.PI);
+    for (let i = 0; i <= s; i++) pts.push({ x, y: y + h - r - (h - r * 2) * (i / s) });
+    arc(x + r, y + r, Math.PI, Math.PI * 1.5);
+    return pts;
+}
+
+function wigglePts(pts) {
+    return pts.map((p, i) => {
+        const prev = pts[(i - 1 + pts.length) % pts.length];
+        const next = pts[(i + 1) % pts.length];
+        const dx = next.x - prev.x;
+        const dy = next.y - prev.y;
+        const len = Math.hypot(dx, dy) || 1;
+        const n = svgNoise(i * SVG_FREQ * 0.1) * SVG_AMP;
+        return { x: p.x + (-dy / len) * n, y: p.y + (dx / len) * n };
+    });
+}
+
+function ptsToPath(pts) {
+    let d = `M ${pts[0].x} ${pts[0].y}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+        const p0 = pts[i - 1] || pts[i];
+        const p1 = pts[i];
+        const p2 = pts[i + 1];
+        const p3 = pts[i + 2] || p2;
+        const cp1x = p1.x + (p2.x - p0.x) / 6;
+        const cp1y = p1.y + (p2.y - p0.y) / 6;
+        const cp2x = p2.x - (p3.x - p1.x) / 6;
+        const cp2y = p2.y - (p3.y - p1.y) / 6;
+        d += ` C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${p2.x} ${p2.y}`;
     }
+    return d + ' Z';
+}
+
+function wavyDivPath(y, w) {
+    let d = '';
+    const steps = SVG_SMOOTH * 4;
+    for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const px = 6 + t * (w - 12);
+        const py = y + svgNoise(i * SVG_FREQ * 0.1) * SVG_AMP;
+        d += i === 0 ? `M ${px} ${py}` : ` L ${px} ${py}`;
+    }
+    return d;
+}
+
+function drawCardSvg(cardEl, svgEl) {
+    const w = cardEl.offsetWidth;
+    const h = cardEl.offsetHeight;
+    if (!w || !h) return;
+    svgEl.setAttribute('viewBox', `0 0 ${w} ${h}`);
+
+    const outerPts = wigglePts(rrPoints(SVG_STROKE, SVG_STROKE, w - SVG_STROKE * 2, h - SVG_STROKE * 2, SVG_RADIUS, SVG_SMOOTH));
+    let markup = `<path class="border-rect" d="${ptsToPath(outerPts)}"></path>`;
+
+    const cardRect = cardEl.getBoundingClientRect();
+    cardEl.querySelectorAll('.comment-divider').forEach(div => {
+        const dr = div.getBoundingClientRect();
+        const y = dr.top - cardRect.top + dr.height / 2;
+        markup += `<path class="divider-line" d="${wavyDivPath(y, w)}"></path>`;
+    });
+
+    svgEl.innerHTML = markup;
+}
+
+/* ── Image with fallback ── */
+
+function Img({ src, alt, className, onLoad }) {
+    const [failed, setFailed] = useState(false);
+    if (failed || !src) return <div className={`comment-img-placeholder ${className || ''}`}>No image</div>;
     return (
         <img
             src={src}
             alt={alt || ''}
             className={className}
-            onClick={onClick}
             onError={() => setFailed(true)}
+            onLoad={onLoad}
         />
     );
 }
 
-function getImages(comment) {
-    if (Array.isArray(comment.review_images) && comment.review_images.length > 0) {
-        return comment.review_images;
-    }
-    if (comment.review_image) {
-        return [comment.review_image];
-    }
-    return [];
-}
+/* ── Image carousel ── */
 
-function ImageCarousel({ images, alt, className }) {
+function ImageCarousel({ images, onOrientationChange }) {
     const [index, setIndex] = useState(0);
     const total = images.length;
-    if (!total) {
-        return <div className={`rl-img-placeholder ${className || ''}`}>No image</div>;
-    }
+    if (!total) return null;
 
-    const goPrev = (e) => {
-        e.stopPropagation();
-        setIndex((prev) => (prev - 1 + total) % total);
-    };
-    const goNext = (e) => {
-        e.stopPropagation();
-        setIndex((prev) => (prev + 1) % total);
+    const goPrev = (e) => { e.stopPropagation(); setIndex((i) => (i - 1 + total) % total); };
+    const goNext = (e) => { e.stopPropagation(); setIndex((i) => (i + 1) % total); };
+
+    const handleLoad = (e) => {
+        const { naturalWidth: nw, naturalHeight: nh } = e.target;
+        if (nw && nh && onOrientationChange) {
+            const ratio = nw / nh;
+            onOrientationChange(ratio > 1.2 ? 'landscape' : ratio < 0.85 ? 'portrait' : 'square');
+        }
     };
 
     return (
-        <div className={`rl-carousel ${className || ''}`}>
-            <Img src={images[index]} alt={alt} className="rl-carousel__img" />
+        <div className="comment-carousel">
+            <Img
+                src={images[index]}
+                alt="comment image"
+                className="comment-carousel__img"
+                onLoad={handleLoad}
+            />
             {total > 1 && (
                 <>
-                    <button className="rl-carousel__nav rl-carousel__nav--left" onClick={goPrev} aria-label="Previous photo">‹</button>
-                    <button className="rl-carousel__nav rl-carousel__nav--right" onClick={goNext} aria-label="Next photo">›</button>
-                    <div className="rl-carousel__dots">
+                    <button className="comment-carousel__nav comment-carousel__nav--left" onClick={goPrev} aria-label="Previous">‹</button>
+                    <button className="comment-carousel__nav comment-carousel__nav--right" onClick={goNext} aria-label="Next">›</button>
+                    <div className="comment-carousel__dots">
                         {images.map((_, i) => (
-                            <span key={i} className={`rl-carousel__dot ${i === index ? 'is-active' : ''}`} />
+                            <span key={i} className={`comment-carousel__dot ${i === index ? 'is-active' : ''}`} />
                         ))}
                     </div>
                 </>
@@ -87,226 +182,223 @@ function ImageCarousel({ images, alt, className }) {
     );
 }
 
-/* ============================================================
-   Comment Card  (rendered in the grid)
-   ============================================================ */
-function CommentCard({ comment, type, userVote, onVote, onClick }) {
-    const images = getImages(comment);
-    if (type === 'normal') {
-        return (
-            <div className="rl-card rl-card--normal" onClick={onClick}>
-                <div className="rl-card__image-wrap">
-                    <ImageCarousel images={images} alt={comment.review_title} className="rl-card__image" />
-                    {comment.created_at && <span className="rl-card__date">{formatDate(comment.created_at)}</span>}
-                </div>
-                <div className="rl-card__body">
-                    <h4 className="rl-card__title">{comment.review_title}</h4>
-                    <p className="rl-card__text">{comment.review_text}</p>
-                    <div className="rl-card__footer">
-                        <UpvoteWidget score={comment._liveScore} userVote={userVote} onVote={onVote} variant="stacked" />
-                    </div>
-                </div>
-            </div>
-        );
-    }
+/* ── Like button — stacked heart over count ── */
 
-    if (type === 'text_only') {
-        return (
-            <div className="rl-card rl-card--text" onClick={onClick}>
-                <div className="rl-card__text-header">
-                    <h4 className="rl-card__title">{comment.review_title}</h4>
-                    {comment.created_at && <span className="rl-card__date-inline">{formatDate(comment.created_at)}</span>}
-                </div>
-                <p className="rl-card__text rl-card__text--long">{comment.review_text}</p>
-                <div className="rl-card__footer">
-                    <UpvoteWidget score={comment._liveScore} userVote={userVote} onVote={onVote} variant="stacked" />
-                </div>
-            </div>
-        );
-    }
-
-    // image_only
+function LikeButton({ count, isLiked, onToggle }) {
     return (
-        <div className="rl-card rl-card--imgonly" onClick={onClick}>
-            <div className="rl-card__image-wrap">
-                <ImageCarousel images={images} alt="Review image" className="rl-card__image" />
-                {comment.created_at && <span className="rl-card__date">{formatDate(comment.created_at)}</span>}
-            </div>
-            <div className="rl-card__vote rl-card__vote--end">
-                <UpvoteWidget score={comment._liveScore} userVote={userVote} onVote={onVote} variant="pill" />
-            </div>
+        <div
+            className={`comment-likes${isLiked ? ' comment-likes--active' : ''}`}
+            onClick={(e) => { e.stopPropagation(); onToggle(isLiked); }}
+            role="button"
+            tabIndex={0}
+            aria-label={isLiked ? 'Unlike' : 'Like'}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(); } }}
+        >
+            <span className="comment-like-btn">♥</span>
+            <span className="comment-like-count">{formatLikeCount(count)}</span>
         </div>
     );
 }
 
-/* ============================================================
-   Fullscreen Lightbox
-   ============================================================ */
-function Lightbox({ comment, type, userVote, onVote, onClose }) {
-    const images = getImages(comment);
-    // Close on Escape
+/* ── Comment card ── */
+
+function CommentCard({ review, userVote, onVote, onToggleHide, editing }) {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [needsExpand, setNeedsExpand] = useState(false);
+    const [imageOrientation, setImageOrientation] = useState('');
+    const cardRef = useRef(null);
+    const bodyRef = useRef(null);
+    const svgRef = useRef(null);
+
+    const title = review.review_title?.trim() || '';
+    const text = review.review_text?.trim() || '';
+    const images = getImages(review);
+    const date = review.created_at;
+
+    // Draw/redraw SVG border + dividers, triggered by any layout change
     useEffect(() => {
-        const h = (e) => { if (e.key === 'Escape') onClose(); };
-        document.addEventListener('keydown', h);
-        return () => document.removeEventListener('keydown', h);
-    }, [onClose]);
+        const card = cardRef.current;
+        const svg = svgRef.current;
+        if (!card || !svg) return;
+        const draw = () => drawCardSvg(card, svg);
+        draw();
+        const ro = new ResizeObserver(draw);
+        ro.observe(card);
+        return () => ro.disconnect();
+    }, []);
+
+    // Redraw when expand toggles (card height animates) or image loads
+    useEffect(() => {
+        if (cardRef.current && svgRef.current) {
+            drawCardSvg(cardRef.current, svgRef.current);
+        }
+    }, [isExpanded, imageOrientation]);
+
+    // Measure body height after render to decide if More button is needed
+    useEffect(() => {
+        const check = () => {
+            if (bodyRef.current && bodyRef.current.scrollHeight > 500) setNeedsExpand(true);
+        };
+        const t = setTimeout(check, 150);
+        return () => clearTimeout(t);
+    }, []);
 
     return (
-        <div className="rl-lightbox" onClick={onClose}>
-            <div className="rl-lightbox__inner" onClick={(e) => e.stopPropagation()}>
-                <button className="rl-lightbox__close" onClick={onClose}>&times;</button>
+        <div
+            className={`comment-card${review._pendingHidden && editing ? ' comment-card--hidden' : ''}`}
+            ref={cardRef}
+            data-expanded={isExpanded || undefined}
+        >
+            <svg ref={svgRef} className="comment-border-svg" />
 
-                {type === 'normal' && (
-                    <>
-                        <div className="rl-lightbox__img-col">
-                            <ImageCarousel images={images} alt={comment.review_title} className="rl-lightbox__img" />
-                        </div>
-                        <div className="rl-lightbox__label">
-                            <h3 className="rl-lightbox__title">{comment.review_title}</h3>
-                            {comment.created_at && <span className="rl-lightbox__date">{formatDate(comment.created_at)}</span>}
-                            <div className="rl-lightbox__line"></div>
-                            <p className="rl-lightbox__text">{comment.review_text}</p>
-                            <div className="rl-lightbox__vote">
-                                <UpvoteWidget score={comment._liveScore} userVote={userVote} onVote={onVote} variant="pill" theme="dark" />
-                            </div>
-                        </div>
-                    </>
-                )}
+            {/* Body shrinks/expands; footer stays visible */}
+            <div className="comment-card__body" ref={bodyRef}>
+                {title && <h4 className="comment-title">{title}</h4>}
+                {title && (images.length > 0 || text) && <div className="comment-divider" />}
 
-                {type === 'text_only' && (
-                    <div className="rl-lightbox__text-full">
-                        <h3 className="rl-lightbox__title rl-lightbox__title--big">{comment.review_title}</h3>
-                        {comment.created_at && <span className="rl-lightbox__date">{formatDate(comment.created_at)}</span>}
-                        <div className="rl-lightbox__line"></div>
-                        <p className="rl-lightbox__text">{comment.review_text}</p>
-                        <div className="rl-lightbox__vote">
-                            <UpvoteWidget score={comment._liveScore} userVote={userVote} onVote={onVote} variant="pill" theme="dark" />
-                        </div>
+                {images.length > 0 && (
+                    <div className={`comment-image${imageOrientation ? ` ${imageOrientation}` : ''}`}>
+                        <ImageCarousel images={images} onOrientationChange={setImageOrientation} />
                     </div>
                 )}
+                {images.length > 0 && text && <div className="comment-divider" />}
 
-                {type === 'image_only' && (
-                    <div className="rl-lightbox__img-col rl-lightbox__img-col--solo">
-                        <ImageCarousel images={images} alt="Review image" className="rl-lightbox__img" />
-                        <div className="rl-lightbox__vote rl-lightbox__vote--overlay">
-                            <UpvoteWidget score={comment._liveScore} userVote={userVote} onVote={onVote} variant="pill" theme="dark" />
-                        </div>
-                    </div>
+                {text && <p className="comment-text">{text}</p>}
+
+                {needsExpand && !isExpanded && <div className="comment-expand-fade" />}
+                {needsExpand && (
+                    <button
+                        className="comment-expand-btn"
+                        onClick={(e) => { e.stopPropagation(); setIsExpanded(v => !v); }}
+                    >
+                        {isExpanded ? 'Less' : 'More'}
+                    </button>
                 )}
             </div>
+
+            <div className="comment-footer">
+                {date && <span className="comment-date">{formatRelativeDate(date)}</span>}
+                <LikeButton
+                    count={review._liveScore}
+                    isLiked={userVote === 1}
+                    onToggle={(currentlyLiked) => onVote(currentlyLiked ? 0 : 1)}
+                />
+            </div>
+
+            {editing && (
+                <label className="comment-hide-label">
+                    <input
+                        type="checkbox"
+                        checked={!!review._pendingHidden}
+                        onChange={() => onToggleHide(review.id, !review._pendingHidden)}
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                    Hide comment
+                </label>
+            )}
         </div>
     );
 }
 
-/* ============================================================
-   ReviewList  (main export)
-   ============================================================ */
-export default function ReviewList({ reviews, club_stats, club }) {
-    const [selectedId, setSelectedId] = useState(null);
+/* ── ReviewList (main export) ── */
+
+export default function ReviewList({ reviews, editing, members, hideDraft = {}, onToggleHide }) {
+    const [activeTab, setActiveTab] = useState(0); // 0 = Members, 1 = Others
     const [userVotes, setUserVotes] = useState({});
     const [reviewScores, setReviewScores] = useState({});
     const { userId } = useClubData();
 
+    // Seed live scores and fetch user votes
     useEffect(() => {
         setReviewScores(prev => {
             const next = { ...prev };
-            reviews.forEach(r => {
-                if (!(r.id in next)) next[r.id] = r.upvotes ?? 0;
-            });
+            reviews.forEach(r => { if (!(r.id in next)) next[r.id] = r.upvotes ?? 0; });
             return next;
         });
 
-        if (!userId || reviews.length === 0) {
-            setUserVotes({});
-            return;
-        }
+        if (!userId || reviews.length === 0) { setUserVotes({}); return; }
 
-        const reviewIds = reviews.map(r => r.id);
-        apiFetch(`/me/votes?reviewIds=${reviewIds.join(',')}`)
-            .then((data) => {
+        const ids = reviews.map(r => r.id);
+        apiFetch(`/me/votes?reviewIds=${ids.join(',')}`)
+            .then(data => {
                 const votes = {};
                 (data || []).forEach(v => { votes[v.review_id] = v.vote; });
                 setUserVotes(votes);
             })
-            .catch((err) => console.error('Error fetching user votes:', err));
+            .catch(err => console.error('Error fetching votes:', err));
     }, [reviews, userId]);
 
-    const handleVote = useCallback(async (id, direction) => {
+    const handleVote = useCallback(async (id, newVote) => {
         const currentVote = userVotes[id] || 0;
-        const newVote = currentVote === direction ? 0 : direction;
-        const voteDelta = newVote - currentVote;
         const oldScore = reviewScores[id] ?? 0;
-        const newScore = oldScore + voteDelta;
 
-        // optimistic UI
-        setUserVotes((prev) => ({ ...prev, [id]: newVote }));
-        setReviewScores((prev) => ({ ...prev, [id]: newScore }));
+        setUserVotes(prev => ({ ...prev, [id]: newVote }));
+        setReviewScores(prev => ({ ...prev, [id]: oldScore + (newVote - currentVote) }));
 
         try {
-            // Server owns reviews.upvotes now — it recomputes from sum(user_votes.vote)
-            // and returns the authoritative count, so we use that instead of our
-            // optimistic estimate.
             const resp = newVote === 0
                 ? await apiFetch(`/me/votes/${id}`, { method: 'DELETE' })
                 : await apiFetch('/me/votes', { method: 'POST', body: { review_id: id, vote: newVote } });
-
             if (resp && typeof resp.upvotes === 'number') {
-                setReviewScores((prev) => ({ ...prev, [id]: resp.upvotes }));
+                setReviewScores(prev => ({ ...prev, [id]: resp.upvotes }));
             }
         } catch (err) {
             console.error('Vote error:', err);
-            setUserVotes((prev) => ({ ...prev, [id]: currentVote }));
-            setReviewScores((prev) => ({ ...prev, [id]: oldScore }));
+            setUserVotes(prev => ({ ...prev, [id]: currentVote }));
+            setReviewScores(prev => ({ ...prev, [id]: oldScore }));
         }
     }, [userVotes, reviewScores]);
 
-    // Attach live score to each review for rendering
-    const enriched = reviews.map((r) => ({ ...r, _liveScore: reviewScores[r.id] ?? (r.upvotes ?? 0) }));
-    const selectedReview = enriched.find((r) => r.id === selectedId);
-    const selectedType = selectedReview ? getCommentType(selectedReview) : null;
+    const handleToggleHide = useCallback((reviewId, hidden) => {
+        onToggleHide?.(reviewId, hidden);
+    }, [onToggleHide]);
+
+    const enriched = reviews.map(r => ({
+        ...r,
+        _liveScore: reviewScores[r.id] ?? (r.upvotes ?? 0),
+        _pendingHidden: r.id in hideDraft ? hideDraft[r.id] : (r.is_hidden || r.isHidden || false),
+    }));
+    const visible = editing ? enriched : enriched.filter(r => !r._pendingHidden);
+
+    const memberIds = useMemo(() => new Set((members || []).map(m => m.user_id)), [members]);
+    const authorizedReviews = visible.filter(r => memberIds.has(r.user_id));
+    const unauthorizedReviews = visible.filter(r => !memberIds.has(r.user_id));
+    const activeReviews = activeTab === 0 ? authorizedReviews : unauthorizedReviews;
 
     return (
         <div className="review-item">
-            <p className="divider-header">Stats</p>
-            <StatsCard stats_array={club_stats} />
+            <p className="divider-header">Participant Posts</p>
 
-            <div className="divider"></div>
-            <p className="divider-header">Comments</p>
+            <div className="comment-tabs" role="tablist">
+                {['Members', 'Others'].map((label, i) => (
+                    <button
+                        key={label}
+                        role="tab"
+                        aria-selected={activeTab === i}
+                        className={`mr-cat-tab ${activeTab === i ? 'active' : ''}`}
+                        onClick={() => setActiveTab(i)}
+                    >
+                        {label}
+                    </button>
+                ))}
+            </div>
 
-            {enriched.length > 0 ? (
-                <div className="rl-grid">
-                    {enriched.map((review) => {
-                        const type = getCommentType(review);
-                        return (
-                            <CommentCard
-                                key={review.id}
-                                comment={review}
-                                type={type}
-                                userVote={userVotes[review.id] || 0}
-                                onVote={(val) => handleVote(review.id, val)}
-                                onClick={() => setSelectedId(review.id)}
-                            />
-                        );
-                    })}
+            {activeReviews.length > 0 ? (
+                <div className="rl-comments-row">
+                    {activeReviews.map(review => (
+                        <CommentCard
+                            key={review.id}
+                            review={review}
+                            userVote={userVotes[review.id] || 0}
+                            onVote={(val) => handleVote(review.id, val)}
+                            onToggleHide={handleToggleHide}
+                            editing={editing}
+                        />
+                    ))}
                 </div>
             ) : (
-                <p className="empty-text">No reviews yet — be the first!</p>
+                <p className="comment-empty">No comments yet</p>
             )}
-
-            {selectedReview && (
-                <Lightbox
-                    comment={selectedReview}
-                    type={selectedType}
-                    userVote={userVotes[selectedReview.id] || 0}
-                    onVote={(val) => handleVote(selectedReview.id, val)}
-                    onClose={() => setSelectedId(null)}
-                />
-            )}
-
-            <div className="divider"></div>
-            <p className="divider-header">Contact</p>
-            <p>{club.contact_email || "No contact info available."}</p>
-            <div className="divider"></div>
         </div>
     );
 }

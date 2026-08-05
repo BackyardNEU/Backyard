@@ -1,4 +1,4 @@
-﻿import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+﻿import { Routes, Route, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import './App.css';
 import { SearchBar } from './home_components/SearchBar';
@@ -9,6 +9,8 @@ import AuthListener from "./login_components/AuthListener";
 import AuthCallbackPage from './login_components/AuthCallbackPage';
 import ProfileSetupPage from './profile_components/ProfileSetupPage';
 import { ProfilePage } from './profile_components/ProfilePage';
+import { FriendProfile } from './profile_components/FriendProfile';
+import ResetPasswordPage from './login_components/ResetPasswordPage';
 import { ClubDataProvider } from './context/ClubDataProvider'
 import { SupportModal } from './support_components/SupportModal'
 
@@ -75,8 +77,10 @@ function App() {
           <Route path="/reviews/:id" element={<ReviewPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/friend/:id" element={<FriendProfile />} />
           <Route path="/profile/setup" element={<ProfileSetupPage />} />
           <Route path="/profile-setup" element={<ProfileSetupPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
         </Routes>
       </div>
     </ClubDataProvider>
@@ -84,3 +88,4 @@ function App() {
 }
 
 export default App
+//small implementation test

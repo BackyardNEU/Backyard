@@ -1,0 +1,248 @@
+.stats-module {
+    width: 100%;
+    
+    padding-left: 1.5%; 
+}
+
+.rendered-part {
+    padding: 5px;
+}
+
+.stats-add-btn{
+    padding: 8px 16px;
+    border-radius: 15px;
+    background-color: #16193C;
+    color:#adadad;
+    font-size: 1rem;
+    height: 40px;
+    align-self: center;
+  
+
+}
+
+.qual-stats .stats-add-btn {
+    align-self: flex-start; 
+    margin-top: 15px;      
+    
+}
+.stats-remove-btn {
+    display: flex;
+    background:#16193C;
+    color: white;
+    border-radius: 5px;
+    width: 20px;
+    height: 20px;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.1s ease-in;
+}
+
+
+.stats-remove-btn:hover {
+    transform: scale(1.1);
+    background: rgba(180, 40, 40);
+}
+
+/* View mode — stat bars */
+.stats-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+}
+
+.vert-flex {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+}
+
+.stats-module .number-big {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 500;
+    line-height: 1.2;
+    font-size: 4rem;
+    text-transform: uppercase;
+    white-space: pre-wrap;
+    width: 70px;
+
+}
+
+.stats-module .number-small {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 500;
+    font-size: 1.3rem;
+    line-height: 1.2;
+    text-transform: uppercase;
+    white-space: pre-wrap;
+    margin-left: 3px;
+    width:40px;
+    border-radius: 10px;
+}
+
+.stats-module .stat-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 400;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+}
+
+/* Hide number input spinners */
+.stats-module input[type="number"]::-webkit-inner-spin-button,
+.stats-module input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.stats-module input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* Input/Label styles here */
+.edit-mode-input {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    padding-left: 5px;
+    box-shadow: inset 0 0 0 2px #16193C;
+    border-radius: 10px;
+    width: 90px;
+}
+
+.edit-mode-input:hover {
+    box-shadow: inset 0 0 0 2px black;
+    border-radius: 5px;
+}
+
+.qual-stats .range-label {
+    width: 100px;
+}
+
+/* Stat name styles */ 
+.stat-name-input-label {
+    display: flex;
+}
+
+/* Quantitative stats — horizontal scrolling carousel */
+.quant-stats {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    width: 70vw;
+    gap: 8px;
+    scrollbar-width: thin;
+    border-bottom: 0.9px dashed rgb(175, 175, 175);
+}
+
+.quant-stat-holder {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 120px;
+    padding: 10px;
+}
+
+.quant-stat-holder:first-child {
+    padding-left: 0px;
+}
+
+/* Qualitative stats — vertical list */
+.qual-stats {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+}
+
+/* Slider stlyes here */
+.sliderContainer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    align-self: stretch;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 85%;
+    max-width: 700px;
+    height: 23px;
+    margin-bottom: 0px;
+    border: 3px solid rgb(255, 255, 255);
+    -webkit-transition: 0.2s;
+    transition: opacity 0.2s;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+
+  .sliderContainer p {
+    margin: 0;
+    white-space: nowrap;
+    min-width: 80px;
+  }
+
+  .slider:hover {
+    opacity: 1;
+  }
+  
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgb(255, 255, 255);
+    border: 2px solid rgb(255, 255, 255);
+    box-shadow: 0px 0px 4px 2px rgba(50, 50, 50, 0.3), 0 0 0 1px #adadad;
+    border-radius: 20px;
+    margin-top: -3px;
+    width: 10px;
+    height: 30px;
+    cursor: pointer;
+    z-index: 9200;
+  }
+  
+  .slider::-moz-range-thumb {
+    background: rgb(255, 255, 255);
+    border-radius: 20px;
+    outline: 1px solid grey;
+    margin-top: -3px;
+    width: 15px;
+    height: 25px;
+    cursor: pointer;
+    z-index: 9200;
+  }
+
+  .quant-inputs-row {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 8px; /* Adds space between the two inputs */
+}
+
+/* 2. Expand holder width to prevent layout squeezing */
+.quant-stat-holder {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto; /* Increased from 120px to 180px so elements fit side-by-side */
+    padding: 10px;
+    gap: 6px;        /* Adds vertical space between inputs row and the remove button */
+}
+
+/* 3. Keep the remove button cleanly aligned to the left edge on its new row */
+.quant-stat-holder .stats-remove-btn {
+    align-self: flex-start;
+}
+
+.quant-stat-holder.editing {
+    flex: 0 0 180px;
+    width: 180px;
+}
+
+.quant-stat-holder:not(.editing) {
+    flex: 0 0 auto;
+    width: fit-content;
+}
