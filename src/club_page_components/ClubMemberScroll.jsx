@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { sanitizeBioHtml } from '../lib/sanitizeHtml';
+import borderImg from '/src/assets/border-green.svg';
+import borderHorizontalImg from '/src/assets/border-horizontal-green.svg';
 
 /**
  * Member roster viewer: category tabs + an avatar track for the active category.
@@ -87,14 +89,28 @@ function DetailOverlay({ members, startIndex, onClose }) {
         {members.map((m, i) => (
           <div className="mr-slide" key={i}>
             <div className="mr-detail" onClick={(e) => e.stopPropagation()}>
-              <button className="mr-close" onClick={onClose} aria-label="Close">×</button>
+              <img src={borderImg} alt="" className="mr-detail-border mr-detail-border-left" />
+              <img src={borderImg} alt="" className="mr-detail-border mr-detail-border-right" />
               <div
-                className="mr-d-avatar"
-                style={m.photo ? { backgroundImage: `url(${m.photo})` } : undefined}
+                className="mr-detail-border-h-wrap mr-detail-border-top-wrap"
+                style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+                aria-hidden="true"
               />
-              <div className="mr-d-name">{m.name}</div>
-              <div className="mr-d-role">{m.category}</div>
-              <div className="mr-d-bio" dangerouslySetInnerHTML={{ __html: sanitizeBioHtml(m.bio) }} />
+              <div
+                className="mr-detail-border-h-wrap mr-detail-border-bottom-wrap"
+                style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+                aria-hidden="true"
+              />
+              <button className="mr-close" onClick={onClose} aria-label="Close">×</button>
+              <div className="mr-detail-scroll">
+                <div
+                  className="mr-d-avatar"
+                  style={m.photo ? { backgroundImage: `url(${m.photo})` } : undefined}
+                />
+                <div className="mr-d-name">{m.name}</div>
+                <div className="mr-d-role">{m.category}</div>
+                <div className="mr-d-bio" dangerouslySetInnerHTML={{ __html: sanitizeBioHtml(m.bio) }} />
+              </div>
             </div>
           </div>
         ))}

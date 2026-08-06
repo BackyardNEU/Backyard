@@ -21,7 +21,10 @@ export default function AuthCallbackPage() {
         return;
       }
 
+      const pendingJoinToken = sessionStorage.getItem('pendingJoinToken');
+
       if (isSignupReturn) {
+        // New user needs profile setup; sessionStorage token will be picked up after setup
         navigate('/profile-setup', { replace: true });
         return;
       }
@@ -30,7 +33,14 @@ export default function AuthCallbackPage() {
         const profile = await apiFetch('/me/profile');
         const username = (profile?.username || '').trim();
         const needsSetup = !username || /\s/.test(username);
-        navigate(needsSetup ? '/profile-setup' : '/profile', { replace: true });
+        if (needsSetup) {
+          navigate('/profile-setup', { replace: true });
+        } else if (pendingJoinToken) {
+          sessionStorage.removeItem('pendingJoinToken');
+          navigate(`/join/${pendingJoinToken}`, { replace: true });
+        } else {
+          navigate('/profile', { replace: true });
+        }
       } catch {
         navigate('/profile-setup', { replace: true });
       }

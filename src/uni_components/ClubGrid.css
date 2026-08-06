@@ -80,7 +80,7 @@
   margin-top: 15px;
   font-style: normal;
   
-  font-size: clamp(26px, 13cqi, 72px);
+  font-size: clamp(26px, 13cqi, 50px);
   white-space: pre-wrap;
   word-break: break-word;
   width: 100%;

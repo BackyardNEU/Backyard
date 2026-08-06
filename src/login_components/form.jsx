@@ -2,9 +2,10 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 import { apiFetch } from "../lib/api";
+import BorderedInput from "./BorderedInput";
 import "./form.css";
 
-function Form({ isSignUp = false, onAuth }) {
+function Form({ isSignUp = false, onAuth, onFirstNameCommit, needHelpButton, toggleAuthButton }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
@@ -64,7 +65,10 @@ function Form({ isSignUp = false, onAuth }) {
             emailRedirectTo: `${window.location.origin}/auth/callback?flow=signup`,
           },
         });
-        if (signUpError) throw signUpError;
+        
+        if (signUpError) {
+          throw signUpError; 
+        }
 
         if (signUpData?.session) {
           await apiFetch("/me/profile", {
@@ -99,15 +103,16 @@ function Form({ isSignUp = false, onAuth }) {
       {isSignUp && (
         <>
           <div className="name-row">
-            <input
+            <BorderedInput
               type="text"
               placeholder="First name"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
+              onBlur={() => onFirstNameCommit && onFirstNameCommit(firstName.trim())}
               disabled={loading}
               required
             />
-            <input
+            <BorderedInput
               type="text"
               placeholder="Last name"
               value={lastName}
@@ -117,7 +122,7 @@ function Form({ isSignUp = false, onAuth }) {
             />
           </div>
           <div className="username-field">
-            <input
+            <BorderedInput
               type="text"
               placeholder="Username"
               value={username}
@@ -138,7 +143,7 @@ function Form({ isSignUp = false, onAuth }) {
           </div>
         </>
       )}
-      <input
+      <BorderedInput
         type="email"
         placeholder="Email"
         value={email}
@@ -146,7 +151,7 @@ function Form({ isSignUp = false, onAuth }) {
         disabled={loading}
         required
       />
-      <input
+      <BorderedInput
         type="password"
         placeholder="Password"
         value={password}
@@ -154,9 +159,21 @@ function Form({ isSignUp = false, onAuth }) {
         disabled={loading}
         required
       />
-      <button type="submit" disabled={loading}>
-        {loading ? (isSignUp ? "Signing up..." : "Logging in...") : isSignUp ? "Sign up" : "Login"}
-      </button>
+      <div className="submit-row">
+        {needHelpButton}
+        <div className="duo-btn-wrap auth-submit-wrap">
+          <div className="duo-btn-pill" aria-hidden="true" />
+          <button
+            type="submit"
+            disabled={loading}
+            className="auth-submit-btn duo-btn"
+            style={{ '--duo-shadow': 'rgb(30, 80, 95)' }}
+          >
+            {loading ? (isSignUp ? "Signing up..." : "Logging in...") : isSignUp ? "Sign up" : "Login"}
+          </button>
+        </div>
+        {toggleAuthButton}
+      </div>
       {error && <div className="form-error">{error}</div>}
     </form>
   );

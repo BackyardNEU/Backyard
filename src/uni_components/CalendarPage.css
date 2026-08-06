@@ -1,8 +1,858 @@
-.whole-calendar-page {
-    padding: 10px;
+.calendar-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    overflow-x: auto;
+    overflow: hidden;
 }
 
-.calendar-button {
-    background: white;
-    border: 1px solid black;
+/* Each day of the calendar */
+.calendar-day {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 350px;
+    min-width: 300px;
+    padding: 5px;
+}
+
+.day-title-number {
+    font-size: 30px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.current-month {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    font-size: 60px;
+}
+
+.calendar-event {
+    position: relative;
+    padding: 10px;
+    margin: 10px;
+
+    box-shadow: 8px 5px 8px rgba(0, 0, 0, 0.22);
+    margin-bottom: 6px;
+    z-index: 0;
+}
+
+.calendar-event::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url('/src/assets/white-paper-texture.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: inherit;
+    filter: brightness(1.25) contrast(0.9);
+    z-index: -1;
+}
+
+/* --- module wrapper --- */
+.cal-module {
+    width: 100%;
+    padding-left: 1.5%;
+}
+
+/* --- edit section --- */
+.cal-edit-section {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.cal-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #555;
+    cursor: pointer;
+}
+
+/* ===== EVENT PREVIEWS ===== */
+.cal-preview-section {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.cal-preview-title {
+  flex-basis: 100%;
+  font-size: 15px;
+  font-weight: 700;
+  color: #2b3440;
+  margin: 0;
+}
+
+.cal-preview-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0;
+}
+
+.cal-preview-week-card {
+    max-width: 350px;
+    pointer-events: none;
+}
+
+/* Portrait preview — inline (no backdrop) */
+.cal-portrait-preview {
+    width: min(390px, 88vw);
+
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.55);
+}
+
+
+/* ===== VIEW TOGGLE ===== */
+.cal-view-toggle {
+  display: flex;
+  width: fit-content;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.cal-toggle-btn {
+  background: #fff;
+  border: none;
+  padding: 6px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.cal-toggle-btn:hover {
+  background: #f5f5f5;
+}
+
+.cal-toggle-active {
+  background: #2b3440;
+  color: #fff;
+}
+
+.cal-toggle-active:hover {
+  background: #2b3440;
+}
+
+/* ===== MONTHLY CARD ===== */
+.cal-monthly-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  padding: 20px 24px 24px;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.cal-monthly-tree {
+  
+  margin-bottom: 10px;
+}
+
+.cal-tree-img {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.cal-monthly-header {
+  display: flex;
+
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.cal-month-name {
+  font-size: 38px;
+  font-weight: 400;
+  color: #911e1e;
+  letter-spacing: -1px;
+  font-family: Georgia, serif;
+}
+
+.cal-month-nav {
+  display: flex;
+  gap: 2px;
+}
+
+.cal-nav-btn {
+  background: none;
+  border: none;
+  font-size: 26px;
+  color: #555;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 4px;
+  line-height: 1;
+}
+
+.cal-nav-btn:hover {
+  background: #f0f0f0;
+}
+
+/* ===== CALENDAR GRID ===== */
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.cal-weekday-label {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #999;
+  padding: 4px 0 6px;
+}
+
+.cal-day-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 50%;
+  user-select: none;
+}
+
+.cal-day-empty {
+  /* padding cell — intentionally blank */
+}
+
+.cal-day-past {
+  color: #c0c0c0;
+}
+
+.cal-day-normal {
+  color: #1a1a1a;
+}
+
+.cal-day-today {
+  color: #1a1a1a;
+  background: #fff9db;
+  font-weight: 700;
+}
+
+.cal-day-today-events {
+  color: #7a5100;
+  background: #ffd43b;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cal-day-today-events:hover {
+  background: #f0c800;
+}
+
+.calpg-grid-panel .cal-day-today-events {
+  width: 34px;
+  height: 34px;
+  aspect-ratio: 1;
+  justify-self: center;
+  align-self: center;
+}
+
+.cal-day-has-events {
+  color: #e8793a;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cal-day-has-events:hover {
+  background: #d4692b;
+  color: white;
+}
+
+.cal-loading {
+  text-align: center;
+  color: #aaa;
+  font-size: 14px;
+  padding: 20px 0;
+}
+
+/* ===== ADD EVENT SECTION ===== */
+.cal-add-event-section {
+  margin-top: 16px;
+}
+
+/* ===== DAY DETAIL OVERLAY ===== */
+.cal-overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* iPhone-style portrait card */
+.cal-overlay-portrait {
+  --header-h: 56px;
+  position: relative;
+  width: 450px;
+  height: 100%;
+  max-height: none;
+  border-radius: 0;
+  overflow: hidden;
+  background: rgb(255 255 255 / 100%);
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 500px) {
+  .cal-overlay-portrait {
+    width: 100vw;
+    height: 100%;
+  }
+}
+
+.cal-overlay-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-size: 14px;
+  color: #000000;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  transition: background 0.15s;
+}
+
+.cal-overlay-close:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* Date heading at the top of the portrait card */
+.cal-overlay-date {
+  height: var(--header-h);
+  padding: 16px 20px 0;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 1.75rem;
+  font-weight: 300;
+  color: #000000;
+  background: #ffffff;
+  text-align: center;
+  margin: 0;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Scrollable stack — hides the scrollbar */
+.cal-portrait-scroll {
+  overflow-y: auto;
+  max-height: calc(92vh - var(--header-h));
+  scrollbar-width: none;
+  scroll-snap-type: y mandatory;
+}
+
+.cal-portrait-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Each event card — natural height, snaps into place. Composed of two
+   stacked sub-cards (image + info) with zero gap between them so their
+   abutting black-ink borders read as a single dividing line. */
+.cal-portrait-event {
+  flex-shrink: 0;
+  height: auto;
+  border-radius: 0;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  scroll-snap-align: start;
+}
+
+/* Ink-line border overlay (same assets/technique as .add-event-card-border) */
+.cal-portrait-card-border {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: auto;
+  pointer-events: none;
+  z-index: 2;
+}
+.cal-portrait-card-border-left {
+  left: 0;
+  transform: scaleX(0.5);
+  transform-origin: left center;
+}
+.cal-portrait-card-border-right {
+  right: -1px;
+  transform: scaleX(-0.5);
+  transform-origin: center;
+}
+.cal-portrait-card-border-h {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2.5px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  background-size: auto 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+.cal-portrait-card-border-h-top { top: 0; }
+.cal-portrait-card-border-h-bottom { bottom: 0; }
+
+/* Info card's own vertical borders — fixed pixel width (not width:auto) so
+   the ink line stays the same thickness as the image card's despite the
+   info card being much shorter (width:auto would scale the line thinner
+   as height shrinks, since it follows the svg's native aspect ratio). */
+.cal-portrait-info-border {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 4px;
+  pointer-events: none;
+  z-index: 2;
+}
+.cal-portrait-info-border-left {
+  left: -2px;
+  transform: scaleX(1.3);
+  transform-origin: left center;
+}
+.cal-portrait-info-border-right {
+  right: -1px;
+  transform: scaleX(-1.5);
+  transform-origin: center;
+}
+
+/* Image card — sized by aspect-ratio, not a static width, so it scales with
+   the overlay. Padding matches add-event-card; the image bleeds through it
+   (negative inset) so the photo runs edge-to-edge to the ink border. */
+.cal-portrait-img-wrap {
+  position: relative;
+  width: 100%;
+  background: #fff;
+  overflow: hidden;
+  padding: 12px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+.cal-portrait-img {
+  width: calc(100% + 24px);
+  margin: 0;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  display: block;
+  border-radius: 5px;
+  border: 1px solid black;
+}
+
+/* Fallback (club logo / default avatar) is square and doesn't bleed past
+   the card's padding like a poster does — width:100% (not the +24px bleed)
+   keeps a matching 12px inset on all four sides, and the 1:1 ratio (vs.
+   the poster's 3:4) shortens the whole card since height follows width. */
+.cal-portrait-img--default {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+}
+
+.cal-portrait-no-img {
+  color: rgba(0, 0, 0, 0.4);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* Info card — same black-ink bordering as the image card above on the
+   left/right/bottom, but no top ink border. The divider between the image
+   and info cards is instead a standard (non-svg) dashed line. */
+.cal-portrait-info {
+  position: relative;
+  flex-shrink: 0;
+  background: #fff;
+  padding: 14px 18px;
+  border-top: 2px dashed #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+/* Club name + event name, capped to 75% of the card. Fits: centered single
+   line. Overflows: infinite right-to-left ticker (duplicated copy, track
+   translates -50%) — same technique as ClubMediaModule's .cm-poster-text. */
+.cal-portrait-title-wrap {
+  width: 75%;
+  max-width: 75%;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.cal-portrait-title-track {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.cal-portrait-title-track.cal-portrait-title-marquee-on {
+  width: max-content;
+  justify-content: flex-start;
+  will-change: transform;
+  animation: cal-portrait-title-marquee var(--cal-title-dur, 20s) linear infinite;
+}
+
+.cal-portrait-title-copy {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 600;
+  font-size: 1.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #1a1a1a;
+}
+
+.cal-portrait-title-marquee-on .cal-portrait-title-copy {
+  padding-right: 2rem;
+}
+
+@keyframes cal-portrait-title-marquee {
+  0%, 10% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* where / when / about rows — label in a lighter weight, value in a
+   lighter-still all-caps weight, separated by a small gap. Improved
+   version of the weekly view's plain .event-description/.club-info pair. */
+.cal-info-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.cal-info-label {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 400;
+  font-size: 1.2rem;
+  color: #1a1a1a;
+  flex-shrink: 0;
+}
+
+.cal-info-value {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 300;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  color: #1a1a1a;
+}
+
+/* ===== STANDALONE CALENDAR PAGE (university page inline calendar) ===== */
+.calpg-card {
+  position: relative;
+  background: #fff;
+
+  padding: 20px 20px 64px;
+  width: 100%;
+ 
+  height: 100%;
+  box-sizing: border-box;
+  overflow-y: auto;
+  
+  scrollbar-width: none;
+}
+
+.calpg-card::-webkit-scrollbar {
+  display: none;
+}
+
+.calpg-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: #f0f0f0;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: background 0.15s;
+}
+
+.calpg-close:hover {
+  background: #e0e0e0;
+}
+
+.cal-unauthed-msg {
+  text-align: center;
+  color: #666;
+  font-size: 15px;
+  padding: 40px 0;
+  margin: 0;
+}
+
+/* ===== INLINE CALENDAR HEADER (tree + month name) ===== */
+.calpg-header {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+
+}
+
+.calpg-tree-wrap {
+  display: flex;
+  justify-content: center;
+  padding-top: 6px;
+  margin-bottom: 2px;
+}
+
+.calpg-tree-img {
+  width: 12rem;
+  height: auto;
+  object-fit: contain;
+}
+
+.calpg-month-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.calpg-align-row {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.calpg-month-row.calpg-align-row {
+  justify-content: flex-start;
+}
+
+@media (min-width: 1400px) {
+  .calpg-month-row-monthly.calpg-align-row {
+    padding: 0 34px;
+  }
+}
+
+/* ===== INLINE CALENDAR MONTH GRID(S) ===== */
+.calpg-dual-grid-row {
+  justify-content: center;
+  gap: 24px;
+}
+
+@media (max-width: 700px) {
+  .calpg-dual-grid-row {
+    padding: 0 8px;
+  }
+}
+
+@media (min-width: 1400px) {
+  .calpg-dual-grid-row {
+    display: grid;
+    grid-template-columns: minmax(0, 500px) 1fr minmax(0, 500px);
+    align-items: start;
+    justify-content: center;
+    padding: 0 34px;
+    gap: 0;
+  }
+}
+
+.calpg-grid-panel {
+  width: 100%;
+  max-width: 500px;
+}
+
+.calpg-grid-panel-next {
+  display: none;
+}
+
+.calpg-grid-divider {
+  display: none;
+  width: 1px;
+  align-self: stretch;
+  justify-self: center;
+  background: #ccc;
+}
+
+@media (min-width: 1400px) {
+  .calpg-grid-panel-next {
+    display: grid;
+  }
+  .calpg-grid-divider {
+    display: block;
+  }
+}
+
+.calpg-month {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 6rem;
+  letter-spacing: 1px;
+  color: #3b3c3c;
+  margin: 0;
+  line-height: 1;
+}
+
+@media (min-width: 1400px) {
+  .calpg-month-monthly {
+    padding-left: 36px;
+  }
+}
+
+.calpg-month-full {
+  display: inline;
+}
+
+.calpg-month-abbr {
+  display: none;
+}
+
+.calpg-month-range {
+  display: none;
+  font-size: 3rem;
+}
+
+@media (max-width: 700px) {
+  .calpg-month-full {
+    display: none;
+  }
+  .calpg-month-abbr {
+    display: inline;
+  }
+  .calpg-month {
+    font-size: 5rem;
+  }
+}
+
+@media (min-width: 1400px) {
+  .calpg-month-monthly .calpg-month-full,
+  .calpg-month-monthly .calpg-month-abbr {
+    display: none;
+  }
+  .calpg-month-range {
+    display: inline;
+  }
+}
+
+/* ===== INLINE CALENDAR VIEW TOGGLE (bottom-right of the card) ===== */
+.calpg-toggle-btn {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  background: none;
+  border: none;
+  padding: 0;
+  color: #1a1a1a;
+  font-family: "Barlow Condensed", sans-serif;
+  text-transform: uppercase;
+  font-size: 1.6rem;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  z-index: 20;
+  transition: color 0.15s;
+}
+
+.calpg-toggle-btn:hover {
+  color: #4e7da9;
+}
+
+@media (max-width: 700px) {
+  .calpg-toggle-btn {
+    font-size: 1.5rem;
+  }
+}
+
+/* ===== INLINE CALENDAR WEEK VIEW ALIGNMENT ===== */
+.calpg-week-row {
+  justify-content: flex-start;
+  overflow-x: auto;
+  overflow-y: hidden;
+  box-sizing: border-box;
+  scrollbar-width: none;
+}
+
+.calpg-week-row::-webkit-scrollbar {
+  display: none;
+}
+
+/* ===== INLINE CALENDAR WEEK VIEW DAY LABELS ===== */
+.calpg-day-label {
+  font-family: "Barlow Condensed", sans-serif;
+  text-transform: uppercase;
+}
+
+/* ===== INLINE CALENDAR MONTH VIEW WEEKDAY HEADER (S M T W T F S) ===== */
+.calpg-weekday-label {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 600;
+  font-size: 1.2rem;
+  color: #3b3c3c;
+}
+
+@media (max-width: 700px) {
+  .calpg-day-title {
+    justify-content: center;
+  }
+  .calpg-day-num {
+    display: none;
+  }
+  .calpg-week-day {
+    flex: 0 0 46%;
+    min-width: 130px;
+  }
+}
+
+@media (max-width: 400px) {
+ 
+  .calpg-month {
+    font-size: 4rem;
+  }
+
+  .calpg-tree-img {
+  width: 10rem;
+  height: auto;
+  object-fit: contain;
+}
 }

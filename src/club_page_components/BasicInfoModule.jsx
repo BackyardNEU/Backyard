@@ -2,8 +2,9 @@ import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useClubData } from '../context/useClubData';
 import ColorThief from 'colorthief';
 import { FaSearch, FaTimes } from 'react-icons/fa';
+import borderImg from '/src/assets/border-green.svg';
+import borderHorizontalImg from '/src/assets/border-horizontal-green.svg';
 import './BasicInfoModule.css';
-import LinksTable from './LinksTable';
 
 /**
  * @param {Object} props
@@ -18,8 +19,9 @@ import LinksTable from './LinksTable';
  * @param {React.ReactNode} props.actions - action row slot rendered between hero and about in full/hero mode
  * @param {string|null} props.warning - validation message shown in edit mode
  * @param {'full'|'hero'|'about'} props.part - which slice to render; hero is fixed above the accordion
+ * @param {boolean} props.linksDisplayed - whether the Links module's visibility checkbox is on; hides the action-bar link buttons entirely when false
  */
-function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange, actions, warning, part = 'full' }) {
+function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange, actions, warning, part = 'full', linksDisplayed = true }) {
   const [dominantColor, setDominantColor] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
   const [descOpen, setDescOpen] = useState(false);
@@ -29,7 +31,9 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   const [friendsSearch, setFriendsSearch] = useState('');
   const [imageWarning, setImageWarning] = useState('');
   const [linksExpanded, setLinksExpanded] = useState(false);
-  const [linksModalOpen, setLinksModalOpen] = useState(false);
+  // Drives how many links show before "More" — 2 on narrow viewports, 5 otherwise.
+  // Tracked reactively (not just read once) so resizing across the breakpoint updates it.
+  const [isNarrow, setIsNarrow] = useState(() => window.innerWidth <= 500);
 
   const imgRef = useRef(null);
   const descRef = useRef(null);
@@ -57,20 +61,19 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
 
   const links = data?.links ?? [];
   const enabledLinks = links.filter(l => l.enabled && l.url);
+  // Collapsed count differs by breakpoint; expanding always reveals the rest
+  // in the same row (it just scrolls further) — never a second row or a modal.
+  const collapsedCount = isNarrow ? 2 : 5;
+  const visibleLinks = linksExpanded ? enabledLinks : enabledLinks.slice(0, collapsedCount);
+  const showMoreToggle = enabledLinks.length > collapsedCount;
 
   const getLinkKeyword = (name) => {
     const n = (name || '').toLowerCase().trim();
-    const keywords = ['instagram', 'facebook', 'discord', 'email', 'album', 'slack', 'tiktok', 'linktree', 'youtube'];
+    const keywords = ['instagram', 'facebook', 'discord', 'email', 'spotify', 'slack', 'tiktok', 'linktree', 'youtube'];
     return keywords.find(k => n === k) || 'default';
   };
 
-  const handleMoreLinks = () => {
-    if (window.innerWidth <= 500) {
-      setLinksModalOpen(true);
-    } else {
-      setLinksExpanded(prev => !prev);
-    }
-  };
+  const handleMoreLinks = () => setLinksExpanded(prev => !prev);
 
 
   const getPastelColor = (r, g, b) => {
@@ -79,6 +82,12 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
                     b + (255 - b) * 0.85 >= 240) ? 0.5 : 0.85;
     return `rgb(${Math.round(r + (255 - r) * factor)}, ${Math.round(g + (255 - g) * factor)}, ${Math.round(b + (255 - b) * factor)})`;
   };
+
+  useEffect(() => {
+    const onResize = () => setIsNarrow(window.innerWidth <= 500);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   useEffect(() => {
     const colorThief = new ColorThief();
@@ -226,56 +235,39 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
       {showHero && editing && imageWarning && <p className="module-warning">{imageWarning}</p>}
 
       {showHero && (
-      <>
       <div className="action-links-wrapper">
-        {actions}
-        {enabledLinks.length > 0 && (
-          <>
-            <span className="links-sep">|</span>
-            <div className="links-bar">
-              {enabledLinks.slice(0, 3).map((link, i) => (
-                <a
-                  key={link.id || i}
-                  className={`review-btn link-btn link-btn--${getLinkKeyword(link.name)}`}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {link.name}
-                </a>
-              ))}
-              {enabledLinks.length > 3 && (
-                <button className="review-btn link-btn links-toggle-btn" onClick={handleMoreLinks}>
-                  {linksExpanded ? 'Less' : 'More'}
-                </button>
-              )}
-            </div>
-          </>
-        )}
-        {editing && (
-          <LinksTable
-            links={links}
-            onChange={(next) => onChange({ ...data, links: next })}
-          />
-        )}
-      </div>
-
-      {linksExpanded && (
-        <div className="links-expanded-row">
-          {enabledLinks.slice(3).map((link, i) => (
-            <a
-              key={link.id || i}
-              className={`review-btn link-btn link-btn--${getLinkKeyword(link.name)}`}
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {link.name}
-            </a>
-          ))}
+        <div className="action-links-track">
+          {actions}
+          {linksDisplayed && enabledLinks.length > 0 && (
+            <>
+              <span className="links-sep">|</span>
+              <div className="links-bar">
+                {visibleLinks.map((link, i) => (
+                  <div className="duo-btn-wrap" key={link.id || i}>
+                    <div className="duo-btn-pill" aria-hidden="true" />
+                    <a
+                      className={`review-btn link-btn link-btn--${getLinkKeyword(link.name)}`}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {link.name}
+                    </a>
+                  </div>
+                ))}
+                {showMoreToggle && (
+                  <div className="duo-btn-wrap">
+                    <div className="duo-btn-pill" aria-hidden="true" />
+                    <button className="review-btn link-btn links-toggle-btn" onClick={handleMoreLinks}>
+                      {linksExpanded ? 'Less' : 'More'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
-      )}
-      </>
+      </div>
       )}
 
       {showAbout && (
@@ -326,7 +318,9 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
               </span>
             </button>
           )}
-  <p className = "tag">•</p>
+  {friendsInClub.length > 0 && topTags.length > 0 && (
+    <p className="tag tag-separator">•</p>
+  )}
           {topTags.length > 0 && (
             <div className="club-tag2">
               {topTags.map((tag) => (
@@ -369,6 +363,18 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
       {showAbout && descOpen && (
         <div className="desc-modal-overlay" onClick={() => setDescOpen(false)}>
           <div className="desc-modal" onClick={(e) => e.stopPropagation()}>
+            <img src={borderImg} alt="" className="desc-modal-border desc-modal-border-left" />
+            <img src={borderImg} alt="" className="desc-modal-border desc-modal-border-right" />
+            <div
+              className="desc-modal-border-h-wrap desc-modal-border-top-wrap"
+              style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+              aria-hidden="true"
+            />
+            <div
+              className="desc-modal-border-h-wrap desc-modal-border-bottom-wrap"
+              style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+              aria-hidden="true"
+            />
             <div className="desc-modal-header">
               <h3 className="desc-modal-title">{displayName}</h3>
               <button
@@ -440,31 +446,6 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
         </div>
       )}
 
-      {showHero && linksModalOpen && (
-        <div className="links-modal-overlay" onClick={() => setLinksModalOpen(false)}>
-          <div className="links-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="friends-modal-header">
-              <h3 className="friends-modal-title">All Links</h3>
-              <button className="friends-modal-close" onClick={() => setLinksModalOpen(false)}>
-                <FaTimes />
-              </button>
-            </div>
-            <div className="links-modal-grid">
-              {enabledLinks.map((link, i) => (
-                <a
-                  key={link.id || i}
-                  className={`review-btn link-btn link-btn--${getLinkKeyword(link.name)}`}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {link.name}
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

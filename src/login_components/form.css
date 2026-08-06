@@ -1,23 +1,92 @@
 form {
     display: grid;
-    gap: 12px;               /* controls spacing between all children */
+    gap: 20px;               /* controls spacing between all children */
     padding: 0px;
     position: relative;
 }
 
-form input {
-    width: 70vh;
-    padding: 8px 12px;
-    border: 3px solid rgb(102, 102, 102);
-    border-radius: 0;
-    color: black;
-    box-sizing: border-box;
+/* ===== Bordered input (ink-line SVG border, same assets as cm-poster / comment-card) ===== */
+.bordered-input-wrap {
+    position: relative;
+    width: min(70vh, 88vw);
     justify-self: center;    /* centers inputs in the grid */
 }
 
-form button {
-    width: 70vh;
-    padding: 8px 12px;
+.bordered-input {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    padding: 14px clamp(0px, 3vw, 12px);
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    color: black;
+    box-sizing: border-box;
+    outline: none;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(0.85rem, 3vw, 1rem);
+}
+
+.bordered-input:focus,
+.bordered-input:focus-visible {
+    outline: none;
+    box-shadow: none;
+}
+
+.bordered-input-border {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 6px;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.bordered-input-border-left {
+    left: -15px;
+    transform: scaleX(5);
+    transform-origin: left center;
+}
+
+.bordered-input-border-right {
+    right: -2px;
+    transform: scaleX(-5.0);
+    transform-origin: center;
+}
+
+.bordered-input-border-h-wrap {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-repeat: repeat-x;
+    background-position: left center;
+    background-size: auto 100%;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.bordered-input-border-top-wrap {
+    top: 0;
+}
+
+.bordered-input-border-bottom-wrap {
+    bottom: 0;
+}
+
+/* Darker gray by default; black variant fades in while the input is focused */
+.bordered-input-border--active {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.bordered-input:focus ~ .bordered-input-border--active {
+    opacity: 1;
+}
+
+form button:not(.toggle-auth-btn):not(.need-help-btn):not(.auth-submit-btn):not(.reset-submit-btn) {
+    width: min(70vh, 88vw);
+    padding: 14px clamp(0px, 3vw, 12px);
     border: 3px solid rgb(46, 120, 139);
 
     border-radius: 0;
@@ -26,28 +95,110 @@ form button {
     box-sizing: border-box;
     justify-self: center;
     margin-bottom: 2%;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(0.85rem, 3vw, 1rem);
+}
+
+/* ===== Row: Need help? — submit button — toggle/back link, spread across the same width the button used to fill ===== */
+.submit-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+    width: min(70vh, 88vw);
+    justify-self: center;
+    margin-bottom: 2%;
+}
+
+/* These links normally carry stand-alone vertical margins; strip them
+   here since .submit-row's own gap/alignment handles spacing instead */
+.submit-row .toggle-auth-btn,
+.submit-row .need-help-btn {
+    margin: 0;
+    flex: 0 0 auto;
+}
+
+/* ===== Login/signup submit — duo-btn style; grows to fill the space
+   left over by the two flanking links, so its horizontal padding
+   adapts to whatever room remains in the row ===== */
+.auth-submit-wrap {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.auth-submit-btn {
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+    background-color: rgb(46, 120, 139);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+/* Overrides .duo-btn's shared !important padding/font-size, just for this button —
+   padding shrinks toward 0 and text shrinks as the viewport narrows */
+.auth-submit-btn.duo-btn {
+    padding-top: 14px !important;
+    padding-bottom: 14px !important;
+    padding-left: clamp(0px, 3vw, 10px) !important;
+    padding-right: clamp(0px, 3vw, 10px) !important;
+    font-size: clamp(0.85rem, 4vw, 1.25rem) !important;
 }
 
 .name-row {
     display: flex;
     gap: 12px;
-    width: 70vh;
+    width: min(70vh, 88vw);
     justify-self: center;
 }
 
-.name-row input {
+.name-row .bordered-input-wrap {
     flex: 1;
     width: auto;
 }
 
 .username-field {
     position: relative;
-    width: 70vh;
+    width: min(70vh, 88vw);
     justify-self: center;
 }
 
-.username-field input {
+.username-field .bordered-input-wrap {
     width: 100%;
+}
+
+/* ===== Send Reset Link — same duo-btn treatment as the login/signup submit ===== */
+.reset-submit-wrap {
+    width: min(70vh, 88vw);
+    justify-self: center;
+    margin-bottom: 2%;
+}
+
+.reset-submit-btn {
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+    background-color: rgb(46, 120, 139);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.reset-submit-btn.duo-btn {
+    padding-top: 14px !important;
+    padding-bottom: 14px !important;
+    padding-left: clamp(0px, 3vw, 10px) !important;
+    padding-right: clamp(0px, 3vw, 10px) !important;
+    font-size: clamp(0.85rem, 4vw, 1.25rem) !important;
 }
 
 .username-ok {
@@ -96,6 +247,7 @@ form button {
     flex-direction: column;
     align-items: center;
     width: min(90vw, 480px);
+    font-family: 'Barlow Condensed', sans-serif;
 }
 
 .reset-card .raccoon {
@@ -106,7 +258,7 @@ form button {
 }
 
 .reset-card h2 {
-    font-family: "Be Vietnam Pro", sans-serif;
+    font-family: 'Barlow Condensed', sans-serif;
     font-size: 1.6rem;
     font-weight: 700;
     margin: 0.5rem 0 1rem;
@@ -122,7 +274,7 @@ form button {
     width: 100%;
 }
 
-.reset-card .input-field input,
+.reset-card .input-field .bordered-input-wrap,
 .reset-card .input-field button {
     width: 100%;
 }

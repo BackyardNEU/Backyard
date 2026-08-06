@@ -36,7 +36,7 @@ router.get('/rsvps', async (req, res) => {
     if (ids.length === 0) return res.json([]);
 
     const { data, error } = await supabaseAdmin
-        .from('event_rsvps')
+        .from('attendees')
         .select('user_id, event_id')
         .in('event_id', ids);
 
@@ -50,12 +50,12 @@ router.get('/rsvps', async (req, res) => {
 });
 
 // Server-side validation — the frontend does this too, but never trust it.
-function validateEvent(body) {
-    const { clubId, clubName, description, startTime, endTime } = body || {};
-    if (!clubId || !clubName || !description || !startTime || !endTime) {
-        return 'Missing required fields: clubId, clubName, description, startTime, endTime';
+function validateEventFields(body) {
+    const { description, startTime, endTime } = body || {};
+    if (!startTime || !endTime) {
+        return 'Missing required fields: startTime, endTime';
     }
-    if (description.length > 200) return 'Description must be 200 characters or fewer';
+    if (description && description.length > 200) return 'Description must be 200 characters or fewer';
 
     const start = new Date(startTime);
     const end = new Date(endTime);
@@ -67,6 +67,47 @@ function validateEvent(body) {
     return null;
 }
 
+function validateEvent(body) {
+    const { clubId, clubName } = body || {};
+    if (!clubId || !clubName) return 'Missing required fields: clubId, clubName';
+    return validateEventFields(body);
+}
+
+// Shared by PUT/DELETE — confirms the event exists and the current user is a
+// member of the club that owns it (same permission model as creating events:
+// any approved club editor, not just the original creator).
+async function requireClubMembershipForEvent(req, res) {
+    const { data: existing, error: fetchError } = await supabaseAdmin
+        .from('club_events')
+        .select('id_of_club')
+        .eq('id', req.params.eventId)
+        .single();
+
+    if (fetchError || !existing) {
+        res.status(404).json({ error: 'Event not found' });
+        return null;
+    }
+
+    const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('member_list')
+        .eq('id', req.user.id)
+        .single();
+
+    const memberList = profile?.member_list || [];
+    if (!memberList.includes(existing.id_of_club)) {
+        res.status(403).json({ error: 'You must be a member of this club to modify its events' });
+        return null;
+    }
+
+    return existing;
+}
+
+router.post('/', async (req, res) => {
+    const validationError = validateEvent(req.body);
+    if (validationError) return res.status(400).json({ error: validationError });
+
+    const { clubId, clubName, eventName, description, where, startTime, endTime, imageUrl, isMembersOnly } = req.body;
 router.post('/', checkMuted, async (req, res) => {
     const validationError = validateEvent(req.body);
     if (validationError) return res.status(400).json({ error: validationError });
@@ -95,8 +136,11 @@ router.post('/', checkMuted, async (req, res) => {
         event_description: description,
         start_time: startTime,
         end_time: endTime,
+        is_members_only: isMembersOnly === true,
     };
     if (imageUrl) insert.event_image_url = imageUrl;
+    if (eventName) insert.event_name = eventName;
+    if (where) insert.where = where;
 
     const { data, error } = await supabaseAdmin
         .from('club_events')
@@ -113,9 +157,63 @@ router.post('/', checkMuted, async (req, res) => {
     res.status(201).json(data);
 });
 
+router.put('/:eventId', async (req, res) => {
+    const validationError = validateEventFields(req.body);
+    if (validationError) return res.status(400).json({ error: validationError });
+
+    const existing = await requireClubMembershipForEvent(req, res);
+    if (!existing) return;
+
+    const { eventName, description, where, startTime, endTime, imageUrl, isMembersOnly } = req.body;
+
+    const update = {
+        event_description: description,
+        start_time: startTime,
+        end_time: endTime,
+        is_members_only: isMembersOnly === true,
+        event_image_url: imageUrl || null,
+        event_name: eventName || null,
+        where: where || null,
+    };
+
+    const { data, error } = await supabaseAdmin
+        .from('club_events')
+        .update(update)
+        .eq('id', req.params.eventId)
+        .select()
+        .single();
+
+    if (error) {
+        const err = new Error(error.message);
+        err.status = 502;
+        throw err;
+    }
+
+    res.json(data);
+});
+
+router.delete('/:eventId', async (req, res) => {
+    const existing = await requireClubMembershipForEvent(req, res);
+    if (!existing) return;
+
+    const { error } = await supabaseAdmin
+        .from('club_events')
+        .delete()
+        .eq('id', req.params.eventId);
+
+    if (error) {
+        const err = new Error(error.message);
+        err.status = 502;
+        throw err;
+    }
+
+    res.status(204).end();
+});
+
+router.post('/:eventId/rsvp', async (req, res) => {
 router.post('/:eventId/rsvp', checkMuted, async (req, res) => {
     const { error } = await supabaseAdmin
-        .from('event_rsvps')
+        .from('attendees')
         .upsert(
             { user_id: req.user.id, event_id: req.params.eventId },
             { onConflict: 'user_id,event_id', ignoreDuplicates: true }
@@ -132,7 +230,7 @@ router.post('/:eventId/rsvp', checkMuted, async (req, res) => {
 
 router.delete('/:eventId/rsvp', async (req, res) => {
     const { error } = await supabaseAdmin
-        .from('event_rsvps')
+        .from('attendees')
         .delete()
         .eq('user_id', req.user.id)
         .eq('event_id', req.params.eventId);

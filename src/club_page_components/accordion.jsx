@@ -11,12 +11,12 @@ import './accordion.css';
 
 export const MODULE_TITLES = {
   basic_info: 'About',
+  links: 'Links',
   club_media: 'Media',
   join: 'How to Join',
   faqs: 'FAQs',
   stats: 'Stats',
   member_roster: 'Members',
-  calendar: 'Events',
   comments: 'Comments',
 };
 
@@ -93,7 +93,6 @@ function SortableModule({
   children,
 }) {
   const isDisplayed = module.isDisplayed !== false;
-  const isEvents = module.type === 'calendar';
 
   const {
     attributes,
@@ -136,7 +135,7 @@ function SortableModule({
               onChange={onToggleDisplayed}
             />
             <span
-              className={`module-name ${!isDisplayed ? 'muted' : ''} ${isEvents ? 'events-emphasis' : ''}`}
+              className={`module-name ${!isDisplayed ? 'muted' : ''}`}
             >
               {title}
             </span>

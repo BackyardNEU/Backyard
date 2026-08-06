@@ -1,3 +1,7 @@
+import React, { useState, useRef, useLayoutEffect } from 'react';
+import { format, parseISO } from 'date-fns';
+import borderImg from '../assets/border.svg';
+import borderHorizontalImg from '../assets/border-horizontal.svg';
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   startOfDay, addDays, format, isSameDay, parseISO,
@@ -7,39 +11,54 @@ import { apiFetch } from '../lib/api';
 import { buildGoogleCalendarUrl, downloadIcsFile } from '../lib/calendarExport';
 import './CalendarModule.css';
 
-const WEEK_DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-
 /**
- * Calendar / Events module.
+ * Calendar / Events module — simplified "Coming Up" list. Read-only display
+ * (RSVP + lightbox) only — adding events lives in the separate, always-on-top
+ * AddEventPanel so the two can't be confused with each other.
  *
  * data shape: { filterByMembership: boolean }
- * @param {Object}   club          - club object (id used for monthly fetch)
+ * @param {Object}   club          - club record (used for its image_url, as a
+ *                                    poster placeholder for events with no image)
  * @param {Object}   data          - module data
- * @param {boolean}  editing       - page layout edit mode (shows filterByMembership toggle)
- * @param {boolean}  isApproved    - true for approved club owners; shows add-event form
+ * @param {boolean}  editing       - page edit mode
  * @param {Function} onChange      - (updatedData) => void
- * @param {string}   warning
- * @param {Array}    events        - weekly events fetched by ExpandedTile
+ * @param {string}   warning       - displays a warning for invalid fields not entered in by page editor
+ * @param {Array}    events        - upcoming events fetched by ExpandedTile, sorted by start_time
  * @param {Set}      myRsvpSet     - event IDs the current user has RSVPd to
  * @param {Map}      friendRsvpMap - event ID → [{ username, ... }]
  * @param {Function} onRsvp        - (eventId, isCurrentlyGoing) => void
- * @param {Function} onAddEvent    - ({ description, startTime, endTime, imageUrl }) => Promise<void>
  * @param {string}   userId        - null if not logged in
  */
 export function CalendarModule({
   club,
-  data,
   editing,
-  isApproved = false,
-  onChange,
   warning,
   events = [],
   myRsvpSet = new Set(),
   friendRsvpMap = new Map(),
   onRsvp,
-  onAddEvent,
   userId,
 }) {
+  const [overlayEvent, setOverlayEvent] = useState(null);
+  const [overlayHasMore, setOverlayHasMore] = useState(false);
+  const overlayScrollRef = useRef(null);
+  const overlayItemRefs = useRef({});
+
+  useLayoutEffect(() => {
+    if (!overlayEvent || !overlayScrollRef.current) return;
+    const el = overlayItemRefs.current[overlayEvent.id];
+    if (el) el.scrollIntoView({ block: 'start', behavior: 'instant' });
+    // check after scroll settles
+    const el2 = overlayScrollRef.current;
+    setTimeout(() => {
+      setOverlayHasMore(el2.scrollHeight - el2.scrollTop - el2.clientHeight > 10);
+    }, 50);
+  }, [overlayEvent]);
+
+  const handleOverlayScroll = () => {
+    const el = overlayScrollRef.current;
+    if (!el) return;
+    setOverlayHasMore(el.scrollHeight - el.scrollTop - el.clientHeight > 10);
   // ── view toggle ──────────────────────────────────────────────────────────
   const [viewMode, setViewMode] = useState('week');
 
@@ -259,90 +278,140 @@ export function CalendarModule({
     }
   };
 
-  const handleCancelForm = () => {
-    setShowForm(false);
-    setFormData({ description: '', date: '', startTime: '', endTime: '' });
-    setImageFile(null);
-    setImagePreview(null);
-    setFormWarning('');
-  };
+  // sorting events passed in through events prop by closest to current date
+  const sorted = [...events].sort((a, b) => parseISO(a.start_time) - parseISO(b.start_time));
 
-  // ── derived values ───────────────────────────────────────────────────────
-  const cells = getMonthGrid();
-  const selectedDayEvents = selectedDay ? (monthlyEventsByDay.get(selectedDay) || []) : [];
-  const monthDisplayDate = new Date(displayYear, displayMonth - 1, 1);
-
-  // form preview times
-  const previewStartTime = formData.date && formData.startTime
-    ? `${formData.date}T${formData.startTime}:00` : null;
-  const previewEndTime = formData.date && formData.endTime
-    ? `${formData.date}T${formData.endTime}:00` : null;
-  const previewImage = imagePreview || club?.logo_url || null;
-
-  // ── render ───────────────────────────────────────────────────────────────
+  // ── render ─────────────────────────────────────────────────────────────
   return (
     <div className="cal-module">
-      <p className="divider-header">Events</p>
+      <p className="divider-header">Coming Up</p>
       {editing && warning && <p className="module-warning">{warning}</p>}
 
-      {/* View toggle */}
-      <div className="cal-view-toggle">
-        <button
-          className={`cal-toggle-btn${viewMode === 'week' ? ' cal-toggle-active' : ''}`}
-          onClick={() => setViewMode('week')}
-        >
-          Week
-        </button>
-        <button
-          className={`cal-toggle-btn${viewMode === 'month' ? ' cal-toggle-active' : ''}`}
-          onClick={() => setViewMode('month')}
-        >
-          Month
-        </button>
-      </div>
+      {sorted.length === 0 ? (
+        <p className="cal-empty">No upcoming events.</p>
+      ) : (
+        <div className="cal-event-list">
+          {sorted.map((event) => {
+            const start = parseISO(event.start_time);
+            const end = parseISO(event.end_time);
+            const friends = friendRsvpMap.get(event.id);
+            const isGoing = myRsvpSet.has(event.id);
 
-      {/* ══ WEEKLY VIEW ═══════════════════════════════════════════════════ */}
-      {viewMode === 'week' && (
-        <>
-          <h1 className="current-month">{format(today, 'MMMM')}</h1>
-          <div
-            className="calendar-container"
-            ref={containerRef}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-          >
-            {weekDays.map((day) => (
-              <div key={day.date.toISOString()} className={`calendar-day${day.isToday ? ' today' : ''}`}>
-                <div className="day-title-number">
-                  <span>{day.label}</span>
-                  <span>{day.sublabel}</span>
+            return (
+              <div
+                key={event.id}
+                className="cal-event-item cal-event-item--clickable"
+                onClick={() => setOverlayEvent(event)}
+              >
+                <img src={borderImg} alt="" className="cal-event-item-border cal-event-item-border-left" />
+                <img src={borderImg} alt="" className="cal-event-item-border cal-event-item-border-right" />
+                <div
+                  className="cal-event-item-border-h cal-event-item-border-h-top"
+                  style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+                />
+                <div
+                  className="cal-event-item-border-h cal-event-item-border-h-bottom"
+                  style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+                />
+                <img
+                  className="cal-event-img"
+                  src={event.event_image_url || club?.image_url || '/raccoon_pfp.png'}
+                  alt=""
+                />
+                <div className="cal-event-body">
+                  <p className="cal-event-date">{format(start, 'EEE, MMM d').toUpperCase()}</p>
+                  <p className="cal-event-time">
+                    {format(start, 'h:mm a')} – {format(end, 'h:mm a')}
+                  </p>
+                  <p className="cal-event-desc">{event.event_description}</p>
+                  {event.is_members_only && (
+                    <span className="cal-members-badge">Members only</span>
+                  )}
+                  {friends && friends.length > 0 && (
+                    <p className="friend-rsvp-callout">
+                      {friends.length === 1
+                        ? `${friends[0].username} is going`
+                        : `${friends[0].username} and ${friends.length - 1} ${friends.length - 1 === 1 ? 'other' : 'others'} you know are going`}
+                    </p>
+                  )}
+                  {userId && (
+                    <button
+                      className={`rsvp-button${isGoing ? ' rsvp-going' : ''}`}
+                      onClick={(e) => { e.stopPropagation(); onRsvp?.(event.id, isGoing); }}
+                    >
+                      {isGoing ? 'Going ✓' : "I'm going!"}
+                    </button>
+                  )}
                 </div>
-                {day.events.length === 0 ? (
-                  <p>No events</p>
-                ) : (
-                  day.events.map((event) => (
-                    <div key={event.id} className="calendar-event">
-                      {event.event_image_url && (
-                        <img className="club-img" src={event.event_image_url} alt="" />
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Event lightbox overlay — scrollable portrait stack */}
+      {overlayEvent && (
+        <div
+          className="cal-overlay-backdrop"
+          onClick={() => setOverlayEvent(null)}
+        >
+          <div
+            className="cal-overlay-portrait"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="cal-overlay-close"
+              onClick={() => setOverlayEvent(null)}
+              aria-label="Close"
+            >✕</button>
+
+            {overlayHasMore && (
+              <div className="cal-overlay-more-arrow" aria-hidden="true">&#8964;</div>
+            )}
+            <div className="cal-portrait-scroll" ref={overlayScrollRef} onScroll={handleOverlayScroll}>
+              {sorted.map((ev) => {
+                const evStart = parseISO(ev.start_time);
+                const evEnd = parseISO(ev.end_time);
+                const evIsGoing = myRsvpSet.has(ev.id);
+                const evFriends = friendRsvpMap.get(ev.id);
+                return (
+                  <div
+                    key={ev.id}
+                    className="cal-portrait-event"
+                    ref={(el) => { overlayItemRefs.current[ev.id] = el; }}
+                  >
+                    {ev.event_image_url ? (
+                      <div className="cal-portrait-img-wrap">
+                        <img className="cal-portrait-img" src={ev.event_image_url} alt="" />
+                      </div>
+                    ) : null}
+                    <div className="cal-portrait-info">
+                      <p className="cal-overlay-date-line">
+                        {format(evStart, 'EEEE, MMMM d')}
+                      </p>
+                      <p className="cal-overlay-time">
+                        {format(evStart, 'h:mm a')} – {format(evEnd, 'h:mm a')}
+                      </p>
+                      <p className="cal-overlay-desc">{ev.event_description}</p>
+                      {ev.is_members_only && (
+                        <span className="cal-members-badge">Members only</span>
                       )}
-                      <div className="club-name">{event.club_name}</div>
-                      <div className="event-description">
-                        <p>about<span className="club-info">{event.event_description}</span></p>
-                      </div>
-                      <div>
-                        <span>time </span>
-                        <span className="club-info">
-                          {format(parseISO(event.start_time), 'h:mm a')} – {format(parseISO(event.end_time), 'h:mm a')}
-                        </span>
-                      </div>
+                      {evFriends && evFriends.length > 0 && (
+                        <p className="friend-rsvp-callout">
+                          {evFriends.length === 1
+                            ? `${evFriends[0].username} is going`
+                            : `${evFriends[0].username} and ${evFriends.length - 1} ${evFriends.length - 1 === 1 ? 'other' : 'others'} you know are going`}
+                        </p>
+                      )}
                       {userId && (
                         <button
-                          className="rsvp-button"
-                          onClick={() => onRsvp?.(event.id, myRsvpSet.has(event.id))}
+                          className={`rsvp-button${evIsGoing ? ' rsvp-going' : ''}`}
+                          onClick={() => onRsvp?.(ev.id, evIsGoing)}
                         >
-                          {myRsvpSet.has(event.id) ? 'Going ✓' : "I'm going!"}
+                          {evIsGoing ? 'Going ✓' : "I'm going!"}
                         </button>
                       )}
+                    </div>
                       <div className="cal-export-row">
                         <a
                           href={buildGoogleCalendarUrl(event)}
@@ -476,173 +545,10 @@ export function CalendarModule({
                       </button>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
-        </div>
-      )}
-
-      {/* ══ EDIT SETTINGS ═════════════════════════════════════════════════ */}
-      {editing && (
-        <div className="cal-edit-section">
-          <label className="cal-toggle-label">
-            <input
-              type="checkbox"
-              checked={data?.filterByMembership ?? false}
-              onChange={(e) => onChange?.({ ...data, filterByMembership: e.target.checked })}
-            />
-            {' '}Restrict members-only events to club members
-          </label>
-        </div>
-      )}
-
-      {/* ══ ADD EVENT ═════════════════════════════════════════════════════ */}
-      {isApproved && (
-        <div className="cal-add-event-section">
-          {!showForm && (
-            <button className="cal-add-btn" onClick={() => setShowForm(true)}>＋ Add Event</button>
-          )}
-          {showForm && (
-            <div className="cal-form">
-              <p className="cal-form-title">New Event</p>
-
-              <label className="cal-label">
-                Description *
-                <div>
-                  <textarea
-                    className="cal-input cal-textarea"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleFormChange}
-                    placeholder="What's happening?"
-                    maxLength={200}
-                    rows={3}
-                  />
-                  <div className="char-counter-wrap">
-                    <span className="char-counter">{formData.description.length}/200</span>
-                  </div>
-                </div>
-              </label>
-
-              <label className="cal-label">
-                Date *
-                <input
-                  className="cal-input"
-                  type="date"
-                  name="date"
-                  value={formData.date}
-                  onChange={handleFormChange}
-                />
-              </label>
-
-              <div className="cal-time-row">
-                <label className="cal-label">
-                  Start time *
-                  <input
-                    className="cal-input"
-                    type="time"
-                    name="startTime"
-                    value={formData.startTime}
-                    onChange={handleFormChange}
-                  />
-                </label>
-                <label className="cal-label">
-                  End time *
-                  <input
-                    className="cal-input"
-                    type="time"
-                    name="endTime"
-                    value={formData.endTime}
-                    onChange={handleFormChange}
-                  />
-                </label>
-              </div>
-
-              <div className="cal-label">
-                Event image (optional)
-                <p className="cal-image-hint">For the best display, use a portrait-style image — 3:4 ratio or 750 × 1,000 px</p>
-                <div
-                  className="cal-image-trigger"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => imageInputRef.current?.click()}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      imageInputRef.current?.click();
-                    }
-                  }}
-                >
-                  {imageFile ? `✓ ${imageFile.name}` : 'Click to upload image'}
-                  <input
-                    ref={imageInputRef}
-                    type="file"
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    onChange={handleImageChange}
-                  />
-                </div>
-              </div>
-
-              {/* ── Live previews ─────────────────────────────────────── */}
-              {imagePreview && (
-                <div className="cal-preview-section">
-                  <p className="cal-preview-title">Previews</p>
-
-                  {/* Week view card */}
-                  <div className="cal-preview-element">
-                    <p className="cal-preview-label">Week view</p>
-                    <div className="calendar-event cal-preview-week-card">
-                      <img className="club-img" src={imagePreview} alt="" />
-                      <div className="club-name">{club?.name || 'Your Club'}</div>
-                      <div className="event-description">
-                        <p>about<span className="club-info">{formData.description || '…'}</span></p>
-                      </div>
-                      {previewStartTime && previewEndTime && (
-                        <div>
-                          <span>time </span>
-                          <span className="club-info">
-                            {format(new Date(previewStartTime), 'h:mm a')} – {format(new Date(previewEndTime), 'h:mm a')}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Month overlay portrait card */}
-                  <div className="cal-preview-element">
-                    <p className="cal-preview-label">Month view</p>
-                    <div className="cal-portrait-preview">
-                      <div className="cal-portrait-img-wrap">
-                        <img src={imagePreview} alt="Event" className="cal-portrait-img" />
-                      </div>
-                      <div className="cal-portrait-info">
-                        <p className="cal-overlay-desc">{formData.description || '…'}</p>
-                        {previewStartTime && previewEndTime && (
-                          <p className="cal-overlay-time">
-                            {format(new Date(previewStartTime), 'h:mm a')} –{' '}
-                            {format(new Date(previewEndTime), 'h:mm a')}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {formWarning && <p className="cal-form-warning">{formWarning}</p>}
-
-              <div className="cal-form-actions">
-                <button className="cal-cancel-btn" onClick={handleCancelForm} disabled={isSubmitting}>
-                  Cancel
-                </button>
-                <button className="cal-submit-btn" onClick={handleSubmit} disabled={isSubmitting}>
-                  {isSubmitting ? 'Adding...' : 'Add Event'}
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>

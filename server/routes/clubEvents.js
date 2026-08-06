@@ -102,6 +102,48 @@ router.get('/:clubId/events', optionalAuth, async (req, res) => {
   res.json(data || []);
 });
 
+// GET /api/clubs/:clubId/events/upcoming
+// Returns all events today or in the future for the given club, sorted by start_time.
+// Optional auth — members also see members-only events.
+router.get('/:clubId/events/upcoming', optionalAuth, async (req, res) => {
+  const { clubId } = req.params;
+
+  let isMember = false;
+  if (req.user) {
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('member_list')
+      .eq('id', req.user.id)
+      .single();
+    isMember = (profile?.member_list || []).includes(clubId);
+  }
+
+  // Start of today in UTC so events happening today are included even if start_time has passed
+  const todayUtc = new Date();
+  todayUtc.setUTCHours(0, 0, 0, 0);
+
+  let query = supabaseAdmin
+    .from('club_events')
+    .select('*')
+    .eq('id_of_club', clubId)
+    .gte('start_time', todayUtc.toISOString())
+    .order('start_time', { ascending: true });
+
+  if (!isMember) {
+    query = query.or('is_members_only.is.null,is_members_only.eq.false');
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    const err = new Error(error.message);
+    err.status = 502;
+    throw err;
+  }
+
+  res.json(data || []);
+});
+
 // GET /api/clubs/:clubId/events/rsvps?eventIds=a,b,c
 // Returns all RSVPs for the given event IDs (used for friend callouts).
 router.get('/:clubId/events/rsvps', async (req, res) => {

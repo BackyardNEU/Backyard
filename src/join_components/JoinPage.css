@@ -1,0 +1,115 @@
+.join-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f7f7f7;
+  padding: 2rem 1rem;
+}
+
+.join-card {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  padding: 2.5rem 2rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.join-club-logo {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e0e0e0;
+  margin-bottom: 0.25rem;
+}
+
+.join-card h2 {
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  text-align: center;
+}
+
+.join-subtitle {
+  color: #666;
+  font-size: 0.95rem;
+  text-align: center;
+  margin: 0 0 0.5rem;
+}
+
+.join-confirm-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background: #2d2d2d;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background 0.15s;
+}
+
+.join-confirm-btn:hover:not(:disabled) {
+  background: #111;
+}
+
+.join-confirm-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.join-home-btn {
+  padding: 0.65rem 1.5rem;
+  background: #2d2d2d;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: "Be Vietnam Pro", sans-serif;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background 0.15s;
+}
+
+.join-home-btn:hover {
+  background: #111;
+}
+
+.join-error {
+  color: #c0392b;
+  font-size: 0.88rem;
+  text-align: center;
+  margin: 0;
+}
+
+.join-loading {
+  color: #888;
+  font-size: 1rem;
+}
+
+.join-card--error h2 {
+  color: #c0392b;
+}
+
+.join-card--success h2 {
+  color: #27ae60;
+}
+
+/* Reuse shared auth styles from LoginMorph.css for oauth-btn, auth-divider, toggle-auth-btn */
+.join-card .oauth-btn {
+  width: 100%;
+}
+
+.join-card .auth-divider {
+  width: 100%;
+}

@@ -1,0 +1,482 @@
+.add-event-panel {
+  width: 100%;
+  padding-left: 0.3rem;
+  margin-bottom: 24px;
+}
+
+@media (min-width: 501px) {
+  .add-event-panel {
+    padding-left: 1.5%;
+  }
+}
+
+/* New-event slot + existing-event cards, side by side */
+.add-event-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+/* Edit/delete controls overlaid on the top-right corner of an existing
+   event's card — same pill treatment as the poster upload's scale/remove
+   buttons, just positioned absolutely instead of in a toolbar row */
+.add-event-card-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 6px;
+  z-index: 3;
+}
+
+.add-event-card-actions .cal-image-scale-btn,
+.add-event-card-actions .cal-image-remove-btn {
+  background: rgba(46, 64, 100);
+}
+
+/* An existing event's read-only card — sits inside a .cal-add-slot (same as
+   the new-event button) so it can morph into the shared .cal-form when its
+   own EDIT button is clicked. Deliberately its own class (not .cal-event-item
+   from CalendarModule.css) since this card supports a behavior — turning into
+   a form — that the read-only "Coming Up" card never needs. */
+.add-event-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  background: #fff;
+  overflow: hidden;
+  padding: 12px;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.add-event-card-border {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: auto;
+  pointer-events: none;
+  z-index: 2;
+}
+.add-event-card-border-left {
+  left: 0;
+  transform: scaleX(0.5);
+  transform-origin: left center;
+}
+.add-event-card-border-right {
+  right: -1px;
+  transform: scaleX(-0.5);
+  transform-origin: center;
+}
+.add-event-card-border-h {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2.5px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  background-size: auto 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+.add-event-card-border-h-top { top: 0; }
+.add-event-card-border-h-bottom { bottom: 0; }
+
+.add-event-card-img {
+  width: calc(100% + 24px);
+  margin: 0;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  display: block;
+}
+
+/* Fallback (club logo / default avatar) is square — keep it square instead
+   of stretching/cropping it to the 3:4 poster ratio. */
+.add-event-card-img--default {
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+}
+
+.add-event-card-body {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.add-event-card-date {
+  font-size: 11px;
+  font-weight: 700;
+  color: #888;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+.add-event-card-time {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2b3440;
+  margin: 0;
+}
+
+.add-event-card-desc {
+  font-size: 14px;
+  color: #444;
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* Shared row slot for the add-btn <-> cal-form swap. Collapsed height matches
+   the button (450px); expanded height is set inline from the form's measured
+   scrollHeight — same max-height transition technique as the comment card's
+   More/Less, itself derived from the module accordion's grid-rows trick. */
+.cal-add-slot {
+  flex: 0 0 auto;
+  width: 300px;
+  /* Collapsed resting height — must fit the tallest collapsed content: the
+     fixed-450px add-button, or an existing-event card (image + date/time/desc
+     + optional members-badge/friend-callout + the RSVP button). */
+  max-height: 620px;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.cal-add-btn {
+  position: relative;
+  width: 300px;
+  height: 450px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background-image: var(--cal-add-btn-bg);
+  background-size: cover;
+  background-position: center;
+  animation: fadeIn 0.3s ease;
+}
+.cal-add-btn:hover {
+  background-image: var(--cal-add-btn-bg-hover);
+}
+
+/* Ink-line border overlay (same assets/technique as .comment-border on the
+   review comment cards) — "black svg borders" per spec, not a plain CSS border */
+.cal-add-btn-border {
+  position: absolute;
+  top: -2px;
+  height: 100%;
+  width: auto;
+  pointer-events: none;
+}
+.cal-add-btn-border-left {
+  left: -2px;
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+.cal-add-btn-border-right {
+  right: -2px;
+  transform: scaleX(-1);
+  transform-origin: center;
+}
+.cal-add-btn-border-h {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  background-size: auto 100%;
+  pointer-events: none;
+}
+.cal-add-btn-border-h-top { top: 0; }
+.cal-add-btn-border-h-bottom { bottom: 0; }
+
+/* ===== ADD EVENT FORM ===== */
+.cal-form {
+  position: relative;
+  width: 300px;
+  background: #2e4064;
+  padding: 15px 7px;
+  color: #ECE7E5;
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Grain texture — same noise data-uri as .duo-btn::before */
+.cal-form::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='1' stitchTiles='stitch'/%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.19'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+/* Ink-line border overlay (same assets/technique as .cal-add-btn-border) —
+   replaces the plain white CSS border */
+.cal-form-border {
+  position: absolute;
+  top: -1px;
+  height: 100%;
+  width: auto;
+  pointer-events: none;
+  z-index: 2;
+}
+.cal-form-border-left {
+  left: -2px;
+  transform: scaleX(0.75);
+  transform-origin: left center;
+}
+.cal-form-border-right {
+  right: -2px;
+  transform: scaleX(-0.75);
+  transform-origin: center;
+}
+.cal-form-border-h {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  background-size: auto 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+.cal-form-border-h-top { top: 0; }
+.cal-form-border-h-bottom { bottom: 0; }
+
+.cal-form-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 14px;
+}
+
+.cal-form-close-btn {
+  background: none;
+  border: none;
+  color: #ECE7E5;
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* Sits above the upload tile — same layout idea as .comment-carousel-toolbar */
+.cal-image-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.cal-image-scale-btn,
+.cal-image-remove-btn {
+  border-radius: 8px;
+  border: 1px solid #ECE7E5;
+  background: transparent;
+  color: #ECE7E5;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-family: 'Barlow Condensed', sans-serif;
+  padding: 4px 12px;
+  line-height: 1;
+}
+
+.cal-image-scale-btn:hover,
+.cal-image-remove-btn:hover {
+  background: rgba(236, 231, 229);
+}
+
+.cal-image-scale-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.cal-image-trigger {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border: 2px solid #ECE7E5;
+  background: rgba(236, 231, 229, 0.18);
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+/* Grain texture — same noise data-uri as .duo-btn::before */
+.cal-image-trigger::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='1' stitchTiles='stitch'/%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.19'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+.cal-poster-placeholder-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.cal-poster-placeholder {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.cal-poster-plus {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 4rem;
+  line-height: 1;
+  color: #ECE7E5;
+  pointer-events: none;
+}
+
+.cal-poster-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cal-divider {
+  border-top: 3px dashed rgba(236, 231, 229, 0.8);
+  margin-bottom: 18px;
+}
+
+.cal-input {
+  width: 100%;
+  height: 42px;
+  margin-bottom: 14px;
+  padding: 0 14px;
+  background: transparent;
+  border: 2px solid #ECE7E5;
+  color: #ECE7E5;
+  font-size: 14px;
+  font-family: 'Barlow Condensed', sans-serif;
+  outline: none;
+  color-scheme: dark;
+}
+.cal-input::placeholder {
+  font-family: 'Barlow Condensed', sans-serif;
+  color: #ECE7E5;
+  opacity: 0.9;
+}
+
+/* Start/End datetime fields — the label sits inside the same bordered box,
+   before the native mm/dd/yyyy control (datetime-local ignores placeholder) */
+.cal-datetime-field {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  height: 42px;
+  margin-bottom: 14px;
+  padding: 0 14px;
+  background: transparent;
+  border: 2px solid #ECE7E5;
+}
+
+.cal-datetime-label {
+  flex-shrink: 0;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  color: #ECE7E5;
+}
+
+.cal-datetime-field .cal-input {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  height: auto;
+  margin-bottom: 0;
+  padding: 0;
+  border: none;
+}
+
+.cal-form-warning {
+  color: #ECE7E5;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.cal-form-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.cal-members-only-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  color: #ECE7E5;
+  font-size: 15px;
+}
+
+.cal-members-only-label input {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: 2px solid #ECE7E5;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.cal-members-only-label input:checked::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: -1px;
+  width: 4px;
+  height: 9px;
+  border: solid #ECE7E5;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.cal-submit-wrap {
+  flex: 1;
+}
+
+.cal-submit-btn {
+  width: 100%;
+  box-sizing: border-box;
+  height: 40px;
+  border: none;
+  border-radius: 10px;
+  background: #ECE7E5;
+  color: #2e4064;
+  font-size: 18px;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-weight: 500;
+}
+.cal-submit-btn:hover:not(:disabled) {
+  background: #fff;
+}
+.cal-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

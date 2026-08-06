@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { sanitizeBioHtml } from '../lib/sanitizeHtml';
 import './JoinModule.css';
+import borderBlackImg from '/src/assets/border.svg';
+import borderHorizontalBlackImg from '/src/assets/border-horizontal.svg';
 
 /**
  * Join module — lets a club advertise recruiting info.
@@ -82,26 +84,34 @@ function JoinModule({ data, editing, onChange, warning }) {
       {(applicationLink || contactLink) && (
         <div className="join-actions">
           {applicationLink && (
-            <a
-              className="apply-link-btn"
-              href={applicationLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={editing ? (e) => e.preventDefault() : undefined}
-            >
-              Apply
-            </a>
+            <div className="duo-btn-wrap">
+              <div className="duo-btn-pill" aria-hidden="true" />
+              <a
+                className="apply-link-btn duo-btn"
+                style={{ '--duo-shadow': 'rgb(52, 32, 0)' }}
+                href={applicationLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={editing ? (e) => e.preventDefault() : undefined}
+              >
+                Apply
+              </a>
+            </div>
           )}
           {contactLink && (
-            <a
-              className="contact-link-btn"
-              href={contactLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={editing ? (e) => e.preventDefault() : undefined}
-            >
-              Contact recruiter
-            </a>
+            <div className="duo-btn-wrap">
+              <div className="duo-btn-pill" aria-hidden="true" />
+              <a
+                className="contact-link-btn duo-btn"
+                style={{ '--duo-shadow': 'rgb(30, 85, 125)' }}
+                href={contactLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={editing ? (e) => e.preventDefault() : undefined}
+              >
+                Contact recruiter
+              </a>
+            </div>
           )}
         </div>
       )}
@@ -112,6 +122,18 @@ function JoinModule({ data, editing, onChange, warning }) {
           <div className="join-card-row">
             {tabs.map((t, idx) => (
               <div className="join-tab-card" key={idx}>
+                <img src={borderBlackImg} alt="" className="join-tab-border join-tab-border-left" />
+                <img src={borderBlackImg} alt="" className="join-tab-border join-tab-border-right" />
+                <div
+                  className="join-tab-border-h-wrap join-tab-border-top-wrap"
+                  style={{ backgroundImage: `url(${borderHorizontalBlackImg})` }}
+                  aria-hidden="true"
+                />
+                <div
+                  className="join-tab-border-h-wrap join-tab-border-bottom-wrap"
+                  style={{ backgroundImage: `url(${borderHorizontalBlackImg})` }}
+                  aria-hidden="true"
+                />
                 <button
                   className="join-tab-remove-btn"
                   onClick={() => removeTab(idx)}
@@ -134,6 +156,18 @@ function JoinModule({ data, editing, onChange, warning }) {
               </div>
             ))}
             <button className="join-add-card" onClick={addTab} aria-label="Add a tab">
+              <img src={borderBlackImg} alt="" className="join-add-card-border join-add-card-border-left" />
+              <img src={borderBlackImg} alt="" className="join-add-card-border join-add-card-border-right" />
+              <div
+                className="join-add-card-border-h-wrap join-add-card-border-top-wrap"
+                style={{ backgroundImage: `url(${borderHorizontalBlackImg})` }}
+                aria-hidden="true"
+              />
+              <div
+                className="join-add-card-border-h-wrap join-add-card-border-bottom-wrap"
+                style={{ backgroundImage: `url(${borderHorizontalBlackImg})` }}
+                aria-hidden="true"
+              />
               +
             </button>
           </div>

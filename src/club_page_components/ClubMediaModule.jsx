@@ -4,6 +4,10 @@ import FeatheredBlob from './FeatheredBlob';
 import { apiFetch } from '../lib/api';
 import { uploadVideo } from '../lib/uploadVideo';
 import './ClubMediaModule.css';
+import borderImg from '/src/assets/border-green.svg';
+import borderHorizontalImg from '/src/assets/border-horizontal-green.svg';
+import borderBlackImg from '/src/assets/border.svg';
+import borderHorizontalBlackImg from '/src/assets/border-horizontal.svg';
 
 const REVEAL_MS = 1600;
 const MAX_VIDEO_SECONDS = 15;
@@ -147,7 +151,21 @@ function ClubMediaModule({ data, editing, onChange, warning }) {
         ))}
 
         {editing && (
-          <button className="cm-add-poster" onClick={addPoster} aria-label="Add poster">+</button>
+          <button className="cm-add-poster" onClick={addPoster} aria-label="Add poster">
+            <img src={borderBlackImg} alt="" className="cm-add-poster-border cm-add-poster-border-left" />
+            <img src={borderBlackImg} alt="" className="cm-add-poster-border cm-add-poster-border-right" />
+            <div
+              className="cm-add-poster-border-h-wrap cm-add-poster-border-top-wrap"
+              style={{ backgroundImage: `url(${borderHorizontalBlackImg})` }}
+              aria-hidden="true"
+            />
+            <div
+              className="cm-add-poster-border-h-wrap cm-add-poster-border-bottom-wrap"
+              style={{ backgroundImage: `url(${borderHorizontalBlackImg})` }}
+              aria-hidden="true"
+            />
+            +
+          </button>
         )}
       </div>
 
@@ -240,6 +258,19 @@ function PosterCard({ poster, editing, rank, count, onOpen, isPosterOpen, onUpda
         className={`cm-poster-card ${editing ? 'cm-poster-card--editing' : ''}`}
         style={{ background: poster.poster_color || '#1e2630' }}
       >
+        <img src={borderImg} alt="" className="cm-poster-border cm-poster-border-left" />
+        <img src={borderImg} alt="" className="cm-poster-border cm-poster-border-right" />
+        <div
+          className="cm-poster-border-h-wrap cm-poster-border-top-wrap"
+          style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+          aria-hidden="true"
+        />
+        <div
+          className="cm-poster-border-h-wrap cm-poster-border-bottom-wrap"
+          style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+          aria-hidden="true"
+        />
+
         {editing && (
           <button
             className="cm-poster-delete"
@@ -292,6 +323,19 @@ function PosterCard({ poster, editing, rank, count, onOpen, isPosterOpen, onUpda
 
       {editing && (
         <div className="cm-poster-edit">
+          <img src={borderBlackImg} alt="" className="cm-edit-border cm-edit-border-left" />
+          <img src={borderBlackImg} alt="" className="cm-edit-border cm-edit-border-right" />
+          <div
+            className="cm-edit-border-h-wrap cm-edit-border-top-wrap"
+            style={{ backgroundImage: `url(${borderHorizontalBlackImg})` }}
+            aria-hidden="true"
+          />
+          <div
+            className="cm-edit-border-h-wrap cm-edit-border-bottom-wrap"
+            style={{ backgroundImage: `url(${borderHorizontalBlackImg})` }}
+            aria-hidden="true"
+          />
+
           <div className="cm-edit-hint">click poster to edit content</div>
 
           <div className="cm-row">
@@ -392,10 +436,23 @@ function PosterModal({ poster, editing, revealing, onClose, onUpdate, onWarning 
     >
       <div className="cm-modal-card">
         <div className={`cm-modal${revealCls}`} onClick={(e) => e.stopPropagation()}>
-          <button type="button" className="cm-modal-close" onClick={onClose} aria-label="Close">×</button>
+          <img src={borderImg} alt="" className="cm-modal-border cm-modal-border-left" />
+          <img src={borderImg} alt="" className="cm-modal-border cm-modal-border-right" />
+          <div
+            className="cm-modal-border-h-wrap cm-modal-border-top-wrap"
+            style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+            aria-hidden="true"
+          />
+          <div
+            className="cm-modal-border-h-wrap cm-modal-border-bottom-wrap"
+            style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+            aria-hidden="true"
+          />
+
+          <button type="button" className="cm-modal-close" onClick={onClose} aria-label="Close">X</button>
 
           <div className="cm-modal-header">
-            <span className="cm-modal-title" style={{ color: poster.poster_color || '#2c1b2b' }}>
+            <span className="cm-modal-title" style={{ color: poster.poster_text_color || '#fff' }}>
               {poster.poster_text || 'Untitled'}
             </span>
           </div>
@@ -504,13 +561,34 @@ function BlockAdder({ onAdd, onWarning }) {
   if (!open) {
     return (
       <div className="cm-block-adder">
-        <button className="cm-add-btn" onClick={() => setOpen(true)}>+ Add</button>
+        <div className="duo-btn-wrap">
+          <div className="duo-btn-pill" aria-hidden="true" />
+          <button
+            className="cm-add-btn duo-btn"
+            style={{ '--duo-shadow': '#1c2a44' }}
+            onClick={() => setOpen(true)}
+          >
+            + Add
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="cm-block-adder cm-add-menu">
+      <img src={borderBlackImg} alt="" className="cm-add-menu-border cm-add-menu-border-left" />
+      <img src={borderBlackImg} alt="" className="cm-add-menu-border cm-add-menu-border-right" />
+      <div
+        className="cm-add-menu-border-h-wrap cm-add-menu-border-top-wrap"
+        style={{ backgroundImage: `url(${borderHorizontalBlackImg})` }}
+        aria-hidden="true"
+      />
+      <div
+        className="cm-add-menu-border-h-wrap cm-add-menu-border-bottom-wrap"
+        style={{ backgroundImage: `url(${borderHorizontalBlackImg})` }}
+        aria-hidden="true"
+      />
       <button onClick={() => { onAdd({ type: 'title', value: '' }); setOpen(false); }}>Title</button>
       <button onClick={() => { onAdd({ type: 'text', value: '' }); setOpen(false); }}>Text</button>
       <label className="cm-add-upload">

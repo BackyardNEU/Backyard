@@ -1,0 +1,38 @@
+.invite-generate-btn,
+.invite-copy-btn {
+  background: #2e4064;
+  color: #Ece7e5;
+}
+
+.invite-revoke-btn {
+  background: rgb(180, 40, 40);
+  color: #fff;
+}
+
+.invite-generate-btn:disabled,
+.invite-copy-btn:disabled,
+.invite-revoke-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Standalone "Link revoked" confirmation — holds fully visible (no animation
+   running at all) for 1s, then fades itself out over the next 1s, ending
+   right as the matching 2s JS timeout unmounts it. */
+.invite-revoked-fade {
+  opacity: 1;
+  animation: inviteRevokedFade 1s ease 1s forwards;
+  pointer-events: none;
+}
+
+@keyframes inviteRevokedFade {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.invite-error {
+  font-size: 0.8rem;
+  color: #c0392b;
+  margin: 0;
+  font-family: "Be Vietnam Pro", sans-serif;
+}

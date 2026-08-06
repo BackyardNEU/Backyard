@@ -15,9 +15,9 @@
 /* Stats bar rows (kept for ReviewPage) */
 .range-row { display: flex; flex-direction: column; align-items: flex-start; align-self: flex-start; gap: 10px; width: 70vw; margin-bottom: 8px; }
 .range-label { width: 120px; font-family: "Barlow Condensed", sans-serif; font-size: 1.2rem; flex-shrink: 0; text-transform: uppercase; }
-.range-bar-container { width: 100%; height: 23px; border-radius: 20px; box-shadow: 0 0 0 1px #adadad; overflow: hidden; }
-.range-bar-fill { height: 100%; border-radius: 20px; border: 3px solid rgb(255,255,255); }
-.range-bar-partial {  height: 100%; border-radius: 20px 10px 10px 20px; border: 3px solid rgb(255,255,255); }
+.range-bar-container { width: 100%; height: 23px; border-radius: 8px; box-shadow: 0 0 0 1px #adadad; overflow: hidden; }
+.range-bar-fill { height: 100%; border-radius: 10px; border: 3px solid rgb(255,255,255); }
+.range-bar-partial {  height: 100%; border-radius: 10px 10px 10px 10px; border: 3px solid rgb(255,255,255); }
 .range-value { width: 10px; font-size: 14px; flex-shrink: 0; }
 
 /* ===== Tabs ===== */
@@ -58,13 +58,13 @@
     border-radius: 4px;
 }
 
-/* ===== Comment card — no border/overflow; SVG handles the border ===== */
+/* ===== Comment card — square corners; ink-line SVG assets draw the border ===== */
 .comment-card {
     position: relative;
     width: 300px;
     flex-shrink: 0;
     scroll-snap-align: start;
-    border-radius: 10px;
+    border-radius: 0;
     background: #FFFDFB;
     display: flex;
     flex-direction: column;
@@ -72,30 +72,49 @@
 
 .comment-card--hidden {
     opacity: 0.10;
-    
+
 }
 
-/* ===== SVG border overlay ===== */
-.comment-border-svg {
+/* ===== Ink-line border (same assets as cm-poster) ===== */
+.comment-border {
     position: absolute;
-    inset: 0;
-    width: 100%;
+    top: 0;
     height: 100%;
-    overflow: visible;
+    width: auto;
     pointer-events: none;
+    z-index: 5;
 }
 
-.comment-border-svg path {
-    fill: none;
-    stroke: #3A201F;;
-    stroke-width: 1;
-    vector-effect: non-scaling-stroke;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+.comment-border-left {
+    left: 0;
+    transform: scaleX(0.5);
+    transform-origin: left center;
 }
 
-.comment-border-svg path.divider-line {
-    stroke: #e0dbd9;
+.comment-border-right {
+    right: -1px;
+    transform: scaleX(-0.5);
+    transform-origin: center;
+}
+
+.comment-border-h-wrap {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 2.5px;
+    background-repeat: repeat-x;
+    background-position: left center;
+    background-size: auto 100%;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.comment-border-top-wrap {
+    top: 0;
+}
+
+.comment-border-bottom-wrap {
+    bottom: 0;
 }
 
 /* ===== Card body — shrinks/expands; footer stays outside ===== */
@@ -103,11 +122,14 @@
     position: relative;
     max-height: 500px;
     overflow: hidden;
-    transition: max-height 0.4s ease;
+    transition: max-height 0.3s ease;
 }
 
-.comment-card[data-expanded] .comment-card__body {
-    max-height: 4000px;
+/* Compose mode has no expand/collapse "More" button — never clip, so a
+   portrait photo + full title/body text are always visible while editing */
+.comment-card__body--compose {
+    max-height: none;
+    overflow: visible;
 }
 
 /* ===== Card content ===== */
@@ -133,10 +155,11 @@
     padding: 10px 14px;
 }
 
-/* Invisible spacer — SVG draws the wavy line at this y-position */
 .comment-divider {
-    height: 1px;
-    background: transparent;
+    height: 2px;
+    background-repeat: repeat-x;
+    background-position: left center;
+    background-size: auto 100%;
     margin: 0 14px;
     flex-shrink: 0;
 }
@@ -151,16 +174,44 @@
 .comment-image.landscape { aspect-ratio: 4/3; }
 .comment-image.square    { aspect-ratio: 1/1; }
 
-.comment-carousel {
-    position: relative;
-    width: 100%;
+/* Compose mode adds a toolbar row above the carousel (remove/scale buttons),
+   so the fixed aspect-ratio has to live on the carousel itself instead of the
+   outer wrapper — otherwise the toolbar would be squeezed out of a box sized
+   for the image alone. Defaults to square before any photo's orientation is
+   known (matches the square add-photo button). */
+.comment-image:has(.comment-carousel--editable) {
+    aspect-ratio: auto;
+    display: flex;
+    flex-direction: column;
 }
 
-/* When aspect-ratio class constrains the container, fill it */
-.comment-image.portrait .comment-carousel,
-.comment-image.landscape .comment-carousel,
-.comment-image.square .comment-carousel {
-    height: 100%;
+.comment-carousel--editable {
+    aspect-ratio: 1/1;
+}
+
+.comment-image.portrait .comment-carousel--editable  { aspect-ratio: 3/4; }
+.comment-image.landscape .comment-carousel--editable { aspect-ratio: 4/3; }
+.comment-image.square .comment-carousel--editable    { aspect-ratio: 1/1; }
+
+.commentCarousel {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin: 3px 0;
+}
+
+.comment-carousel__frame {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+}
+
+/* When aspect-ratio class constrains the container, fill it (minus the
+   carousel's own 3px top/bottom margin, so it doesn't overflow the box) */
+.comment-image.portrait .commentCarousel,
+.comment-image.landscape .commentCarousel,
+.comment-image.square .commentCarousel {
+    height: calc(100% - 6px);
 }
 
 .comment-carousel__img {
@@ -194,11 +245,11 @@
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    width: 28px;
-    height: 28px;
-    border-radius: 999px;
-    border: 1px solid rgba(0,0,0,0.2);
-    background: rgba(255,255,255,0.88);
+    padding: 5px 10px;
+    border-radius: 10px;
+    border: 1.2px solid rgb(112, 84, 29);
+    background: #37291E;
+    color: #fff;
     cursor: pointer;
     font-size: 20px;
     line-height: 1;
@@ -210,14 +261,19 @@
 .comment-carousel__nav--left  { left: 8px; }
 .comment-carousel__nav--right { right: 8px; }
 
+/* Read-only carousel only (not the compose/editable carousel) — lighter,
+   ink-line-matched treatment instead of the solid brown fill */
+.commentCarousel:not(.comment-carousel--editable) .comment-carousel__nav {
+    background: rgba(255, 253, 251, 0.95);
+    border: 1px solid #9C8E8C;
+    color: #5a4b40;
+}
+
 .comment-carousel__dots {
-    position: absolute;
-    bottom: 6px;
-    left: 50%;
-    transform: translateX(-50%);
     display: flex;
+    justify-content: center;
     gap: 5px;
-    z-index: 3;
+    margin-bottom: 1px;
 }
 .comment-carousel__dot {
     width: 6px;
@@ -236,6 +292,7 @@
     justify-content: space-between;
     padding: 6px 10px;
     flex-shrink: 0;
+    margin-bottom: 3px;
 }
 
 .comment-date {
@@ -303,8 +360,8 @@
     font-size: 0.85rem;
     background: rgba(255,253,251,0.95);
     border: 1px solid #9C8E8C;
-    border-radius: 999px;
-    padding: 3px 14px;
+    border-radius: 10px;
+    padding: 5px 10px;
     cursor: pointer;
     color: #5a4b40;
     transition: background 0.15s;
@@ -325,25 +382,58 @@
 }
 
 /* ===== Edit mode: hide checkbox ===== */
+
+.comment-hide-label::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.19'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
 .comment-hide-label {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-family: 'Barlow', sans-serif;
+    font-family: 'Barlow Condesed', sans-serif;
     font-size: 0.78rem;
-    color: rgb(207, 210, 229);
+    color: #Ece7e5;
     padding: 8px 14px 10px;
-    border-radius: 0px 0px 15px 15px;
+
     border-top: 1px solid #ede8e6;
-    background-color: rgb(22, 25, 60);
+    background-color: #2e4064;
     cursor: pointer;
     -webkit-user-select: none;
     user-select: none;
     flex-shrink: 0;
 }
 .comment-hide-label input[type="checkbox"] {
+    position: relative;
     cursor: pointer;
     width: 14px;
     height: 14px;
-    fill: #3A201F;
+    margin: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid #fff;
+    background-color: transparent;
+    border-radius: 2px;
+}
+
+.comment-hide-label input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: -1px;
+    width: 3px;
+    height: 7px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+@media (max-width: 500px) {
+  .review-item {
+    padding-left: 0.3rem;
+  }
 }

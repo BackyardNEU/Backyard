@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { uploadImage } from '../lib/uploadImage';
 import { sanitizeBioHtml } from '../lib/sanitizeHtml';
+import borderBlackImg from '/src/assets/border.svg';
+import borderHorizontalBlackImg from '/src/assets/border-horizontal.svg';
 
-const ADD_VALUE = '__add_category__';
+const CATEGORY_LIST_ID = 'mr-category-options';
 
 /**
  * Member roster editor (rendered in edit mode below the scroll).
@@ -24,44 +26,14 @@ function ClubMemberEdit({ data, onChange }) {
   const removeMember = (i) =>
     onChange?.({ ...data, members: members.filter((_, idx) => idx !== i) });
 
-  // Add a category and assign it to this member in a single update (avoids stale-data races).
-  const addCategoryAndAssign = (i, name) => {
-    const nextCats = categories.includes(name) ? categories : [...categories, name];
-    const nextMembers = members.map((m, idx) => (idx === i ? { ...m, category: name } : m));
-    onChange?.({ ...data, categories: nextCats, members: nextMembers });
-  };
+  const onCategoryChange = (i, value) => setMember(i, { category: value });
 
-  const onCategoryChange = (i, value) => {
-    if (value === ADD_VALUE) {
-      const name = (window.prompt('New category name:') || '').trim();
-      if (name) addCategoryAndAssign(i, name);
-    } else {
-      setMember(i, { category: value });
-    }
-  };
-
-  // Rename a category everywhere (the list + every member assigned to it); merges if the new
-  // name already exists.
-  const renameCategory = (oldName) => {
-    const name = (window.prompt('Rename category:', oldName) || '').trim();
-    if (!name || name === oldName) return;
-    const nextCats = categories
-      .map((c) => (c === oldName ? name : c))
-      .filter((c, idx, arr) => arr.indexOf(c) === idx); // dedupe on merge
-    const nextMembers = members.map((m) => (m.category === oldName ? { ...m, category: name } : m));
-    onChange?.({ ...data, categories: nextCats, members: nextMembers });
-  };
-
-  // Delete a category; its members become uncategorized (kept, but hidden from the viewer
-  // until reassigned).
-  const deleteCategory = (name) => {
-    const count = members.filter((m) => m.category === name).length;
-    if (count > 0 && !window.confirm(
-      `"${name}" has ${count} member${count === 1 ? '' : 's'}. Delete the category? They'll become uncategorized.`
-    )) return;
-    const nextCats = categories.filter((c) => c !== name);
-    const nextMembers = members.map((m) => (m.category === name ? { ...m, category: '' } : m));
-    onChange?.({ ...data, categories: nextCats, members: nextMembers });
+  // Remember a freshly-typed category for future autocomplete suggestions, once the user
+  // is done typing it (on blur) — avoids polluting the suggestion list with half-typed text.
+  const commitCategory = (i) => {
+    const name = (members[i]?.category || '').trim();
+    if (!name || categories.includes(name)) return;
+    onChange?.({ ...data, categories: [...categories, name] });
   };
 
   const handlePhoto = async (i, file) => {
@@ -75,28 +47,18 @@ function ClubMemberEdit({ data, onChange }) {
 
   return (
     <div className="mr-edit">
-      <div className="mr-cat-manage">
-        <span className="mr-cat-manage-label">Categories</span>
-        {categories.length === 0 && (
-          <span className="mr-cat-empty">none yet — add one from a member card</span>
-        )}
-        {categories.map((c) => (
-          <span className="mr-cat-chip" key={c}>
-            <span className="mr-cat-chip-name">{c}</span>
-            <button className="mr-cat-chip-btn" onClick={() => renameCategory(c)} aria-label={`Rename ${c}`}>✎</button>
-            <button className="mr-cat-chip-btn del" onClick={() => deleteCategory(c)} aria-label={`Delete ${c}`}>×</button>
-          </span>
-        ))}
-      </div>
+      <datalist id={CATEGORY_LIST_ID}>
+        {categories.map((c) => <option key={c} value={c} />)}
+      </datalist>
 
       <div className="mr-edit-row">
         {members.map((m, i) => (
           <MemberCard
             key={i}
             member={m}
-            categories={categories}
             onRemove={() => removeMember(i)}
             onCategory={(v) => onCategoryChange(i, v)}
+            onCategoryBlur={() => commitCategory(i)}
             onName={(v) => setMember(i, { name: v })}
             onPhoto={(f) => handlePhoto(i, f)}
             onBio={(html) => setMember(i, { bio: sanitizeBioHtml(html) })}
@@ -104,6 +66,18 @@ function ClubMemberEdit({ data, onChange }) {
         ))}
 
         <button className="mr-add-card" onClick={addMember} aria-label="Add a member">
+          <img src={borderBlackImg} alt="" className="mr-add-card-border mr-add-card-border-left" />
+          <img src={borderBlackImg} alt="" className="mr-add-card-border mr-add-card-border-right" />
+          <div
+            className="mr-add-card-border-h-wrap mr-add-card-border-top-wrap"
+            style={{ backgroundImage: `url(${borderHorizontalBlackImg})` }}
+            aria-hidden="true"
+          />
+          <div
+            className="mr-add-card-border-h-wrap mr-add-card-border-bottom-wrap"
+            style={{ backgroundImage: `url(${borderHorizontalBlackImg})` }}
+            aria-hidden="true"
+          />
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
@@ -114,23 +88,37 @@ function ClubMemberEdit({ data, onChange }) {
   );
 }
 
-function MemberCard({ member, categories, onRemove, onCategory, onName, onPhoto, onBio }) {
+function MemberCard({ member, onRemove, onCategory, onCategoryBlur, onName, onPhoto, onBio }) {
   const fileRef = useRef(null);
 
   return (
     <div className="mr-card">
+      <img src={borderBlackImg} alt="" className="mr-border mr-border-left" />
+      <img src={borderBlackImg} alt="" className="mr-border mr-border-right" />
+      <div
+        className="mr-border-h-wrap mr-border-top-wrap"
+        style={{ backgroundImage: `url(${borderHorizontalBlackImg})` }}
+        aria-hidden="true"
+      />
+      <div
+        className="mr-border-h-wrap mr-border-bottom-wrap"
+        style={{ backgroundImage: `url(${borderHorizontalBlackImg})` }}
+        aria-hidden="true"
+      />
+
       <button className="mr-remove" onClick={onRemove} aria-label="Remove member">✕</button>
 
       <div className="mr-category-wrap">
-        <select
+        <input
           className="mr-category"
-          value={categories.includes(member.category) ? member.category : ''}
+          type="text"
+          list={CATEGORY_LIST_ID}
+          placeholder="Add to category  ex. Coaches"
+          maxLength={40}
+          value={member.category || ''}
           onChange={(e) => onCategory(e.target.value)}
-        >
-          <option value="" disabled>Add to category  ex. Coaches</option>
-          {categories.map((c) => <option key={c} value={c}>{c}</option>)}
-          <option value={ADD_VALUE}>＋  Add category</option>
-        </select>
+          onBlur={onCategoryBlur}
+        />
       </div>
 
       <div

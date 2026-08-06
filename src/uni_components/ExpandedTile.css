@@ -33,14 +33,15 @@
 .club-modules {
   width: 100%;
   box-sizing: border-box;
-  padding-left: 1.5%;
+
+  padding-bottom: 2rem;
 }
 
 /* Keep modules centered the way .expanded-card did before they were wrapped */
 .club-modules {
-  /* Shared left inset for every module + the hero. Mobile: 0.4rem. Web (>500px): 0,
+  /* Shared left inset for every module + the hero. Mobile: 0.3rem. Web (>500px): 0,
      so all content starts where the full-bleed rectangle banner starts. */
-  --mod-pad: 0.4rem;
+  --mod-pad: 0.3rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -93,19 +94,20 @@
 .add-events-btn {
   font-family: 'Barlow Condensed', sans-serif;
   display: inline-block;
-  padding: 10px 15px;
+  padding: 5px 10px;
   background-color: rgb(207, 87, 69);
   color: #fff;
   border: none;
-  border-radius: 90px;
+  border-radius: 10px;
   cursor: pointer;
   transition: transform 0.12s ease;
+}
+
+.add-events-btn:not(.duo-btn) {
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
 }
 
-.add-events-btn:hover {
-  transform: scale(1.05);
-}
+
 
 /* Sized to match the height of the pill buttons next to it */
 .exp-action-heart {
@@ -129,14 +131,15 @@
 
 .close-btn {
   position: fixed;
-  top: 15px;
-  margin-right: 1vw;
+  top: 32px;
+  right: 32px;
   background: none;
   border: none;
-  font-size: 1rem;
   cursor: pointer;
+  font-size: 2rem;
   line-height: 1;
   z-index: 8300;
+  padding: 4px 6px;
 }
 
 .review-btn {
@@ -149,8 +152,12 @@
   border: none;
   border-radius: 90px;
   transition: transform 0.12s ease;
+}
+
+.review-btn:not(.duo-btn):not(.link-btn) {
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
 }
+
 
 .log-btn {
   width: 170px;
@@ -169,11 +176,18 @@
   margin-top: 10px;
   margin-bottom: 10px;
   transition: transform 0.12s ease, background-color 0.2s ease;
+}
+
+.membership-btn:not(.duo-btn) {
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
 }
 
 .membership-btn:hover {
   transform: scale(1.05);
+}
+
+.membership-btn.duo-btn:hover {
+  transform: none;
 }
 
 .membership-btn:disabled {
@@ -204,9 +218,12 @@
 }
 
 .divider {
-  height: 1px;
-  background-color: rgb(205, 205, 205);
-  
+  display: block;
+  width: 100%;
+  height: 2px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  background-size: auto 100%;
 }
 
 .divider-header {
@@ -217,7 +234,7 @@
   font-weight: 400;
   color: #37291E;
   text-align: left;
-  margin-bottom: 30px;
+  margin-bottom: 15px;
 }
 
 @keyframes review-pop {

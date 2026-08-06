@@ -10,16 +10,20 @@ import logImage from '/src/assets/logImage.png';
 import heartEmpty from '/src/assets/empty_heart.png';
 import heartFull from '/src/assets/full_heart.png';
 import BasicInfoModule from '../club_page_components/BasicInfoModule';
+import LinksModule from '../club_page_components/LinksModule';
 import JoinModule from '../club_page_components/JoinModule';
 import StatsModule from '../club_page_components/StatsModule';
 import ClubMediaModule from '../club_page_components/ClubMediaModule';
 import FaqModule from '../club_page_components/FaqModule';
 import MemberRosterModule from '../club_page_components/MemberRosterModule';
 import { CalendarModule } from '../club_page_components/CalendarModule';
+import AddEventPanel from '../club_page_components/AddEventPanel';
 import ModuleAccordion from '../club_page_components/accordion';
 import ClubMembersPanel from '../club_page_components/ClubMembersPanel';
 import { useClubData } from '../context/useClubData';
 import { useGlobalStore } from '../lib/store';
+import InviteLinkButton from '../club_page_components/InviteLinkButton';
+import dividerLineImg from '/src/assets/border-horizontal-gray.svg';
 
 // --- Validation helpers ---
 const isValidUrl = (url) => {
@@ -32,6 +36,14 @@ function validateBasicInfo(data) {
     if (data.club_name.trim().length > 80) return 'Club name must be 80 characters or fewer.';
     if (!data?.description?.trim()) return 'Description cannot be empty.';
     for (const l of (data?.links ?? [])) {
+        if (l.name.length > 15) return 'Link names must be 15 characters or fewer.';
+        if (l.url && !isValidUrl(l.url)) return 'One or more link URLs are invalid.';
+    }
+    return null;
+}
+
+function validateLinks(basicInfoData) {
+    for (const l of (basicInfoData?.links ?? [])) {
         if (l.name.length > 15) return 'Link names must be 15 characters or fewer.';
         if (l.url && !isValidUrl(l.url)) return 'One or more link URLs are invalid.';
     }
@@ -94,11 +106,6 @@ function validateMemberRoster(data) {
     return null;
 }
 
-function validateCalendar(_data) {
-    // module.data stores only settings (filterByMembership); events live in the DB
-    return null;
-}
-
 function validateComments() { return null; }
 
 function validateClubMedia(data) {
@@ -119,25 +126,33 @@ function validateClubMedia(data) {
 
 function getModuleWarnings(draft) {
     const w = {};
+    const basicInfo = draft.find((m) => m.type === 'basic_info');
     for (const m of draft) {
         if (m.type === 'basic_info') w.basic_info = validateBasicInfo(m.data);
+        if (m.type === 'links') w.links = validateLinks(basicInfo?.data);
         if (m.type === 'join') w.join = validateJoin(m.data);
         if (m.type === 'stats') w.stats = validateStats(m.data);
         if (m.type === 'faqs') w.faqs = validateFaq(m.data);
         if (m.type === 'member_roster') w.member_roster = validateMemberRoster(m.data);
         if (m.type === 'club_media') w.club_media = validateClubMedia(m.data);
-        if (m.type === 'calendar') w.calendar = validateCalendar(m.data);
         if (m.type === 'comments') w.comments = validateComments(m.data);
     }
     return w;
 }
 
 function normalizeModules(modules) {
-    return (modules ?? []).map((m, i) => ({
+    const normalized = (modules ?? []).map((m, i) => ({
         ...m,
         order: m.order ?? i,
         isDisplayed: m.isDisplayed !== false,
     }));
+    // Older club pages saved before the Links module existed won't have one yet — give them
+    // one now so Links gets its own accordion slot (title, help text, visibility checkbox).
+    // It has no data of its own; it edits basic_info.data.links.
+    if (normalized.length > 0 && !normalized.some((m) => m.type === 'links')) {
+        normalized.push({ type: 'links', order: normalized.length, isDisplayed: true, data: {} });
+    }
+    return normalized;
 }
 
 function applyAccordionOrder(reorderedModules) {
@@ -243,7 +258,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 apiFetch(`/clubs/${id}/reviews`, { auth: false }),
                 apiFetch(`/clubs/${id}/page`, { auth: false }),
                 apiFetch(`/clubs/${id}/top-tags`, { auth: false }),
-                apiFetch(`/clubs/${id}/events`), // optional auth: sends token if logged in
+                apiFetch(`/clubs/${id}/events/upcoming`), // optional auth: sends token if logged in
                 apiFetch(`/clubs/${id}/members`, { auth: false }),
             ];
             const authFetches = authUser ? [
@@ -371,20 +386,47 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     };
 
     const handleAddEvent = async (eventData) => {
-        await apiFetch('/events', {
+        const newEvent = await apiFetch('/events', {
             method: 'POST',
             body: {
                 clubId: id,
                 clubName: club.club_name,
+                eventName: eventData.eventName ?? undefined,
                 description: eventData.description,
+                where: eventData.where ?? undefined,
                 startTime: eventData.startTime,
                 endTime: eventData.endTime,
                 imageUrl: eventData.imageUrl ?? undefined,
+                isMembersOnly: eventData.isMembersOnly ?? false,
             },
         });
-        // Refresh events after adding
-        const events = await apiFetch(`/clubs/${id}/events`);
-        setClubEvents(events || []);
+        setClubEvents((prev) =>
+            [...prev, newEvent].sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
+        );
+    };
+
+    const handleEditEvent = async (eventId, eventData) => {
+        const updated = await apiFetch(`/events/${eventId}`, {
+            method: 'PUT',
+            body: {
+                eventName: eventData.eventName ?? undefined,
+                description: eventData.description,
+                where: eventData.where ?? undefined,
+                startTime: eventData.startTime,
+                endTime: eventData.endTime,
+                imageUrl: eventData.imageUrl ?? undefined,
+                isMembersOnly: eventData.isMembersOnly ?? false,
+            },
+        });
+        setClubEvents((prev) =>
+            prev.map((e) => (e.id === eventId ? updated : e))
+                .sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
+        );
+    };
+
+    const handleDeleteEvent = async (eventId) => {
+        await apiFetch(`/events/${eventId}`, { method: 'DELETE' });
+        setClubEvents((prev) => prev.filter((e) => e.id !== eventId));
     };
 
     const moduleWarnings = isEditing ? getModuleWarnings(draft) : {};
@@ -481,8 +523,15 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
     const sortedDraft = [...(draft ?? [])].sort((a, b) => a.order - b.order);
     const basicInfoModule = sortedDraft.find((m) => m.type === 'basic_info');
-    const accordionModules = sortedDraft;
-    const viewModules = sortedDraft.filter((m) => m.isDisplayed !== false);
+    // Calendar ("Coming Up") is pinned above the accordion/view stream and rendered
+    // unconditionally, not toggleable/reorderable like the other modules — exclude it here.
+    const accordionModules = sortedDraft.filter((m) => m.type !== 'calendar');
+    // Links has no separate public section of its own (see renderModule) — exclude it from the
+    // view-mode stream entirely so it doesn't leave a stray divider where its content would be.
+    const viewModules = sortedDraft.filter((m) => m.isDisplayed !== false && m.type !== 'links' && m.type !== 'calendar');
+    // Its checkbox instead controls whether the action-bar link buttons show at all.
+    const linksModuleEntry = sortedDraft.find((m) => m.type === 'links');
+    const linksDisplayed = linksModuleEntry ? linksModuleEntry.isDisplayed !== false : true;
 
     // Action row rendered inside the basic_info module (between the banner and the About text)
     const actionRow = (
@@ -490,21 +539,45 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             <div className="exp-action-row-inner">
                 {isClicked
                     ? <img src={logImage} className="log-btn" alt="Clicked state" />
-                    : <button className="review-btn" onClick={handleClick}>Share your experience</button>
+                    : (
+                        <div className="duo-btn-wrap">
+                            <div className="duo-btn-pill" aria-hidden="true" />
+                            <button
+                                className="review-btn duo-btn"
+                                style={{ '--duo-shadow': 'rgb(52, 32, 0)' }}
+                                onClick={handleClick}
+                            >
+                                Share your experience
+                            </button>
+                        </div>
+                    )
                 }
 
                 {user && (
-                    <button
-                        className={`membership-btn ${isMember ? 'leave' : 'join'}`}
-                        onClick={handleMembership}
-                        disabled={memberLoading}
-                    >
-                        {memberLoading ? '...' : isMember ? 'Leave Club' : 'Join Club'}
-                    </button>
+                    <div className="duo-btn-wrap">
+                        <div className="duo-btn-pill" aria-hidden="true" />
+                        <button
+                            className={`membership-btn duo-btn ${isMember ? 'leave' : 'join'}`}
+                            style={{ '--duo-shadow': isMember ? 'rgb(90, 20, 20)' : 'rgb(0, 45, 8)' }}
+                            onClick={handleMembership}
+                            disabled={memberLoading}
+                        >
+                            {memberLoading ? '...' : isMember ? 'Leave Club' : 'Join Club'}
+                        </button>
+                    </div>
                 )}
 
                 {/* Placeholder — event creation to be wired up later */}
-                <button className="add-events-btn" type="button">Add Events</button>
+                <div className="duo-btn-wrap">
+                    <div className="duo-btn-pill" aria-hidden="true" />
+                    <button
+                        className="add-events-btn duo-btn"
+                        style={{ '--duo-shadow': 'rgb(157, 62, 47)' }}
+                        type="button"
+                    >
+                        Add Events
+                    </button>
+                </div>
 
                 {GlobalValue && (
                     <img
@@ -532,6 +605,23 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     actions={actionRow}
                     warning={moduleWarnings.basic_info ?? null}
                     part={part}
+                    linksDisplayed={linksDisplayed}
+                />
+            );
+        }
+        if (module.type === 'links') {
+            // Links has no separate public "full" section of its own — the actual link
+            // buttons always live in the action bar (rendered via basic_info's hero), so its
+            // order in the module stream is irrelevant. Only show its editing UI/preview here.
+            if (!isEditing) return null;
+            const basicInfo = draft.find((m) => m.type === 'basic_info');
+            return (
+                <LinksModule
+                    key="links"
+                    data={basicInfo?.data}
+                    editing={isEditing}
+                    onChange={(updatedData) => handleModuleChange('basic_info', updatedData)}
+                    warning={moduleWarnings.links ?? null}
                 />
             );
         }
@@ -597,25 +687,6 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 />
             );
         }
-        if (module.type === 'calendar') {
-            return (
-                <CalendarModule
-                    key="calendar"
-                    club={club}
-                    data={module.data}
-                    editing={isEditing}
-                    isApproved={isApproved}
-                    onChange={(updatedData) => handleModuleChange('calendar', updatedData)}
-                    warning={moduleWarnings.calendar ?? null}
-                    events={clubEvents}
-                    myRsvpSet={clubMyRsvpSet}
-                    friendRsvpMap={clubFriendRsvpMap}
-                    onRsvp={handleClubRsvp}
-                    onAddEvent={handleAddEvent}
-                    userId={user?.id ?? null}
-                />
-            );
-        }
         if (module.type === 'comments') {
             return (
                 <ReviewList
@@ -642,23 +713,35 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
             onAnimationComplete={() => setAnimationDone(true)}
         >
-            <button className="close-btn" onClick={handleClose}>x</button>
+            <button className="close-btn" onClick={handleClose}>×</button>
 
             {isApproved && !isEditing && (
-                <button className="exp-edit-btn" onClick={async () => {
-                    if (!pageData?.modules?.length) {
-                        try {
-                            const result = await apiFetch(`/clubs/${id}/page/init`, { method: 'POST' });
-                            if (result?.modules?.length) {
-                                setPageData(result);
-                                setDraft(normalizeModules(result.modules));
-                            }
-                        } catch (err) {
-                            console.error('Failed to initialize page defaults:', err);
-                        }
-                    }
-                    setIsEditing(true);
-                }}>Edit Page</button>
+                <div className="exp-toolbar">
+                    <div className="duo-btn-wrap">
+                        <div className="duo-btn-pill" aria-hidden="true" />
+                        <button
+                            className="exp-edit-btn duo-btn"
+                            style={{ '--duo-shadow': 'rgb(30, 60, 90)' }}
+                            onClick={async () => {
+                                if (!pageData?.modules?.length) {
+                                    try {
+                                        const result = await apiFetch(`/clubs/${id}/page/init`, { method: 'POST' });
+                                        if (result?.modules?.length) {
+                                            setPageData(result);
+                                            setDraft(normalizeModules(result.modules));
+                                        }
+                                    } catch (err) {
+                                        console.error('Failed to initialize page defaults:', err);
+                                    }
+                                }
+                                setIsEditing(true);
+                            }}
+                        >
+                            Edit Page
+                        </button>
+                    </div>
+                    <InviteLinkButton clubId={id} />
+                </div>
             )}
 
             <div className="club-tab-switcher">
@@ -690,6 +773,29 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
             <div className="club-modules">
                 {basicInfoModule && renderModule(basicInfoModule, 'hero')}
+                {!isApproved && (
+                    <CalendarModule
+                        club={club}
+                        editing={false}
+                        events={clubEvents}
+                        myRsvpSet={clubMyRsvpSet}
+                        friendRsvpMap={clubFriendRsvpMap}
+                        onRsvp={handleClubRsvp}
+                        userId={user?.id ?? null}
+                    />
+                )}
+                <AddEventPanel
+                    isApproved={isApproved}
+                    club={club}
+                    events={clubEvents}
+                    onAddEvent={handleAddEvent}
+                    onEditEvent={handleEditEvent}
+                    onDeleteEvent={handleDeleteEvent}
+                    myRsvpSet={clubMyRsvpSet}
+                    friendRsvpMap={clubFriendRsvpMap}
+                    onRsvp={handleClubRsvp}
+                    userId={user?.id ?? null}
+                />
                 {isEditing ? (
                     <ModuleAccordion
                         modules={accordionModules}
@@ -703,14 +809,14 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     <>
                         {viewModules.length > 0 && (
                             <div className="module-view-divider">
-                                <div className="divider" />
+                                <div className="divider" style={{ backgroundImage: `url(${dividerLineImg})` }} aria-hidden="true" />
                             </div>
                         )}
                         {viewModules.map((module, index) => (
                             <React.Fragment key={module.type}>
                                 {index > 0 && (
                                     <div className="module-view-divider">
-                                        <div className="divider" />
+                                        <div className="divider" style={{ backgroundImage: `url(${dividerLineImg})` }} aria-hidden="true" />
                                     </div>
                                 )}
                                 {renderModule(
@@ -726,11 +832,29 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             )} {/* end activeTab === 'page' */}
 
             {isApproved && isEditing && (
-                <div className="expanded-edit-actions">
-                    <button onClick={handleCancel} disabled={isSaving}>Cancel</button>
-                    <button className="save-btn" onClick={handleSave} disabled={isSaving || !isDraftValid}>
-                        {isSaving ? 'Saving...' : 'Save'}
-                    </button>
+                <div className="exp-toolbar exp-toolbar--start">
+                    <div className="duo-btn-wrap">
+                        <div className="duo-btn-pill" aria-hidden="true" />
+                        <button
+                            className="save-btn duo-btn"
+                            style={{ '--duo-shadow': 'rgb(0, 0, 0)' }}
+                            onClick={handleSave}
+                            disabled={isSaving || !isDraftValid}
+                        >
+                            {isSaving ? 'Saving...' : 'Save'}
+                        </button>
+                    </div>
+                    <div className="duo-btn-wrap">
+                        <div className="duo-btn-pill" aria-hidden="true" />
+                        <button
+                            className="cancel-btn duo-btn"
+                            style={{ '--duo-shadow': 'rgb(120, 120, 120)' }}
+                            onClick={handleCancel}
+                            disabled={isSaving}
+                        >
+                            Cancel
+                        </button>
+                    </div>
                 </div>
             )}
 

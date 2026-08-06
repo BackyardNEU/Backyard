@@ -1,7 +1,13 @@
 .stats-module {
     width: 100%;
-    
-    padding-left: 1.5%; 
+
+    padding-left: 1.5%;
+}
+
+@media (max-width: 500px) {
+  .stats-module {
+    padding-left: 0.3rem;
+  }
 }
 
 .rendered-part {
@@ -131,7 +137,7 @@
     flex-direction: row;
     overflow-x: auto;
     overflow-y: hidden;
-    width: 70vw;
+    width: 100%;
     gap: 8px;
     scrollbar-width: thin;
     border-bottom: 0.9px dashed rgb(175, 175, 175);
@@ -165,6 +171,7 @@
     max-width: 100%;
     margin: 0;
     padding: 0;
+    gap: 10px;
   }
 
   .slider {
@@ -177,7 +184,7 @@
     border: 3px solid rgb(255, 255, 255);
     -webkit-transition: 0.2s;
     transition: opacity 0.2s;
-    border-radius: 20px;
+    border-radius: 10px;
     cursor: pointer;
   }
 

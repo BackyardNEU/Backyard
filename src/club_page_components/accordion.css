@@ -12,10 +12,10 @@
   padding: 1rem;
   max-width: 800px;
   font-size: 1.1rem;
-  color: #4c4c4c;
+   color: #000000;
   line-height: 1.2;
-  background: rgb(186, 197, 219);
-  border-radius: 15px;
+  background: rgb(234, 234, 230);
+  border-radius: 8px;
   text-align: left;
 
   
@@ -93,14 +93,6 @@
 
 .accordion .module-name.muted {
   color: #aaa;
-}
-
-.accordion .module-name.events-emphasis {
-  color: #b45309;
-}
-
-.accordion .module-name.events-emphasis.muted {
-  color: #d4a574;
 }
 
 .accordion .icon {
