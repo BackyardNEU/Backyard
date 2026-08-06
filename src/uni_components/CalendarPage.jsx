@@ -1,10 +1,11 @@
-﻿import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+﻿import React, { useState, useMemo, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
 import {
   startOfDay, addDays, format, isSameDay, parseISO,
   getDay, getDaysInMonth, isToday, isBefore,
 } from 'date-fns';
 import { apiFetch } from '../lib/api';
 import { supabase } from '../lib/supabase';
+import { useClubData } from '../context/useClubData';
 import '../club_page_components/CalendarModule.css';
 import './CalendarPage.css';
 import treeImg from '/src/assets/tree.png';
@@ -13,7 +14,52 @@ import borderHorizontalImg from '../assets/border-horizontal.svg';
 
 const WEEK_DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
+// Club name + event name title above the info card. Capped to 75% of the
+// card's width; if the text is wider than that, it becomes an infinite
+// right-to-left ticker — same measure-and-duplicate technique as
+// ClubMediaModule's .cm-poster-text marquee.
+function PortraitTitle({ text }) {
+  const wrapRef = useRef(null);
+  const copyRef = useRef(null);
+  const [marquee, setMarquee] = useState(false);
+  const [dur, setDur] = useState(20);
+
+  useLayoutEffect(() => {
+    const wrap = wrapRef.current;
+    const copy = copyRef.current;
+    if (!wrap || !copy) return;
+    const textW = copy.scrollWidth;
+    const over = textW > wrap.clientWidth + 1;
+    setMarquee(over);
+    if (over) setDur(Math.max(6, textW / 20));
+  }, [text]);
+
+  if (!text) return null;
+
+  return (
+    <div className="cal-portrait-title-wrap" ref={wrapRef}>
+      <div
+        className={`cal-portrait-title-track ${marquee ? 'cal-portrait-title-marquee-on' : ''}`}
+        style={{ '--cal-title-dur': `${dur}s` }}
+      >
+        <span ref={copyRef} className="cal-portrait-title-copy">{text}</span>
+        {marquee && <span className="cal-portrait-title-copy" aria-hidden="true">{text}</span>}
+      </div>
+    </div>
+  );
+}
+
 export function CalendarPage({ onClose }) {
+  const { allData } = useClubData();
+  const clubImageById = useMemo(
+    () => new Map(allData.map(club => [club.id, club.image_url])),
+    [allData]
+  );
+  const clubNameById = useMemo(
+    () => new Map(allData.map(club => [club.id, club.club_name])),
+    [allData]
+  );
+
   const todayDate = startOfDay(new Date());
   const [status, setStatus] = useState('loading'); // 'loading' | 'ready' | 'unauthed'
   const [userId, setUserId] = useState(null);
@@ -351,7 +397,13 @@ export function CalendarPage({ onClose }) {
                 {format(new Date(selectedDayInfo.year, selectedDayInfo.month - 1, selectedDayInfo.day), 'EEE d').toUpperCase()}
               </h2>
               <div className="cal-portrait-scroll">
-                {selectedDayEvents.map(event => (
+                {selectedDayEvents.map(event => {
+                  const clubName = event.club_name || clubNameById.get(event.club_id) || '';
+                  const eventName = event.event_name || '';
+                  const titleText = clubName && eventName
+                    ? `${clubName} • ${eventName}`
+                    : (clubName || eventName);
+                  return (
                   <div key={event.id} className="cal-portrait-event">
                     <div className="cal-portrait-img-wrap">
                       <img src={borderImg} alt="" className="cal-portrait-card-border cal-portrait-card-border-left" />
@@ -360,23 +412,20 @@ export function CalendarPage({ onClose }) {
                         className="cal-portrait-card-border-h cal-portrait-card-border-h-top"
                         style={{ backgroundImage: `url(${borderHorizontalImg})` }}
                       />
-                      <div
-                        className="cal-portrait-card-border-h cal-portrait-card-border-h-bottom"
-                        style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+                      <img
+                        src={event.event_image_url || event.image_url || clubImageById.get(event.club_id) || '/raccoon_pfp.png'}
+                        alt="Event"
+                        className={`cal-portrait-img${event.event_image_url ? '' : ' cal-portrait-img--default'}`}
                       />
-                      {event.event_image_url ? (
-                        <img src={event.event_image_url} alt="Event" className="cal-portrait-img" />
-                      ) : (
-                        <img src="/raccoon_pfp.png" className="cal-portrait-img" alt="" />
-                      )}
                     </div>
                     <div className="cal-portrait-info">
-                      <img src={borderImg} alt="" className="cal-portrait-card-border cal-portrait-card-border-left" />
-                      <img src={borderImg} alt="" className="cal-portrait-card-border cal-portrait-card-border-right" />
+                      <img src={borderImg} alt="" className="cal-portrait-info-border cal-portrait-info-border-left" />
+                      <img src={borderImg} alt="" className="cal-portrait-info-border cal-portrait-info-border-right" />
                       <div
                         className="cal-portrait-card-border-h cal-portrait-card-border-h-bottom"
                         style={{ backgroundImage: `url(${borderHorizontalImg})` }}
                       />
+                      <PortraitTitle text={titleText} />
                       <p className="cal-overlay-desc">{event.event_description}</p>
                       <p className="cal-overlay-time">
                         {format(parseISO(event.start_time), 'h:mm a')} – {format(parseISO(event.end_time), 'h:mm a')}
@@ -391,7 +440,8 @@ export function CalendarPage({ onClose }) {
                       )}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

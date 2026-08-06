@@ -34,7 +34,7 @@
     position: relative;
     padding: 10px;
     margin: 10px;
-    border-radius: 2px;
+
     box-shadow: 8px 5px 8px rgba(0, 0, 0, 0.22);
     margin-bottom: 6px;
     z-index: 0;
@@ -113,7 +113,7 @@
 /* Portrait preview — inline (no backdrop) */
 .cal-portrait-preview {
     width: min(390px, 88vw);
-    border-radius: 16px;
+
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -313,8 +313,9 @@
 .cal-overlay-portrait {
   --header-h: 56px;
   position: relative;
-  width: 390px;
-  max-height: 100vh;
+  width: 450px;
+  height: 100%;
+  max-height: none;
   border-radius: 0;
   overflow: hidden;
   background: rgb(255 255 255 / 100%);
@@ -388,6 +389,9 @@
    abutting black-ink borders read as a single dividing line. */
 .cal-portrait-event {
   flex-shrink: 0;
+  height: auto;
+  border-radius: 0;
+  background: transparent;
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -427,6 +431,29 @@
 .cal-portrait-card-border-h-top { top: 0; }
 .cal-portrait-card-border-h-bottom { bottom: 0; }
 
+/* Info card's own vertical borders — fixed pixel width (not width:auto) so
+   the ink line stays the same thickness as the image card's despite the
+   info card being much shorter (width:auto would scale the line thinner
+   as height shrinks, since it follows the svg's native aspect ratio). */
+.cal-portrait-info-border {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 4px;
+  pointer-events: none;
+  z-index: 2;
+}
+.cal-portrait-info-border-left {
+  left: -2px;
+  transform: scaleX(2);
+  transform-origin: left center;
+}
+.cal-portrait-info-border-right {
+  right: -1px;
+  transform: scaleX(-2);
+  transform-origin: center;
+}
+
 /* Image card — sized by aspect-ratio, not a static width, so it scales with
    the overlay. Padding matches add-event-card; the image bleeds through it
    (negative inset) so the photo runs edge-to-edge to the ink border. */
@@ -440,7 +467,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  flex-shrink: 0;
+  flex: 0 0 auto;
+  min-height: 0;
 }
 
 .cal-portrait-img {
@@ -449,6 +477,18 @@
   aspect-ratio: 3 / 4;
   object-fit: cover;
   display: block;
+  border-radius: 5px;
+  border: 1px solid black;
+}
+
+/* Fallback (club logo / default avatar) is square and doesn't bleed past
+   the card's padding like a poster does — width:100% (not the +24px bleed)
+   keeps a matching 12px inset on all four sides, and the 1:1 ratio (vs.
+   the poster's 3:4) shortens the whole card since height follows width. */
+.cal-portrait-img--default {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
 }
 
 .cal-portrait-no-img {
@@ -457,19 +497,62 @@
   text-align: center;
 }
 
-/* Info card — same black-ink bordering as the image card above, minus its
-   own top border (the image card's bottom border already forms the shared
-   dividing line between the two). */
+/* Info card — same black-ink bordering as the image card above on the
+   left/right/bottom, but no top ink border. The divider between the image
+   and info cards is instead a standard (non-svg) dashed line. */
 .cal-portrait-info {
   position: relative;
   flex-shrink: 0;
   background: #fff;
   padding: 14px 18px;
+  border-top: 2px dashed #1a1a1a;
   display: flex;
   flex-direction: column;
   gap: 6px;
   overflow-y: auto;
   box-sizing: border-box;
+}
+
+/* Club name + event name, capped to 75% of the card. Fits: centered single
+   line. Overflows: infinite right-to-left ticker (duplicated copy, track
+   translates -50%) — same technique as ClubMediaModule's .cm-poster-text. */
+.cal-portrait-title-wrap {
+  width: 75%;
+  max-width: 75%;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.cal-portrait-title-track {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.cal-portrait-title-track.cal-portrait-title-marquee-on {
+  width: max-content;
+  justify-content: flex-start;
+  will-change: transform;
+  animation: cal-portrait-title-marquee var(--cal-title-dur, 20s) linear infinite;
+}
+
+.cal-portrait-title-copy {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #1a1a1a;
+}
+
+.cal-portrait-title-marquee-on .cal-portrait-title-copy {
+  padding-right: 2rem;
+}
+
+@keyframes cal-portrait-title-marquee {
+  0%, 10% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
 .cal-overlay-desc {
