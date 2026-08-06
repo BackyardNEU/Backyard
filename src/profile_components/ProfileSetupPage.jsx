@@ -16,9 +16,12 @@ const ProfileSetupPage = () => {
     const [username, setUsername] = useState('')
     const [usernameStatus, setUsernameStatus] = useState(null)
     const [biography, setBiography] = useState('')
-    const [schoolInput, setSchoolInput] = useState('')
+    const [schoolInput, setSchoolInput] = useState('Northeastern')
     const [universities, setUniversities] = useState([])
-    const [selectedUniversity, setSelectedUniversity] = useState(null)
+    const [selectedUniversity, setSelectedUniversity] = useState({
+        id: '38500bfc-e606-46a7-840d-720b11ad2e8b',
+        uni_name: 'Northeastern',
+    })
     const [avatarFile, setAvatarFile] = useState(null)
     const [avatarPreview, setAvatarPreview] = useState(null)
     const [showDropdown, setShowDropdown] = useState(false)
@@ -435,36 +438,14 @@ const ProfileSetupPage = () => {
                     </div>
                 )}
 
-                <label className="setup-field-label" htmlFor="school-input">choose school</label>
+                {/* School selection disabled — defaulting to Northeastern */}
+                <label className="setup-field-label">school</label>
                 <div className="setup-school-wrap">
                     <input
-                        id="school-input"
                         className="setup-school-input"
-                        value={schoolInput}
-                        placeholder="Search your university"
-                        onChange={(event) => {
-                            setSchoolInput(event.target.value);
-                            setSelectedUniversity(null);
-                            setShowDropdown(true);
-                        }}
-                        onFocus={() => setShowDropdown(true)}
-                        onBlur={() => setTimeout(() => setShowDropdown(false), 120)}
+                        value="Northeastern"
+                        disabled
                     />
-
-                    {showDropdown && filteredUniversities.length > 0 && (
-                        <div className="setup-school-dropdown">
-                            {filteredUniversities.slice(0, 12).map((uni) => (
-                                <button
-                                    key={uni.id}
-                                    type="button"
-                                    className="setup-school-option"
-                                    onMouseDown={() => handleSchoolSelect(uni)}
-                                >
-                                    {uni.uni_name}
-                                </button>
-                            ))}
-                        </div>
-                    )}
                 </div>
 
                 <button type="submit" className="setup-submit" disabled={submitting}>

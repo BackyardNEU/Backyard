@@ -4,6 +4,7 @@ import {
   getDay, getDaysInMonth, isToday, isBefore,
 } from 'date-fns';
 import { apiFetch } from '../lib/api';
+import { buildGoogleCalendarUrl, downloadIcsFile } from '../lib/calendarExport';
 import './CalendarModule.css';
 
 const WEEK_DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -342,6 +343,22 @@ export function CalendarModule({
                           {myRsvpSet.has(event.id) ? 'Going ✓' : "I'm going!"}
                         </button>
                       )}
+                      <div className="cal-export-row">
+                        <a
+                          href={buildGoogleCalendarUrl(event)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="cal-export-btn"
+                        >
+                          Google Cal
+                        </a>
+                        <button
+                          className="cal-export-btn"
+                          onClick={() => downloadIcsFile(event)}
+                        >
+                          Apple Cal
+                        </button>
+                      </div>
                       {(() => {
                         const friends = friendRsvpMap.get(event.id);
                         if (!friends || friends.length === 0) return null;
@@ -442,6 +459,22 @@ export function CalendarModule({
                         {monthlyMyRsvpSet.has(event.id) ? 'Going ✓' : "I'm going!"}
                       </button>
                     )}
+                    <div className="cal-export-row">
+                      <a
+                        href={buildGoogleCalendarUrl(event)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="cal-export-btn"
+                      >
+                        Google Cal
+                      </a>
+                      <button
+                        className="cal-export-btn"
+                        onClick={() => downloadIcsFile(event)}
+                      >
+                        Apple Cal
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

@@ -1,4 +1,4 @@
-﻿import { Routes, Route, useLocation } from 'react-router-dom';
+﻿import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import './App.css';
 import { SearchBar } from './home_components/SearchBar';
@@ -34,44 +34,10 @@ function App() {
           <SupportModal open={supportOpen} setOpen={setSupportOpen} />
 
         <Routes>
+          {/* University selection disabled — defaulting to Northeastern for now */}
           <Route
             path="/"
-            element={
-              
-            <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-  {/* Responsive Video Container */}
-  <div style={{
-    width: '100%',
-    marginTop: '-40px',
-    maxWidth: '1100px',
-    marginLeft: 'auto',
-    marginRight: 'auto',
-    overflow: 'hidden',
-  }}>
-    <video 
-      src={`/src/assets/intro_screen.mp4`} 
-      autoPlay 
-      muted 
-      playsInline 
-      loop
-      style={{ 
-        width: '90%',
-        maxWidth: '1100px',
-        height: 'auto',
-        objectFit: 'cover', // Ensures no black bars, fills the container
-        display: 'block',
-        zIndex: 1,
-
-      }}
-    />
-  </div>
-
-  {/* Search Bar Container */}
-  <div className="search-bar-container" style={{ width: '100%', padding: '1rem' }}>
-    <SearchBar />
-  </div>
-</div>
-            }
+            element={<Navigate to="/university/38500bfc-e606-46a7-840d-720b11ad2e8b" replace />}
           />
           <Route path="/university/:id" element={<UniversityPage />} />
           <Route path="/reviews/:id" element={<ReviewPage />} />
