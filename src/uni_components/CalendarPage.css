@@ -383,38 +383,85 @@
   display: none;
 }
 
-/* Each event card — natural height, snaps into place */
+/* Each event card — natural height, snaps into place. Composed of two
+   stacked sub-cards (image + info) with zero gap between them so their
+   abutting black-ink borders read as a single dividing line. */
 .cal-portrait-event {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  gap: 0;
   scroll-snap-align: start;
 }
 
-/* Image area: aspect-ratio drives the height so 3:4 images fill without letterboxing */
-.cal-portrait-img-wrap {
-  aspect-ratio: 3 / 4;
+/* Ink-line border overlay (same assets/technique as .add-event-card-border) */
+.cal-portrait-card-border {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: auto;
+  pointer-events: none;
+  z-index: 2;
+}
+.cal-portrait-card-border-left {
+  left: 0;
+  transform: scaleX(0.5);
+  transform-origin: left center;
+}
+.cal-portrait-card-border-right {
+  right: -1px;
+  transform: scaleX(-0.5);
+  transform-origin: center;
+}
+.cal-portrait-card-border-h {
+  position: absolute;
+  left: 0;
   width: 100%;
-  background: rgba(0, 0, 0, 0.4);
+  height: 2.5px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  background-size: auto 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+.cal-portrait-card-border-h-top { top: 0; }
+.cal-portrait-card-border-h-bottom { bottom: 0; }
+
+/* Image card — sized by aspect-ratio, not a static width, so it scales with
+   the overlay. Padding matches add-event-card; the image bleeds through it
+   (negative inset) so the photo runs edge-to-edge to the ink border. */
+.cal-portrait-img-wrap {
+  position: relative;
+  width: 100%;
+  background: #fff;
   overflow: hidden;
+  padding: 12px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   flex-shrink: 0;
 }
 
 .cal-portrait-img {
-  width: 100%;
-  height: 100%;
+  width: calc(100% + 24px);
+  margin: 0;
+  aspect-ratio: 3 / 4;
   object-fit: cover;
   display: block;
 }
 
 .cal-portrait-no-img {
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(0, 0, 0, 0.4);
   font-size: 13px;
   text-align: center;
 }
 
-/* Info panel — white background, sits below the image */
+/* Info card — same black-ink bordering as the image card above, minus its
+   own top border (the image card's bottom border already forms the shared
+   dividing line between the two). */
 .cal-portrait-info {
+  position: relative;
   flex-shrink: 0;
   background: #fff;
   padding: 14px 18px;
@@ -422,6 +469,7 @@
   flex-direction: column;
   gap: 6px;
   overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .cal-overlay-desc {

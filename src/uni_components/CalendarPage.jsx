@@ -8,6 +8,8 @@ import { supabase } from '../lib/supabase';
 import '../club_page_components/CalendarModule.css';
 import './CalendarPage.css';
 import treeImg from '/src/assets/tree.png';
+import borderImg from '../assets/border.svg';
+import borderHorizontalImg from '../assets/border-horizontal.svg';
 
 const WEEK_DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
@@ -352,6 +354,16 @@ export function CalendarPage({ onClose }) {
                 {selectedDayEvents.map(event => (
                   <div key={event.id} className="cal-portrait-event">
                     <div className="cal-portrait-img-wrap">
+                      <img src={borderImg} alt="" className="cal-portrait-card-border cal-portrait-card-border-left" />
+                      <img src={borderImg} alt="" className="cal-portrait-card-border cal-portrait-card-border-right" />
+                      <div
+                        className="cal-portrait-card-border-h cal-portrait-card-border-h-top"
+                        style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+                      />
+                      <div
+                        className="cal-portrait-card-border-h cal-portrait-card-border-h-bottom"
+                        style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+                      />
                       {event.event_image_url ? (
                         <img src={event.event_image_url} alt="Event" className="cal-portrait-img" />
                       ) : (
@@ -359,6 +371,12 @@ export function CalendarPage({ onClose }) {
                       )}
                     </div>
                     <div className="cal-portrait-info">
+                      <img src={borderImg} alt="" className="cal-portrait-card-border cal-portrait-card-border-left" />
+                      <img src={borderImg} alt="" className="cal-portrait-card-border cal-portrait-card-border-right" />
+                      <div
+                        className="cal-portrait-card-border-h cal-portrait-card-border-h-bottom"
+                        style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+                      />
                       <p className="cal-overlay-desc">{event.event_description}</p>
                       <p className="cal-overlay-time">
                         {format(parseISO(event.start_time), 'h:mm a')} – {format(parseISO(event.end_time), 'h:mm a')}
