@@ -1,6 +1,7 @@
 import express from 'express';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { checkMuted } from '../middleware/checkMuted.js';
 
 const router = express.Router();
 
@@ -56,7 +57,7 @@ router.get('/', async (req, res) => {
     res.json(data);
 });
 
-router.post('/', async (req, res) => {
+router.post('/', checkMuted, async (req, res) => {
     const { review_id, vote } = req.body || {};
     if (!review_id) return res.status(400).json({ error: 'review_id required' });
     if (vote !== 1 && vote !== -1) {

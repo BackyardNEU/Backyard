@@ -1,0 +1,410 @@
+/* ─── Trigger button (fixed bottom-right) ─────────────────────────────────── */
+.support-trigger {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 50;
+
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  border: 1px solid #b0b0b0;
+  background: #f7f7f7;
+  color: #494949;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.support-trigger:hover {
+  background: #ebebeb;
+  color: #1f1f1f;
+}
+
+/* ─── Modal shell ─────────────────────────────────────────────────────────── */
+.support-modal {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  z-index: 9999;
+
+  width: min(680px, 92vw);
+  max-height: 88vh;
+  overflow-y: auto;
+
+  background: rgb(252, 252, 252);
+  border: 1px solid rgb(162, 162, 162);
+  border-radius: 15px;
+  box-shadow:
+    0 20px 80px rgba(0, 0, 0, 0.3),
+    0 0 0 9999px rgba(0, 0, 0, 0.55);
+
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 2rem 2.5rem;
+}
+
+/* ─── Close button ────────────────────────────────────────────────────────── */
+.support-close {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  line-height: 1;
+  color: #999;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.support-close:hover {
+  color: #222;
+}
+
+/* ─── Heading ─────────────────────────────────────────────────────────────── */
+.support-heading {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2.8rem, 7vw, 4rem);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: #494949;
+  margin: 0 0 0.25rem;
+}
+
+.support-divider {
+  width: 100%;
+  border: none;
+  border-top: 1px solid #ddd;
+  margin: 0 0 1.25rem;
+}
+
+/* ─── Pill tabs ───────────────────────────────────────────────────────────── */
+.support-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.support-tab {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid #c4c4c4;
+  background: #f0f0f0;
+  color: #5c5c5c;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.support-tab:hover {
+  background: #e2e2e2;
+  color: #2a2a2a;
+}
+
+.support-tab--active {
+  background: #494949;
+  color: #fff;
+  border-color: #494949;
+}
+
+.support-tab--active:hover {
+  background: #333;
+  border-color: #333;
+  color: #fff;
+}
+
+/* ─── Content area ────────────────────────────────────────────────────────── */
+.support-content {
+  flex: 1;
+}
+
+/* ─── FAQ ─────────────────────────────────────────────────────────────────── */
+.support-faq {
+  display: flex;
+  flex-direction: column;
+}
+
+.support-faq-item {
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.support-faq-item:first-child {
+  border-top: 1px solid #e8e8e8;
+}
+
+.support-faq-question {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0.9rem 0;
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #3a3a3a;
+  text-align: left;
+  cursor: pointer;
+  gap: 1rem;
+  transition: color 0.15s ease;
+}
+
+.support-faq-question:hover {
+  color: #000;
+}
+
+.support-faq-chevron {
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.support-faq-answer {
+  overflow: hidden;
+}
+
+.support-faq-answer p {
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.9rem;
+  color: #5c5c5c;
+  line-height: 1.55;
+  padding-bottom: 0.9rem;
+  margin: 0;
+}
+
+/* ─── Submit form ─────────────────────────────────────────────────────────── */
+.support-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.support-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.support-label {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #5c5c5c;
+}
+
+.support-char-count {
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #aaa;
+}
+
+.support-input,
+.support-select,
+.support-textarea {
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.95rem;
+  color: #2a2a2a;
+  background: #fafafa;
+  border: 1px solid #c8c8c8;
+  border-radius: 0;
+  padding: 0.55rem 0.7rem;
+  outline: none;
+  transition: border-color 0.15s ease;
+  width: 100%;
+}
+
+.support-input:focus,
+.support-select:focus,
+.support-textarea:focus {
+  border-color: #494949;
+}
+
+.support-textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.support-error {
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.875rem;
+  color: #c0392b;
+  margin: 0;
+}
+
+.support-form-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.support-submit-btn {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.5rem 1.2rem;
+  border: 1px solid #7a7a7a;
+  background: #f7f7f7;
+  color: #404040;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.support-submit-btn:hover:not(:disabled) {
+  background: #ebebeb;
+  color: #1f1f1f;
+}
+
+.support-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── Success state ───────────────────────────────────────────────────────── */
+.support-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.support-success-heading {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.2rem;
+  letter-spacing: 0.05em;
+  color: #494949;
+  margin: 0;
+}
+
+.support-success-sub {
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.95rem;
+  color: #5c5c5c;
+  margin: 0;
+}
+
+.support-success-btn {
+  margin-top: 0.75rem;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.4rem 1rem;
+  border: 1px solid #b0b0b0;
+  background: none;
+  color: #5c5c5c;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.support-success-btn:hover {
+  background: #f0f0f0;
+}
+
+/* ─── My Tickets list ─────────────────────────────────────────────────────── */
+.support-ticket-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.support-ticket-row {
+  padding: 0.85rem 0;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.support-ticket-row:first-child {
+  border-top: 1px solid #e8e8e8;
+}
+
+.support-ticket-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.8rem;
+  margin-bottom: 0.25rem;
+}
+
+.support-ticket-id {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #494949;
+  text-transform: uppercase;
+}
+
+.support-ticket-category {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  color: #888;
+  text-transform: uppercase;
+}
+
+.support-ticket-status {
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.8rem;
+  text-transform: capitalize;
+  font-weight: 500;
+}
+
+.support-ticket-date {
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.8rem;
+  color: #aaa;
+  margin-left: auto;
+}
+
+.support-ticket-subject {
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.9rem;
+  color: #3a3a3a;
+  margin: 0;
+}
+
+/* ─── Auth gate / empty / loading states ──────────────────────────────────── */
+.support-auth-gate,
+.support-empty,
+.support-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 2.5rem 0;
+  text-align: center;
+}
+
+.support-auth-gate p,
+.support-empty p,
+.support-loading {
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.95rem;
+  color: #3a3a3a;
+  margin: 0;
+}
+
+.support-auth-hint {
+  font-size: 0.85rem !important;
+  color: #888 !important;
+}

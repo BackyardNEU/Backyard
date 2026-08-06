@@ -1,6 +1,8 @@
 import express from 'express';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { checkMuted } from '../middleware/checkMuted.js';
+import textModerator from '../lib/textModerator.js';
 
 const router = express.Router();
 
@@ -169,10 +171,10 @@ router.get('/:clubId/page', async (req, res) => {
 router.post('/:clubId/page/init', requireAuth, async (req, res) => {
   const { clubId } = req.params;
 
-  // Verify approval
-  const { data: approval, error: approvalError } = await supabaseAdmin
-    .from('approved_club_accounts')
-    .select('user_id')
+  // Verify moderator or top_moderator role
+  const { data: membership, error: approvalError } = await supabaseAdmin
+    .from('club_memberships')
+    .select('role')
     .eq('user_id', req.user.id)
     .eq('club_id', clubId)
     .maybeSingle();
@@ -182,8 +184,8 @@ router.post('/:clubId/page/init', requireAuth, async (req, res) => {
     err.status = 502;
     throw err;
   }
-  if (!approval) {
-    return res.status(403).json({ error: 'Not an approved account for this club' });
+  if (!membership || !['top_moderator', 'moderator'].includes(membership.role)) {
+    return res.status(403).json({ error: 'Forbidden' });
   }
 
   // Check for existing data
@@ -242,10 +244,51 @@ router.post('/:clubId/page/init', requireAuth, async (req, res) => {
   res.status(201).json(data);
 });
 
+function extractModuleText(modules) {
+  const texts = {};
+  let i = 0;
+  const add = (prefix, value) => { if (value) texts[`${prefix}_${i++}`] = value; };
+  for (const mod of modules) {
+    const d = mod.data || {};
+    if (mod.type === 'basic_info') {
+      add('club_name', d.club_name);
+      add('description', d.description);
+    } else if (mod.type === 'join') {
+      for (const tab of d.tabs || []) {
+        add('tab_title', tab.title);
+        add('tab_body', tab.body);
+      }
+    } else if (mod.type === 'faqs') {
+      for (const faq of d.faqs || []) {
+        add('faq_q', faq.q);
+        add('faq_a', faq.a);
+      }
+    } else if (mod.type === 'member_roster') {
+      for (const m of d.members || []) {
+        add('member_name', m.name);
+        add('member_bio', m.bio);
+      }
+    } else if (mod.type === 'club_media') {
+      for (const p of d.posters || []) {
+        add('poster_text', p.poster_text);
+        for (const c of p.content || []) {
+          add('poster_content', c.value);
+        }
+      }
+    } else if (mod.type === 'stats') {
+      for (const s of d.stats || []) {
+        add('stat_label', s.label);
+        add('stat_unit', s.unit1);
+      }
+    }
+  }
+  return texts;
+}
+
 // PUT /api/clubs/:clubId/page
 // Authenticated. Approved club account only.
 // Upserts the modules array for this club's page.
-router.put('/:clubId/page', requireAuth, async (req, res) => {
+router.put('/:clubId/page', requireAuth, checkMuted, async (req, res) => {
   const { clubId } = req.params;
   const { modules } = req.body;
 
@@ -253,10 +296,16 @@ router.put('/:clubId/page', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'modules must be an array' });
   }
 
-  // Verify the authenticated user is an approved account for this club.
-  const { data: approval, error: approvalError } = await supabaseAdmin
-    .from('approved_club_accounts')
-    .select('user_id')
+  const moduleTexts = extractModuleText(modules);
+  const textCheck = textModerator.checkFields(moduleTexts);
+  if (!textCheck.clean) {
+    return res.status(400).json({ error: textCheck.message, field: textCheck.field });
+  }
+
+  // Verify moderator or top_moderator role.
+  const { data: membership, error: approvalError } = await supabaseAdmin
+    .from('club_memberships')
+    .select('role')
     .eq('user_id', req.user.id)
     .eq('club_id', clubId)
     .maybeSingle();
@@ -267,8 +316,8 @@ router.put('/:clubId/page', requireAuth, async (req, res) => {
     throw err;
   }
 
-  if (!approval) {
-    return res.status(403).json({ error: 'Not an approved account for this club' });
+  if (!membership || !['top_moderator', 'moderator'].includes(membership.role)) {
+    return res.status(403).json({ error: 'Forbidden' });
   }
 
   const { data, error } = await supabaseAdmin
@@ -313,10 +362,9 @@ router.get('/:clubId/top-tags', async (req, res) => {
 router.get('/:clubId/is-approved', requireAuth, async (req, res) => {
   const { clubId } = req.params;
 
-  // Requires the approved_club_accounts table described above.
   const { data, error } = await supabaseAdmin
-    .from('approved_club_accounts')
-    .select('user_id')
+    .from('club_memberships')
+    .select('role')
     .eq('user_id', req.user.id)
     .eq('club_id', clubId)
     .maybeSingle();
@@ -327,7 +375,8 @@ router.get('/:clubId/is-approved', requireAuth, async (req, res) => {
     throw err;
   }
 
-  res.json({ approved: !!data });
+  const role = data?.role ?? null;
+  res.json({ approved: ['top_moderator', 'moderator'].includes(role), role });
 });
 
 export default router;

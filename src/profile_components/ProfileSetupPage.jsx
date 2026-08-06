@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import imageCompression from 'browser-image-compression'
 import { supabase } from '../lib/supabase'
 import { apiFetch } from '../lib/api'
+import textModerator from '../lib/textModerator'
 import './ProfileSetupPage.css'
 
 const ProfileSetupPage = () => {
@@ -15,9 +16,12 @@ const ProfileSetupPage = () => {
     const [username, setUsername] = useState('')
     const [usernameStatus, setUsernameStatus] = useState(null)
     const [biography, setBiography] = useState('')
-    const [schoolInput, setSchoolInput] = useState('')
+    const [schoolInput, setSchoolInput] = useState('Northeastern')
     const [universities, setUniversities] = useState([])
-    const [selectedUniversity, setSelectedUniversity] = useState(null)
+    const [selectedUniversity, setSelectedUniversity] = useState({
+        id: '38500bfc-e606-46a7-840d-720b11ad2e8b',
+        uni_name: 'Northeastern',
+    })
     const [avatarFile, setAvatarFile] = useState(null)
     const [avatarPreview, setAvatarPreview] = useState(null)
     const [showDropdown, setShowDropdown] = useState(false)
@@ -78,10 +82,13 @@ const ProfileSetupPage = () => {
                 const { data, error } = await supabase.auth.getUser();
                 if (error) throw error;
 
-                const [uniData, profileData] = await Promise.all([
+                const [uniResult, profileResult] = await Promise.allSettled([
                     apiFetch('/universities', { auth: false }),
                     apiFetch('/me/profile'),
                 ]);
+
+                const uniData = uniResult.status === 'fulfilled' ? uniResult.value : [];
+                const profileData = profileResult.status === 'fulfilled' ? profileResult.value : null;
 
                 const authUser = data?.user || null;
                 setUser(authUser);
@@ -194,6 +201,14 @@ const ProfileSetupPage = () => {
             });
             if (!putRes.ok) throw new Error(`Upload failed (${putRes.status})`);
 
+            const verification = await apiFetch('/storage/verify-image', {
+                method: 'POST',
+                body: { publicUrl },
+            });
+            if (!verification.ok) {
+                throw new Error(verification.error || 'Photo rejected by content policy');
+            }
+
             urls.push(publicUrl);
         }
         return urls;
@@ -223,6 +238,16 @@ const ProfileSetupPage = () => {
             return;
         }
 
+        const textCheck = textModerator.checkFields({
+            first_name: firstName,
+            last_name: lastName,
+            biography,
+        });
+        if (!textCheck.clean) {
+            setError(textCheck.message);
+            return;
+        }
+
         if (!selectedUniversity) {
             setError('Please choose a school from the dropdown list.');
             return;
@@ -245,6 +270,14 @@ const ProfileSetupPage = () => {
                     headers: { 'Content-Type': 'image/webp' },
                 });
                 if (!putRes.ok) throw new Error(`Upload failed (${putRes.status})`);
+
+                const verification = await apiFetch('/storage/verify-image', {
+                    method: 'POST',
+                    body: { publicUrl },
+                });
+                if (!verification.ok) {
+                    throw new Error(verification.error || 'Avatar rejected by content policy');
+                }
 
                 avatarUrl = publicUrl;
             }
@@ -411,36 +444,14 @@ const ProfileSetupPage = () => {
                     </div>
                 )}
 
-                <label className="setup-field-label" htmlFor="school-input">choose school</label>
+                {/* School selection disabled — defaulting to Northeastern */}
+                <label className="setup-field-label">school</label>
                 <div className="setup-school-wrap">
                     <input
-                        id="school-input"
                         className="setup-school-input"
-                        value={schoolInput}
-                        placeholder="Search your university"
-                        onChange={(event) => {
-                            setSchoolInput(event.target.value);
-                            setSelectedUniversity(null);
-                            setShowDropdown(true);
-                        }}
-                        onFocus={() => setShowDropdown(true)}
-                        onBlur={() => setTimeout(() => setShowDropdown(false), 120)}
+                        value="Northeastern"
+                        disabled
                     />
-
-                    {showDropdown && filteredUniversities.length > 0 && (
-                        <div className="setup-school-dropdown">
-                            {filteredUniversities.slice(0, 12).map((uni) => (
-                                <button
-                                    key={uni.id}
-                                    type="button"
-                                    className="setup-school-option"
-                                    onMouseDown={() => handleSchoolSelect(uni)}
-                                >
-                                    {uni.uni_name}
-                                </button>
-                            ))}
-                        </div>
-                    )}
                 </div>
 
                 <button type="submit" className="setup-submit" disabled={submitting}>

@@ -6,6 +6,7 @@ import { useGlobalStore } from "../lib/store";
 import { useClubData } from '../context/useClubData';
 import { CommentCard } from './ReviewList';
 import ImageScaleCropModal from './ImageScaleCropModal';
+import textModerator from '../lib/textModerator';
 import thanksImage from "../assets/thanks.png"
 import ThanksPage from './ThanksPage';
 
@@ -13,11 +14,6 @@ import "./ReviewPage.css"
 
 export default function ReviewPage({clubId, onClose}) {
 
-    const badWords = [
-        ' ass ', 'fuck', 'shit', 'bitch', 'whore', 'cunt', ' nigger', 'nigga', 'negro', 'chink', 'fag',
-        ' a$$', ' a$s', 'as$', '@ss', 'sh1t', 'bltch', 'b1tch', 'wh0re', 'n1gger', 'nlgger', 'n1gga', 'nlgga', 'negr0', 'f@g', 'asshole', 'assh0le',
-        'retard', 'pussy', 'ret@rd'
-    ]
     const GlobalValue = useGlobalStore((state) => state.GlobalValue);
     const { allData } = useClubData();
     const id = clubId;
@@ -105,6 +101,16 @@ export default function ReviewPage({clubId, onClose}) {
     const replaceImage = (imgId, newFile) => {
         setStagedImages((prev) => prev.map((img) => (img.id === imgId ? { ...img, file: newFile } : img)));
     };
+                const verification = await apiFetch('/storage/verify-image', {
+                    method: 'POST',
+                    body: { publicUrl },
+                });
+                if (!verification.ok) {
+                    throw new Error(verification.error || 'Image rejected by content policy');
+                }
+
+                urls.push(publicUrl);
+            }
 
     const reorderImages = (reorderedPreview) => {
         setStagedImages((prev) => reorderedPreview.map((p) => prev.find((img) => img.id === p.id)));
@@ -143,6 +149,16 @@ export default function ReviewPage({clubId, onClose}) {
                 return;
             }
         }
+        if (GlobalValue) {
+            if((user_review && user_title) || uploadedUrls.length > 0)  {
+                const textCheck = textModerator.checkFields({
+                    review_title: user_title,
+                    review_text: user_review,
+                });
+                if (!textCheck.clean) {
+                    setWarning(textCheck.message);
+                    return;
+                }
 
         setWarning("");
         setPosting(true);

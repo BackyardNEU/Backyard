@@ -5,9 +5,11 @@
 export const useGlobalStore = create((set) => ({
   globalValue: false,
   lastPath: "/",
+  unreadCount: 0,
 
   setGlobalValue: (newValue) => set({ GlobalValue: newValue }),
   setLastPath: (path) => set({ lastPath: path }),
+  setUnreadCount: (count) => set({ unreadCount: count }),
 }));
 
 /*

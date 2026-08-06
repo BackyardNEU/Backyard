@@ -340,3 +340,27 @@
     padding-left: 0.3rem;
   }
 }
+
+.cal-export-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.cal-export-btn {
+  font-size: 11px;
+  padding: 4px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  color: #555;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: inherit;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.cal-export-btn:hover {
+  border-color: #4e7da9;
+  color: #4e7da9;
+}

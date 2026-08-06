@@ -15,17 +15,30 @@ import profilesRouter from './routes/profiles.js';
 import usersRouter from './routes/users.js';
 import storageRouter from './routes/storage.js';
 import eventsRouter from './routes/events.js';
+import supportRouter from './routes/support.js';
 import clubEventsRouter from './routes/clubEvents.js';
 import clubPageRouter from './routes/clubPage.js';
 import questionsRouter from './routes/questions.js';
 import invitesRouter from './routes/invites.js';
+import { startQueue } from './notifications/queue.js';
+import friendRequestsRouter from './routes/friend-requests.js';
+import notificationsRouter from './routes/notifications.js';
+import clubMembersRouter from './routes/clubMembers.js';
+
 
 const app = express();
 const port = process.env.PORT || 3001;
 
 app.use(helmet());
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
+  .split(',')
+  .map(o => o.trim());
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin(origin, cb) {
+    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    cb(new Error('CORS'));
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: '100kb' }));
@@ -39,6 +52,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Public reads
+app.use('/api/clubs', clubMembersRouter);
 app.use('/api/clubs', clubsRouter);
 app.use('/api/clubs', clubPageRouter);
 app.use('/api/clubs', questionsRouter);
@@ -51,6 +65,8 @@ app.use('/api/reviews', writeLimiter, reviewsRouter);
 app.use('/api/me/favorites', writeLimiter, favoritesRouter);
 app.use('/api/me/votes', writeLimiter, votesRouter);
 app.use('/api/me/friends', writeLimiter, friendsRouter);
+app.use('/api/friend-requests', writeLimiter, friendRequestsRouter);
+app.use('/api/me/notifications', writeLimiter, notificationsRouter);
 app.use('/api/me', profilesRouter); // serves /profile and /membership
 app.use('/api/users', usersRouter);
 app.use('/api/events', writeLimiter, eventsRouter);
@@ -60,6 +76,8 @@ app.use('/api/storage', writeLimiter, storageRouter);
 
 // Invite links: generate (POST /api/clubs/:clubId/invite-link) + validate/redeem (GET|POST /api/invite/:token)
 app.use('/api', writeLimiter, invitesRouter);
+// Support tickets
+app.use('/api/support', writeLimiter, supportRouter);
 
 app.use((err, req, res, _next) => {
   console.error('[api error]', err);
@@ -68,4 +86,8 @@ app.use((err, req, res, _next) => {
 
 app.listen(port, () => {
   console.log(`API listening on http://localhost:${port}`);
+});
+
+startQueue().catch((err) => {
+  console.error('[queue] failed to start — notifications disabled:', err.message);
 });

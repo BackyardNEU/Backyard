@@ -1,6 +1,7 @@
 import express from 'express';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { checkMuted } from '../middleware/checkMuted.js';
 
 const router = express.Router();
 
@@ -39,23 +40,26 @@ router.get('/', async (req, res) => {
     res.json(data);
 });
 
-// PUT /api/me/friends with { friend_list: [...] }.
-// Caveat: replacing the whole array means concurrent add/remove from two tabs
-// will race — last write wins. Per-friend POST/DELETE with array_append would
-// be safer; PUT-the-whole-array matches BACKEND_PLAN.md and the current
-// frontend pattern, so sticking with it.
-router.put('/', async (req, res) => {
-    const { friend_list } = req.body || {};
-    if (!Array.isArray(friend_list)) {
-        return res.status(400).json({ error: 'friend_list must be an array' });
+router.delete('/:friendId', async (req, res) => {
+    const { friendId } = req.params;
+
+    const { data: profile, error: fetchError } = await supabaseAdmin
+        .from('profiles')
+        .select('friend_list')
+        .eq('id', req.user.id)
+        .single();
+
+    if (fetchError) {
+        const err = new Error(fetchError.message);
+        err.status = 502;
+        throw err;
     }
 
-    // Defense in depth: don't let a user add themselves, and dedupe.
-    const cleaned = [...new Set(friend_list.filter((id) => id && id !== req.user.id))];
+    const newList = (profile?.friend_list || []).filter((id) => id !== friendId);
 
     const { error } = await supabaseAdmin
         .from('profiles')
-        .update({ friend_list: cleaned })
+        .update({ friend_list: newList })
         .eq('id', req.user.id);
 
     if (error) {
