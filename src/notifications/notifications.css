@@ -1,8 +1,8 @@
 /* Bell button */
 .notif-bell {
   position: relative;
-  background: none;
-  border: none;
+  background: #ffffff;
+  border: 1px solid rgb(175, 174, 174);
   cursor: pointer;
   color: #1a4d2e;
   display: flex;
@@ -15,7 +15,7 @@
 }
 
 .notif-bell:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #f2f2f2;
 }
 
 /* Unread dot */
@@ -36,7 +36,7 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.4);
-  z-index: 200;
+  z-index: 10100;
 }
 
 /* Panel */
@@ -48,7 +48,7 @@
   height: 100vh;
   background: #1a4d2e;
   color: #cfd2e5;
-  z-index: 201;
+  z-index: 10101;
   overflow-y: auto;
   display: flex;
   flex-direction: column;

@@ -101,16 +101,6 @@ export default function ReviewPage({clubId, onClose}) {
     const replaceImage = (imgId, newFile) => {
         setStagedImages((prev) => prev.map((img) => (img.id === imgId ? { ...img, file: newFile } : img)));
     };
-                const verification = await apiFetch('/storage/verify-image', {
-                    method: 'POST',
-                    body: { publicUrl },
-                });
-                if (!verification.ok) {
-                    throw new Error(verification.error || 'Image rejected by content policy');
-                }
-
-                urls.push(publicUrl);
-            }
 
     const reorderImages = (reorderedPreview) => {
         setStagedImages((prev) => reorderedPreview.map((p) => prev.find((img) => img.id === p.id)));
@@ -149,16 +139,14 @@ export default function ReviewPage({clubId, onClose}) {
                 return;
             }
         }
-        if (GlobalValue) {
-            if((user_review && user_title) || uploadedUrls.length > 0)  {
-                const textCheck = textModerator.checkFields({
-                    review_title: user_title,
-                    review_text: user_review,
-                });
-                if (!textCheck.clean) {
-                    setWarning(textCheck.message);
-                    return;
-                }
+        const textCheck = textModerator.checkFields({
+            review_title: user_title,
+            review_text: user_review,
+        });
+        if (!textCheck.clean) {
+            setWarning(textCheck.message);
+            return;
+        }
 
         setWarning("");
         setPosting(true);
@@ -166,6 +154,13 @@ export default function ReviewPage({clubId, onClose}) {
             const urls = [];
             for (const { file } of stagedImages) {
                 const publicUrl = await uploadImage(file);
+                const verification = await apiFetch('/storage/verify-image', {
+                    method: 'POST',
+                    body: { publicUrl },
+                });
+                if (!verification.ok) {
+                    throw new Error(verification.error || 'Image rejected by content policy');
+                }
                 urls.push(publicUrl);
             }
 
