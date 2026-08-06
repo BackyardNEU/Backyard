@@ -103,11 +103,6 @@ async function requireClubMembershipForEvent(req, res) {
     return existing;
 }
 
-router.post('/', async (req, res) => {
-    const validationError = validateEvent(req.body);
-    if (validationError) return res.status(400).json({ error: validationError });
-
-    const { clubId, clubName, eventName, description, where, startTime, endTime, imageUrl, isMembersOnly } = req.body;
 router.post('/', checkMuted, async (req, res) => {
     const validationError = validateEvent(req.body);
     if (validationError) return res.status(400).json({ error: validationError });
@@ -210,7 +205,6 @@ router.delete('/:eventId', async (req, res) => {
     res.status(204).end();
 });
 
-router.post('/:eventId/rsvp', async (req, res) => {
 router.post('/:eventId/rsvp', checkMuted, async (req, res) => {
     const { error } = await supabaseAdmin
         .from('attendees')

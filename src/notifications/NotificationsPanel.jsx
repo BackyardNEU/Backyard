@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { isToday, isThisWeek } from 'date-fns';
 import { NotificationItem } from './NotificationItem';
 import './notifications.css';
@@ -22,7 +23,7 @@ export function NotificationsPanel({ onClose, notifications, markAllRead, respon
     markAllRead();
   }, []);
 
-  return (
+  return createPortal(
     <>
       <div className="notif-backdrop" onClick={onClose} />
       <div className="notif-panel">
@@ -71,6 +72,7 @@ export function NotificationsPanel({ onClose, notifications, markAllRead, respon
           <p className="notif-empty">No notifications yet.</p>
         )}
       </div>
-    </>
+    </>,
+    document.body
   );
 }

@@ -1,12 +1,10 @@
-import React, { useState, useRef, useLayoutEffect } from 'react';
-import { format, parseISO } from 'date-fns';
-import borderImg from '../assets/border.svg';
-import borderHorizontalImg from '../assets/border-horizontal.svg';
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useLayoutEffect, useCallback, useEffect } from 'react';
 import {
   startOfDay, addDays, format, isSameDay, parseISO,
   getDay, getDaysInMonth, isToday, isBefore,
 } from 'date-fns';
+import borderImg from '../assets/border.svg';
+import borderHorizontalImg from '../assets/border-horizontal.svg';
 import { apiFetch } from '../lib/api';
 import { buildGoogleCalendarUrl, downloadIcsFile } from '../lib/calendarExport';
 import './CalendarModule.css';
@@ -59,6 +57,8 @@ export function CalendarModule({
     const el = overlayScrollRef.current;
     if (!el) return;
     setOverlayHasMore(el.scrollHeight - el.scrollTop - el.clientHeight > 10);
+  };
+
   // ── view toggle ──────────────────────────────────────────────────────────
   const [viewMode, setViewMode] = useState('week');
 
@@ -412,42 +412,28 @@ export function CalendarModule({
                         </button>
                       )}
                     </div>
-                      <div className="cal-export-row">
-                        <a
-                          href={buildGoogleCalendarUrl(event)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="cal-export-btn"
-                        >
-                          Google Cal
-                        </a>
-                        <button
-                          className="cal-export-btn"
-                          onClick={() => downloadIcsFile(event)}
-                        >
-                          Apple Cal
-                        </button>
-                      </div>
-                      {(() => {
-                        const friends = friendRsvpMap.get(event.id);
-                        if (!friends || friends.length === 0) return null;
-                        const first = friends[0].username;
-                        const rest = friends.length - 1;
-                        return (
-                          <p className="friend-rsvp-callout">
-                            {rest === 0
-                              ? `${first} is going`
-                              : `${first} and ${rest} ${rest === 1 ? 'other' : 'others'} you know are going`}
-                          </p>
-                        );
-                      })()}
+                    <div className="cal-export-row">
+                      <a
+                        href={buildGoogleCalendarUrl(ev)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="cal-export-btn"
+                      >
+                        Google Cal
+                      </a>
+                      <button
+                        className="cal-export-btn"
+                        onClick={() => downloadIcsFile(ev)}
+                      >
+                        Apple Cal
+                      </button>
                     </div>
-                  ))
-                )}
-              </div>
-            ))}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </>
+        </div>
       )}
 
       {/* ══ MONTHLY VIEW ══════════════════════════════════════════════════ */}
@@ -545,8 +531,8 @@ export function CalendarModule({
                       </button>
                     </div>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           </div>
         </div>
