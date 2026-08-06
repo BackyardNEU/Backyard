@@ -426,10 +426,24 @@ export function CalendarPage({ onClose }) {
                         style={{ backgroundImage: `url(${borderHorizontalImg})` }}
                       />
                       <PortraitTitle text={titleText} />
-                      <p className="cal-overlay-desc">{event.event_description}</p>
-                      <p className="cal-overlay-time">
-                        {format(parseISO(event.start_time), 'h:mm a')} – {format(parseISO(event.end_time), 'h:mm a')}
+                      {event.where && (
+                        <p className="cal-info-row">
+                          <span className="cal-info-label">where</span>
+                          <span className="cal-info-value">{event.where}</span>
+                        </p>
+                      )}
+                      <p className="cal-info-row">
+                        <span className="cal-info-label">when</span>
+                        <span className="cal-info-value">
+                          {format(parseISO(event.start_time), 'EEE MMM d')} {format(parseISO(event.start_time), 'h:mm a')}–{format(parseISO(event.end_time), 'h:mm a')}
+                        </span>
                       </p>
+                      {event.event_description && (
+                        <p className="cal-info-row">
+                          <span className="cal-info-label">about</span>
+                          <span className="cal-info-value">{event.event_description}</span>
+                        </p>
+                      )}
                       {userId && event.club_id && (
                         <button
                           className="rsvp-button"

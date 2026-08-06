@@ -540,7 +540,7 @@
 .cal-portrait-title-copy {
   font-family: "Barlow Condensed", sans-serif;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 1.3rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: #1a1a1a;
@@ -555,17 +555,31 @@
   100% { transform: translateX(-50%); }
 }
 
-.cal-overlay-desc {
-  font-size: 14px;
-  color: #333;
+/* where / when / about rows — label in a lighter weight, value in a
+   lighter-still all-caps weight, separated by a small gap. Improved
+   version of the weekly view's plain .event-description/.club-info pair. */
+.cal-info-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
   margin: 0;
-  line-height: 1.45;
+  line-height: 1.4;
 }
 
-.cal-overlay-time {
-  font-size: 13px;
-  color: #666;
-  margin: 0;
+.cal-info-label {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 400;
+  font-size: 1.2rem;
+  color: #1a1a1a;
+  flex-shrink: 0;
+}
+
+.cal-info-value {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 300;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  color: #1a1a1a;
 }
 
 /* ===== STANDALONE CALENDAR PAGE (university page inline calendar) ===== */
