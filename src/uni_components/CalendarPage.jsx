@@ -127,14 +127,14 @@ export function CalendarPage({ onClose }) {
     const nextYear = nextDate.getFullYear();
     const nextMonthNum = nextDate.getMonth() + 1;
 
+    // One batched request instead of one per club. Fanning out client-side meant a user
+    // in N clubs fired 2N requests every time this view opened, which was a large part of
+    // what tripped the rate limiter.
     async function fetchClubEventsForMonth(memberList, year, month) {
-      const settled = await Promise.allSettled(
-        memberList.map(clubId =>
-          apiFetch(`/clubs/${clubId}/events/monthly?year=${year}&month=${month}`)
-            .then(evts => (evts || []).map(e => ({ ...e, club_id: clubId })))
-        )
+      const events = await apiFetch(
+        `/clubs/events/monthly-batch?clubIds=${memberList.join(',')}&year=${year}&month=${month}`
       );
-      return settled.filter(r => r.status === 'fulfilled').flatMap(r => r.value);
+      return events || [];
     }
 
     async function buildRsvpSet(events) {
