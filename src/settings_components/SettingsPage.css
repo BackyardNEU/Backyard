@@ -1,0 +1,208 @@
+/* Structural only — spacing and legibility so the page is usable before design.
+   Milo owns the visual pass; nothing here is meant to be final.
+
+   Reuses the existing .ProfilePage shell and the setup-* field classes, so restyling
+   those fields in one place covers onboarding and settings together. */
+
+.settings-page {
+  padding-bottom: 96px;
+}
+
+.settings-section {
+  margin: 28px 0;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(41, 36, 29, 0.12);
+}
+
+.settings-section:last-child {
+  border-bottom: none;
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 520px;
+}
+
+.settings-status,
+.settings-hint {
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.9rem;
+  color: #6b6257;
+  margin: 4px 0;
+  line-height: 1.4;
+}
+
+.settings-error {
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.9rem;
+  color: #8a3b2f;
+  margin: 8px 0 0;
+}
+
+.settings-warning {
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.9rem;
+  color: #8a5a2f;
+  background: rgba(138, 90, 47, 0.08);
+  border-left: 3px solid #8a5a2f;
+  padding: 10px 12px;
+  margin: 12px 0;
+  max-width: 520px;
+}
+
+.settings-saved {
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  color: #3f7a4f;
+}
+
+.settings-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.settings-save,
+.settings-secondary,
+.settings-danger-btn,
+.settings-unblock {
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.9rem;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 2px solid #2f2a22;
+  cursor: pointer;
+  background: transparent;
+  color: #2f2a22;
+}
+
+.settings-save {
+  background: #2f2a22;
+  color: #f5f1ea;
+}
+
+.settings-save:disabled,
+.settings-secondary:disabled,
+.settings-danger-btn:disabled,
+.settings-unblock:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Radio + toggle groups */
+.settings-radio-group,
+.settings-toggle-group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 12px;
+  max-width: 520px;
+}
+
+.settings-radio,
+.settings-toggle {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 10px;
+  align-items: center;
+  cursor: pointer;
+}
+
+.settings-radio .settings-hint,
+.settings-toggle .settings-hint {
+  grid-column: 2;
+  margin: 0;
+}
+
+.settings-radio-label,
+.settings-toggle-label {
+  font-family: 'Barlow', sans-serif;
+  font-size: 1rem;
+  color: #29241d;
+}
+
+/* Read-only rows */
+.settings-readonly {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 16px;
+}
+
+.settings-readonly-value {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 0.95rem;
+  color: #29241d;
+}
+
+/* Blocked users */
+.settings-blocked-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  max-width: 520px;
+}
+
+.settings-blocked-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(41, 36, 29, 0.08);
+}
+
+.settings-blocked-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.settings-blocked-name {
+  flex: 1;
+  font-family: 'Barlow', sans-serif;
+  color: #29241d;
+}
+
+/* Destructive zone — visually separated so it cannot be hit by accident. */
+.settings-danger {
+  margin-top: 32px;
+  padding: 16px;
+  border: 2px solid rgba(138, 59, 47, 0.35);
+  border-radius: 6px;
+  max-width: 520px;
+}
+
+.settings-danger-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  font-size: 1rem;
+  color: #8a3b2f;
+  margin: 0 0 8px;
+}
+
+.settings-danger-trigger {
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.9rem;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #8a3b2f;
+  color: #8a3b2f;
+  padding: 2px 0;
+  cursor: pointer;
+}
+
+.settings-danger-btn {
+  background: #8a3b2f;
+  border-color: #8a3b2f;
+  color: #fff;
+}
