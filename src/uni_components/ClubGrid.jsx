@@ -9,42 +9,48 @@ import { useGlobalStore } from "../lib/store";
 import { useClubData } from '../context/useClubData';
 //import paperTexture from '/src/assets/white-paper-texture.jpg';
 import posterPin from '/src/assets/poster_pin.png';
-export const ClubGrid = ({ result, onExpand, hideHeart, hidePins }) => {
+const ClubGridCard = ({ result, onExpand, hideHeart, hidePins }) => {
   const [animating, setAnimating] = useState(false);
-  let GlobalValue = useGlobalStore((state) => state.GlobalValue);
+  const [favError, setFavError] = useState(null);
+  const GlobalValue = useGlobalStore((state) => state.GlobalValue);
 
   const { favoritesCache, invalidateFavoritesCache, friendMembershipMap, clubTopTags } = useClubData();
 
-  // meant to determine if a particular card is liked or not, depending on if it 
-  // is found in the partulcar liked table or all false if the user is not logged
-  // in
-  let liked = favoritesCache?.has(result.id) ?? false;
+  // Whether this card is favorited. Derived straight from the shared cache — it used to be
+  // a `let` that the click handler reassigned during render, which React never observes,
+  // so the heart only ever changed because invalidateFavoritesCache happened to dispatch.
+  const liked = favoritesCache?.has(result.id) ?? false;
 
   const friendsInClub = friendMembershipMap?.get(result.id) || [];
   const topTags = clubTopTags?.get(result.id) || [];
 
-  //if a user likes a club, refresh cache and add this favorite to it
-  const updateFavorite = async (newLiked) => {
+  const handleHeartClick = async (e) => {
+    e.stopPropagation();
+    if (!GlobalValue) return;
+
+    const next = !liked;
+    setAnimating(true);
+    setFavError(null);
+
+    // Flip the shared cache first so the heart responds immediately, then reconcile.
+    invalidateFavoritesCache(result.id, next);
+
     try {
-      if (newLiked) {
+      if (next) {
         await apiFetch('/me/favorites', { method: 'POST', body: { club_id: result.id } });
-        invalidateFavoritesCache(result.id, true);
       } else {
         await apiFetch(`/me/favorites/${result.id}`, { method: 'DELETE' });
-        invalidateFavoritesCache(result.id, false);
       }
     } catch (err) {
-      console.error(`Error ${newLiked ? 'adding' : 'removing'} favorite:`, err);
+      // Roll back, so the heart shows what the server actually has rather than silently
+      // disagreeing with it. Previously every failure was swallowed into console.error,
+      // which is why a rate-limited click looked identical to a button that does nothing.
+      invalidateFavoritesCache(result.id, !next);
+      setFavError(err?.status === 429 ? err.message : 'Could not save that. Try again.');
+      console.error(`Error ${next ? 'adding' : 'removing'} favorite:`, err);
+    } finally {
+      setTimeout(() => setAnimating(false), 250);
     }
-  };
-
-  const handleHeartClick = async (e) => {
-    console.log("heart button clicked");
-    e.stopPropagation();
-    setAnimating(true);
-    liked = !liked;
-    await updateFavorite(liked);
-    setTimeout(() => setAnimating(false), 250);
   };
 
   const handleExpand = () => {
@@ -75,6 +81,7 @@ export const ClubGrid = ({ result, onExpand, hideHeart, hidePins }) => {
           onClick = {handleHeartClick}
         /> : null}
         </div>
+        {favError && <div className="club-fav-error">{favError}</div>}
         {GlobalValue && friendsInClub.length > 0 && (
           <div className="friend-avatars">
             {friendsInClub.slice(0, 3).map((friend) => (
@@ -105,4 +112,8 @@ export const ClubGrid = ({ result, onExpand, hideHeart, hidePins }) => {
 );
 };
 
-export default React.memo(ClubGrid);
+// Memoize on the *named* export as well. Both call sites (ClubList and
+// ClubMembershipPanel) import { ClubGrid }, so memoizing only the default export meant
+// the memo was never actually used — every card re-rendered on any parent update.
+export const ClubGrid = React.memo(ClubGridCard);
+export default ClubGrid;
