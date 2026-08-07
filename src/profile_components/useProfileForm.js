@@ -1,0 +1,291 @@
+import { useState, useEffect, useCallback } from 'react';
+import imageCompression from 'browser-image-compression';
+import { apiFetch } from '../lib/api';
+import textModerator from '../lib/textModerator';
+
+// Shared state and save logic for the profile form.
+//
+// Extracted from ProfileSetupPage so the settings page can reuse it. The two differ only
+// in framing and what happens after a successful save — onboarding redirects, settings
+// stays put — so everything up to that point lives here: the debounced username
+// availability check, avatar compression, the upload -> verify-image moderation round
+// trip, and the photo gallery's three-way state (existing urls, pending files, object
+// URLs for previews).
+//
+// Duplicating any of that would mean two moderation paths to keep in sync.
+
+export const MAX_PHOTOS = 10;
+const AVATAR_COLUMN = 'avatar_url';
+
+const COMPRESSION_OPTIONS = {
+    maxSizeMB: 0.2,
+    maxWidthOrHeight: 400,
+    useWebWorker: true,
+    fileType: 'image/webp',
+};
+
+export function useProfileForm() {
+    const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
+    const [error, setError] = useState(null);
+
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [username, setUsername] = useState('');
+    const [usernameStatus, setUsernameStatus] = useState(null);
+    const [biography, setBiography] = useState('');
+    const [school, setSchool] = useState('');
+
+    const [avatarFile, setAvatarFile] = useState(null);
+    const [avatarPreview, setAvatarPreview] = useState(null);
+
+    const [existingPhotos, setExistingPhotos] = useState([]);
+    const [selectedPhotoFiles, setSelectedPhotoFiles] = useState([]);
+    const [photoPreviews, setPhotoPreviews] = useState([]);
+
+    // The username the profile already has. Re-saving without changing it must not trip
+    // the "taken" check against itself.
+    const [initialUsername, setInitialUsername] = useState('');
+
+    const checkUsername = useCallback(async (value) => {
+        if (!value || value.length < 3 || !/^[a-zA-Z0-9_]+$/.test(value)) {
+            setUsernameStatus(null);
+            return;
+        }
+        try {
+            const { available, reason } = await apiFetch(
+                `/users/check-username?username=${encodeURIComponent(value)}`,
+                { auth: false }
+            );
+            setUsernameStatus(available ? 'available' : reason || 'taken');
+        } catch {
+            setUsernameStatus(null);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!username) { setUsernameStatus(null); return; }
+        // Your own current username is not "taken" by anyone else.
+        if (username === initialUsername) { setUsernameStatus(null); return; }
+        const timer = setTimeout(() => checkUsername(username), 400);
+        return () => clearTimeout(timer);
+    }, [username, initialUsername, checkUsername]);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        async function load() {
+            setLoading(true);
+            setError(null);
+            try {
+                const profile = await apiFetch('/me/profile');
+                if (cancelled) return;
+
+                setFirstName(profile?.first_name || '');
+                setLastName(profile?.last_name || '');
+                const existing = profile?.username || '';
+                if (existing && /^[a-zA-Z0-9_]+$/.test(existing)) {
+                    setUsername(existing);
+                    setInitialUsername(existing);
+                }
+                setBiography(profile?.biography || '');
+                setSchool(profile?.school || '');
+                setAvatarPreview(profile?.avatar_url || null);
+                setExistingPhotos(Array.isArray(profile?.photos) ? profile.photos : []);
+            } catch (err) {
+                if (cancelled) return;
+                console.error('Error loading profile:', err);
+                setError('Failed to load your profile. Please try again.');
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        }
+
+        load();
+        return () => { cancelled = true; };
+    }, []);
+
+    // Object URLs leak until revoked.
+    useEffect(() => {
+        return () => photoPreviews.forEach((url) => URL.revokeObjectURL(url));
+    }, [photoPreviews]);
+
+    const handleAvatarChange = (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        setAvatarFile(file);
+        setAvatarPreview(URL.createObjectURL(file));
+    };
+
+    const handlePhotoChange = (event) => {
+        const files = Array.from(event.target.files || []);
+        const remaining = MAX_PHOTOS - (existingPhotos.length + selectedPhotoFiles.length);
+
+        if (remaining <= 0) {
+            setError(`You can have at most ${MAX_PHOTOS} photos.`);
+            event.target.value = '';
+            return;
+        }
+
+        const toAdd = files.slice(0, remaining);
+        if (files.length > remaining) {
+            setError(`Only added ${remaining} photo(s). Max ${MAX_PHOTOS} total.`);
+        }
+
+        setSelectedPhotoFiles((prev) => [...prev, ...toAdd]);
+        setPhotoPreviews((prev) => [...prev, ...toAdd.map((f) => URL.createObjectURL(f))]);
+        event.target.value = '';
+    };
+
+    const removeExistingPhoto = (index) => {
+        setExistingPhotos((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    const removeNewPhoto = (index) => {
+        URL.revokeObjectURL(photoPreviews[index]);
+        setSelectedPhotoFiles((prev) => prev.filter((_, i) => i !== index));
+        setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    // Every uploaded image goes through /storage/verify-image before its URL is saved,
+    // so a rejected image is never referenced by a profile row.
+    const uploadPhotos = async () => {
+        const urls = [];
+        for (const file of selectedPhotoFiles) {
+            const ext = file.name.split('.').pop();
+            const { signedUrl, publicUrl } = await apiFetch('/storage/profile-photos-upload-url', {
+                method: 'POST',
+                body: { ext },
+            });
+
+            const putRes = await fetch(signedUrl, {
+                method: 'PUT',
+                body: file,
+                headers: { 'Content-Type': file.type || 'application/octet-stream' },
+            });
+            if (!putRes.ok) throw new Error(`Upload failed (${putRes.status})`);
+
+            const verification = await apiFetch('/storage/verify-image', {
+                method: 'POST',
+                body: { publicUrl },
+            });
+            if (!verification.ok) {
+                throw new Error(verification.error || 'Photo rejected by content policy');
+            }
+
+            urls.push(publicUrl);
+        }
+        return urls;
+    };
+
+    const uploadAvatar = async () => {
+        const compressed = await imageCompression(avatarFile, COMPRESSION_OPTIONS);
+
+        const { signedUrl, publicUrl } = await apiFetch('/storage/profile-upload-url', {
+            method: 'POST',
+        });
+
+        const putRes = await fetch(signedUrl, {
+            method: 'PUT',
+            body: compressed,
+            headers: { 'Content-Type': 'image/webp' },
+        });
+        if (!putRes.ok) throw new Error(`Upload failed (${putRes.status})`);
+
+        const verification = await apiFetch('/storage/verify-image', {
+            method: 'POST',
+            body: { publicUrl },
+        });
+        if (!verification.ok) {
+            throw new Error(verification.error || 'Avatar rejected by content policy');
+        }
+
+        return publicUrl;
+    };
+
+    // Returns an error string, or null when valid. Client-side only — the server runs the
+    // same moderation on every write.
+    const validate = () => {
+        if (!firstName.trim() || !lastName.trim()) return 'First and last name are required.';
+        if (!/^[a-zA-Z0-9_]{3,30}$/.test(username)) {
+            return 'Username must be 3-30 alphanumeric or underscore characters.';
+        }
+        if (usernameStatus && usernameStatus !== 'available') return 'That username is already taken.';
+        if (!biography.trim()) return 'Please enter a short biography.';
+
+        const textCheck = textModerator.checkFields({
+            first_name: firstName,
+            last_name: lastName,
+            biography,
+        });
+        if (!textCheck.clean) return textCheck.message;
+
+        return null;
+    };
+
+    /**
+     * Validates, uploads any new images, then PUTs the profile.
+     * `extraFields` is merged into the body — onboarding uses it to send `school`.
+     * Returns true on success, false if it set an error.
+     */
+    const save = async (extraFields = {}) => {
+        setError(null);
+
+        const validationError = validate();
+        if (validationError) {
+            setError(validationError);
+            return false;
+        }
+
+        setSubmitting(true);
+        try {
+            const avatarUrl = avatarFile ? await uploadAvatar() : avatarPreview;
+            const photos = [...existingPhotos, ...(await uploadPhotos())];
+
+            await apiFetch('/me/profile', {
+                method: 'PUT',
+                body: {
+                    first_name: firstName.trim(),
+                    last_name: lastName.trim(),
+                    username: username.trim(),
+                    [AVATAR_COLUMN]: avatarUrl,
+                    biography: biography.trim(),
+                    photos,
+                    ...extraFields,
+                },
+            });
+
+            // Uploaded files are now saved URLs; fold them into the existing set so a
+            // second save does not re-upload them.
+            setExistingPhotos(photos);
+            setSelectedPhotoFiles([]);
+            setPhotoPreviews([]);
+            setAvatarFile(null);
+            setAvatarPreview(avatarUrl);
+            setInitialUsername(username.trim());
+
+            return true;
+        } catch (err) {
+            console.error('Error saving profile:', err);
+            setError(err?.message || 'Could not save your profile. Please try again.');
+            return false;
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    return {
+        loading, submitting, error, setError,
+        firstName, setFirstName,
+        lastName, setLastName,
+        username, setUsername,
+        usernameStatus,
+        biography, setBiography,
+        school,
+        avatarPreview, handleAvatarChange,
+        existingPhotos, photoPreviews,
+        handlePhotoChange, removeExistingPhoto, removeNewPhoto,
+        totalPhotos: existingPhotos.length + selectedPhotoFiles.length,
+        validate, save,
+    };
+}
