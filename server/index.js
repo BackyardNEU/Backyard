@@ -12,6 +12,7 @@ import reviewsRouter from './routes/reviews.js';
 import favoritesRouter from './routes/favorites.js';
 import votesRouter from './routes/votes.js';
 import friendsRouter from './routes/friends.js';
+import blocksRouter from './routes/blocks.js';
 import profilesRouter from './routes/profiles.js';
 import usersRouter from './routes/users.js';
 import storageRouter from './routes/storage.js';
@@ -107,6 +108,7 @@ app.use('/api/reviews', reviewsLimiter, reviewsRouter);
 app.use('/api/me/favorites', favoritesLimiter, favoritesRouter);
 app.use('/api/me/votes', votesLimiter, votesRouter);
 app.use('/api/me/friends', friendsLimiter, friendsRouter);
+app.use('/api/me/blocks', friendsLimiter, blocksRouter);
 app.use('/api/friend-requests', friendRequestsLimiter, friendRequestsRouter);
 app.use('/api/me/notifications', notificationsLimiter, notificationsRouter);
 app.use('/api/me', profilesRouter); // serves /profile and /membership
