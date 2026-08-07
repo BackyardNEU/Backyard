@@ -17,6 +17,7 @@ describe('PROFILE_WRITABLE whitelist', () => {
                 'school',
                 'graduation_year',
                 'major',
+                'calendar_preference',
             ].sort()
         );
     });
