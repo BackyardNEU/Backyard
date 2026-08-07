@@ -107,9 +107,16 @@ router.post('/', checkMuted, async (req, res) => {
     const validationError = validateEvent(req.body);
     if (validationError) return res.status(400).json({ error: validationError });
 
-    const textCheck = textModerator.check(req.body.description);
+    // event_name and where are written to club_events and render prominently on the
+    // calendar, but only description used to be moderated — leaving two user-controlled
+    // text fields unchecked.
+    const textCheck = textModerator.checkFields({
+        description: req.body.description,
+        event_name: req.body.eventName,
+        where: req.body.where,
+    });
     if (!textCheck.clean) {
-        return res.status(400).json({ error: textCheck.message });
+        return res.status(400).json({ error: textCheck.message, field: textCheck.field });
     }
 
     const {
@@ -157,9 +164,20 @@ router.post('/', checkMuted, async (req, res) => {
     res.status(201).json(data);
 });
 
-router.put('/:eventId', async (req, res) => {
+router.put('/:eventId', checkMuted, async (req, res) => {
     const validationError = validateEventFields(req.body);
     if (validationError) return res.status(400).json({ error: validationError });
+
+    // The edit path had no moderation and no mute check at all, so a member could post a
+    // clean event and immediately edit it to say anything.
+    const textCheck = textModerator.checkFields({
+        description: req.body.description,
+        event_name: req.body.eventName,
+        where: req.body.where,
+    });
+    if (!textCheck.clean) {
+        return res.status(400).json({ error: textCheck.message, field: textCheck.field });
+    }
 
     const existing = await requireClubMembershipForEvent(req, res);
     if (!existing) return;
