@@ -112,7 +112,12 @@ router.post('/', checkMuted, async (req, res) => {
         return res.status(400).json({ error: textCheck.message });
     }
 
-    const { clubId, clubName, description, startTime, endTime, imageUrl } = req.body;
+    const {
+        clubId, clubName, description, startTime, endTime, imageUrl,
+        // eventName, where and isMembersOnly are used below but were missing from this
+        // destructure, so every POST threw ReferenceError before reaching the insert.
+        eventName, where, isMembersOnly,
+    } = req.body;
 
     const { data: profile } = await supabaseAdmin
         .from('profiles')
