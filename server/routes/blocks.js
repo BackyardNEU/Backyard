@@ -75,9 +75,14 @@ router.get('/', async (req, res) => {
     throw err;
   }
 
+  // The .order() above applies to the user_blocks query, but the response is built from
+  // the profiles result, whose .in() ordering is not guaranteed — so sort explicitly
+  // rather than relying on it. Newest block first.
   const blockedAt = new Map((blocks || []).map((b) => [b.blocked_id, b.created_at]));
   res.json(
-    (profiles || []).map((p) => ({ ...p, blocked_at: blockedAt.get(p.id) ?? null }))
+    (profiles || [])
+      .map((p) => ({ ...p, blocked_at: blockedAt.get(p.id) ?? null }))
+      .sort((a, b) => new Date(b.blocked_at ?? 0) - new Date(a.blocked_at ?? 0))
   );
 });
 
