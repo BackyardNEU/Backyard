@@ -55,6 +55,21 @@ export async function apiFetch(path, { method = 'GET', body, headers = {}, auth 
     }
   }
 
+  // Rate limited. Deliberately not retried: retrying a throttled request is precisely what
+  // turns a brief limit into a sustained one. Surface how long to wait so callers can show
+  // something useful — before this, a 429 reached the UI as an unexplained silent failure.
+  if (res.status === 429) {
+    const retryAfter = Number(res.headers.get('retry-after')) || null;
+    const err = new Error(
+      retryAfter
+        ? `You're going a little fast. Try again in ${retryAfter} second${retryAfter === 1 ? '' : 's'}.`
+        : "You're going a little fast. Give it a moment and try again."
+    );
+    err.status = 429;
+    err.retryAfter = retryAfter;
+    throw err;
+  }
+
   const text = await res.text();
   const data = text ? safeParseJson(text) : null;
 

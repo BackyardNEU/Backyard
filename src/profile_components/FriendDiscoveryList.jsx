@@ -38,16 +38,24 @@ export const FriendDiscoveryList = ({ userId }) => {
       return;
     }
 
-    async function searchUsers() {
+    let cancelled = false;
+
+    // Debounce: this previously fired one /users/search per keystroke.
+    const timer = setTimeout(async () => {
       try {
         const data = await apiFetch(`/users/search?q=${encodeURIComponent(searchInput)}`);
+        // A newer query superseded this one while it was in flight.
+        if (cancelled) return;
         setSearchResults(data || []);
       } catch (err) {
-        console.error('Error searching users:', err);
+        if (!cancelled) console.error('Error searching users:', err);
       }
-    }
+    }, 300);
 
-    searchUsers();
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [searchInput, userId]);
 
   async function handleAddFriend(friendId) {

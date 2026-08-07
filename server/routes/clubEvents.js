@@ -2,6 +2,7 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { getBlockedIds, filterBlocked } from '../lib/blocks.js';
 
 const router = express.Router();
 const JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
@@ -18,6 +19,64 @@ function optionalAuth(req, _res, next) {
   }
   next();
 }
+
+// GET /api/clubs/events/monthly-batch?clubIds=a,b,c&year=2026&month=6
+// Batched form of the per-club route below. CalendarPage needs every club the user
+// belongs to, which previously meant one request per club per month — a user in 20 clubs
+// fired 40 requests every time the month view opened or the month changed, enough on its
+// own to trip the rate limiter.
+//
+// Two segments, so this cannot collide with the three-segment /:clubId/events/monthly.
+router.get('/events/monthly-batch', optionalAuth, async (req, res) => {
+  const year = parseInt(req.query.year, 10);
+  const month = parseInt(req.query.month, 10);
+
+  if (!year || !month || month < 1 || month > 12) {
+    return res.status(400).json({ error: 'Valid year and month (1–12) are required' });
+  }
+
+  const clubIds = String(req.query.clubIds || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  if (clubIds.length === 0) return res.json([]);
+  if (clubIds.length > 100) {
+    return res.status(400).json({ error: 'Too many clubIds (max 100)' });
+  }
+
+  // One membership lookup covering every club, rather than one per club as the
+  // single-club route does.
+  let memberOf = new Set();
+  if (req.user) {
+    const { data: memberships } = await supabaseAdmin
+      .from('club_memberships')
+      .select('club_id')
+      .eq('user_id', req.user.id)
+      .in('club_id', clubIds);
+    memberOf = new Set((memberships || []).map((m) => m.club_id));
+  }
+
+  const settled = await Promise.allSettled(
+    clubIds.map((clubId) =>
+      supabaseAdmin
+        .rpc('get_club_monthly_events', {
+          p_club_id: clubId,
+          p_year: year,
+          p_month: month,
+          p_is_member: memberOf.has(clubId),
+        })
+        .then(({ data, error }) => {
+          if (error) throw new Error(error.message);
+          return (data || []).map((e) => ({ ...e, club_id: clubId }));
+        })
+    )
+  );
+
+  // Drop failed clubs rather than failing the whole calendar — matches what the client
+  // did with Promise.allSettled when it was fanning out these requests itself.
+  res.json(settled.filter((r) => r.status === 'fulfilled').flatMap((r) => r.value));
+});
 
 // GET /api/clubs/:clubId/events/monthly?year=2026&month=6
 // Returns events spanning prev month, current month, and next month for the given club.
@@ -146,7 +205,13 @@ router.get('/:clubId/events/upcoming', optionalAuth, async (req, res) => {
 
 // GET /api/clubs/:clubId/events/rsvps?eventIds=a,b,c
 // Returns all RSVPs for the given event IDs (used for friend callouts).
-router.get('/:clubId/events/rsvps', async (req, res) => {
+//
+// requireAuth was added here deliberately. The route previously had no auth middleware of
+// its own — it was only ever reachable by authenticated callers because questions.js was
+// accidentally 401ing the whole /api/clubs mount. With that bug fixed this became a fully
+// public endpoint that let anyone enumerate who attended any event, so it now requires
+// auth in its own right rather than by accident.
+router.get('/:clubId/events/rsvps', requireAuth, async (req, res) => {
   const idsParam = req.query.eventIds;
   if (!idsParam) return res.json([]);
 
@@ -164,7 +229,8 @@ router.get('/:clubId/events/rsvps', async (req, res) => {
     throw err;
   }
 
-  res.json(data || []);
+  const blockedIds = await getBlockedIds(req.user.id);
+  res.json(filterBlocked(data, blockedIds, (r) => r.user_id));
 });
 
 // POST /api/clubs/:clubId/events/:eventId/rsvp — auth required

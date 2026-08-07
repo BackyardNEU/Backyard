@@ -31,8 +31,18 @@ export function useNotifications() {
   useEffect(() => {
     if (!isLoggedIn) return;
     let channel;
+    let cancelled = false;
+
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
+      // The effect can be torn down while getUser() is still in flight. Cleanup only
+      // removes `channel`, which is still undefined at that point, so the old channel
+      // survives — and because the topic name is fixed, the next run gets that same
+      // already-subscribed channel back from supabase.channel(). Calling .on() on a
+      // subscribed channel throws "cannot add postgres_changes callbacks ... after
+      // subscribe()", which killed realtime notifications entirely. StrictMode's double
+      // effect invocation triggered it on every mount in development.
+      if (cancelled || !user) return;
+
       channel = supabase
         .channel('my-notifications')
         .on('postgres_changes', {
@@ -43,7 +53,11 @@ export function useNotifications() {
         }, () => fetchNotifications())
         .subscribe();
     });
-    return () => { if (channel) supabase.removeChannel(channel); };
+
+    return () => {
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
+    };
   }, [isLoggedIn, fetchNotifications]);
 
   const markAllRead = useCallback(async () => {

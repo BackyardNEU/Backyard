@@ -19,7 +19,9 @@ function LoginMorph({ open, setOpen }) {
   const setLastPath = useGlobalStore((state) => state.setLastPath);
   const navigate = useNavigate();
   const location = useLocation();
-  const isProfilePage = location.pathname === '/profile';
+  // Pages that render their own account chrome. The floating avatar cluster would
+  // otherwise overlay them.
+  const isProfilePage = location.pathname === '/profile' || location.pathname === '/settings';
   const [view, setView] = useState("login");
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [signupFirstName, setSignupFirstName] = useState("");

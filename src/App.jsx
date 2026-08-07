@@ -8,6 +8,7 @@ import ReviewPage from "./review_components/ReviewPage";
 import AuthListener from "./login_components/AuthListener";
 import AuthCallbackPage from './login_components/AuthCallbackPage';
 import ProfileSetupPage from './profile_components/ProfileSetupPage';
+import SettingsPage from './settings_components/SettingsPage';
 import { ProfilePage } from './profile_components/ProfilePage';
 import { FriendProfile } from './profile_components/FriendProfile';
 import ResetPasswordPage from './login_components/ResetPasswordPage';
@@ -45,6 +46,7 @@ function App() {
           <Route path="/reviews/:id" element={<ReviewPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/settings" element={<SettingsPage />} />
           <Route path="/friend/:id" element={<FriendProfile />} />
           <Route path="/profile/setup" element={<ProfileSetupPage />} />
           <Route path="/profile-setup" element={<ProfileSetupPage />} />

@@ -189,6 +189,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const [pendingLogoFile, setPendingLogoFile] = useState(null);
     // favorites heart — mirrors the behavior in ClubGrid
     const [heartAnimating, setHeartAnimating] = useState(false);
+    const [favError, setFavError] = useState(null);
     // pending user-submitted FAQ questions (approved editors only) + ids to delete on Save
     const [userFaqs, setUserFaqs] = useState([]);
     const [questionDeletes, setQuestionDeletes] = useState(() => new Set());
@@ -212,20 +213,31 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
     const handleHeartClick = async (e) => {
         e.stopPropagation();
-        setHeartAnimating(true);
+        if (!GlobalValue) return;
+
         const newLiked = !liked;
+        setHeartAnimating(true);
+        setFavError(null);
+
+        // Flip the shared cache first so the heart responds immediately, then reconcile.
+        invalidateFavoritesCache(club.id, newLiked);
+
         try {
             if (newLiked) {
                 await apiFetch('/me/favorites', { method: 'POST', body: { club_id: club.id } });
-                invalidateFavoritesCache(club.id, true);
             } else {
                 await apiFetch(`/me/favorites/${club.id}`, { method: 'DELETE' });
-                invalidateFavoritesCache(club.id, false);
             }
         } catch (err) {
+            // Roll back so the heart reflects what the server actually has, and say so —
+            // this failure used to be swallowed into console.error, making a rate-limited
+            // click indistinguishable from a button that does nothing.
+            invalidateFavoritesCache(club.id, !newLiked);
+            setFavError(err?.status === 429 ? err.message : 'Could not save that. Try again.');
             console.error(`Error ${newLiked ? 'adding' : 'removing'} favorite:`, err);
+        } finally {
+            setTimeout(() => setHeartAnimating(false), 250);
         }
-        setTimeout(() => setHeartAnimating(false), 250);
     };
 
     const handleClose = useCallback(() => {
@@ -587,6 +599,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                         alt={liked ? 'Remove favorite' : 'Add favorite'}
                     />
                 )}
+                {favError && <div className="exp-fav-error">{favError}</div>}
             </div>
         </div>
     );

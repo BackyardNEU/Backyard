@@ -132,13 +132,6 @@ export default function ReviewPage({clubId, onClose}) {
         }
         if (!((user_review && user_title) || stagedImages.length > 0)) return;
 
-        for (let i = 0; i < badWords.length; i++) {
-            const regex = new RegExp(badWords[i], 'gi');
-            if (regex.test(user_review) || regex.test(user_title)) {
-                setWarning("Review contains harmful content. Please do not use derogatory or harmful speech.");
-                return;
-            }
-        }
         const textCheck = textModerator.checkFields({
             review_title: user_title,
             review_text: user_review,

@@ -6,7 +6,7 @@ import {
 import borderImg from '../assets/border.svg';
 import borderHorizontalImg from '../assets/border-horizontal.svg';
 import { apiFetch } from '../lib/api';
-import { buildGoogleCalendarUrl, downloadIcsFile } from '../lib/calendarExport';
+import { CalendarExportRow } from './CalendarExportRow';
 import './CalendarModule.css';
 
 /**
@@ -39,6 +39,23 @@ export function CalendarModule({
 }) {
   const [overlayEvent, setOverlayEvent] = useState(null);
   const [overlayHasMore, setOverlayHasMore] = useState(false);
+
+  // Which format "Add to calendar" uses, set in Settings. Defaults to 'ics' — which every
+  // calendar app imports — so this renders correctly before the fetch resolves and for
+  // signed-out visitors, who get no profile at all.
+  const [calendarPreference, setCalendarPreference] = useState('ics');
+
+  useEffect(() => {
+    let cancelled = false;
+    apiFetch('/me/profile')
+      .then((profile) => {
+        if (!cancelled && profile?.calendar_preference) {
+          setCalendarPreference(profile.calendar_preference);
+        }
+      })
+      .catch(() => { /* signed out, or profile unavailable — the 'ics' default stands */ });
+    return () => { cancelled = true; };
+  }, []);
   const overlayScrollRef = useRef(null);
   const overlayItemRefs = useRef({});
 
@@ -412,22 +429,7 @@ export function CalendarModule({
                         </button>
                       )}
                     </div>
-                    <div className="cal-export-row">
-                      <a
-                        href={buildGoogleCalendarUrl(ev)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="cal-export-btn"
-                      >
-                        Google Cal
-                      </a>
-                      <button
-                        className="cal-export-btn"
-                        onClick={() => downloadIcsFile(ev)}
-                      >
-                        Apple Cal
-                      </button>
-                    </div>
+                    <CalendarExportRow event={ev} preference={calendarPreference} />
                   </div>
                 );
               })}
@@ -514,22 +516,7 @@ export function CalendarModule({
                         {monthlyMyRsvpSet.has(event.id) ? 'Going ✓' : "I'm going!"}
                       </button>
                     )}
-                    <div className="cal-export-row">
-                      <a
-                        href={buildGoogleCalendarUrl(event)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="cal-export-btn"
-                      >
-                        Google Cal
-                      </a>
-                      <button
-                        className="cal-export-btn"
-                        onClick={() => downloadIcsFile(event)}
-                      >
-                        Apple Cal
-                      </button>
-                    </div>
+                    <CalendarExportRow event={event} preference={calendarPreference} />
                   </div>
                 </div>
               ))}

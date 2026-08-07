@@ -104,36 +104,41 @@ useEffect(() => {
   
    
     useEffect(() => {
-    async function getClubs() {
-      if (input.trim() !== "") {
-        // Full Text Search + Exact Match via the backend search route
-        try {
-          const data = await apiFetch(
-            `/search?q=${encodeURIComponent(input)}&school=${encodeURIComponent(university)}`,
-            { auth: false }
-          );
-          console.log("NL result sample:", data[0]);
-          setClubs(data);
-          setResults(data);
-        } catch (err) {
-          console.error("Error fetching clubs via search:", err);
-        }
-      } else {
-        // Default state: no input. allData is already loaded by ClubDataProvider, so we
-        // just filter it client-side rather than burn a second round trip.
-        const data = allData.filter((c) => c.school === university).slice(0, 100);
-        setClubs(data);
-        setResults(data);
-      }
+    // No input: allData is already loaded by ClubDataProvider, so filter client-side
+    // immediately rather than burning a round trip or making the user wait on a debounce.
+    if (input.trim() === "") {
+      const data = allData.filter((c) => c.school === university).slice(0, 100);
+      setClubs(data);
+      setResults(data);
+      return;
     }
 
-    // Debounce the search: wait 300ms after the user stops typing before querying
-    const delayDebounceFn = setTimeout(() => {
-      getClubs();
-    }, 0);
+    let cancelled = false;
 
-    // Cleanup function clears the timeout if the input changes before 300ms
-    return () => clearTimeout(delayDebounceFn);
+    // Debounce the search: wait 300ms after the user stops typing before querying.
+    // This delay was previously 0, which defeated the debounce entirely — setTimeout(fn, 0)
+    // fires on the next macrotask, before the cleanup below can cancel it, so every
+    // keystroke issued its own /search request.
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        const data = await apiFetch(
+          `/search?q=${encodeURIComponent(input)}&school=${encodeURIComponent(university)}`,
+          { auth: false }
+        );
+        // A newer query superseded this one while it was in flight; dropping the result
+        // keeps a slow early response from overwriting fresher matches.
+        if (cancelled) return;
+        setClubs(data);
+        setResults(data);
+      } catch (err) {
+        if (!cancelled) console.error("Error fetching clubs via search:", err);
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(delayDebounceFn);
+    };
   }, [input, university, setResults, allData]);
 
   return (

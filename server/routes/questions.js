@@ -23,7 +23,14 @@ const router = express.Router();
 // ─────────────────────────────────────────────────────────────────────────────
 
 // All FAQ-question routes require a logged-in user.
-router.use(requireAuth);
+//
+// Scoped to this router's own path rather than a bare router.use(requireAuth): this
+// router shares the /api/clubs mount with clubsRouter, clubPageRouter, clubMembersRouter
+// and clubEventsRouter, and it is mounted ahead of clubEventsRouter. A blanket
+// router.use() therefore ran for *every* /api/clubs request and 401'd anonymous callers
+// before clubEventsRouter was ever reached — which silently turned all of that router's
+// optionalAuth event routes into authenticated-only ones.
+router.use('/:clubId/questions', requireAuth);
 
 async function isApprovedFor(userId, clubId) {
   const { data, error } = await supabaseAdmin

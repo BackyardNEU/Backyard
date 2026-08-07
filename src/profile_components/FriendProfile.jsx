@@ -8,6 +8,7 @@ import './FriendDiscoveryList.css'
 import './FriendProfile.css'
 import { ClubMembershipPanel } from './ClubMembershipPanel'
 import { PolaroidCards } from './PolaroidCards'
+import { useClubData } from '../context/useClubData'
 
 // Read-only counterpart to ProfilePage. Renders another user's profile and the
 // friends both viewers have in common. There is intentionally no avatar upload,
@@ -20,6 +21,10 @@ export const FriendProfile = () => {
   const [profile, setProfile] = useState(null)
   const [status, setStatus] = useState('loading')
   const [errorMessage, setErrorMessage] = useState(null)
+  const [confirmingBlock, setConfirmingBlock] = useState(false)
+  const [blocking, setBlocking] = useState(false)
+  const [blockError, setBlockError] = useState(null)
+  const { refetch } = useClubData()
 
   useEffect(() => {
     let cancelled = false
@@ -69,6 +74,27 @@ export const FriendProfile = () => {
   const handleClose = () => {
     const target = lastPath && lastPath !== window.location.pathname ? lastPath : '/profile'
     navigate(target)
+  }
+
+  // Blocking severs the friendship on both sides and hides each user from the other, so
+  // it is confirmed rather than fired straight from the button.
+  const handleBlock = async () => {
+    setBlocking(true)
+    setBlockError(null)
+
+    try {
+      await apiFetch('/me/blocks', { method: 'POST', body: { blockedId: id } })
+      // The provider caches friends and their club memberships; without this the blocked
+      // user lingers in friend lists and "X is going" callouts until a reload.
+      await refetch?.()
+      navigate('/profile', { replace: true })
+    } catch (err) {
+      console.error('Error blocking user:', err)
+      setBlockError(
+        err?.status === 429 ? err.message : 'Could not block this user. Please try again.'
+      )
+      setBlocking(false)
+    }
   }
 
   if (status === 'loading') {
@@ -136,6 +162,44 @@ export const FriendProfile = () => {
       <div className="profile-section">
         <h2 className="profile-divider-header">Mutual Friends</h2>
         <MutualFriendsList friends={profile?.mutual_friends || []} viewerId={viewerId} />
+      </div>
+
+      <div className="profile-section friend-block-section">
+        {confirmingBlock ? (
+          <div className="friend-block-confirm" role="alertdialog" aria-label="Confirm block">
+            <p className="friend-block-copy">
+              Block {profile?.username || 'this user'}? You won&apos;t see each other&apos;s
+              profiles, events or friends, and you&apos;ll be removed as friends.
+            </p>
+            <div className="friend-block-actions">
+              <button
+                type="button"
+                className="friend-block-cancel"
+                onClick={() => { setConfirmingBlock(false); setBlockError(null) }}
+                disabled={blocking}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="friend-block-danger"
+                onClick={handleBlock}
+                disabled={blocking}
+              >
+                {blocking ? 'Blocking…' : `Block ${profile?.username || 'user'}`}
+              </button>
+            </div>
+            {blockError && <p className="friend-block-error">{blockError}</p>}
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="friend-block-trigger"
+            onClick={() => setConfirmingBlock(true)}
+          >
+            Block user
+          </button>
+        )}
       </div>
     </div>
   )

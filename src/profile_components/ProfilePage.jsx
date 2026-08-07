@@ -147,6 +147,14 @@ export const ProfilePage = () => {
             >
               Setup profile
             </button>
+            {/* There is no nav bar, so the profile page is the entry point to settings. */}
+            <button
+              type="button"
+              className="profile-setup-btn"
+              onClick={() => navigate('/settings')}
+            >
+              Settings
+            </button>
           </div>
           <button
             className="profile-close-btn"
