@@ -46,7 +46,9 @@ All frontend→backend calls go through `src/lib/api.js:apiFetch()`, which autom
 - `/join/:inviteCode` — Invite link handler
 
 ### Backend Route Structure (`server/routes/`)
-All routes are mounted under `/api`. Auth middleware (`server/middleware/auth.js`) verifies JWT on protected routes and sets `req.userId`.
+All routes are mounted under `/api`. Auth middleware (`server/middleware/requireAuth.js`) verifies the Supabase JWT on protected routes and sets `req.user = { id, email }` — read `req.user.id`, not `req.userId`.
+
+`identifyUser` (same file) is mounted globally on `/api` and attaches `req.user` when a valid token is present without rejecting anonymous callers. Rate limiters rely on it to key by user rather than IP.
 
 Key route files: `clubs.js`, `reviews.js`, `favorites.js`, `friends.js`, `users.js`, `events.js`, `media.js`, `email.js`
 
@@ -67,5 +69,5 @@ See `docs/testing-guide.md` for setup patterns and examples.
 - `src/lib/api.js` — `apiFetch(path, options)`: authenticated fetch wrapper
 - `src/lib/store.js` — Zustand global store
 - `server/supabaseAdmin.js` — Service-role Supabase client (server-only)
-- `server/middleware/auth.js` — JWT verification middleware
+- `server/middleware/requireAuth.js` — JWT verification: `requireAuth` (rejects anonymous), `identifyUser` (populates `req.user`, never rejects), `verifyBearer` (returns user or null)
 - `server/lib/validation.js` — Input validation helpers
