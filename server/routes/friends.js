@@ -2,6 +2,7 @@ import express from 'express';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { checkMuted } from '../middleware/checkMuted.js';
+import { getBlockedIds } from '../lib/blocks.js';
 
 const router = express.Router();
 
@@ -23,7 +24,15 @@ router.get('/', async (req, res) => {
         throw err;
     }
 
-    const friendIds = profile?.friend_list || [];
+    // Blocking severs the friendship on both sides, so a blocked user should already be
+    // absent from friend_list. Filtering anyway keeps a half-applied block (or a row
+    // written before blocking existed) from leaking them back into the UI.
+    //
+    // This filter cascades: "which friends are going" is computed client-side by
+    // intersecting this list against event RSVPs, so dropping someone here removes them
+    // from every "X is going" callout as well.
+    const blockedIds = await getBlockedIds(req.user.id);
+    const friendIds = (profile?.friend_list || []).filter((id) => !blockedIds.has(id));
     if (friendIds.length === 0) return res.json([]);
 
     const { data, error } = await supabaseAdmin

@@ -3,6 +3,7 @@ import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { checkMuted } from '../middleware/checkMuted.js';
 import textModerator from '../lib/textModerator.js';
+import { getBlockedIds, filterBlocked } from '../lib/blocks.js';
 
 const router = express.Router();
 
@@ -46,7 +47,11 @@ router.get('/rsvps', async (req, res) => {
         throw err;
     }
 
-    res.json(data);
+    // Strip blocked users before the payload leaves the server. Filtering GET /me/friends
+    // already removes them from the "X is going" callouts, which are computed client-side,
+    // but their raw user_id would still be sitting in this response.
+    const blockedIds = await getBlockedIds(req.user.id);
+    res.json(filterBlocked(data, blockedIds, (r) => r.user_id));
 });
 
 // Server-side validation — the frontend does this too, but never trust it.

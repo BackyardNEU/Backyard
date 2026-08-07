@@ -1,6 +1,7 @@
 import express from 'express';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { getBlockedIds, filterBlocked } from '../lib/blocks.js';
 
 const router = express.Router();
 router.use(requireAuth);
@@ -19,7 +20,12 @@ router.get('/', async (req, res) => {
     throw err;
   }
 
-  const actorIds = [...new Set(notifs.filter((n) => n.actor_id).map((n) => n.actor_id))];
+  // Drop anything a blocked user did. Notifications outlive the action that created
+  // them, so without this a block would leave their name sitting in the tray.
+  const blockedIds = await getBlockedIds(req.user.id);
+  const visible = filterBlocked(notifs, blockedIds, (n) => n.actor_id);
+
+  const actorIds = [...new Set(visible.filter((n) => n.actor_id).map((n) => n.actor_id))];
   let actorMap = {};
   if (actorIds.length > 0) {
     const { data: profiles } = await supabaseAdmin
@@ -29,7 +35,7 @@ router.get('/', async (req, res) => {
     actorMap = Object.fromEntries((profiles || []).map((p) => [p.id, p]));
   }
 
-  const enriched = notifs.map((n) => ({
+  const enriched = visible.map((n) => ({
     ...n,
     actor: n.actor_id ? (actorMap[n.actor_id] ?? null) : null,
   }));

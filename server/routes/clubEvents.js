@@ -2,6 +2,7 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { getBlockedIds, filterBlocked } from '../lib/blocks.js';
 
 const router = express.Router();
 const JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
@@ -204,7 +205,13 @@ router.get('/:clubId/events/upcoming', optionalAuth, async (req, res) => {
 
 // GET /api/clubs/:clubId/events/rsvps?eventIds=a,b,c
 // Returns all RSVPs for the given event IDs (used for friend callouts).
-router.get('/:clubId/events/rsvps', async (req, res) => {
+//
+// requireAuth was added here deliberately. The route previously had no auth middleware of
+// its own — it was only ever reachable by authenticated callers because questions.js was
+// accidentally 401ing the whole /api/clubs mount. With that bug fixed this became a fully
+// public endpoint that let anyone enumerate who attended any event, so it now requires
+// auth in its own right rather than by accident.
+router.get('/:clubId/events/rsvps', requireAuth, async (req, res) => {
   const idsParam = req.query.eventIds;
   if (!idsParam) return res.json([]);
 
@@ -222,7 +229,8 @@ router.get('/:clubId/events/rsvps', async (req, res) => {
     throw err;
   }
 
-  res.json(data || []);
+  const blockedIds = await getBlockedIds(req.user.id);
+  res.json(filterBlocked(data, blockedIds, (r) => r.user_id));
 });
 
 // POST /api/clubs/:clubId/events/:eventId/rsvp — auth required
