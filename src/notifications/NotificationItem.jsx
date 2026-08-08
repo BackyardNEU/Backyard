@@ -1,5 +1,6 @@
 import { formatDistanceToNow } from 'date-fns';
 import { registry } from './registry';
+import Avatar from '../components/Avatar';
 
 export function NotificationItem({ notification, onRespond }) {
   const entry = registry[notification.type];
@@ -10,10 +11,10 @@ export function NotificationItem({ notification, onRespond }) {
 
   return (
     <div className={`notif-item${!notification.read_at ? ' notif-item--unread' : ''}`}>
-      <img
+      <Avatar
         className="notif-avatar"
-        src={notification.actor?.avatar_url || '/raccoon_pfp.png'}
-        alt={notification.actor?.username ?? 'User'}
+        url={notification.actor?.avatar_url}
+        username={notification.actor?.username}
       />
       <div className="notif-content">
         <p className="notif-message">{message}</p>

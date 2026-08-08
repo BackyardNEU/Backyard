@@ -1,0 +1,21 @@
+.avatar {
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  flex-shrink: 0;
+}
+
+.avatar-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  user-select: none;
+  /* Barlow Condensed reads narrow at small sizes; the app's body face keeps two
+     characters legible at 28px, which is the smallest place this renders. */
+  font-family: 'Barlow', sans-serif;
+  line-height: 1;
+  /* Used when no explicit size is passed and the class sizes the element. */
+  font-size: 0.9rem;
+}

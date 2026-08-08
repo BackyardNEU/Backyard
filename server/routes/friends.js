@@ -37,7 +37,8 @@ router.get('/', async (req, res) => {
 
     const { data, error } = await supabaseAdmin
         .from('profiles')
-        .select('id, username, avatar_url, member_list')
+        // first/last name feed the initials fallback in Avatar when a friend has no photo
+        .select('id, username, avatar_url, first_name, last_name, member_list')
         .in('id', friendIds);
 
     if (error) {

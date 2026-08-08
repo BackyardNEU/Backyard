@@ -4,6 +4,7 @@ import { apiFetch } from '../lib/api';
 import { FaSearch, FaTimes } from 'react-icons/fa';
 import './FriendDiscoveryList.css';
 import { useClubData } from '../context/useClubData';
+import Avatar from '../components/Avatar';
 
 export const FriendDiscoveryList = ({ userId }) => {
   const navigate = useNavigate();
@@ -109,10 +110,12 @@ export const FriendDiscoveryList = ({ userId }) => {
             onClick={() => navigate(`/friend/${friend.id}`)}
             aria-label={`View ${friend.username}'s profile`}
           >
-            <img
+            <Avatar
               className="friend-avatar"
-              src={friend.avatar_url || '/raccoon_pfp.png'}
-              alt={friend.username}
+              url={friend.avatar_url}
+              firstName={friend.first_name}
+              lastName={friend.last_name}
+              username={friend.username}
             />
             <span className="friend-card-name">{friend.username}</span>
           </button>
@@ -153,10 +156,10 @@ export const FriendDiscoveryList = ({ userId }) => {
                   const alreadyFriend = friendIds.includes(person.id);
                   return (
                     <div className="friend-search-result" key={person.id}>
-                      <img
+                      <Avatar
                         className="friend-avatar-sm"
-                        src={person.avatar_url || '/raccoon_pfp.png'}
-                        alt={person.username}
+                        url={person.avatar_url}
+                        username={person.username}
                       />
                       <span className="friend-result-name">{person.username}</span>
                       {alreadyFriend ? (
@@ -186,10 +189,12 @@ export const FriendDiscoveryList = ({ userId }) => {
               <div className="friends-modal-list">
                 {friends.map((friend) => (
                   <div className="friend-modal-row" key={friend.id}>
-                    <img
+                    <Avatar
                       className="friend-avatar-sm"
-                      src={friend.avatar_url || '/raccoon_pfp.png'}
-                      alt={friend.username}
+                      url={friend.avatar_url}
+                      firstName={friend.first_name}
+                      lastName={friend.last_name}
+                      username={friend.username}
                     />
                     <span className="friend-result-name">{friend.username}</span>
                     <button

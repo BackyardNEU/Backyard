@@ -11,6 +11,7 @@ import { PolaroidCards } from './PolaroidCards'
 import { useClubData } from '../context/useClubData'
 import { cachedFetch, readCached, invalidatePrefix } from '../lib/queryCache'
 import { Skeleton, SkeletonCircle, SkeletonRegion } from '../components/Skeleton'
+import Avatar from '../components/Avatar'
 
 // Read-only counterpart to ProfilePage. Renders another user's profile and the
 // friends both viewers have in common. There is intentionally no avatar upload,
@@ -145,9 +146,9 @@ export const FriendProfile = () => {
       <div className="spacer" />
       <div className="profile-header">
         <div className="friend-photo-wrap">
-          <img
-            src={profile?.avatar_url || '/raccoon_pfp.png'}
-            alt={profile?.username || 'Profile'}
+          <Avatar
+            url={profile?.avatar_url}
+            username={profile?.username}
             className="profile-image"
           />
         </div>
@@ -240,10 +241,10 @@ const MutualFriendsList = ({ friends, viewerId }) => {
               navigate(friend.id === viewerId ? '/profile' : `/friend/${friend.id}`)
             }
           >
-            <img
+            <Avatar
               className="friend-avatar"
-              src={friend.avatar_url || '/raccoon_pfp.png'}
-              alt={friend.username}
+              url={friend.avatar_url}
+              username={friend.username}
             />
             <span className="friend-card-name">{friend.username}</span>
           </button>

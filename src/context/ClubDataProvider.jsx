@@ -123,6 +123,8 @@ export const ClubDataProvider = ({ children }) => {
                     id: f.id,
                     username: f.username,
                     avatar_url: f.avatar_url,
+                    first_name: f.first_name,
+                    last_name: f.last_name,
                 }));
                 for (const friend of friendProfiles || []) {
                     const clubs = friend.member_list || [];
@@ -132,6 +134,8 @@ export const ClubDataProvider = ({ children }) => {
                             id: friend.id,
                             username: friend.username,
                             avatar_url: friend.avatar_url,
+                            first_name: friend.first_name,
+                            last_name: friend.last_name,
                         });
                     }
                 }

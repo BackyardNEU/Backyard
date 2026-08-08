@@ -3,6 +3,7 @@ import { apiFetch } from '../lib/api'
 import { useClubData } from '../context/useClubData'
 import { cachedFetch, readCached, invalidateKey } from '../lib/queryCache'
 import { Skeleton, SkeletonCircle, SkeletonRegion } from '../components/Skeleton'
+import Avatar from '../components/Avatar'
 
 // The management screen GET /api/me/blocks was built for. Until now that route and its
 // DELETE counterpart had no frontend callers at all — blocking was one-way with no way
@@ -78,10 +79,10 @@ export const BlockedUsersSettings = () => {
                     <ul className="settings-blocked-list">
                         {blocked.map((user) => (
                             <li key={user.id} className="settings-blocked-item">
-                                <img
+                                <Avatar
                                     className="settings-blocked-avatar"
-                                    src={user.avatar_url || '/raccoon_pfp.png'}
-                                    alt=""
+                                    url={user.avatar_url}
+                                    username={user.username}
                                 />
                                 <span className="settings-blocked-name">{user.username}</span>
                                 <button

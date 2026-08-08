@@ -10,6 +10,7 @@ import { useClubData } from '../context/useClubData';
 import { prefetchClubPage } from '../lib/clubPageCache';
 //import paperTexture from '/src/assets/white-paper-texture.jpg';
 import posterPin from '/src/assets/poster_pin.png';
+import Avatar from '../components/Avatar';
 const ClubGridCard = ({ result, onExpand, hideHeart, hidePins }) => {
   const [animating, setAnimating] = useState(false);
   const [favError, setFavError] = useState(null);
@@ -99,11 +100,13 @@ const ClubGridCard = ({ result, onExpand, hideHeart, hidePins }) => {
         {GlobalValue && friendsInClub.length > 0 && (
           <div className="friend-avatars">
             {friendsInClub.slice(0, 3).map((friend) => (
-              <img
+              <Avatar
                 key={friend.id}
+                url={friend.avatar_url}
+                firstName={friend.first_name}
+                lastName={friend.last_name}
+                username={friend.username}
                 className="friend-avatar-img"
-                src={friend.avatar_url || "/raccoon_pfp.png"}
-                alt={friend.username}
               />
             ))}
             {friendsInClub.length > 3 && (
