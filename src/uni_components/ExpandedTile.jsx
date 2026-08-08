@@ -195,6 +195,9 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     // fast click), in which case the effect below fetches as before.
     const warmed = readClubPage(club.id);
 
+    // Read before the state block so viewerId can seed `user` below.
+    const { favoritesCache, invalidateFavoritesCache, friendsArray, userId: viewerId } = useClubData();
+
     // determines when to begin the data requesting- animationDone triggers most data requests here
     const [animationDone, setAnimationDone] = useState(true);
     const [isOpen, setIsOpen] = useState(false);
@@ -202,7 +205,11 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const [reviews, set_reviews] = useState(() => warmed?.reviews ?? []);
     const [isClicked, setIsClicked] = useState(false);
     // records the user itself
-    const [user, setUser] = useState(null);
+    // Seeded from the provider, which resolved the session on app load. This is only ever
+    // truthiness-tested, and it gates the Join/Leave button — deriving it from an awaited
+    // getUser() inside the fetch effect meant that button popped in after the page had
+    // already drawn.
+    const [user, setUser] = useState(() => (viewerId ? { id: viewerId } : null));
     // null = not a member; 'member' | 'moderator' | 'top_moderator' = current role
     // Seeded from the prefetch. This decides between the editor header and a plain close
     // button, so resolving it after mount used to swap the header and shove everything
@@ -244,7 +251,6 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
     const id = club.id;
 
-    const { favoritesCache, invalidateFavoritesCache, friendsArray } = useClubData();
     const GlobalValue = useGlobalStore((state) => state.GlobalValue);
     const liked = favoritesCache?.has(club.id) ?? false;
 
