@@ -70,7 +70,12 @@ const ClubGridCard = ({ result, onExpand, hideHeart, hidePins }) => {
     return words.slice(0, wordLimit).join(" ") + "...";
   };
 
-  return ( 
+  // No layoutId on the card: it paired this element with the expanded tile as a
+  // shared-element morph, and framer-motion interpolating between a small square card and
+  // a full-viewport panel is what produced the distortion on open. The tile does a plain
+  // pop now. Dropping it also means resizing the grid via the density toggle settles
+  // instantly instead of animating every card's layout at once.
+  return (
 
     <motion.button
       className = "club-card"
@@ -78,7 +83,6 @@ const ClubGridCard = ({ result, onExpand, hideHeart, hidePins }) => {
       onMouseEnter={warm}
       onFocus={warm}
       onPointerDown={warm}
-      layoutId={`club-${result.id}`}
 >
       {!hidePins && <img src={posterPin} alt="" className="pin pin-left" />}
       {!hidePins && <img src={posterPin} alt="" className="pin pin-right" />}

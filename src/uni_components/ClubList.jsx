@@ -15,19 +15,21 @@ export const ClubList = ({ results, cardSize = 'medium' }) => {
 
   return (
     <>
-    <AnimatePresence>
       {/* data-size drives --card-scale and the column count; see ClubList.css. */}
       <div className="clubs-list" data-size={cardSize}>
         {results.map((club) => (
-
           <ClubGrid
             key={club.id}
             result={club}
             onExpand={setExpandedClub}
           />
         ))}
-        </div>
+      </div>
 
+      {/* Scoped to the tile alone. It previously also wrapped the always-mounted grid,
+          which gave AnimatePresence a permanent child to track and meant the tile's exit
+          animation never got a chance to play before unmount. */}
+      <AnimatePresence>
         {expandedClub && (
           <ExpandedTile
             club={expandedClub}
@@ -35,7 +37,7 @@ export const ClubList = ({ results, cardSize = 'medium' }) => {
             onClose={handleClose}
           />
         )}
-    </AnimatePresence>
+      </AnimatePresence>
     </>
   );
 };

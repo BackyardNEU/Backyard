@@ -758,10 +758,20 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
     return (
         <motion.div
-            layoutId={`club-${club.id}`}
             className="expanded-card"
             style={{ pointerEvents: isClosing ? "none" : "auto" }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            // A plain scale-and-fade rather than a layoutId morph from the grid card.
+            // The shared-element version had to interpolate between a small square card
+            // and this full-viewport panel, which distorted the contents mid-flight and
+            // went visibly wrong whenever the grid reflowed underneath it.
+            //
+            // A fixed-duration tween instead of a spring: springs overshoot by design and
+            // their settle time varies with whatever interrupted them, which is the other
+            // half of why this felt unpredictable.
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
             onAnimationComplete={() => setAnimationDone(true)}
         >
             {!isApproved && (
