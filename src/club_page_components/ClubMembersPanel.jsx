@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { apiFetch } from '../lib/api';
+import { hexToRgba, roleColorStyle } from '../lib/roleColor';
 import borderHorizontalImg from '../assets/border-horizontal.svg';
 import dividerLineImg from '../assets/border-horizontal-gray.svg';
 import './ClubMembersPanel.css';
@@ -15,32 +16,6 @@ const ROLE_COLORS = [
   '#724200ff', '#56758b', '#be2419ff', '#da781cff',
   '#ffcc13', '#628753ff', '#a39a96', '#d3d1c9ff',
 ];
-
-const DEFAULT_ROLE_COLOR = '#a39a96';
-
-function hexToRgba(hex, alpha) {
-  const h = hex.replace('#', '');
-  const r = parseInt(h.substring(0, 2), 16);
-  const g = parseInt(h.substring(2, 4), 16);
-  const b = parseInt(h.substring(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-function darkenHex(hex, amount = 0.35) {
-  const h = hex.replace('#', '');
-  const r = Math.round(parseInt(h.substring(0, 2), 16) * (1 - amount));
-  const g = Math.round(parseInt(h.substring(2, 4), 16) * (1 - amount));
-  const b = Math.round(parseInt(h.substring(4, 6), 16) * (1 - amount));
-  return `rgb(${r}, ${g}, ${b})`;
-}
-
-// Shared border/background/text scheme for role badges and the create-role
-// form's live preview: border in the solid color, background at 40%, text a
-// darker shade of the same color (for legibility over the translucent fill).
-function roleColorStyle(color) {
-  const c = color || DEFAULT_ROLE_COLOR;
-  return { background: hexToRgba(c, 0.4), borderColor: c, color: darkenHex(c) };
-}
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 

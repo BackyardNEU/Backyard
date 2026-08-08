@@ -619,6 +619,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     warning={moduleWarnings.basic_info ?? null}
                     part={part}
                     linksDisplayed={linksDisplayed}
+                    currentUserId={user?.id ?? null}
                 />
             );
         }

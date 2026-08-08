@@ -887,6 +887,11 @@
   font-size: 0.9rem;
   color: #333;
 }
+
+.friend-result-badge {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+}
 .friends-empty {
   color: #999;
   font-style: italic;
