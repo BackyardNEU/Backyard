@@ -1,21 +1,22 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { apiFetch } from '../lib/api'
 import { useClubData } from '../context/useClubData'
+import { cachedFetch, readCached, invalidateKey } from '../lib/queryCache'
 import { Skeleton, SkeletonCircle, SkeletonRegion } from '../components/Skeleton'
 
 // The management screen GET /api/me/blocks was built for. Until now that route and its
 // DELETE counterpart had no frontend callers at all — blocking was one-way with no way
 // to see or undo it.
 export const BlockedUsersSettings = () => {
-    const [blocked, setBlocked] = useState([])
-    const [loading, setLoading] = useState(true)
+    const [blocked, setBlocked] = useState(() => readCached('me:blocks') ?? [])
+    const [loading, setLoading] = useState(() => readCached('me:blocks') === null)
     const [unblockingId, setUnblockingId] = useState(null)
     const [error, setError] = useState(null)
     const { refetch } = useClubData()
 
     const load = useCallback(async () => {
         try {
-            const data = await apiFetch('/me/blocks')
+            const data = await cachedFetch('me:blocks', () => apiFetch('/me/blocks'))
             setBlocked(data || [])
         } catch (err) {
             console.error('Error loading blocked users:', err)
@@ -33,6 +34,7 @@ export const BlockedUsersSettings = () => {
 
         try {
             await apiFetch(`/me/blocks/${user.id}`, { method: 'DELETE' })
+            invalidateKey('me:blocks')
             setBlocked((prev) => prev.filter((b) => b.id !== user.id))
             // They become visible again across the app, so drop the cached friend and
             // membership maps that were built while they were hidden.

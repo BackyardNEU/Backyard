@@ -1,8 +1,9 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
 import { FaSearch, FaTimes } from 'react-icons/fa';
 import './FriendDiscoveryList.css';
+import { useClubData } from '../context/useClubData';
 
 export const FriendDiscoveryList = ({ userId }) => {
   const navigate = useNavigate();
@@ -14,23 +15,18 @@ export const FriendDiscoveryList = ({ userId }) => {
   const [pendingIds, setPendingIds] = useState(new Set());
   const [modalOpen, setModalOpen] = useState(false);
 
-  const fetchFriends = useCallback(async () => {
-    if (!userId) return;
-
-    // /me/friends already returns full profile rows for each friend, so we collapse
-    // the previous two-round-trip (friend_list, then profiles by id) into one call.
-    try {
-      const friendProfiles = await apiFetch('/me/friends');
-      setFriends(friendProfiles || []);
-      setFriendIds((friendProfiles || []).map((f) => f.id));
-    } catch (err) {
-      console.error('Error fetching friends:', err);
-    }
-  }, [userId]);
+  // ClubDataProvider already loaded /me/friends, and it carries exactly the three fields
+  // rendered here — id, username, avatar_url. Fetching it again on mount meant every visit
+  // to a profile page re-requested a list the app was already holding.
+  //
+  // Kept in local state so add and remove can update optimistically without waiting on a
+  // provider-wide refetch, and re-synced whenever the shared list changes.
+  const { friendsArray } = useClubData();
 
   useEffect(() => {
-    fetchFriends();
-  }, [fetchFriends]);
+    setFriends(friendsArray);
+    setFriendIds(friendsArray.map((f) => f.id));
+  }, [friendsArray]);
 
   useEffect(() => {
     if (!searchInput.trim()) {

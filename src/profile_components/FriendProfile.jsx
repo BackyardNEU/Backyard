@@ -9,6 +9,7 @@ import './FriendProfile.css'
 import { ClubMembershipPanel } from './ClubMembershipPanel'
 import { PolaroidCards } from './PolaroidCards'
 import { useClubData } from '../context/useClubData'
+import { cachedFetch, readCached, invalidatePrefix } from '../lib/queryCache'
 import { Skeleton, SkeletonCircle, SkeletonRegion } from '../components/Skeleton'
 
 // Read-only counterpart to ProfilePage. Renders another user's profile and the
@@ -19,8 +20,10 @@ export const FriendProfile = () => {
   const navigate = useNavigate()
   const lastPath = useGlobalStore((state) => state.lastPath)
   const [viewerId, setViewerId] = useState(null)
-  const [profile, setProfile] = useState(null)
-  const [status, setStatus] = useState('loading')
+  // Seeded from cache so returning to a friend you already viewed paints immediately
+  // instead of showing the skeleton again.
+  const [profile, setProfile] = useState(() => readCached(`user:${id}`))
+  const [status, setStatus] = useState(() => (readCached(`user:${id}`) ? 'ready' : 'loading'))
   const [errorMessage, setErrorMessage] = useState(null)
   const [confirmingBlock, setConfirmingBlock] = useState(false)
   const [blocking, setBlocking] = useState(false)
@@ -52,7 +55,7 @@ export const FriendProfile = () => {
       }
 
       try {
-        const data = await apiFetch(`/users/${id}/profile`)
+        const data = await cachedFetch(`user:${id}`, () => apiFetch(`/users/${id}/profile`))
         if (cancelled) return
         setProfile(data)
         setStatus('ready')
@@ -85,6 +88,8 @@ export const FriendProfile = () => {
 
     try {
       await apiFetch('/me/blocks', { method: 'POST', body: { blockedId: id } })
+      // Mutual invisibility changes what every profile returns, not just this one.
+      invalidatePrefix('user:')
       // The provider caches friends and their club memberships; without this the blocked
       // user lingers in friend lists and "X is going" callouts until a reload.
       await refetch?.()
