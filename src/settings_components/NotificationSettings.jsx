@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { apiFetch } from '../lib/api'
+import { Skeleton, SkeletonRegion } from '../components/Skeleton'
 
 // Per-channel master toggles. The backend stores these as `type = '*'` wildcard rows so
 // they cover notification types added later — a row per known type would silently miss
@@ -57,10 +58,13 @@ export const NotificationSettings = () => {
 
     if (loading) {
         return (
-            <section className="settings-section">
+            <SkeletonRegion className="settings-section" label="Loading notification settings">
                 <h2 className="profile-divider-header">Notifications</h2>
-                <p className="settings-status">Loading…</p>
-            </section>
+                <div className="settings-toggle-group">
+                    <Skeleton width="260px" height="1.1rem" />
+                    <Skeleton width="260px" height="1.1rem" />
+                </div>
+            </SkeletonRegion>
         )
     }
 

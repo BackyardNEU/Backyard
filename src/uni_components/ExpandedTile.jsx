@@ -204,7 +204,10 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     // records the user itself
     const [user, setUser] = useState(null);
     // null = not a member; 'member' | 'moderator' | 'top_moderator' = current role
-    const [myRole, setMyRole] = useState(null);
+    // Seeded from the prefetch. This decides between the editor header and a plain close
+    // button, so resolving it after mount used to swap the header and shove everything
+    // below it down — the buttons visibly jumping on open.
+    const [myRole, setMyRole] = useState(() => warmed?.role ?? null);
     // NOTE2SELF: THIS WILL BECOME IRRELEVANT LATER AS A LOADING STATE ACROSS ALL MODULES/INFO IS PUT IN PLACE
     const [memberLoading, setMemberLoading] = useState(false);
     // active tab: 'page' | 'members'
@@ -310,7 +313,10 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 apiFetch(`/clubs/${id}/events/upcoming`), // optional auth: sends token if logged in
                 apiFetch(`/clubs/${id}/members`, { auth: false }),
             ];
-            const authFetches = authUser ? [
+            // undefined means the prefetch never resolved it; null is a real answer
+            // (signed in, not an editor) and does not need asking again.
+            const roleKnown = warmed && warmed.role !== undefined;
+            const authFetches = authUser && !roleKnown ? [
                 apiFetch(`/clubs/${id}/is-approved`),
             ] : [];
 

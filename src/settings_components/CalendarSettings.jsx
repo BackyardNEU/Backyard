@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { apiFetch } from '../lib/api'
+import { useClubData } from '../context/useClubData'
+import { Skeleton, SkeletonRegion } from '../components/Skeleton'
 
 // Which format the single "Add to calendar" button uses.
 //
@@ -12,33 +14,22 @@ const OPTIONS = [
 ]
 
 export const CalendarSettings = () => {
+    // Read from the shared profile rather than fetching again. This section, ProfileSettings
+    // and AccountSettings each used to request /me/profile on mount, so opening Settings
+    // fired the same call three times.
+    const { profile, loading, setProfile } = useClubData()
+
     const [preference, setPreference] = useState(null)
-    const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState(null)
 
-    useEffect(() => {
-        let cancelled = false
-
-        apiFetch('/me/profile')
-            .then((profile) => {
-                if (cancelled) return
-                setPreference(profile?.calendar_preference || 'ics')
-            })
-            .catch((err) => {
-                if (cancelled) return
-                console.error('Error loading calendar preference:', err)
-                setError('Could not load your calendar preference.')
-            })
-            .finally(() => { if (!cancelled) setLoading(false) })
-
-        return () => { cancelled = true }
-    }, [])
+    // Local copy so a click reflects instantly; falls back to the shared value until touched.
+    const current = preference ?? profile?.calendar_preference ?? 'ics'
 
     const choose = async (value) => {
-        if (value === preference) return
+        if (value === current) return
 
-        const previous = preference
+        const previous = current
         setPreference(value) // optimistic — this is a single radio, reverting is cheap
         setSaving(true)
         setError(null)
@@ -48,6 +39,7 @@ export const CalendarSettings = () => {
                 method: 'PUT',
                 body: { calendar_preference: value },
             })
+            setProfile({ calendar_preference: value })
         } catch (err) {
             console.error('Error saving calendar preference:', err)
             setPreference(previous)
@@ -59,10 +51,14 @@ export const CalendarSettings = () => {
 
     if (loading) {
         return (
-            <section className="settings-section">
+            <SkeletonRegion className="settings-section" label="Loading calendar settings">
                 <h2 className="profile-divider-header">Calendar</h2>
-                <p className="settings-status">Loading…</p>
-            </section>
+                <Skeleton width="60%" height="0.9rem" />
+                <div className="settings-radio-group">
+                    <Skeleton width="240px" height="1.1rem" />
+                    <Skeleton width="200px" height="1.1rem" />
+                </div>
+            </SkeletonRegion>
         )
     }
 
@@ -80,7 +76,7 @@ export const CalendarSettings = () => {
                             type="radio"
                             name="calendar_preference"
                             value={option.value}
-                            checked={preference === option.value}
+                            checked={current === option.value}
                             onChange={() => choose(option.value)}
                             disabled={saving}
                         />

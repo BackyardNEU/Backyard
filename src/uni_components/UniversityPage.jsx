@@ -9,6 +9,7 @@ import { CalendarPage } from './CalendarPage';
 import { useGlobalStore } from "../lib/store";
 import { useClubData } from '../context/useClubData';
 import { useCardSize } from '../lib/useCardSize';
+import { Skeleton, SkeletonRegion } from '../components/Skeleton';
 
 // Import your images
 import ghibliBackground from '/src/assets/ghibili_background.jpg';
@@ -166,7 +167,42 @@ export const UniversityPage = () => {
     navigate(`/university/${slug}`, { replace: true });
   }, [university, id, navigate]);
 
-  if (!university) return <div>Loading...</div>;
+  // The whole page shell, so the header and search row do not jump into place once the
+  // school resolves.
+  if (!university) {
+    return (
+      <SkeletonRegion className="UniPage" label="Loading university">
+        <div className="uni-background-layer" />
+        <div className="uni-layout">
+          <header className="uni-header-spacer">
+            <Skeleton width="320px" height="4rem" style={{ margin: '0 auto' }} />
+          </header>
+          <div className="uni-search-row">
+            <div className="uni-search-shell">
+              <Skeleton height="2.6rem" radius={999} />
+            </div>
+          </div>
+          <main className="uni-club-stage">
+            <div className="uni-club-viewport">
+              <div className="clubs-list" data-size={cardSize}>
+                {Array.from({ length: 6 }, (_, i) => (
+                  <div key={i} className="club-card">
+                    <div className="flex-card">
+                      <div className="image-container">
+                        <Skeleton width="100%" height="100%" radius={2} />
+                      </div>
+                      <Skeleton width="80%" height="1.6rem" style={{ marginTop: 15 }} />
+                      <Skeleton width="55%" height="1rem" style={{ marginTop: 8 }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </main>
+        </div>
+      </SkeletonRegion>
+    );
+  }
 
   return (
     <div className="UniPage">

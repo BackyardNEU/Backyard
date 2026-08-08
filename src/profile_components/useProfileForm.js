@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import imageCompression from 'browser-image-compression';
 import { apiFetch } from '../lib/api';
+import { useClubData } from '../context/useClubData';
 import textModerator from '../lib/textModerator';
 
 // Shared state and save logic for the profile form.
@@ -25,6 +26,11 @@ const COMPRESSION_OPTIONS = {
 };
 
 export function useProfileForm() {
+    // Prefer the shared copy. It falls back to fetching because onboarding can run before
+    // the provider has one — a brand new account's profile row is created by AuthListener
+    // after the provider's initial load.
+    const { profile: sharedProfile } = useClubData();
+
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
@@ -78,7 +84,7 @@ export function useProfileForm() {
             setLoading(true);
             setError(null);
             try {
-                const profile = await apiFetch('/me/profile');
+                const profile = sharedProfile ?? await apiFetch('/me/profile');
                 if (cancelled) return;
 
                 setFirstName(profile?.first_name || '');
@@ -103,7 +109,7 @@ export function useProfileForm() {
 
         load();
         return () => { cancelled = true; };
-    }, []);
+    }, [sharedProfile]);
 
     // Object URLs leak until revoked.
     useEffect(() => {

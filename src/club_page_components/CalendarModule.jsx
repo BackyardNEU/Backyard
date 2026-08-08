@@ -7,6 +7,8 @@ import borderImg from '../assets/border.svg';
 import borderHorizontalImg from '../assets/border-horizontal.svg';
 import { apiFetch } from '../lib/api';
 import { CalendarExportRow } from './CalendarExportRow';
+import { Skeleton, SkeletonRegion } from '../components/Skeleton';
+import { useClubData } from '../context/useClubData';
 import './CalendarModule.css';
 
 /**
@@ -40,22 +42,14 @@ export function CalendarModule({
   const [overlayEvent, setOverlayEvent] = useState(null);
   const [overlayHasMore, setOverlayHasMore] = useState(false);
 
-  // Which format "Add to calendar" uses, set in Settings. Defaults to 'ics' — which every
-  // calendar app imports — so this renders correctly before the fetch resolves and for
-  // signed-out visitors, who get no profile at all.
-  const [calendarPreference, setCalendarPreference] = useState('ics');
+  // Which format "Add to calendar" uses, set in Settings. Read from the shared profile
+  // rather than fetched here — this was another copy of /me/profile. Defaults to 'ics',
+  // which every calendar app imports, so it is correct before the profile loads and for
+  // signed-out visitors, who have no profile at all.
+  const { profile: viewerProfile } = useClubData();
+  const calendarPreference = viewerProfile?.calendar_preference || 'ics';
 
-  useEffect(() => {
-    let cancelled = false;
-    apiFetch('/me/profile')
-      .then((profile) => {
-        if (!cancelled && profile?.calendar_preference) {
-          setCalendarPreference(profile.calendar_preference);
-        }
-      })
-      .catch(() => { /* signed out, or profile unavailable — the 'ics' default stands */ });
-    return () => { cancelled = true; };
-  }, []);
+
   const overlayScrollRef = useRef(null);
   const overlayItemRefs = useRef({});
 
@@ -456,7 +450,9 @@ export function CalendarModule({
           </div>
 
           {monthlyLoading ? (
-            <p className="cal-loading">Loading…</p>
+            <SkeletonRegion label="Loading events">
+              <Skeleton height="8rem" radius={4} />
+            </SkeletonRegion>
           ) : (
             <div className="cal-grid">
               {/* Day-of-week headers */}

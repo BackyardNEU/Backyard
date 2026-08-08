@@ -6,6 +6,7 @@ import {
 import { apiFetch } from '../lib/api';
 import { useClubData } from '../context/useClubData';
 import { prefetchCalendar, readCalendar } from '../lib/calendarCache';
+import { Skeleton, SkeletonRegion } from '../components/Skeleton';
 import '../club_page_components/CalendarModule.css';
 import './CalendarPage.css';
 import './EventInfoRow.css';
@@ -21,7 +22,7 @@ import maximizedPosterInactiveIcon from '../assets/Maximized_poster_icon_inactiv
 const WEEK_DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 export function CalendarPage({ onClose }) {
-  const { allData, friendsArray } = useClubData();
+  const { allData, friendsArray, profile: viewerProfile } = useClubData();
   const clubImageById = useMemo(
     () => new Map(allData.map(club => [club.id, club.image_url])),
     [allData]
@@ -162,8 +163,9 @@ export function CalendarPage({ onClose }) {
     async function fetchMonthly() {
       setMonthlyLoading(true);
       try {
-        const profile = await apiFetch('/me/profile');
-        const memberList = profile?.member_list || [];
+        // member_list comes from the shared profile; this used to be yet another
+        // /me/profile request, fired every time the month view opened.
+        const memberList = viewerProfile?.member_list || [];
         if (!memberList.length) {
           if (!cancelled) {
             setMonthlyEvents([]);
@@ -195,7 +197,7 @@ export function CalendarPage({ onClose }) {
     }
     fetchMonthly();
     return () => { cancelled = true; };
-  }, [viewMode, displayYear, displayMonth, userId]);
+  }, [viewMode, displayYear, displayMonth, userId, viewerProfile]);
 
   const handleWeeklyRsvp = async (eventId, isGoing) => {
     const event = weeklyEvents.find(e => e.id === eventId);
@@ -294,9 +296,16 @@ export function CalendarPage({ onClose }) {
 
   if (status === 'loading') {
     return (
-      <div className="calpg-card">
-        <p className="cal-loading">Loading events…</p>
-      </div>
+      <SkeletonRegion className="calpg-card" label="Loading events">
+        <div className="calendar-container">
+          {Array.from({ length: 7 }, (_, i) => (
+            <div key={i} className="cal-day-col">
+              <Skeleton width="60%" height="1rem" style={{ margin: '0 auto 12px' }} />
+              <Skeleton height="9rem" radius={4} />
+            </div>
+          ))}
+        </div>
+      </SkeletonRegion>
     );
   }
 
@@ -423,7 +432,9 @@ export function CalendarPage({ onClose }) {
         )}
         {viewMode === 'month' && (
           monthlyLoading ? (
-            <p className="cal-loading">Loading…</p>
+            <SkeletonRegion label="Loading month">
+              <Skeleton height="14rem" radius={4} />
+            </SkeletonRegion>
           ) : (
             <div className="calpg-align-row calpg-dual-grid-row">
               <div className="cal-grid calpg-grid-panel">

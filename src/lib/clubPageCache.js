@@ -9,9 +9,13 @@ import { apiFetch } from './api';
 // Hovering a card is a strong signal of intent, and there is roughly 150-400ms between
 // hover and click. That is enough to have the payload in hand by the time the tile mounts.
 //
-// Only the five public requests are prefetched. The authenticated ones (is-approved,
-// RSVPs) are cheap, depend on session state, and do not gate the main content render, so
-// they stay in the component.
+// is-approved is prefetched too, despite being user-specific. It decides whether the tile
+// renders an editor header or a plain close button, so resolving it after mount visibly
+// swaps the header and shifts everything under it. AuthListener clears this cache on
+// sign-in and sign-out, which is what makes caching a per-user answer safe.
+//
+// RSVPs stay in the component: they depend on which events came back, and they do not
+// affect layout.
 
 const cache = new Map();     // clubId -> { data, at }
 const inflight = new Map();  // clubId -> Promise
@@ -27,12 +31,15 @@ function isFresh(entry) {
 async function load(clubId) {
   // allSettled, not all: a club with no page row or no reviews must still open. The
   // component already handles each field being absent.
-  const [reviews, page, topTags, events, members] = await Promise.allSettled([
+  const [reviews, page, topTags, events, members, approved] = await Promise.allSettled([
     apiFetch(`/clubs/${clubId}/reviews`, { auth: false }),
     apiFetch(`/clubs/${clubId}/page`, { auth: false }),
     apiFetch(`/clubs/${clubId}/top-tags`, { auth: false }),
     apiFetch(`/clubs/${clubId}/events/upcoming`),
     apiFetch(`/clubs/${clubId}/members`, { auth: false }),
+    // 401s for signed-out visitors; allSettled turns that into a rejection we ignore,
+    // which lands on the same `undefined` a signed-out viewer should see anyway.
+    apiFetch(`/clubs/${clubId}/is-approved`),
   ]);
 
   return {
@@ -41,6 +48,7 @@ async function load(clubId) {
     topTags: topTags.status === 'fulfilled' ? topTags.value : undefined,
     events: events.status === 'fulfilled' ? events.value : undefined,
     members: members.status === 'fulfilled' ? members.value : undefined,
+    role: approved.status === 'fulfilled' ? (approved.value?.role ?? null) : undefined,
   };
 }
 

@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { apiFetch } from '../lib/api'
 import { useGlobalStore } from '../lib/store'
@@ -8,6 +8,8 @@ import imageCompression from 'browser-image-compression'
 import { ClubMembershipPanel } from './ClubMembershipPanel'
 import { FriendDiscoveryList } from './FriendDiscoveryList'
 import { PolaroidCards } from './PolaroidCards'
+import { useClubData } from '../context/useClubData'
+import { Skeleton, SkeletonCircle, SkeletonRegion } from '../components/Skeleton'
 
 //this is the landing page for our university club search, most of the info will go through here
 
@@ -17,10 +19,16 @@ import { PolaroidCards } from './PolaroidCards'
 export const ProfilePage = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null)
-  const [profile, setProfile] = useState(null)
-  const setStatus = useState('idle')
+  // Shared profile — this component used to fetch /me/profile itself, one of several
+  // copies of the same request.
+  const { profile, setProfile, loading } = useClubData()
+  // These two were written as `const setStatus = useState('idle')`, which binds the whole
+  // [value, setter] tuple to the name — so calling setStatus('compressing') called an
+  // array and threw, killing avatar upload from this page before it started. Neither
+  // value is rendered, so the value half stays discarded.
+  const [, setStatus] = useState('idle')
   const [preview, setPreview]   = useState(null)
-  const setImageUrl = useState(null)
+  const [, setImageUrl] = useState(null)
   //const inputRef = useRef(null)
 
   const BUCKET = 'profile_images'
@@ -47,12 +55,8 @@ export const ProfilePage = () => {
 
       if (!authUser) return;
 
-      try {
-        const profileData = await apiFetch('/me/profile');
-        setProfile(profileData);
-      } catch (err) {
-        console.error('Error fetching profile data:', err);
-      }
+      // Profile itself comes from ClubDataProvider, which already loaded it — this
+      // component only needs to know whether anyone is signed in.
     }
 
     loadUser();
@@ -112,7 +116,7 @@ export const ProfilePage = () => {
           body: { [URL_COL]: publicUrl },
         });
 
-        setProfile(prev => ({ ...prev, [URL_COL]: publicUrl }))
+        setProfile({ [URL_COL]: publicUrl })
         setImageUrl(publicUrl)
         setStatus('success')
     }
@@ -124,6 +128,29 @@ export const ProfilePage = () => {
 }
 
   const profileDescription = profile?.biography ?? ''
+
+  if (loading) {
+    return (
+      <SkeletonRegion className="ProfilePage" label="Loading your profile">
+        <div className='spacer' />
+        <div className='profile-header'>
+          <SkeletonCircle size={140} />
+          <div className="profile-copy">
+            <Skeleton width="240px" height="2.2rem" />
+            <Skeleton width="70%" height="1rem" style={{ marginTop: 10 }} />
+            <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+              <Skeleton width="130px" height="2.1rem" radius={999} />
+              <Skeleton width="100px" height="2.1rem" radius={999} />
+            </div>
+          </div>
+        </div>
+        <hr className="profile-divider" />
+        <div className="profile-section">
+          <Skeleton width="180px" height="1.4rem" />
+        </div>
+      </SkeletonRegion>
+    )
+  }
 
   return (
       <div className="ProfilePage">

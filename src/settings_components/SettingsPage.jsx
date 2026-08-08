@@ -7,6 +7,7 @@ import { CalendarSettings } from './CalendarSettings'
 import { NotificationSettings } from './NotificationSettings'
 import { BlockedUsersSettings } from './BlockedUsersSettings'
 import { AccountSettings } from './AccountSettings'
+import { Skeleton, SkeletonRegion } from '../components/Skeleton'
 import '../profile_components/ProfilePage.css'
 import '../profile_components/ProfileSetupPage.css'
 import './SettingsPage.css'
@@ -46,9 +47,23 @@ export const SettingsPage = () => {
 
     if (status === 'loading') {
         return (
-            <div className="ProfilePage settings-page">
-                <p className="friend-profile-status">Loading…</p>
-            </div>
+            <SkeletonRegion className="ProfilePage settings-page" label="Loading settings">
+                <div className="profile-header">
+                    <div className="profile-copy">
+                        <Skeleton width="180px" height="2.2rem" />
+                    </div>
+                </div>
+                <hr className="profile-divider" />
+                {[0, 1, 2].map((i) => (
+                    <div key={i} className="settings-section">
+                        <Skeleton width="160px" height="1.2rem" />
+                        <div className="settings-form">
+                            <Skeleton height="2.4rem" radius={4} />
+                            <Skeleton width="70%" height="2.4rem" radius={4} />
+                        </div>
+                    </div>
+                ))}
+            </SkeletonRegion>
         )
     }
 

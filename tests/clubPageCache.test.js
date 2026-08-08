@@ -17,9 +17,9 @@ describe('clubPageCache', () => {
 
     afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
 
-    it('fetches the five public endpoints', async () => {
+    it('fetches the page endpoints, including the viewer role', async () => {
         await prefetchClubPage(CLUB);
-        expect(apiFetch).toHaveBeenCalledTimes(5);
+        expect(apiFetch).toHaveBeenCalledTimes(6);
         const paths = apiFetch.mock.calls.map((c) => c[0]);
         expect(paths).toEqual([
             `/clubs/${CLUB}/reviews`,
@@ -27,7 +27,26 @@ describe('clubPageCache', () => {
             `/clubs/${CLUB}/top-tags`,
             `/clubs/${CLUB}/events/upcoming`,
             `/clubs/${CLUB}/members`,
+            // Prefetched despite being user-specific: it decides whether the tile shows an
+            // editor header or a close button, so resolving it late shifts the layout.
+            `/clubs/${CLUB}/is-approved`,
         ]);
+    });
+
+    it('exposes the role, and null rather than undefined when signed out', async () => {
+        apiFetch.mockImplementation(async (path) => {
+            if (path.endsWith('/is-approved')) return { role: 'moderator' };
+            return { path };
+        });
+        expect((await prefetchClubPage(CLUB)).role).toBe('moderator');
+
+        invalidateClubPage(CLUB);
+        apiFetch.mockImplementation(async (path) => {
+            if (path.endsWith('/is-approved')) throw new Error('401');
+            return { path };
+        });
+        // undefined means "never answered", which is what tells ExpandedTile to ask.
+        expect((await prefetchClubPage(CLUB)).role).toBeUndefined();
     });
 
     // Repeated hovers over one card must not re-issue the whole batch.
@@ -35,7 +54,7 @@ describe('clubPageCache', () => {
         const [a, b, c] = await Promise.all([
             prefetchClubPage(CLUB), prefetchClubPage(CLUB), prefetchClubPage(CLUB),
         ]);
-        expect(apiFetch).toHaveBeenCalledTimes(5);
+        expect(apiFetch).toHaveBeenCalledTimes(6);
         expect(a).toBe(b);
         expect(b).toBe(c);
     });
@@ -78,7 +97,7 @@ describe('clubPageCache', () => {
         expect(readClubPage(CLUB)).toBeNull();
         apiFetch.mockClear();
         await prefetchClubPage(CLUB);
-        expect(apiFetch).toHaveBeenCalledTimes(5);
+        expect(apiFetch).toHaveBeenCalledTimes(6);
     });
 
     it('ignores a missing club id', async () => {

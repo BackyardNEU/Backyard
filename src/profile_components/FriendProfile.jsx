@@ -9,6 +9,7 @@ import './FriendProfile.css'
 import { ClubMembershipPanel } from './ClubMembershipPanel'
 import { PolaroidCards } from './PolaroidCards'
 import { useClubData } from '../context/useClubData'
+import { Skeleton, SkeletonCircle, SkeletonRegion } from '../components/Skeleton'
 
 // Read-only counterpart to ProfilePage. Renders another user's profile and the
 // friends both viewers have in common. There is intentionally no avatar upload,
@@ -99,10 +100,20 @@ export const FriendProfile = () => {
 
   if (status === 'loading') {
     return (
-      <div className="ProfilePage">
+      <SkeletonRegion className="ProfilePage" label="Loading profile">
         <div className="spacer" />
-        <p className="friend-profile-status">Loading…</p>
-      </div>
+        <div className="profile-header">
+          <SkeletonCircle size={140} />
+          <div className="profile-copy">
+            <Skeleton width="220px" height="2.2rem" />
+            <Skeleton width="65%" height="1rem" style={{ marginTop: 10 }} />
+          </div>
+        </div>
+        <hr className="profile-divider" />
+        <div className="profile-section">
+          <Skeleton width="140px" height="1.4rem" />
+        </div>
+      </SkeletonRegion>
     )
   }
 

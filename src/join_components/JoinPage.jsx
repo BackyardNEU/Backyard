@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { apiFetch } from '../lib/api';
 import Form from '../login_components/form';
 import './JoinPage.css';
+import { Skeleton, SkeletonRegion } from '../components/Skeleton';
 
 export default function JoinPage() {
   const { token } = useParams();
@@ -80,7 +81,11 @@ export default function JoinPage() {
     return (
       <div className="join-page">
         <div className="join-card">
-          <p className="join-loading">Loading...</p>
+          <SkeletonRegion label="Loading invite">
+            <Skeleton width="70%" height="1.8rem" style={{ margin: '0 auto 14px' }} />
+            <Skeleton width="90%" height="1rem" style={{ margin: '0 auto 8px' }} />
+            <Skeleton width="150px" height="2.4rem" radius={999} style={{ margin: '18px auto 0' }} />
+          </SkeletonRegion>
         </div>
       </div>
     );

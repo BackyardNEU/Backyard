@@ -8,6 +8,7 @@ import Form from "./form";
 import ForgotPasswordForm from "./ForgotPasswordForm";
 import "./LoginMorph.css";
 import { useGlobalStore } from "../lib/store";
+import { useClubData } from "../context/useClubData";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { apiFetch } from "../lib/api";
@@ -23,16 +24,13 @@ function LoginMorph({ open, setOpen }) {
   // otherwise overlay them.
   const isProfilePage = location.pathname === '/profile' || location.pathname === '/settings';
   const [view, setView] = useState("login");
-  const [avatarUrl, setAvatarUrl] = useState(null);
+  // Avatar comes from the shared profile rather than its own /me/profile call. It also
+  // stays correct now when the profile is edited, which the previous fetch-once-on-login
+  // approach did not.
+  const { profile } = useClubData();
+  const avatarUrl = GlobalValue ? profile?.avatar_url : null;
   const [signupFirstName, setSignupFirstName] = useState("");
   const [typedGreeting, setTypedGreeting] = useState("");
-
-  useEffect(() => {
-    if (!GlobalValue) { setAvatarUrl(null); return; }
-    apiFetch('/me/profile')
-      .then((profile) => setAvatarUrl(profile?.avatar_url))
-      .catch(() => {});
-  }, [GlobalValue]);
 
   useEffect(() => {
     if (!open) setView("login");

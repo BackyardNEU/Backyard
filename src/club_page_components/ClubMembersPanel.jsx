@@ -4,6 +4,7 @@ import { hexToRgba, roleColorStyle } from '../lib/roleColor';
 import borderHorizontalImg from '../assets/border-horizontal.svg';
 import dividerLineImg from '../assets/border-horizontal-gray.svg';
 import './ClubMembersPanel.css';
+import { Skeleton, SkeletonCircle, SkeletonRegion } from '../components/Skeleton';
 
 const ROLE_LABEL = {
   top_moderator: 'Owner',
@@ -388,7 +389,14 @@ export default function ClubMembersPanel({ clubId, myRole, currentUserId, onMemb
       {error && <p className="club-members-panel__error">{error}</p>}
 
       {loading ? (
-        <p className="club-members-panel__loading">Loading...</p>
+        <SkeletonRegion label="Loading members">
+          {Array.from({ length: 4 }, (_, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0' }}>
+              <SkeletonCircle size={36} />
+              <Skeleton width="45%" height="1rem" />
+            </div>
+          ))}
+        </SkeletonRegion>
       ) : members.length === 0 ? (
         <p className="club-members-panel__empty">No members yet.</p>
       ) : (
