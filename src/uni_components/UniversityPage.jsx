@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
-import { isUuid, slugifyUniversity } from '../../shared/slug';
+import { isUuid, slugifyUniversity, slugMatches } from '../../shared/slug';
 import { UniSearchBar } from './UniSearchBar';
 import './UniversityPage.css';
 import { ClubList } from './ClubList';
@@ -100,16 +100,40 @@ export const UniversityPage = () => {
   }, [selectedCategory, allData, showCalendar, favoritesCache]);
   
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchUniversity() {
       try {
         const data = await apiFetch(`/universities/${id}`, { auth: false });
-        setUniversity(data);
+        if (!cancelled) setUniversity(data);
+        return;
       } catch (err) {
-        console.error('Error fetching university:', err);
+        // A backend that predates slug support only accepts a UUID here and rejects a
+        // slug outright ("invalid input syntax for type uuid"). Fall back to the list
+        // endpoint, which every version of the API serves, and resolve it client-side
+        // with the same shared slug logic the server uses.
+        //
+        // Keeps the app working against a Railway deploy that is behind this branch,
+        // and costs one extra request only on that path.
+        if (isUuid(id)) {
+          if (!cancelled) console.error('Error fetching university:', err);
+          return;
+        }
+      }
+
+      try {
+        const all = await apiFetch('/universities', { auth: false });
+        const match = (all || []).find((u) => slugMatches(id, u.uni_name));
+        if (cancelled) return;
+        if (match) setUniversity(match);
+        else console.error(`No university matches the slug "${id}"`);
+      } catch (err) {
+        if (!cancelled) console.error('Error fetching university:', err);
       }
     }
 
     fetchUniversity();
+    return () => { cancelled = true; };
   }, [id]);
 
   // Tab title. Restored on unmount so other routes do not inherit it.
