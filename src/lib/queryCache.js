@@ -55,6 +55,18 @@ export function readCached(key, { ttl = DEFAULT_TTL_MS } = {}) {
   return isFresh(entry, ttl) ? entry.data : null;
 }
 
+/**
+ * Write a value straight into the cache, without a fetch.
+ *
+ * For "I just saved this, and I already know the new value" — invalidating instead would
+ * make the next visit show a loading state for something the app is certain about.
+ */
+export function writeCached(key, data) {
+  if (!key) return;
+  cache.set(key, { data, at: Date.now() });
+  inflight.delete(key);
+}
+
 export function invalidateKey(key) {
   cache.delete(key);
   inflight.delete(key);

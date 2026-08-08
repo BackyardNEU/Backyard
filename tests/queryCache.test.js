@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
-    cachedFetch, readCached, invalidateKey, invalidatePrefix, invalidateAllQueries,
+    cachedFetch, readCached, writeCached, invalidateKey, invalidatePrefix, invalidateAllQueries,
 } from '../src/lib/queryCache.js';
 
 describe('queryCache', () => {
@@ -85,6 +85,27 @@ describe('queryCache', () => {
         invalidateAllQueries();
         expect(readCached('a')).toBeNull();
         expect(readCached('b')).toBeNull();
+    });
+
+    // "I just saved this and already know the new value" — invalidating instead would
+    // make the next visit load something the app is certain about.
+    it('writeCached seeds a value without a fetch', async () => {
+        const loader = vi.fn();
+        writeCached('k', { email: false });
+        expect(readCached('k')).toEqual({ email: false });
+        expect(await cachedFetch('k', loader)).toEqual({ email: false });
+        expect(loader).not.toHaveBeenCalled();
+    });
+
+    it('writeCached overwrites an existing entry', async () => {
+        await cachedFetch('k', () => Promise.resolve({ email: true }));
+        writeCached('k', { email: false });
+        expect(readCached('k')).toEqual({ email: false });
+    });
+
+    it('writeCached ignores an empty key', () => {
+        writeCached('', 'x');
+        expect(readCached('')).toBeNull();
     });
 
     it('ignores an empty key without calling the loader', async () => {

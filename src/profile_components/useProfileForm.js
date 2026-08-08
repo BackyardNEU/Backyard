@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import imageCompression from 'browser-image-compression';
 import { apiFetch } from '../lib/api';
 import { useClubData } from '../context/useClubData';
@@ -31,27 +31,44 @@ export function useProfileForm() {
     // after the provider's initial load.
     const { profile: sharedProfile } = useClubData();
 
-    const [loading, setLoading] = useState(true);
+    // Captured once, on mount. Two reasons it is a ref rather than read each render:
+    //
+    // 1. When the provider already has the profile, every field below seeds from it
+    //    synchronously and there is no loading state at all — reopening Settings shows a
+    //    filled-in form rather than a skeleton for data the app is already holding.
+    //
+    // 2. It stops the load effect from re-running when the shared profile changes. It
+    //    previously depended on sharedProfile, so saving a calendar preference in another
+    //    section pushed a new profile into the provider, re-ran this effect, and reset
+    //    every field — silently discarding an in-progress bio or username edit.
+    const seeded = useRef(sharedProfile);
+
+    const [loading, setLoading] = useState(() => !seeded.current);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
 
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');
-    const [username, setUsername] = useState('');
+    const [firstName, setFirstName] = useState(() => seeded.current?.first_name || '');
+    const [lastName, setLastName] = useState(() => seeded.current?.last_name || '');
+    const [username, setUsername] = useState(() => {
+        const u = seeded.current?.username || '';
+        return /^[a-zA-Z0-9_]+$/.test(u) ? u : '';
+    });
     const [usernameStatus, setUsernameStatus] = useState(null);
-    const [biography, setBiography] = useState('');
-    const [school, setSchool] = useState('');
+    const [biography, setBiography] = useState(() => seeded.current?.biography || '');
+    const [school, setSchool] = useState(() => seeded.current?.school || '');
 
     const [avatarFile, setAvatarFile] = useState(null);
-    const [avatarPreview, setAvatarPreview] = useState(null);
+    const [avatarPreview, setAvatarPreview] = useState(() => seeded.current?.avatar_url || null);
 
-    const [existingPhotos, setExistingPhotos] = useState([]);
+    const [existingPhotos, setExistingPhotos] = useState(
+        () => (Array.isArray(seeded.current?.photos) ? seeded.current.photos : [])
+    );
     const [selectedPhotoFiles, setSelectedPhotoFiles] = useState([]);
     const [photoPreviews, setPhotoPreviews] = useState([]);
 
     // The username the profile already has. Re-saving without changing it must not trip
     // the "taken" check against itself.
-    const [initialUsername, setInitialUsername] = useState('');
+    const [initialUsername, setInitialUsername] = useState(() => seeded.current?.username || '');
 
     const checkUsername = useCallback(async (value) => {
         if (!value || value.length < 3 || !/^[a-zA-Z0-9_]+$/.test(value)) {
@@ -77,14 +94,20 @@ export function useProfileForm() {
         return () => clearTimeout(timer);
     }, [username, initialUsername, checkUsername]);
 
+    // Only runs when the provider had nothing at mount — onboarding right after signup,
+    // where AuthListener creates the profile row after the provider's initial load.
+    // Deliberately has no dependency on sharedProfile: re-running it would overwrite
+    // whatever the user has typed.
     useEffect(() => {
+        if (seeded.current) return;
+
         let cancelled = false;
 
         async function load() {
             setLoading(true);
             setError(null);
             try {
-                const profile = sharedProfile ?? await apiFetch('/me/profile');
+                const profile = await apiFetch('/me/profile');
                 if (cancelled) return;
 
                 setFirstName(profile?.first_name || '');
@@ -109,7 +132,7 @@ export function useProfileForm() {
 
         load();
         return () => { cancelled = true; };
-    }, [sharedProfile]);
+    }, []);
 
     // Object URLs leak until revoked.
     useEffect(() => {
