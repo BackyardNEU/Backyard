@@ -33,6 +33,7 @@ export const UniversityPage = () => {
   let GlobalValue = useGlobalStore((state) => state.GlobalValue);
   const [showCalendar, setShowCalendar] = useState(false);
   const [calendarMounted, setCalendarMounted] = useState(false);
+  const [calendarRevealed, setCalendarRevealed] = useState(false);
 
   const { allData, favoritesCache } = useClubData();
   const [cardSize, setCardSize] = useCardSize();
@@ -40,6 +41,18 @@ export const UniversityPage = () => {
   useEffect(() => {
     if (showCalendar) setCalendarMounted(true);
   }, [showCalendar]);
+
+  // The panel used to mount with uni-calendar-visible already on it, so the browser had
+  // no previous opacity to interpolate from and it simply appeared on first open. Later
+  // opens did fade, because the element was still mounted from the time before — so the
+  // same action animated differently depending on whether you had opened it already.
+  // Flipping the class one frame after mount gives the transition a starting value.
+  useEffect(() => {
+    if (!calendarMounted) return;
+    if (!showCalendar) { setCalendarRevealed(false); return; }
+    const raf = requestAnimationFrame(() => setCalendarRevealed(true));
+    return () => cancelAnimationFrame(raf);
+  }, [calendarMounted, showCalendar]);
 
   useEffect(() => {
     const html = document.documentElement;
@@ -190,7 +203,7 @@ export const UniversityPage = () => {
 
         {calendarMounted && (
           <div
-            className={`uni-calendar-inline${showCalendar ? ' uni-calendar-visible' : ''}`}
+            className={`uni-calendar-inline${calendarRevealed ? ' uni-calendar-visible' : ''}`}
             onTransitionEnd={(e) => {
               if (e.propertyName === 'opacity' && !showCalendar) setCalendarMounted(false);
             }}
