@@ -23,6 +23,7 @@ import ClubMembersPanel from '../club_page_components/ClubMembersPanel';
 import { useClubData } from '../context/useClubData';
 import { useGlobalStore } from '../lib/store';
 import { readClubPage, invalidateClubPage } from '../lib/clubPageCache';
+import { Skeleton, SkeletonText } from '../components/Skeleton';
 import InviteLinkButton from '../club_page_components/InviteLinkButton';
 import dividerLineImg from '/src/assets/border-horizontal-gray.svg';
 
@@ -211,6 +212,11 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     // already drawn.
     const [user, setUser] = useState(() => (viewerId ? { id: viewerId } : null));
     // null = not a member; 'member' | 'moderator' | 'top_moderator' = current role
+    // False only when the card was opened without a prior hover — keyboard, touch, or a
+    // click faster than the prefetch. In that window the page renders a skeleton rather
+    // than an empty shell that fills in piece by piece.
+    const [hydrated, setHydrated] = useState(() => !!warmed);
+
     // Seeded from the prefetch. This decides between the editor header and a plain close
     // button, so resolving it after mount used to swap the header and shove everything
     // below it down — the buttons visibly jumping on open.
@@ -377,9 +383,16 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             }
             if (approvedResult?.status === 'fulfilled')
                 setMyRole(approvedResult.value?.role ?? null);
+
+            setHydrated(true);
         }
 
-        fetchAll();
+        // Marks hydrated even if fetchAll throws, so a failed load shows the (empty) page
+        // rather than a skeleton that never resolves.
+        fetchAll().catch((err) => {
+            console.error('Failed to load club page:', err);
+            setHydrated(true);
+        });
     }, [id, animationDone, club]);
 
     // Approved editors: load the club's pending user-submitted FAQ questions.
@@ -786,6 +799,41 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
             onAnimationComplete={() => setAnimationDone(true)}
         >
+            {/* Shown only on a cold open — hovering a card warms the page, so this is the
+                keyboard, touch and very-fast-click path. Rendered inside the same
+                motion.div as the real page, so the container and the open animation are
+                identical and the content swaps in without the layout moving. */}
+            {!hydrated ? (
+                <div className="club-modules" role="status" aria-busy="true" aria-label="Loading club page">
+                    <button className="close-btn" onClick={handleClose}>×</button>
+
+                    {/* Hero: colour band, club name, logo, action links */}
+                    <div className="content-col">
+                        <Skeleton height="120px" radius={2} />
+                        <div className="text-flex" style={{ marginTop: 18 }}>
+                            <Skeleton width="55%" height="2.6rem" />
+                        </div>
+                        <div className="image-stack" style={{ marginTop: 18 }}>
+                            <Skeleton width="180px" height="180px" radius={4} />
+                        </div>
+                        <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
+                            <Skeleton width="110px" height="2.1rem" radius={999} />
+                            <Skeleton width="90px" height="2.1rem" radius={999} />
+                            <Skeleton width="130px" height="2.1rem" radius={999} />
+                        </div>
+                        <SkeletonText lines={3} />
+                    </div>
+
+                    {/* Two module blocks, roughly the height of a stats or calendar module */}
+                    {[0, 1].map((i) => (
+                        <div key={i} style={{ marginTop: 34 }}>
+                            <Skeleton width="200px" height="1.6rem" />
+                            <Skeleton height="9rem" radius={4} style={{ marginTop: 14 }} />
+                        </div>
+                    ))}
+                </div>
+            ) : (
+            <>
             {!isApproved && (
                 <button className="close-btn" onClick={handleClose}>×</button>
             )}
@@ -952,6 +1000,8 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 <div>
                     <ReviewPage clubId={club.id} onClose={() => setIsOpen(false)} />
                 </div>
+            )}
+            </>
             )}
         </motion.div>
     );
