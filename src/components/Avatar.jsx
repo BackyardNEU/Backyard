@@ -39,11 +39,9 @@ export default function Avatar({
   return (
     <div
       className={`avatar avatar-initials ${className}`}
-      style={{
-        ...sizing,
-        backgroundColor: colorFor(firstName, lastName, username),
-        ...(size ? { fontSize: size * 0.38 } : null),
-      }}
+      // No inline font-size: the CSS derives it from the element's own width with a
+      // container query, so it is correct whether the size came from a prop or a class.
+      style={{ ...sizing, backgroundColor: colorFor(firstName, lastName, username) }}
       // The initials are decorative shorthand; the accessible name is the person.
       role="img"
       aria-label={label}
