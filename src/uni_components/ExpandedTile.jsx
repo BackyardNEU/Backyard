@@ -840,6 +840,9 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                         userId={user?.id ?? null}
                     />
                 )}
+                <div className="module-view-divider">
+                    <div className="divider" style={{ backgroundImage: `url(${dividerLineImg})` }} aria-hidden="true" />
+                </div>
                 <AddEventPanel
                     isApproved={isApproved}
                     club={club}
@@ -852,6 +855,9 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     onRsvp={handleClubRsvp}
                     userId={user?.id ?? null}
                 />
+                <div className="module-view-divider">
+                    <div className="divider" style={{ backgroundImage: `url(${dividerLineImg})` }} aria-hidden="true" />
+                </div>
                 {isEditing ? (
                     <ModuleAccordion
                         modules={accordionModules}
@@ -863,11 +869,6 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     />
                 ) : (
                     <>
-                        {viewModules.length > 0 && (
-                            <div className="module-view-divider">
-                                <div className="divider" style={{ backgroundImage: `url(${dividerLineImg})` }} aria-hidden="true" />
-                            </div>
-                        )}
                         {viewModules.map((module, index) => (
                             <React.Fragment key={module.type}>
                                 {index > 0 && (
