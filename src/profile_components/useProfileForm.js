@@ -29,7 +29,7 @@ export function useProfileForm() {
     // Prefer the shared copy. It falls back to fetching because onboarding can run before
     // the provider has one — a brand new account's profile row is created by AuthListener
     // after the provider's initial load.
-    const { profile: sharedProfile, setProfile } = useClubData();
+    const { profile: sharedProfile, setProfile, loading: providerLoading } = useClubData();
 
     // Captured once, on mount. Two reasons it is a ref rather than read each render:
     //
@@ -42,6 +42,9 @@ export function useProfileForm() {
     //    section pushed a new profile into the provider, re-ran this effect, and reset
     //    every field — silently discarding an in-progress bio or username edit.
     const seeded = useRef(sharedProfile);
+    // Whether the form has been filled from a profile yet. Starts true when the provider
+    // already had one at mount, since the initialisers below seeded from it.
+    const populated = useRef(!!sharedProfile);
 
     const [loading, setLoading] = useState(() => !seeded.current);
     const [submitting, setSubmitting] = useState(false);
@@ -94,45 +97,68 @@ export function useProfileForm() {
         return () => clearTimeout(timer);
     }, [username, initialUsername, checkUsername]);
 
-    // Only runs when the provider had nothing at mount — onboarding right after signup,
-    // where AuthListener creates the profile row after the provider's initial load.
-    // Deliberately has no dependency on sharedProfile: re-running it would overwrite
-    // whatever the user has typed.
+    // Fills the form from a profile, exactly once.
+    //
+    // The guard is the important part. Populating a second time would overwrite whatever
+    // the user has typed since — which is precisely what happened when this effect
+    // depended on the shared profile and another Settings section wrote to it.
+    const applyProfile = useCallback((profile) => {
+        if (populated.current || !profile) return;
+        populated.current = true;
+
+        setFirstName(profile.first_name || '');
+        setLastName(profile.last_name || '');
+        const existing = profile.username || '';
+        if (existing && /^[a-zA-Z0-9_]+$/.test(existing)) {
+            setUsername(existing);
+            setInitialUsername(existing);
+        }
+        setBiography(profile.biography || '');
+        setSchool(profile.school || '');
+        setAvatarPreview(profile.avatar_url || null);
+        setExistingPhotos(Array.isArray(profile.photos) ? profile.photos : []);
+        setLoading(false);
+    }, []);
+
+    // Takes the profile from whichever source has it first.
+    //
+    // Seeding at mount only covers the case where the provider had already loaded. Open
+    // /profile-setup on a cold page load and the provider is still in flight, so the form
+    // used to fire its own /me/profile — a duplicate of the request already running, and
+    // a race: if it landed after the user started typing, it wiped their input.
+    //
+    // Waiting for the provider first means one request in the common case. The direct
+    // fetch is kept for the one situation the provider cannot cover: onboarding straight
+    // after signup, where AuthListener creates the row after the provider's initial load
+    // finished, so the provider legitimately has nothing.
     useEffect(() => {
-        if (seeded.current) return;
+        if (populated.current) return;
+
+        if (sharedProfile) {
+            applyProfile(sharedProfile);
+            return;
+        }
+
+        // Provider still working — let it finish rather than racing it.
+        if (providerLoading) return;
 
         let cancelled = false;
 
-        async function load() {
-            setLoading(true);
+        (async () => {
             setError(null);
             try {
                 const profile = await apiFetch('/me/profile');
-                if (cancelled) return;
-
-                setFirstName(profile?.first_name || '');
-                setLastName(profile?.last_name || '');
-                const existing = profile?.username || '';
-                if (existing && /^[a-zA-Z0-9_]+$/.test(existing)) {
-                    setUsername(existing);
-                    setInitialUsername(existing);
-                }
-                setBiography(profile?.biography || '');
-                setSchool(profile?.school || '');
-                setAvatarPreview(profile?.avatar_url || null);
-                setExistingPhotos(Array.isArray(profile?.photos) ? profile.photos : []);
+                if (!cancelled) applyProfile(profile);
             } catch (err) {
                 if (cancelled) return;
                 console.error('Error loading profile:', err);
                 setError('Failed to load your profile. Please try again.');
-            } finally {
-                if (!cancelled) setLoading(false);
+                setLoading(false);
             }
-        }
+        })();
 
-        load();
         return () => { cancelled = true; };
-    }, []);
+    }, [sharedProfile, providerLoading, applyProfile]);
 
     // Object URLs leak until revoked.
     useEffect(() => {
