@@ -34,10 +34,11 @@
   width: min(680px, 92vw);
   max-height: 88vh;
   overflow-y: auto;
+  overflow-x: hidden;
 
   background: rgb(252, 252, 252);
-  border: 1px solid rgb(162, 162, 162);
-  border-radius: 15px;
+  border: none;
+  border-radius: 0;
   box-shadow:
     0 20px 80px rgba(0, 0, 0, 0.3),
     0 0 0 9999px rgba(0, 0, 0, 0.55);
@@ -45,6 +46,48 @@
   display: flex;
   flex-direction: column;
   padding: 2rem 2rem 2.5rem;
+}
+
+/* ─── Ink-line border overlay (black) ─────────────────────────────────────── */
+.support-modal-border {
+  position: absolute;
+  top: -4px;
+  height: 100%;
+  width: auto;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.support-modal-border-left {
+  left: -2px;
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+
+.support-modal-border-right {
+  right: -4px;
+  transform: scaleX(-1);
+  transform-origin: center;
+}
+
+.support-modal-border-h-wrap {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  background-size: auto 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.support-modal-border-top-wrap {
+  top: 0;
+}
+
+.support-modal-border-bottom-wrap {
+  bottom: 0;
 }
 
 /* ─── Close button ────────────────────────────────────────────────────────── */
@@ -67,7 +110,7 @@
 
 /* ─── Heading ─────────────────────────────────────────────────────────────── */
 .support-heading {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'Barlow Condensed', sans-serif;
   font-size: clamp(2.8rem, 7vw, 4rem);
   font-weight: 400;
   letter-spacing: 0.04em;
@@ -77,49 +120,49 @@
 
 .support-divider {
   width: 100%;
-  border: none;
-  border-top: 1px solid #ddd;
+  height: 2px;
+  background-image: url('/src/assets/border-horizontal-gray.svg');
+  background-repeat: repeat-x;
+  background-position: left center;
+  background-size: auto 100%;
   margin: 0 0 1.25rem;
 }
 
-/* ─── Pill tabs ───────────────────────────────────────────────────────────── */
+/* ─── Tabs (styled like club-tab-btn) ─────────────────────────────────────── */
 .support-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 1.25rem;
   margin-bottom: 1.5rem;
 }
 
 .support-tab {
+  flex: 0 0 auto;
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 500;
-  letter-spacing: 0.06em;
+  font-size: clamp(1rem, 2vw, 1.3rem);
+  font-weight: 400;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
-  padding: 0.35rem 0.9rem;
-  border-radius: 999px;
-  border: 1px solid #c4c4c4;
-  background: #f0f0f0;
-  color: #5c5c5c;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+  color: #cdcdcd;
+  white-space: nowrap;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: color 0.15s ease;
 }
 
 .support-tab:hover {
-  background: #e2e2e2;
-  color: #2a2a2a;
+  color: #8c8c8c;
 }
 
 .support-tab--active {
-  background: #494949;
-  color: #fff;
-  border-color: #494949;
+  color: #1a1a1a;
 }
 
 .support-tab--active:hover {
-  background: #333;
-  border-color: #333;
-  color: #fff;
+  color: #1a1a1a;
 }
 
 /* ─── Content area ────────────────────────────────────────────────────────── */
@@ -134,11 +177,20 @@
 }
 
 .support-faq-item {
-  border-bottom: 1px solid #e8e8e8;
+  background-image: url('/src/assets/border-horizontal-gray.svg');
+  background-repeat: repeat-x;
+  background-position: left bottom;
+  background-size: auto 2px;
+  padding-bottom: 1px;
 }
 
 .support-faq-item:first-child {
-  border-top: 1px solid #e8e8e8;
+  background-image:
+    url('/src/assets/border-horizontal-gray.svg'),
+    url('/src/assets/border-horizontal-gray.svg');
+  background-repeat: repeat-x, repeat-x;
+  background-position: left top, left bottom;
+  background-size: auto 2px, auto 2px;
 }
 
 .support-faq-question {
@@ -328,12 +380,20 @@
 }
 
 .support-ticket-row {
-  padding: 0.85rem 0;
-  border-bottom: 1px solid #e8e8e8;
+  padding: 0.85rem 0 calc(0.85rem + 1px);
+  background-image: url('/src/assets/border-horizontal-gray.svg');
+  background-repeat: repeat-x;
+  background-position: left bottom;
+  background-size: auto 2px;
 }
 
 .support-ticket-row:first-child {
-  border-top: 1px solid #e8e8e8;
+  background-image:
+    url('/src/assets/border-horizontal-gray.svg'),
+    url('/src/assets/border-horizontal-gray.svg');
+  background-repeat: repeat-x, repeat-x;
+  background-position: left top, left bottom;
+  background-size: auto 2px, auto 2px;
 }
 
 .support-ticket-meta {

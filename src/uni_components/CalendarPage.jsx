@@ -13,6 +13,10 @@ import PortraitTitle from './PortraitTitle';
 import treeImg from '/src/assets/tree.png';
 import borderImg from '../assets/border.svg';
 import borderHorizontalImg from '../assets/border-horizontal.svg';
+import minimizedPosterActiveIcon from '../assets/Minimized_poster_icon_active.png';
+import minimizedPosterInactiveIcon from '../assets/Minimized_poster_icon_inactive.png';
+import maximizedPosterActiveIcon from '../assets/Maximized_poster_icon_active.png';
+import maximizedPosterInactiveIcon from '../assets/Maximized_poster_icon_inactive.png';
 
 const WEEK_DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
@@ -51,6 +55,10 @@ export function CalendarPage({ onClose }) {
   }, [weeklyRsvps, friendsArray]);
 
   const [viewMode, setViewMode] = useState('week');
+  // Week-view-only: whether each event renders as a tall poster card or a
+  // shrunken single-line row. Toggled via the two icon buttons above the
+  // Week/Month button.
+  const [posterSize, setPosterSize] = useState('maximized'); // 'maximized' | 'minimized'
 
   const [displayYear, setDisplayYear] = useState(todayDate.getFullYear());
   const [displayMonth, setDisplayMonth] = useState(todayDate.getMonth() + 1);
@@ -329,38 +337,60 @@ export function CalendarPage({ onClose }) {
                       : (clubName || eventName);
                     const friends = weeklyFriendRsvpMap.get(event.id);
                     const posterUrl = event.event_image_url || event.image_url || clubImageById.get(event.club_id);
+                    const isMinimized = posterSize === 'minimized';
                     return (
                       <button
                         type="button"
                         key={event.id}
-                        className="calendar-event"
+                        className={`calendar-event${isMinimized ? ' calendar-event--minimized' : ''}`}
                         onClick={() => setSelectedOverlay({ type: 'week', date: day.date })}
                       >
-                        <div className="cal-portrait-img-wrap">
-                          <img src={borderImg} alt="" className="cal-portrait-card-border cal-portrait-card-border-left" />
-                          <img src={borderImg} alt="" className="cal-portrait-card-border cal-portrait-card-border-right" />
-                          <div
-                            className="cal-portrait-card-border-h cal-portrait-card-border-h-top"
-                            style={{ backgroundImage: `url(${borderHorizontalImg})` }}
-                          />
-                          <div
-                            className="cal-portrait-card-border-h cal-portrait-card-border-h-bottom"
-                            style={{ backgroundImage: `url(${borderHorizontalImg})` }}
-                          />
-                          <img
-                            src={posterUrl || '/raccoon_pfp.png'}
-                            alt=""
-                            className={`cal-portrait-img${posterUrl ? '' : ' cal-portrait-img--default'}`}
-                          />
-                          <PortraitTitle text={titleText} />
-                          {friends && friends.length > 0 && (
-                            <p className="friend-rsvp-callout">
-                              {friends.length === 1
-                                ? `${friends[0].username} is going`
-                                : `${friends[0].username} and ${friends.length - 1} ${friends.length - 1 === 1 ? 'other' : 'others'} you know are going`}
-                            </p>
-                          )}
-                        </div>
+                        {isMinimized ? (
+                          <div className="calendar-event-min-row">
+                            <img src={borderImg} alt="" className="cal-portrait-card-border cal-portrait-card-border-left" />
+                            <img src={borderImg} alt="" className="cal-portrait-card-border cal-portrait-card-border-right" />
+                            <div
+                              className="cal-portrait-card-border-h cal-portrait-card-border-h-top"
+                              style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+                            />
+                            <div
+                              className="cal-portrait-card-border-h cal-portrait-card-border-h-bottom"
+                              style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+                            />
+                            <img
+                              src={posterUrl || '/raccoon_pfp.png'}
+                              alt=""
+                              className={`calendar-event-min-thumb${posterUrl ? '' : ' calendar-event-min-thumb--default'}`}
+                            />
+                            <PortraitTitle text={titleText} />
+                          </div>
+                        ) : (
+                          <div className="cal-portrait-img-wrap">
+                            <img src={borderImg} alt="" className="cal-portrait-card-border cal-portrait-card-border-left" />
+                            <img src={borderImg} alt="" className="cal-portrait-card-border cal-portrait-card-border-right" />
+                            <div
+                              className="cal-portrait-card-border-h cal-portrait-card-border-h-top"
+                              style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+                            />
+                            <div
+                              className="cal-portrait-card-border-h cal-portrait-card-border-h-bottom"
+                              style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+                            />
+                            <img
+                              src={posterUrl || '/raccoon_pfp.png'}
+                              alt=""
+                              className={`cal-portrait-img${posterUrl ? '' : ' cal-portrait-img--default'}`}
+                            />
+                            <PortraitTitle text={titleText} />
+                            {friends && friends.length > 0 && (
+                              <p className="friend-rsvp-callout">
+                                {friends.length === 1
+                                  ? `${friends[0].username} is going`
+                                  : `${friends[0].username} and ${friends.length - 1} ${friends.length - 1 === 1 ? 'other' : 'others'} you know are going`}
+                              </p>
+                            )}
+                          </div>
+                        )}
                       </button>
                     );
                   })
@@ -484,6 +514,29 @@ export function CalendarPage({ onClose }) {
           </div>
         )}
       </div>
+
+      {viewMode === 'week' && (
+        <div className="calpg-poster-size-toggle">
+          <button
+            type="button"
+            className="calpg-poster-size-btn"
+            aria-label="Minimized poster view"
+            aria-pressed={posterSize === 'minimized'}
+            onClick={() => setPosterSize('minimized')}
+          >
+            <img src={posterSize === 'minimized' ? minimizedPosterActiveIcon : minimizedPosterInactiveIcon} alt="" />
+          </button>
+          <button
+            type="button"
+            className="calpg-poster-size-btn"
+            aria-label="Maximized poster view"
+            aria-pressed={posterSize === 'maximized'}
+            onClick={() => setPosterSize('maximized')}
+          >
+            <img src={posterSize === 'maximized' ? maximizedPosterActiveIcon : maximizedPosterInactiveIcon} alt="" />
+          </button>
+        </div>
+      )}
 
       <button
         className="calpg-toggle-btn"
