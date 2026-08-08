@@ -1,6 +1,7 @@
 ﻿import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
+import { isUuid, slugifyUniversity } from '../../shared/slug';
 import { UniSearchBar } from './UniSearchBar';
 import './UniversityPage.css';
 import { ClubList } from './ClubList';
@@ -16,8 +17,15 @@ import neuFlag from '/src/assets/neu_flag.png';
 import borderImg from '/src/assets/border.svg';
 import borderHorizontalImg from '/src/assets/border-horizontal.svg';
 
+// Matches the <title> in index.html, so leaving this page restores it rather than
+// stranding the browser tab on whichever school was open last.
+const DEFAULT_TITLE = "Welcome to your school's Backyard!";
+
 export const UniversityPage = () => {
+  // Either a slug ("Northeastern") or a UUID — the API resolves both, and old UUID links
+  // are rewritten to the slug once the name is known.
   const { id } = useParams();
+  const navigate = useNavigate();
   const [university, setUniversity] = useState(null);
   const [results, setResults] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -103,6 +111,21 @@ export const UniversityPage = () => {
 
     fetchUniversity();
   }, [id]);
+
+  // Tab title. Restored on unmount so other routes do not inherit it.
+  useEffect(() => {
+    if (!university?.uni_name) return;
+    document.title = `Backyard | ${university.uni_name}`;
+    return () => { document.title = DEFAULT_TITLE; };
+  }, [university]);
+
+  // Rewrite a legacy UUID URL to the readable slug once the name resolves. `replace` so
+  // it does not add a history entry the back button has to step through.
+  useEffect(() => {
+    if (!university?.uni_name || !isUuid(id)) return;
+    const slug = university.slug || slugifyUniversity(university.uni_name);
+    navigate(`/university/${slug}`, { replace: true });
+  }, [university, id, navigate]);
 
   if (!university) return <div>Loading...</div>;
 

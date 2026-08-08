@@ -40,7 +40,7 @@ function App() {
           {/* University selection disabled — defaulting to Northeastern for now */}
           <Route
             path="/"
-            element={<Navigate to="/university/38500bfc-e606-46a7-840d-720b11ad2e8b" replace />}
+            element={<Navigate to="/university/Northeastern" replace />}
           />
           <Route path="/university/:id" element={<UniversityPage />} />
           <Route path="/reviews/:id" element={<ReviewPage />} />

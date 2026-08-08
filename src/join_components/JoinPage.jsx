@@ -19,7 +19,7 @@ export default function JoinPage() {
   const [redeemState, setRedeemState] = useState(null); // null | 'loading' | 'success' | 'already' | string (error)
   const [isEditorGrant, setIsEditorGrant] = useState(false);
 
-  const neuID = '/university/38500bfc-e606-46a7-840d-720b11ad2e8b'
+  const neuID = '/university/Northeastern'
 
   // Store token so AuthCallbackPage and ProfileSetupPage can redirect back here after auth
   useEffect(() => {

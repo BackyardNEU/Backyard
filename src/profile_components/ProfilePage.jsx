@@ -158,7 +158,7 @@ export const ProfilePage = () => {
           </div>
           <button
             className="profile-close-btn"
-            onClick={() => {navigate(/*lastPath && lastPath !== '/profile' ? lastPath : '/'*/ `/university/38500bfc-e606-46a7-840d-720b11ad2e8b`)}} //neu id
+            onClick={() => {navigate(/*lastPath && lastPath !== '/profile' ? lastPath : '/'*/ `/university/Northeastern`)}}
             aria-label="Close profile"
           >
             ×
