@@ -2,19 +2,52 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="robots" content="index, follow">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta property="og:title" content="Backyard">
-    <meta property="og:url" content="https://explorethebackyard.com">
-    <!-- TODO: Update og:image to absolute URL (explorethebackyard.com/raccoon_pfp.png) once domain is live -->
-    <meta property="og:image" content="/raccoon_pfp.png">
-    <!-- TODO: Write official og:description later -->
-    <meta property="og:description" content="Discover and join clubs, explore events, and connect with friends at your university, all in one place.">
+
+    <title>Welcome to your school's Backyard!</title>
+    <!-- TODO: Write official copy later. This string is reused verbatim by the og: and
+         twitter: descriptions below — update all three together. -->
+    <meta name="description" content="Discover and join clubs, explore events, and connect with friends at your university, all in one place." />
+    <link rel="canonical" href="https://explorethebackyard.com/" />
+    <meta name="robots" content="index, follow" />
+    <!-- Tints mobile browser chrome to the app's parchment background. -->
+    <meta name="theme-color" content="#f5f1ea" />
+
+    <!-- Favicons. favicon.ico carries 16/32/48 for legacy clients and crawlers that
+         request /favicon.ico by default; the PNGs are what modern browsers pick. -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+    <!-- Open Graph. og:image MUST be an absolute URL — scrapers do not resolve relative
+         paths, which is why link previews showed no image before. It also has to be
+         served from whatever origin actually hosts the app, so if this deploys anywhere
+         other than explorethebackyard.com, these two URLs need to change with it. -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Backyard" />
-    
-    <title>Welcome to your school's Backyard!</title>
+    <meta property="og:title" content="Backyard" />
+    <meta property="og:description" content="Discover and join clubs, explore events, and connect with friends at your university, all in one place." />
+    <meta property="og:url" content="https://explorethebackyard.com/" />
+    <meta property="og:image" content="https://explorethebackyard.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="The Backyard wordmark above the Backyard raccoon mascot." />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter reads og: tags as a fallback but needs twitter:card to render the large
+         image rather than a thumbnail. -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Backyard" />
+    <meta name="twitter:description" content="Discover and join clubs, explore events, and connect with friends at your university, all in one place." />
+    <meta name="twitter:image" content="https://explorethebackyard.com/og-image.png" />
+    <meta name="twitter:image:alt" content="The Backyard wordmark above the Backyard raccoon mascot." />
+
+    <!-- Opens the TLS connections to Google Fonts before the stylesheets below are
+         parsed. Cheap, and it matters here because there are ten separate requests. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
     <!-- TODO: Consolidate these requests into a few so app loads faster -->
     <link href="https://fonts.googleapis.com/css2?family=Raleway:ital,wght@1,100..900&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
