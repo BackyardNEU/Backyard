@@ -112,38 +112,58 @@
 }
 
 .add-event-card-date {
-  font-size: 11px;
-  font-weight: 700;
-  color: #888;
+  font-size: 0.8rem;
+  font-weight: 500;
+    font-family: 'Barlow Condensed', sans-serif;
+  color: #464646;
   letter-spacing: 0.06em;
   margin: 0;
+  text-align: center;
 }
 
-.add-event-card-time {
-  font-size: 13px;
-  font-weight: 600;
-  color: #2b3440;
-  margin: 0;
+/* Row holding the More/Less toggle — always its own row, below whatever
+   content the compact/expanded body shows above it. */
+.add-event-card-toggle-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
 }
 
-.add-event-card-desc {
-  font-size: 14px;
-  color: #444;
-  margin: 0;
-  line-height: 1.45;
+/* Same pill treatment as the comment card's More/Less button
+   (.comment-expand-btn in ReviewList.css), kept as its own class since this
+   button is always in-flow (never absolutely overlaid on a fade). */
+.add-event-expand-btn {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.85rem;
+  background: rgba(255, 253, 251, 0.95);
+  border: 1px solid #9C8E8C;
+  border-radius: 10px;
+  padding: 5px 14px;
+  cursor: pointer;
+  color: #5a4b40;
+  transition: background 0.15s;
+}
+.add-event-expand-btn:hover {
+  background: #f5f0ee;
 }
 
-/* Shared row slot for the add-btn <-> cal-form swap. Collapsed height matches
-   the button (450px); expanded height is set inline from the form's measured
-   scrollHeight — same max-height transition technique as the comment card's
-   More/Less, itself derived from the module accordion's grid-rows trick. */
+/* Shared row slot for: the add-btn <-> cal-form swap, an existing event's
+   edit-form morph, and an existing event's compact <-> expanded card toggle.
+   In every case the resting/expanded height is set inline from the visible
+   content's measured scrollHeight — same max-height transition technique as
+   the comment card's More/Less (.comment-card__body in ReviewList.css),
+   itself derived from the module accordion's grid-rows trick: a deliberately
+   snug collapsed max-height so expanding to the measured height always
+   produces a visible grow/shrink animation, instead of the two states
+   happening to already be close in height. */
 .cal-add-slot {
   flex: 0 0 auto;
   width: 300px;
   /* Collapsed resting height — must fit the tallest collapsed content: the
-     fixed-450px add-button, or an existing-event card (image + date/time/desc
-     + optional members-badge/friend-callout + the RSVP button). */
-  max-height: 620px;
+     fixed-450px add-button, or a compact event card (image + date + title +
+     More button). Kept snug (not a generous catch-all) so toggling to the
+     expanded card's measured height always animates. */
+  max-height: 560px;
   overflow: hidden;
   transition: max-height 0.3s ease;
 }
@@ -479,4 +499,8 @@
 .cal-submit-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.duo-btn-pill:has(+ .cal-submit-btn:disabled) {
+  opacity: 0.4;
 }

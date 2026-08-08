@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '../lib/api';
 import { supabase } from '../lib/supabase';
+import borderImg from '/src/assets/border.svg';
+import borderHorizontalImg from '/src/assets/border-horizontal.svg';
 import './SupportModal.css';
 
 // ─── Static FAQ data ──────────────────────────────────────────────────────────
@@ -303,6 +305,19 @@ export function SupportModal({ open, setOpen }) {
           exit={{ opacity: 0, scale: 0.96, y: 12 }}
           transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
         >
+          <img src={borderImg} alt="" className="support-modal-border support-modal-border-left" />
+          <img src={borderImg} alt="" className="support-modal-border support-modal-border-right" />
+          <div
+            className="support-modal-border-h-wrap support-modal-border-top-wrap"
+            style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+            aria-hidden="true"
+          />
+          <div
+            className="support-modal-border-h-wrap support-modal-border-bottom-wrap"
+            style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+            aria-hidden="true"
+          />
+
           <button
             className="support-close"
             onClick={() => setOpen(false)}
@@ -312,7 +327,7 @@ export function SupportModal({ open, setOpen }) {
           </button>
 
           <h1 className="support-heading">Support</h1>
-          <hr className="support-divider" />
+          <div className="support-divider" />
 
           <div className="support-tabs" role="tablist">
             {TABS.map((tab, i) => (

@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useClubData } from '../context/useClubData';
+import { apiFetch } from '../lib/api';
+import { roleColorStyle } from '../lib/roleColor';
 import ColorThief from 'colorthief';
 import { FaSearch, FaTimes } from 'react-icons/fa';
 import borderImg from '/src/assets/border-green.svg';
@@ -21,7 +23,7 @@ import './BasicInfoModule.css';
  * @param {'full'|'hero'|'about'} props.part - which slice to render; hero is fixed above the accordion
  * @param {boolean} props.linksDisplayed - whether the Links module's visibility checkbox is on; hides the action-bar link buttons entirely when false
  */
-function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange, actions, warning, part = 'full', linksDisplayed = true }) {
+function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange, actions, warning, part = 'full', linksDisplayed = true, currentUserId = null }) {
   const [dominantColor, setDominantColor] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
   const [descOpen, setDescOpen] = useState(false);
@@ -31,6 +33,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   const [friendsSearch, setFriendsSearch] = useState('');
   const [imageWarning, setImageWarning] = useState('');
   const [linksExpanded, setLinksExpanded] = useState(false);
+  const [clubRoster, setClubRoster] = useState([]);
   // Drives how many links show before "More" — 2 on narrow viewports, 5 otherwise.
   // Tracked reactively (not just read once) so resizing across the breakpoint updates it.
   const [isNarrow, setIsNarrow] = useState(() => window.innerWidth <= 500);
@@ -50,14 +53,41 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   const isLongDesc = descWords.length > 50;
   const descPreview = isLongDesc ? descWords.slice(0, 50).join(' ') : displayDescription;
 
-  const { friendMembershipMap, friendsArray } = useClubData();
+  const { friendMembershipMap } = useClubData();
   const friendsInClub = friendMembershipMap?.get(club.id) || [];
 
   const friendsInClubIds = new Set(friendsInClub.map(f => f.id));
-  const otherFriends = (friendsArray || []).filter(f => !friendsInClubIds.has(f.id));
+
+  // Roster (with each member's custom role/tag) is fetched lazily — only needed
+  // once the friends modal is actually open, not on every club page load.
+  useEffect(() => {
+    if (!friendsModalOpen) return;
+    let cancelled = false;
+    apiFetch(`/clubs/${club.id}/members`, { auth: false })
+      .then((data) => { if (!cancelled) setClubRoster(data || []); })
+      .catch((err) => console.error('Failed to fetch club roster:', err));
+    return () => { cancelled = true; };
+  }, [friendsModalOpen, club.id]);
+
+  const customRoleByUserId = new Map(
+    clubRoster
+      .filter((m) => m.club_custom_roles?.name)
+      .map((m) => [m.user_id, m.club_custom_roles])
+  );
+
+  // "Other members" = everyone else in the club roster, minus friends already
+  // shown above and minus the current user viewing this modal.
+  const otherMembers = clubRoster
+    .filter((m) => m.user_id !== currentUserId && !friendsInClubIds.has(m.user_id))
+    .map((m) => ({
+      id: m.user_id,
+      username: m.profiles?.username ?? 'Unknown',
+      avatar_url: m.profiles?.avatar_url ?? null,
+    }));
+
   const q = friendsSearch.toLowerCase();
   const filteredInClub = friendsInClub.filter(f => f.username.toLowerCase().includes(q));
-  const filteredOther = otherFriends.filter(f => f.username.toLowerCase().includes(q));
+  const filteredOther = otherMembers.filter(f => f.username.toLowerCase().includes(q));
 
   const links = data?.links ?? [];
   const enabledLinks = links.filter(l => l.enabled && l.url);
@@ -168,11 +198,6 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
 
   return (
     <>
-    {editing && showHero && (
-          <p className="about-edit-help">
-            You're in edit mode! Email explorethebackyard2025@gmail.com with any questions!
-          </p>
-        )}
       {showHero && (
       <div className="content-col">
         <div className="rectangle" style={{ backgroundColor: dominantColor }}>
@@ -415,26 +440,42 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
               <>
                 <div className="friends-modal-section-title">In This Club</div>
                 <div className="friends-modal-list">
-                  {filteredInClub.map((friend) => (
-                    <div className="friend-modal-row" key={friend.id}>
-                      <img className="friend-avatar-sm" src={friend.avatar_url || '/raccoon_pfp.png'} alt={friend.username} />
-                      <span className="friend-result-name">{friend.username}</span>
-                    </div>
-                  ))}
+                  {filteredInClub.map((friend) => {
+                    const customRole = customRoleByUserId.get(friend.id);
+                    return (
+                      <div className="friend-modal-row" key={friend.id}>
+                        <img className="friend-avatar-sm" src={friend.avatar_url || '/raccoon_pfp.png'} alt={friend.username} />
+                        <span className="friend-result-name">{friend.username}</span>
+                        {customRole && (
+                          <span className="role-badge friend-result-badge" style={roleColorStyle(customRole.role_color)}>
+                            {customRole.name}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </>
             )}
 
             {filteredOther.length > 0 && (
               <>
-                <div className="friends-modal-section-title">Other Friends</div>
+                <div className="friends-modal-section-title">Other Members</div>
                 <div className="friends-modal-list">
-                  {filteredOther.map((friend) => (
-                    <div className="friend-modal-row" key={friend.id}>
-                      <img className="friend-avatar-sm" src={friend.avatar_url || '/raccoon_pfp.png'} alt={friend.username} />
-                      <span className="friend-result-name">{friend.username}</span>
-                    </div>
-                  ))}
+                  {filteredOther.map((friend) => {
+                    const customRole = customRoleByUserId.get(friend.id);
+                    return (
+                      <div className="friend-modal-row" key={friend.id}>
+                        <img className="friend-avatar-sm" src={friend.avatar_url || '/raccoon_pfp.png'} alt={friend.username} />
+                        <span className="friend-result-name">{friend.username}</span>
+                        {customRole && (
+                          <span className="role-badge friend-result-badge" style={roleColorStyle(customRole.role_color)}>
+                            {customRole.name}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </>
             )}

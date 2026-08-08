@@ -58,7 +58,7 @@ export default function InviteLinkButton({ clubId }) {
           <div className="duo-btn-pill" aria-hidden="true" />
           <button
             className="invite-generate-btn duo-btn"
-            style={{ '--duo-shadow': '#1c2a44' }}
+            style={{ '--duo-shadow': '#A8241A' }}
             onClick={generate}
             disabled={loading}
             type="button"

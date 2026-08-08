@@ -7,6 +7,8 @@ import newAddPosterImg from '../assets/New_add_poster.png';
 import borderImg from '../assets/border.svg';
 import borderHorizontalImg from '../assets/border-horizontal.svg';
 import EventPosterCropModal from './EventPosterCropModal';
+import PortraitTitle from '../uni_components/PortraitTitle';
+import '../uni_components/EventInfoRow.css';
 import './AddEventPanel.css';
 
 const EMPTY_FORM = { eventName: '', start: '', end: '', where: '', description: '', membersOnly: false };
@@ -70,6 +72,31 @@ export default function AddEventPanel({
   const [addSlotHeight, setAddSlotHeight] = useState(null);
   const editSlotRefs = useRef({});
   const [editSlotHeight, setEditSlotHeight] = useState(null);
+
+  // Compact <-> expanded toggle for read-only event cards (More/Less), same
+  // measured max-height technique as the edit-form morph above — several
+  // cards can be expanded at once, so heights are tracked per event id.
+  const [expandedEventIds, setExpandedEventIds] = useState(() => new Set());
+  const [cardHeights, setCardHeights] = useState({});
+
+  const toggleCardExpanded = (eventId) => {
+    setExpandedEventIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(eventId)) next.delete(eventId);
+      else next.add(eventId);
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (expandedEventIds.size === 0) return;
+    const next = {};
+    expandedEventIds.forEach((id) => {
+      const el = editSlotRefs.current[id];
+      if (el) next[id] = el.scrollHeight;
+    });
+    setCardHeights((prev) => ({ ...prev, ...next }));
+  }, [expandedEventIds]);
 
   // Re-measure the add-slot whenever it's the one open and its content
   // changes shape (image added/removed, warning appears, etc.).
@@ -388,15 +415,20 @@ export default function AddEventPanel({
           const end = parseISO(event.end_time);
           const friends = friendRsvpMap.get(event.id);
           const isGoing = myRsvpSet.has(event.id);
+          const isExpandedThis = expandedEventIds.has(event.id);
           return (
             <div
               key={event.id}
               className="cal-add-slot"
               ref={(el) => { editSlotRefs.current[event.id] = el; }}
-              style={isEditingThis && editSlotHeight ? { maxHeight: `${editSlotHeight}px` } : undefined}
+              style={
+                isEditingThis && editSlotHeight
+                  ? { maxHeight: `${editSlotHeight}px` }
+                  : (isExpandedThis && cardHeights[event.id] ? { maxHeight: `${cardHeights[event.id]}px` } : undefined)
+              }
             >
               {isEditingThis ? addEventForm : (
-                <div className="add-event-card">
+                <div className={`add-event-card${isExpandedThis ? ' add-event-card--expanded' : ''}`}>
                   <img src={borderImg} alt="" className="add-event-card-border add-event-card-border-left" />
                   <img src={borderImg} alt="" className="add-event-card-border add-event-card-border-right" />
                   <div
@@ -432,31 +464,71 @@ export default function AddEventPanel({
                     src={event.event_image_url || club?.image_url || '/raccoon_pfp.png'}
                     alt=""
                   />
-                  <div className="add-event-card-body">
-                    <p className="add-event-card-date">{format(start, 'EEE, MMM d').toUpperCase()}</p>
-                    <p className="add-event-card-time">
-                      {format(start, 'h:mm a')} – {format(end, 'h:mm a')}
-                    </p>
-                    <p className="add-event-card-desc">{event.event_description}</p>
-                    {event.is_members_only && (
-                      <span className="cal-members-badge">Members only</span>
-                    )}
-                    {friends && friends.length > 0 && (
-                      <p className="friend-rsvp-callout">
-                        {friends.length === 1
-                          ? `${friends[0].username} is going`
-                          : `${friends[0].username} and ${friends.length - 1} ${friends.length - 1 === 1 ? 'other' : 'others'} you know are going`}
+
+                  {isExpandedThis ? (
+                    <div className="add-event-card-body">
+                      <PortraitTitle text={event.event_name} />
+                      {event.where && (
+                        <p className="cal-info-row">
+                          <span className="cal-info-label">where</span>
+                          <span className="cal-info-value">{event.where}</span>
+                        </p>
+                      )}
+                      <p className="cal-info-row">
+                        <span className="cal-info-label">when</span>
+                        <span className="cal-info-value">
+                          {format(start, 'EEE MMM d')} {format(start, 'h:mm a')}–{format(end, 'h:mm a')}
+                        </span>
                       </p>
-                    )}
-                    {userId && (
-                      <button
-                        className={`rsvp-button${isGoing ? ' rsvp-going' : ''}`}
-                        onClick={() => onRsvp?.(event.id, isGoing)}
-                      >
-                        {isGoing ? 'Going ✓' : "I'm going!"}
-                      </button>
-                    )}
-                  </div>
+                      {event.event_description && (
+                        <p className="cal-info-row">
+                          <span className="cal-info-label">about</span>
+                          <span className="cal-info-value">{event.event_description}</span>
+                        </p>
+                      )}
+                      {event.is_members_only && (
+                        <span className="cal-members-badge">Members only</span>
+                      )}
+                      {friends && friends.length > 0 && (
+                        <p className="friend-rsvp-callout">
+                          {friends.length === 1
+                            ? `${friends[0].username} is going`
+                            : `${friends[0].username} and ${friends.length - 1} ${friends.length - 1 === 1 ? 'other' : 'others'} you know are going`}
+                        </p>
+                      )}
+                      {userId && (
+                        <button
+                          className={`rsvp-button${isGoing ? ' rsvp-going' : ''}`}
+                          onClick={() => onRsvp?.(event.id, isGoing)}
+                        >
+                          {isGoing ? 'Going ✓' : "I'm going!"}
+                        </button>
+                      )}
+                      <div className="add-event-card-toggle-row">
+                        <button
+                          type="button"
+                          className="add-event-expand-btn"
+                          onClick={() => toggleCardExpanded(event.id)}
+                        >
+                          Less
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="add-event-card-body">
+                      <p className="add-event-card-date">{format(start, 'EEE, MMM d').toUpperCase()}</p>
+                      <PortraitTitle text={event.event_name} />
+                      <div className="add-event-card-toggle-row">
+                        <button
+                          type="button"
+                          className="add-event-expand-btn"
+                          onClick={() => toggleCardExpanded(event.id)}
+                        >
+                          More
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

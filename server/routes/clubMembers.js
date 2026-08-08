@@ -5,6 +5,13 @@ import { requireModerator, requireTopModerator } from '../lib/clubPermissions.js
 
 const router = express.Router();
 
+// Same palette StatsModule.jsx uses for stat bars — kept in sync manually
+// since there's no shared constants module between client and server.
+const ROLE_COLORS = [
+  '#724200ff', '#56758b', '#be2419ff', '#da781cff',
+  '#ffcc13', '#628753ff', '#a39a96', '#d3d1c9ff',
+];
+
 // GET /:clubId/members — public
 // Returns full roster sorted top_moderator → moderator → member.
 // Two-step query: club_memberships.user_id references auth.users, not profiles,
@@ -14,7 +21,7 @@ router.get('/:clubId/members', async (req, res) => {
 
   const { data: memberships, error: mError } = await supabaseAdmin
     .from('club_memberships')
-    .select('user_id, role, custom_role_id, club_custom_roles ( name, grants_moderator_privileges )')
+    .select('user_id, role, custom_role_id, club_custom_roles ( name, grants_moderator_privileges, role_color )')
     .eq('club_id', clubId)
     .order('role');
 
@@ -259,7 +266,7 @@ router.get('/:clubId/roles', async (req, res) => {
 
   const { data, error } = await supabaseAdmin
     .from('club_custom_roles')
-    .select('id, name, grants_moderator_privileges, created_at')
+    .select('id, name, grants_moderator_privileges, role_color, created_at')
     .eq('club_id', clubId)
     .order('created_at');
 
@@ -277,10 +284,14 @@ router.get('/:clubId/roles', async (req, res) => {
 // 409 if name already exists for this club.
 router.post('/:clubId/roles', requireAuth, async (req, res) => {
   const { clubId } = req.params;
-  const { name, grants_moderator_privileges = false } = req.body;
+  const { name, grants_moderator_privileges = false, role_color } = req.body;
 
   if (!name?.trim()) {
     return res.status(400).json({ error: 'Role name is required.' });
+  }
+
+  if (role_color && !ROLE_COLORS.includes(role_color)) {
+    return res.status(400).json({ error: 'Invalid role color.' });
   }
 
   if (grants_moderator_privileges) {
@@ -291,7 +302,12 @@ router.post('/:clubId/roles', requireAuth, async (req, res) => {
 
   const { data, error } = await supabaseAdmin
     .from('club_custom_roles')
-    .insert({ club_id: clubId, name: name.trim(), grants_moderator_privileges })
+    .insert({
+      club_id: clubId,
+      name: name.trim(),
+      grants_moderator_privileges,
+      role_color: role_color || null,
+    })
     .select()
     .single();
 
