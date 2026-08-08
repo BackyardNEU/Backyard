@@ -88,6 +88,19 @@ router.put('/profile', checkMuted, async (req, res) => {
 router.post('/profile', checkMuted, async (req, res) => {
     const patch = pickWritable(req.body);
 
+    // This route exists to guarantee a profile row on first login, and it upserts — so
+    // anything present in the body overwrites what is already stored. A caller passing a
+    // blank field therefore erases real data, which is exactly what AuthListener did on
+    // every auth state change.
+    //
+    // Empty values are dropped here rather than only fixed in the caller, because the
+    // damage is silent and permanent and any future caller would hit the same edge.
+    // PUT /profile is the update path and still accepts empty strings, so clearing a
+    // biography deliberately continues to work.
+    for (const key of Object.keys(patch)) {
+        if (typeof patch[key] === 'string' && patch[key].trim() === '') delete patch[key];
+    }
+
     const textCheck = textModerator.checkFields({
         biography: patch.biography,
         first_name: patch.first_name,

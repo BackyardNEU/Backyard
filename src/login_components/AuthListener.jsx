@@ -13,14 +13,21 @@ import { invalidateAllQueries } from "../lib/queryCache";
 async function ensureProfile(user) {
   if (!user) return;
   const meta = user.user_metadata || {};
+
+  // Only send what the identity provider actually gave us.
+  //
+  // This previously sent empty strings whenever metadata had no name — which is every
+  // email/password signup — and the route below upserts, so each call overwrote the
+  // user's real first and last name with "". ensureProfile runs on every auth state
+  // change, so a name entered during setup was blanked again on the next page load.
+  const body = {};
+  const first = meta.first_name || meta.given_name;
+  const last = meta.last_name || meta.family_name;
+  if (first) body.first_name = first;
+  if (last) body.last_name = last;
+
   try {
-    await apiFetch("/me/profile", {
-      method: "POST",
-      body: {
-        first_name: meta.first_name || meta.given_name || "",
-        last_name: meta.last_name || meta.family_name || "",
-      },
-    });
+    await apiFetch("/me/profile", { method: "POST", body });
   } catch (err) {
     console.error("Profile upsert failed:", err.message);
   }
