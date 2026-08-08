@@ -98,7 +98,9 @@ export const SearchBar = () => {
         <div className="school-dropdown">
           {filtered.map((u, i) => (
             <div
-              key={u.id}
+              // Keyed by name, not id: at least one uni_names row has a NULL id, and a
+              // null key makes React fall back to the array index.
+              key={u.uni_name}
               className={`school-dropdown-item${i === activeIndex ? ' school-dropdown-item--active' : ''}`}
               onMouseDown={() => handleSelect(u)}
               onMouseEnter={() => setActiveIndex(i)}
