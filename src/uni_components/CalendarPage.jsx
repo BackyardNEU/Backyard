@@ -4,8 +4,8 @@ import {
   getDay, getDaysInMonth, isToday, isBefore,
 } from 'date-fns';
 import { apiFetch } from '../lib/api';
-import { supabase } from '../lib/supabase';
 import { useClubData } from '../context/useClubData';
+import { prefetchCalendar, readCalendar } from '../lib/calendarCache';
 import '../club_page_components/CalendarModule.css';
 import './CalendarPage.css';
 import './EventInfoRow.css';
@@ -32,12 +32,26 @@ export function CalendarPage({ onClose }) {
   );
 
   const todayDate = startOfDay(new Date());
-  const [status, setStatus] = useState('loading'); // 'loading' | 'ready' | 'unauthed'
-  const [userId, setUserId] = useState(null);
 
-  const [weeklyEvents, setWeeklyEvents] = useState([]);
-  const [myRsvpSet, setMyRsvpSet] = useState(new Set());
-  const [weeklyRsvps, setWeeklyRsvps] = useState([]); // raw { user_id, event_id } rows, so friend RSVPs can be derived alongside myRsvpSet
+  // Warmed by prefetchCalendar when the calendar button was hovered. Read synchronously
+  // during render rather than in an effect — an effect runs after the first paint, so the
+  // panel would still flash "Loading events…" before swapping to content, which is the
+  // exact seam this removes.
+  const warmed = readCalendar();
+
+  const [status, setStatus] = useState(() => {
+    if (!warmed) return 'loading';
+    return warmed.userId ? 'ready' : 'unauthed';
+  });
+  const [userId, setUserId] = useState(() => warmed?.userId ?? null);
+
+  const [weeklyEvents, setWeeklyEvents] = useState(() => warmed?.events ?? []);
+  const [myRsvpSet, setMyRsvpSet] = useState(() => new Set(
+    (warmed?.rsvps ?? [])
+      .filter((r) => r.user_id === warmed?.userId)
+      .map((r) => r.event_id)
+  ));
+  const [weeklyRsvps, setWeeklyRsvps] = useState(() => warmed?.rsvps ?? []); // raw { user_id, event_id } rows, so friend RSVPs can be derived alongside myRsvpSet
 
   // Same derivation ExpandedTile uses for a club page's "X is going" callouts —
   // cross-reference the raw rsvp rows against the current user's friends list.
@@ -78,29 +92,37 @@ export function CalendarPage({ onClose }) {
   const handleMouseEnter = () => containerRef.current?.addEventListener('wheel', handleWheel, { passive: false });
   const handleMouseLeave = () => containerRef.current?.removeEventListener('wheel', handleWheel);
 
+  // Populates state when the calendar was opened without a prior hover (keyboard, touch,
+  // a very fast click). On a warm cache prefetchCalendar resolves from memory, so this
+  // re-sets the same values and nothing flashes.
+  //
+  // Freshness is handled at the edges rather than by refetching on every open: the TTL is
+  // 30s, RSVPs made inside this component update local state directly, and AuthListener
+  // drops the cache on sign-in and sign-out — which is the only case where the payload
+  // would otherwise belong to a different user.
   useEffect(() => {
+    let cancelled = false;
+
     async function init() {
-      const { data: authData } = await supabase.auth.getUser();
-      const user = authData?.user;
-      if (!user) { setStatus('unauthed'); return; }
-      setUserId(user.id);
-      try {
-        const events = await apiFetch('/events/weekly');
-        setWeeklyEvents(events || []);
-        if (events?.length) {
-          const ids = events.map(e => e.id);
-          const rsvps = await apiFetch(`/events/rsvps?eventIds=${ids.join(',')}`);
-          setWeeklyRsvps(rsvps || []);
-          setMyRsvpSet(new Set(
-            (rsvps || []).filter(r => r.user_id === user.id).map(r => r.event_id)
-          ));
-        }
-      } catch (err) {
-        console.error('Failed to load weekly events:', err);
+      const data = await prefetchCalendar();
+      if (cancelled) return;
+
+      if (!data || !data.userId) {
+        setStatus('unauthed');
+        return;
       }
+
+      setUserId(data.userId);
+      setWeeklyEvents(data.events);
+      setWeeklyRsvps(data.rsvps);
+      setMyRsvpSet(new Set(
+        data.rsvps.filter((r) => r.user_id === data.userId).map((r) => r.event_id)
+      ));
       setStatus('ready');
     }
+
     init();
+    return () => { cancelled = true; };
   }, []);
 
   const weekDays = useMemo(() => {

@@ -1,6 +1,7 @@
 ﻿import React, {useState, useEffect} from 'react'
 import { apiFetch } from '../lib/api'
 import { useClubData } from '../context/useClubData'
+import { prefetchCalendar } from '../lib/calendarCache'
 import {FaSearch, FaCalendarAlt, FaTh, FaThLarge, FaSquare} from 'react-icons/fa'
 import './UniSearchBar.css'
 
@@ -225,10 +226,15 @@ useEffect(() => {
           ))}
         </div>
 
+        {/* Warmed on intent for the same reason club cards are: the panel used to fade in
+            showing "Loading events…" and swap to content once three requests returned. */}
         <button
           className={`uni-calendar-btn${calendarActive ? ' active' : ''}`}
           type="button"
           onClick={handleCalendarClick}
+          onMouseEnter={prefetchCalendar}
+          onFocus={prefetchCalendar}
+          onPointerDown={prefetchCalendar}
           aria-label="View events calendar"
         >
           <FaCalendarAlt />

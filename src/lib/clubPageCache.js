@@ -87,3 +87,10 @@ export function invalidateClubPage(clubId) {
   cache.delete(clubId);
   inflight.delete(clubId);
 }
+
+/** Drop everything. Called on sign-in and sign-out, since some of the cached payload
+ *  (upcoming events in particular) varies with who is asking. */
+export function invalidateAllClubPages() {
+  cache.clear();
+  inflight.clear();
+}
