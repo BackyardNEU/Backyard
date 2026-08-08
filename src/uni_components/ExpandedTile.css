@@ -216,6 +216,10 @@
   cursor: not-allowed;
 }
 
+.duo-btn-pill:has(+ .membership-btn:disabled) {
+  opacity: 0.5;
+}
+
 .membership-btn.join {
   background-color: rgb(0, 62, 11);
 }

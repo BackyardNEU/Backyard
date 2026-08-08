@@ -480,3 +480,7 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.duo-btn-pill:has(+ .cal-submit-btn:disabled) {
+  opacity: 0.4;
+}

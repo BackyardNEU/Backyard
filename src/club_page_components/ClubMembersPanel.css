@@ -12,16 +12,24 @@
 .club-members-panel__header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 1rem;
 }
 
+/* Matches .duo-btn's font-size (and its 501px breakpoint) so the count reads
+   at the same size as the Manage Roles button next to it. */
 .club-members-panel__count {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 1.1rem;
+  font-size: 1rem;
   color: #37291E;
   font-weight: 500;
+}
+
+@media (min-width: 501px) {
+  .club-members-panel__count {
+    font-size: 1.25rem;
+  }
 }
 
 .club-members-panel__error {
@@ -50,18 +58,33 @@
 /* ── Member card ─────────────────────────────────────────────────────────── */
 
 .member-card {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0.6rem 0.75rem;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.55);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
+
+}
+
+/* Ink-line divider between cards — sits in the list's gap, not on the first card */
+.member-card + .member-card::before {
+  content: '';
+  position: absolute;
+  top: -0.25rem;
+  left: 0.75rem;
+  right: 0.75rem;
+  height: 2px;
+  background-image: url('/src/assets/border-horizontal-gray.svg');
+  background-repeat: repeat-x;
+  background-position: left center;
+  background-size: auto 100%;
+  pointer-events: none;
 }
 
 .member-avatar {
-  width: 40px;
-  height: 40px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
@@ -80,7 +103,7 @@
 
 .member-username {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 1rem;
+  font-size: 1.5rem;
   font-weight: 600;
   color: #37291E;
   white-space: nowrap;
@@ -88,13 +111,20 @@
   text-overflow: ellipsis;
 }
 
-/* Custom role: subtitle shown above the mechanical badge; takes visual priority */
+/* Badge row: custom role (if any) sits next to the mechanical role badge */
+.member-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+/* Custom role — same pill as .role-badge, distinct neutral-purple scheme so
+   it doesn't get confused with the fixed owner/moderator/member badges */
+/* Border/background/text colors come from the role's role_color via inline
+   style (roleColorStyle in the JSX) — defaults to black when unset. */
 .member-custom-role {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #555;
-  font-style: italic;
+  border: 1px solid;
 }
 
 /* ── Role badges ─────────────────────────────────────────────────────────── */
@@ -102,12 +132,12 @@
 .role-badge {
   display: inline-block;
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.72rem;
+  font-size: 1rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   padding: 2px 8px;
-  border-radius: 90px;
+  border-radius: 8px;
   width: fit-content;
 }
 
@@ -120,16 +150,16 @@
 
 /* Moderator — cool slate blue */
 .role-badge--moderator {
-  background: #dce8f7;
-  color: #1a4a80;
-  border: 1px solid #a8c8ef;
+  background: rgb(234, 234, 230);
+  color: #444;
+  border: 1px solid #c5c5c0;
 }
 
 /* Member — neutral gray */
 .role-badge--member {
-  background: #ebebeb;
-  color: #555;
-  border: 1px solid #ccc;
+  background: #FFFDFB;
+  color: #000;
+  border: 1px solid #ddd;
 }
 
 /* ── Header actions (Manage Roles + join/leave) ──────────────────────────── */
@@ -145,17 +175,8 @@
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 0.9rem;
   font-weight: 500;
-  padding: 6px 14px;
-  border: 1px solid #ccc;
-  border-radius: 90px;
-  background: transparent;
-  color: #37291E;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.manage-roles-btn:hover {
-  background: rgba(0, 0, 0, 0.05);
+  background: #2e4064;
+  color: #fff;
 }
 
 /* ── Per-member mod controls ─────────────────────────────────────────────── */
@@ -223,7 +244,7 @@
 .manage-roles-panel__header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
 }
 
 .manage-roles-panel__title {
@@ -235,13 +256,9 @@
 
 .manage-roles-panel__close {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.9rem;
-  padding: 5px 14px;
-  border: 1px solid #ccc;
-  border-radius: 90px;
-  background: transparent;
-  color: #37291E;
-  cursor: pointer;
+  font-weight: 600;
+  background: #2d2d2d;
+  color: #fff;
 }
 
 .manage-roles-panel__list {
@@ -257,17 +274,33 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
+  width: 50%;
+  box-sizing: border-box;
+}
+
+/* Styled like .role-badge.member-custom-role (same pill treatment), sized to
+   fill the row so the delete button lands at the right edge. Border/
+   background/text colors come from the role's role_color via inline style
+   (roleColorStyle in the JSX) — defaults to black when unset. */
+.manage-roles-panel__item-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 2px 8px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.6);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  border: 1px solid;
 }
 
 .manage-roles-panel__role-name {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: #37291E;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: inherit;
   flex: 1;
 }
 
@@ -288,17 +321,20 @@
 .manage-roles-panel__delete {
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 0.8rem;
+  font-weight: 600;
   padding: 2px 9px;
-  border: 1px solid #ddd;
-  border-radius: 90px;
-  background: transparent;
-  color: rgb(150, 30, 30);
+  margin-left: auto;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 8px;
+  background: rgb(190, 30, 30);
+  color: #fff;
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
 .manage-roles-panel__delete:hover {
-  background: rgba(150, 30, 30, 0.07);
+  background: rgb(150, 20, 20);
 }
 
 .manage-roles-panel__empty {
@@ -311,22 +347,50 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid #e5e5e5;
 }
 
+/* Border/background/text colors come from the live role-color selection via
+   inline style (roleColorStyle in the JSX) — only layout stays here. */
 .manage-roles-panel__input {
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 0.95rem;
+  width: 50%;
+  box-sizing: border-box;
   padding: 6px 10px;
-  border: 1px solid #ccc;
+  border: 2px solid;
   border-radius: 8px;
   outline: none;
-  color: #37291E;
 }
 
-.manage-roles-panel__input:focus {
-  border-color: rgb(62, 42, 9);
+.manage-roles-panel__color-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 8px;
+  color: #555;
+}
+
+.manage-roles-panel__color-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Background/border colors come from each swatch's own color via inline
+   style (roleColorStyle in the JSX), matching the badges' visual language. */
+.manage-roles-panel__color-swatch {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  border-radius: 8px;
+  border: 2px solid;
+  cursor: pointer;
+  padding: 0;
+}
+
+.manage-roles-panel__color-swatch.selected {
+  box-shadow: 0 0 0 2px #fff inset;
 }
 
 .manage-roles-panel__toggle-label {
@@ -344,23 +408,31 @@
   opacity: 0.5;
 }
 
+.manage-roles-panel__checkbox {
+  border: 1px solid #000;
+}
+
+.manage-roles-panel__form .duo-btn-wrap {
+  align-self: flex-start;
+  width: 50%;
+}
+
 .manage-roles-panel__add-btn {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.95rem;
   font-weight: 600;
-  padding: 7px 18px;
-  border: none;
-  border-radius: 90px;
-  background: rgb(62, 42, 9);
+  width: 100%;
+  box-sizing: border-box;
+  background: rgb(46, 120, 139);
   color: #fff;
-  cursor: pointer;
-  align-self: flex-start;
-  transition: opacity 0.15s ease;
 }
 
 .manage-roles-panel__add-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.duo-btn-pill:has(+ .manage-roles-panel__add-btn:disabled) {
+  opacity: 0.4;
 }
 
 .manage-roles-panel__hint {

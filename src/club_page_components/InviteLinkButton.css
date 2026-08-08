@@ -20,6 +20,12 @@
   cursor: not-allowed;
 }
 
+.duo-btn-pill:has(+ .invite-generate-btn:disabled),
+.duo-btn-pill:has(+ .invite-copy-btn:disabled),
+.duo-btn-pill:has(+ .invite-revoke-btn:disabled) {
+  opacity: 0.5;
+}
+
 /* Standalone "Link revoked" confirmation — holds fully visible (no animation
    running at all) for 1s, then fades itself out over the next 1s, ending
    right as the matching 2s JS timeout unmounts it. */

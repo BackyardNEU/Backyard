@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { apiFetch } from '../lib/api';
+import borderHorizontalImg from '../assets/border-horizontal.svg';
+import dividerLineImg from '../assets/border-horizontal-gray.svg';
 import './ClubMembersPanel.css';
 
 const ROLE_LABEL = {
@@ -7,6 +9,38 @@ const ROLE_LABEL = {
   moderator: 'Moderator',
   member: 'Member',
 };
+
+// Same palette StatsModule.jsx uses for its stat bars.
+const ROLE_COLORS = [
+  '#724200ff', '#56758b', '#be2419ff', '#da781cff',
+  '#ffcc13', '#628753ff', '#a39a96', '#d3d1c9ff',
+];
+
+const DEFAULT_ROLE_COLOR = '#a39a96';
+
+function hexToRgba(hex, alpha) {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function darkenHex(hex, amount = 0.35) {
+  const h = hex.replace('#', '');
+  const r = Math.round(parseInt(h.substring(0, 2), 16) * (1 - amount));
+  const g = Math.round(parseInt(h.substring(2, 4), 16) * (1 - amount));
+  const b = Math.round(parseInt(h.substring(4, 6), 16) * (1 - amount));
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+// Shared border/background/text scheme for role badges and the create-role
+// form's live preview: border in the solid color, background at 40%, text a
+// darker shade of the same color (for legibility over the translucent fill).
+function roleColorStyle(color) {
+  const c = color || DEFAULT_ROLE_COLOR;
+  return { background: hexToRgba(c, 0.4), borderColor: c, color: darkenHex(c) };
+}
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -32,10 +66,17 @@ function MemberCard({ entry, myRole, currentUserId, customRoles, onAssignCustomR
 
       <div className="member-info">
         <span className="member-username">{profiles?.username ?? 'Unknown'}</span>
-        {club_custom_roles?.name && (
-          <span className="member-custom-role">{club_custom_roles.name}</span>
-        )}
-        <span className={`role-badge role-badge--${role}`}>{ROLE_LABEL[role]}</span>
+        <div className="member-badge-row">
+          <span className={`role-badge role-badge--${role}`}>{ROLE_LABEL[role]}</span>
+          {club_custom_roles?.name && (
+            <span
+              className="role-badge member-custom-role"
+              style={roleColorStyle(club_custom_roles.role_color)}
+            >
+              {club_custom_roles.name}
+            </span>
+          )}
+        </div>
       </div>
 
       {canManage && !isSelf && !isTargetOwner && (
@@ -86,6 +127,7 @@ function MemberCard({ entry, myRole, currentUserId, customRoles, onAssignCustomR
 
 function ManageRolesPanel({ clubId, customRoles, myRole, onClose, onRolesChange }) {
   const [newName, setNewName] = useState('');
+  const [newColor, setNewColor] = useState(null);
   const [newPrivileged, setNewPrivileged] = useState(false);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState(null);
@@ -99,9 +141,10 @@ function ManageRolesPanel({ clubId, customRoles, myRole, onClose, onRolesChange 
     try {
       await apiFetch(`/clubs/${clubId}/roles`, {
         method: 'POST',
-        body: { name: newName.trim(), grants_moderator_privileges: newPrivileged },
+        body: { name: newName.trim(), grants_moderator_privileges: newPrivileged, role_color: newColor },
       });
       setNewName('');
+      setNewColor(null);
       setNewPrivileged(false);
       await onRolesChange();
     } catch (err) {
@@ -124,12 +167,24 @@ function ManageRolesPanel({ clubId, customRoles, myRole, onClose, onRolesChange 
   return (
     <div className="manage-roles-panel">
       <div className="manage-roles-panel__header">
-        <span className="manage-roles-panel__title">Custom Roles</span>
-        <button className="manage-roles-panel__close" onClick={onClose}>Done</button>
+        <div className="duo-btn-wrap">
+          <div className="duo-btn-pill" aria-hidden="true" />
+          <button
+            className="manage-roles-panel__close duo-btn"
+            style={{ '--duo-shadow': 'rgb(0, 0, 0)' }}
+            onClick={onClose}
+          >
+            Save
+          </button>
+        </div>
+      </div>
+      <div className="module-view-divider">
+        <div className="divider" style={{ backgroundImage: `url(${borderHorizontalImg})` }} aria-hidden="true" />
       </div>
 
       {error && <p className="club-members-panel__error">{error}</p>}
 
+      <p className="manage-roles-panel__title">Custom Roles</p>
       <ul className="manage-roles-panel__list">
         {customRoles.length === 0 && (
           <li className="manage-roles-panel__empty">No custom roles yet.</li>
@@ -138,15 +193,17 @@ function ManageRolesPanel({ clubId, customRoles, myRole, onClose, onRolesChange 
           const canDelete = isOwner || !r.grants_moderator_privileges;
           return (
             <li key={r.id} className="manage-roles-panel__item">
-              <span className="manage-roles-panel__role-name">{r.name}</span>
-              {r.grants_moderator_privileges && (
-                <span
-                  className="manage-roles-panel__priv-tag"
-                  title="Assigning this role grants moderator access"
-                >
-                  mod access
-                </span>
-              )}
+              <div className="manage-roles-panel__item-badge" style={roleColorStyle(r.role_color)}>
+                <span className="manage-roles-panel__role-name">{r.name}</span>
+                {r.grants_moderator_privileges && (
+                  <span
+                    className="manage-roles-panel__priv-tag"
+                    title="Assigning this role grants moderator access"
+                  >
+                    mod access
+                  </span>
+                )}
+              </div>
               {canDelete && (
                 <button
                   className="manage-roles-panel__delete"
@@ -160,30 +217,56 @@ function ManageRolesPanel({ clubId, customRoles, myRole, onClose, onRolesChange 
         })}
       </ul>
 
+      <div className="module-view-divider">
+        <div className="divider" style={{ backgroundImage: `url(${dividerLineImg})` }} aria-hidden="true" />
+      </div>
+
       <form className="manage-roles-panel__form" onSubmit={handleAdd}>
         <input
           className="manage-roles-panel__input"
-          placeholder="Role name"
+          placeholder="Role name (e.g. Eboard)"
           value={newName}
           maxLength={40}
           onChange={(e) => setNewName(e.target.value)}
+          style={{ ...roleColorStyle(newColor), background: newColor ? hexToRgba(newColor, 0.4) : '#fff' }}
         />
-        <label className="manage-roles-panel__toggle-label">
+
+        <span className="manage-roles-panel__color-label">Choose Role Color</span>
+        <div className="manage-roles-panel__color-row">
+          {ROLE_COLORS.map((c) => (
+            <button
+              key={c}
+              type="button"
+              className={`manage-roles-panel__color-swatch${newColor === c ? ' selected' : ''}`}
+              style={roleColorStyle(c)}
+              aria-label={c}
+              aria-pressed={newColor === c}
+              onClick={() => setNewColor(newColor === c ? null : c)}
+            />
+          ))}
+        </div>
+
+        <label className="manage-roles-panel__toggle-label manage-roles-panel__color-label">
           <input
             type="checkbox"
+            className="manage-roles-panel__checkbox"
             checked={newPrivileged}
             onChange={(e) => setNewPrivileged(e.target.checked)}
             disabled={!isOwner}
           />
           Grants moderator access
         </label>
-        <button
-          type="submit"
-          className="manage-roles-panel__add-btn"
-          disabled={adding || !newName.trim()}
-        >
-          {adding ? '...' : 'Add Role'}
-        </button>
+        <div className="duo-btn-wrap">
+          <div className="duo-btn-pill" aria-hidden="true" />
+          <button
+            type="submit"
+            className="manage-roles-panel__add-btn duo-btn"
+            style={{ '--duo-shadow': '#1c2a44' }}
+            disabled={adding || !newName.trim()}
+          >
+            {adding ? '...' : 'Add Role'}
+          </button>
+        </div>
       </form>
 
       {isOwner && (
@@ -202,12 +285,9 @@ export default function ClubMembersPanel({ clubId, myRole, currentUserId, onMemb
   const [members, setMembers] = useState([]);
   const [customRoles, setCustomRoles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showManageRoles, setShowManageRoles] = useState(false);
 
-  const isMember = myRole !== null;
-  const isTopModerator = myRole === 'top_moderator';
   const canManage = myRole === 'moderator' || myRole === 'top_moderator';
 
   async function fetchMembers() {
@@ -235,36 +315,6 @@ export default function ClubMembersPanel({ clubId, myRole, currentUserId, onMemb
     fetchRoles();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clubId]);
-
-  async function handleJoin() {
-    if (actionLoading) return;
-    setActionLoading(true);
-    setError(null);
-    try {
-      await apiFetch(`/clubs/${clubId}/members/me`, { method: 'POST' });
-      if (onMembershipChange) onMembershipChange('member');
-      await fetchMembers();
-    } catch (err) {
-      setError(err?.message ?? 'Could not join club.');
-    } finally {
-      setActionLoading(false);
-    }
-  }
-
-  async function handleLeave() {
-    if (actionLoading) return;
-    setActionLoading(true);
-    setError(null);
-    try {
-      await apiFetch(`/clubs/${clubId}/members/me`, { method: 'DELETE' });
-      if (onMembershipChange) onMembershipChange(null);
-      await fetchMembers();
-    } catch (err) {
-      setError(err?.message ?? 'Could not leave club.');
-    } finally {
-      setActionLoading(false);
-    }
-  }
 
   async function handleAssignCustomRole(userId, customRoleId, currentMechanicalRole) {
     setError(null);
@@ -343,34 +393,21 @@ export default function ClubMembersPanel({ clubId, myRole, currentUserId, onMemb
         </span>
         <div className="club-members-panel__header-actions">
           {canManage && (
-            <button
-              className="manage-roles-btn"
-              onClick={() => setShowManageRoles(true)}
-            >
-              Manage Roles
-            </button>
-          )}
-          {currentUserId && (
-            isMember ? (
+            <div className="duo-btn-wrap">
+              <div className="duo-btn-pill" aria-hidden="true" />
               <button
-                className="membership-btn leave"
-                onClick={handleLeave}
-                disabled={actionLoading || isTopModerator}
-                title={isTopModerator ? 'Transfer ownership before leaving' : undefined}
+                className="manage-roles-btn duo-btn"
+                style={{ '--duo-shadow': '#1c2a44' }}
+                onClick={() => setShowManageRoles(true)}
               >
-                {actionLoading ? '...' : 'Leave Club'}
+                Manage Roles
               </button>
-            ) : (
-              <button
-                className="membership-btn join"
-                onClick={handleJoin}
-                disabled={actionLoading}
-              >
-                {actionLoading ? '...' : 'Join Club'}
-              </button>
-            )
+            </div>
           )}
         </div>
+      </div>
+      <div className="module-view-divider">
+        <div className="divider" style={{ backgroundImage: `url(${borderHorizontalImg})` }} aria-hidden="true" />
       </div>
 
       {error && <p className="club-members-panel__error">{error}</p>}

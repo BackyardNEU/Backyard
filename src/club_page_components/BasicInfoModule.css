@@ -197,6 +197,13 @@
   cursor: not-allowed;
 }
 
+/* Match the black pill's opacity to its button's disabled state */
+.duo-btn-pill:has(+ .exp-edit-btn.duo-btn:disabled),
+.duo-btn-pill:has(+ .cancel-btn.duo-btn:disabled),
+.duo-btn-pill:has(+ .save-btn.duo-btn:disabled) {
+  opacity: 0.4;
+}
+
 .club-name-input {  
   background: none;
   border: none;
