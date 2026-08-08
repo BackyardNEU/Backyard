@@ -168,11 +168,6 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
 
   return (
     <>
-    {editing && showHero && (
-          <p className="about-edit-help">
-            You're in edit mode! Email explorethebackyard2025@gmail.com with any questions!
-          </p>
-        )}
       {showHero && (
       <div className="content-col">
         <div className="rectangle" style={{ backgroundColor: dominantColor }}>

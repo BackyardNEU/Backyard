@@ -168,35 +168,15 @@
    exclusive, but styled identically) — top-right on desktop, centered top
    on mobile so it never competes with .close-btn's fixed viewport corner. */
 .exp-toolbar {
-  position: fixed;
-  bottom: 5%;
-  right: 2%;
-  
-  padding: 20px 5px;
-  border-radius: 8px;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  justify-content: flex-end;
   gap: 0.5rem;
-  z-index: 8300;
-}
-
-.exp-toolbar--start {
-  justify-content: flex-start;
-}
-
-@media (max-width: 500px) {
-  .exp-toolbar {
-    left: 0.5rem;
-    right: 0.5rem;
-    justify-content: center;
-  }
-  
+  flex-shrink: 0;
 }
 
 .exp-edit-btn {
-  background: #4F83B4;
+  background: #2e4064;
   color: #ffffff;
 }
 
@@ -715,14 +695,50 @@
 }
 
 .about-edit-help {
-  margin: 0.2rem 0 0.75rem;
-  padding: 1rem;
-  max-width: 800px;
-  font-size: 1.1rem;
-  color: #Ece7e5;
+  margin: 0;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  color: #2e4064;
   line-height: 1.2;
-  background: #2e4064;
-  border-radius:15px;
+  background: #F8F6F3;
+  border-radius: 15px;
+}
+
+/* ── Editor-only sticky header (tab switcher + toolbar + status text) ─────
+   Rendered only for approved club editors, above everything else in the
+   page (higher z-index than .close-btn/.exp-action-row at 8300) but below
+   true modal overlays (friends modal 10000, event crop 10000, etc. at
+   8500+). Sticky to .expanded-card, its own scroll container. Stays on one
+   line down to 500px; below that it wraps instead of squeezing/overflowing. */
+.exp-editor-header {
+  position: sticky;
+  top: 0;
+  z-index: 8400;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: rgb(234, 234, 230);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+@media (max-width: 500px) {
+  .exp-editor-header {
+    flex-wrap: wrap;
+  }
+}
+
+/* Plain status text (moderator greeting) — unlike .about-edit-help, no pill
+   background since it just sits inline in the header next to the tabs/toolbar. */
+.exp-header-greeting {
+  margin: 0;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(22px, 4vw, 32px);
+  color: #444;
+  white-space: nowrap;
 }
 
 /* Friends-in-club clickable button */

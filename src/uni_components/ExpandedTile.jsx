@@ -726,51 +726,94 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
             onAnimationComplete={() => setAnimationDone(true)}
         >
-            <button className="close-btn" onClick={handleClose}>×</button>
-
-            {isApproved && !isEditing && (
-                <div className="exp-toolbar">
-                    <div className="duo-btn-wrap">
-                        <div className="duo-btn-pill" aria-hidden="true" />
-                        <button
-                            className="exp-edit-btn duo-btn"
-                            style={{ '--duo-shadow': 'rgb(30, 60, 90)' }}
-                            onClick={async () => {
-                                if (!pageData?.modules?.length) {
-                                    try {
-                                        const result = await apiFetch(`/clubs/${id}/page/init`, { method: 'POST' });
-                                        if (result?.modules?.length) {
-                                            setPageData(result);
-                                            setDraft(normalizeModules(result.modules));
-                                        }
-                                    } catch (err) {
-                                        console.error('Failed to initialize page defaults:', err);
-                                    }
-                                }
-                                setIsEditing(true);
-                            }}
-                        >
-                            Edit Page
-                        </button>
-                    </div>
-                    <InviteLinkButton clubId={id} />
-                </div>
+            {!isApproved && (
+                <button className="close-btn" onClick={handleClose}>×</button>
             )}
 
-            <div className="club-tab-switcher">
-                <button
-                    className={`club-tab-btn${activeTab === 'page' ? ' club-tab-btn--active' : ''}`}
-                    onClick={() => setActiveTab('page')}
-                >
-                    Page
-                </button>
-                <button
-                    className={`club-tab-btn${activeTab === 'members' ? ' club-tab-btn--active' : ''}`}
-                    onClick={() => setActiveTab('members')}
-                >
-                    Members
-                </button>
-            </div>
+            {isApproved && (
+                <div className="exp-editor-header">
+                    <div className="club-tab-switcher">
+                        <button
+                            className={`club-tab-btn${activeTab === 'page' ? ' club-tab-btn--active' : ''}`}
+                            onClick={() => setActiveTab('page')}
+                        >
+                            Page
+                        </button>
+                        <button
+                            className={`club-tab-btn${activeTab === 'members' ? ' club-tab-btn--active' : ''}`}
+                            onClick={() => setActiveTab('members')}
+                        >
+                            Members
+                        </button>
+                    </div>
+
+                    <div className="exp-toolbar">
+                        {!isEditing ? (
+                            <>
+                                <div className="duo-btn-wrap">
+                                    <div className="duo-btn-pill" aria-hidden="true" />
+                                    <button
+                                        className="exp-edit-btn duo-btn"
+                                        style={{ '--duo-shadow': '#1c2a44' }}
+                                        onClick={async () => {
+                                            if (!pageData?.modules?.length) {
+                                                try {
+                                                    const result = await apiFetch(`/clubs/${id}/page/init`, { method: 'POST' });
+                                                    if (result?.modules?.length) {
+                                                        setPageData(result);
+                                                        setDraft(normalizeModules(result.modules));
+                                                    }
+                                                } catch (err) {
+                                                    console.error('Failed to initialize page defaults:', err);
+                                                }
+                                            }
+                                            setIsEditing(true);
+                                        }}
+                                    >
+                                        Edit Page
+                                    </button>
+                                </div>
+                                <InviteLinkButton clubId={id} />
+                            </>
+                        ) : (
+                            <>
+                                <div className="duo-btn-wrap">
+                                    <div className="duo-btn-pill" aria-hidden="true" />
+                                    <button
+                                        className="save-btn duo-btn"
+                                        style={{ '--duo-shadow': 'rgb(0, 0, 0)' }}
+                                        onClick={handleSave}
+                                        disabled={isSaving || !isDraftValid}
+                                    >
+                                        {isSaving ? 'Saving...' : 'Save'}
+                                    </button>
+                                </div>
+                                <div className="duo-btn-wrap">
+                                    <div className="duo-btn-pill" aria-hidden="true" />
+                                    <button
+                                        className="cancel-btn duo-btn"
+                                        style={{ '--duo-shadow': 'rgb(120, 120, 120)' }}
+                                        onClick={handleCancel}
+                                        disabled={isSaving}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+
+                    {isEditing ? (
+                        <p className="exp-header-greeting">
+                            You're in edit mode! Email explorethebackyard2025@gmail.com with any questions!
+                        </p>
+                    ) : (
+                        <p className="exp-header-greeting">Hello, Club Moderator!</p>
+                    )}
+
+                    <button className="close-btn close-btn--header" onClick={handleClose}>×</button>
+                </div>
+            )}
 
             {activeTab === 'members' ? (
                 <ClubMembersPanel
@@ -843,33 +886,6 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             </div>
 
             )} {/* end activeTab === 'page' */}
-
-            {isApproved && isEditing && (
-                <div className="exp-toolbar exp-toolbar--start">
-                    <div className="duo-btn-wrap">
-                        <div className="duo-btn-pill" aria-hidden="true" />
-                        <button
-                            className="save-btn duo-btn"
-                            style={{ '--duo-shadow': 'rgb(0, 0, 0)' }}
-                            onClick={handleSave}
-                            disabled={isSaving || !isDraftValid}
-                        >
-                            {isSaving ? 'Saving...' : 'Save'}
-                        </button>
-                    </div>
-                    <div className="duo-btn-wrap">
-                        <div className="duo-btn-pill" aria-hidden="true" />
-                        <button
-                            className="cancel-btn duo-btn"
-                            style={{ '--duo-shadow': 'rgb(120, 120, 120)' }}
-                            onClick={handleCancel}
-                            disabled={isSaving}
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </div>
-            )}
 
             {isOpen && (
                 <div>

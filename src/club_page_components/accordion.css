@@ -8,10 +8,11 @@
 
 .about-edit-help {
   width: 95%;
+  font-family: 'Barlow Condensed', sans-serif;
   margin: 0.2rem 0 0.75rem 0;
   padding: 1rem;
   max-width: 800px;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
    color: #000000;
   line-height: 1.2;
   background: rgb(234, 234, 230);

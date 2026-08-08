@@ -152,6 +152,17 @@
   padding: 4px 6px;
 }
 
+/* Editors: the close button lives at the end of .exp-editor-header instead
+   of floating fixed over the viewport corner. */
+.close-btn--header {
+  position: static;
+  top: auto;
+  right: auto;
+  z-index: auto;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
 .review-btn {
   font-family: 'Barlow Condensed', sans-serif;
   display: inline-block;

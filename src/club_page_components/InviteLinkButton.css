@@ -1,4 +1,8 @@
-.invite-generate-btn,
+.invite-generate-btn {
+  background: #EE3124;
+  color: #fff;
+}
+
 .invite-copy-btn {
   background: #2e4064;
   color: #Ece7e5;
