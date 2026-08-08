@@ -1,5 +1,6 @@
 import React from 'react';
 import { MAX_PHOTOS } from './useProfileForm';
+import Avatar from '../components/Avatar';
 
 // The profile field group, shared by onboarding (ProfileSetupPage) and the settings page.
 // Presentational only — all state and the save logic live in useProfileForm.
@@ -67,10 +68,13 @@ export const ProfileFields = ({ form, idPrefix = 'profile' }) => {
             </div>
 
             <label htmlFor={id('avatar')} className="setup-avatar-label">
-                <img
-                    src={avatarPreview || '/raccoon_pfp.png'}
-                    alt="Upload profile"
+                <Avatar
+                    url={avatarPreview}
+                    firstName={form.firstName}
+                    lastName={form.lastName}
+                    username={form.username}
                     className="setup-avatar"
+                    alt="Upload profile photo"
                 />
             </label>
             <input

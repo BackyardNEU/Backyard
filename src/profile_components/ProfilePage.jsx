@@ -8,6 +8,7 @@ import imageCompression from 'browser-image-compression'
 import { ClubMembershipPanel } from './ClubMembershipPanel'
 import { FriendDiscoveryList } from './FriendDiscoveryList'
 import { PolaroidCards } from './PolaroidCards'
+import Avatar from '../components/Avatar'
 import { useClubData } from '../context/useClubData'
 import { Skeleton, SkeletonCircle, SkeletonRegion } from '../components/Skeleton'
 
@@ -157,10 +158,17 @@ export const ProfilePage = () => {
         <div className='spacer' />
         <div className='profile-header'>
           <label htmlFor="avatar-upload" className="profile-photo-btn">
-            <img
-              src={preview || profile?.avatar_url}
-              alt="Profile"
+            {/* Had no fallback at all: with no avatar_url the src was undefined, React
+                dropped the attribute, and the browser rendered a broken image — which
+                collapsed to almost nothing and dragged the whole header out of place.
+                Avatar shows initials instead. */}
+            <Avatar
+              url={preview || profile?.avatar_url}
+              firstName={profile?.first_name}
+              lastName={profile?.last_name}
+              username={profile?.username}
               className="profile-image"
+              alt="Your profile photo"
             />
           </label>
           <input type="file" accept="image/*" id="avatar-upload" hidden onChange={handleAvatarUpload} />
