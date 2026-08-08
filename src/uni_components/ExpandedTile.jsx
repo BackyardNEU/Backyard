@@ -22,6 +22,7 @@ import ModuleAccordion from '../club_page_components/accordion';
 import ClubMembersPanel from '../club_page_components/ClubMembersPanel';
 import { useClubData } from '../context/useClubData';
 import { useGlobalStore } from '../lib/store';
+import { readClubPage, invalidateClubPage } from '../lib/clubPageCache';
 import InviteLinkButton from '../club_page_components/InviteLinkButton';
 import dividerLineImg from '/src/assets/border-horizontal-gray.svg';
 
@@ -159,13 +160,46 @@ function applyAccordionOrder(reorderedModules) {
     return reorderedModules.map((m, i) => ({ ...m, order: i }));
 }
 
+// Turns a /clubs/:id/page response into the editable draft. A club with no page row yet
+// gets a default basic_info module seeded from its base record.
+//
+// Shared by the prefetch-seeded initial state and the network path below, so both produce
+// an identical draft — if they diverged, a cache hit and a cache miss would render
+// different pages for the same club.
+function buildDraft(pageValue, club) {
+    const modules = pageValue?.modules;
+    if (modules?.length > 0) return normalizeModules(modules);
+
+    return normalizeModules([
+        {
+            type: 'basic_info',
+            order: 0,
+            isDisplayed: true,
+            data: {
+                club_name: club?.club_name || '',
+                logo_url: club?.image_url || '/raccoon_pfp.png',
+                description: club?.club_description || '',
+                links: [],
+            },
+        },
+        { type: 'comments', order: 1, isDisplayed: true, data: {} },
+    ]);
+}
+
 
 function ExpandedTile({ club, onClose, onMembershipChange }) {
+    // Page data warmed by prefetchClubPage when the card was hovered. Read synchronously
+    // here rather than in an effect: an effect runs after the first paint, which would
+    // still show one empty frame — exactly the flicker the prefetch exists to remove.
+    // null when the user opened the card without hovering first (keyboard, touch, a very
+    // fast click), in which case the effect below fetches as before.
+    const warmed = readClubPage(club.id);
+
     // determines when to begin the data requesting- animationDone triggers most data requests here
     const [animationDone, setAnimationDone] = useState(true);
     const [isOpen, setIsOpen] = useState(false);
     const [isClosing, setIsClosing] = useState(false);
-    const [reviews, set_reviews] = useState([]);
+    const [reviews, set_reviews] = useState(() => warmed?.reviews ?? []);
     const [isClicked, setIsClicked] = useState(false);
     // records the user itself
     const [user, setUser] = useState(null);
@@ -176,13 +210,13 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     // active tab: 'page' | 'members'
     const [activeTab, setActiveTab] = useState('page');
     // info from modules data to be displayed from db
-    const [pageData, setPageData] = useState(null);
+    const [pageData, setPageData] = useState(() => warmed?.page ?? null);
     // top tags derived from reviews
-    const [topTags, setTopTags] = useState([]);
+    const [topTags, setTopTags] = useState(() => (warmed?.topTags ?? []).map((r) => r.tag));
     // editing state for changing modules
     const [isEditing, setIsEditing] = useState(false);
     // copy of the pageData.modules array initially so that it can record changes aggregated over all the modules
-    const [draft, setDraft] = useState([]);
+    const [draft, setDraft] = useState(() => (warmed ? buildDraft(warmed.page, club) : []));
     // determines state of saving progress from changes
     const [isSaving, setIsSaving] = useState(false);
     // determines if a new logo has been uploaded- requires a new signed URL upload to the supabase storage bucket
@@ -194,11 +228,11 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const [userFaqs, setUserFaqs] = useState([]);
     const [questionDeletes, setQuestionDeletes] = useState(() => new Set());
     // club events (for the calendar module)
-    const [clubEvents, setClubEvents] = useState([]);
+    const [clubEvents, setClubEvents] = useState(() => warmed?.events ?? []);
     const [clubMyRsvpSet, setClubMyRsvpSet] = useState(new Set());
     const [clubFriendRsvpMap, setClubFriendRsvpMap] = useState(new Map());
     // club members (for comments module authorized/unauthorized tabs)
-    const [clubMembers, setClubMembers] = useState([]);
+    const [clubMembers, setClubMembers] = useState(() => warmed?.members ?? []);
     // pending hide/show changes for comments — keyed by reviewId, only committed on Save
     const [hideDraft, setHideDraft] = useState({});
 
@@ -266,7 +300,10 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             const { data: { user: authUser } } = await supabase.auth.getUser();
             setUser(authUser ?? null);
 
-            const publicFetches = [
+            // Already rendered from the prefetch cache, so the five public requests would
+            // be re-fetching what is on screen. Only the auth-dependent calls are left,
+            // and those cannot be prefetched — they depend on who is signed in.
+            const publicFetches = warmed ? [] : [
                 apiFetch(`/clubs/${id}/reviews`, { auth: false }),
                 apiFetch(`/clubs/${id}/page`, { auth: false }),
                 apiFetch(`/clubs/${id}/top-tags`, { auth: false }),
@@ -277,17 +314,29 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 apiFetch(`/clubs/${id}/is-approved`),
             ] : [];
 
-            console.log("Awaiting info...");
+            // Settled separately rather than as one concatenated array: publicFetches is
+            // empty on a cache hit, and positional destructuring across both would then
+            // slide the is-approved result into the reviews slot. Still one round trip.
+            const [publicSettled, authSettled] = await Promise.all([
+                Promise.allSettled(publicFetches),
+                Promise.allSettled(authFetches),
+            ]);
 
-            const [reviewsResult, pageResult, topTagsResult, eventsResult, membersResult, approvedResult] =
-                await Promise.allSettled([...publicFetches, ...authFetches]);
+            const [reviewsResult, pageResult, topTagsResult, eventsResult, membersResult] = publicSettled;
+            const [approvedResult] = authSettled;
 
-            if (reviewsResult.status === 'fulfilled') set_reviews(reviewsResult.value);
-            if (topTagsResult.status === 'fulfilled') setTopTags((topTagsResult.value || []).map(r => r.tag));
-            if (membersResult.status === 'fulfilled') setClubMembers(membersResult.value || []);
-            if (eventsResult.status === 'fulfilled') {
-                const eventsData = eventsResult.value || [];
-                setClubEvents(eventsData);
+            if (reviewsResult?.status === 'fulfilled') set_reviews(reviewsResult.value);
+            if (topTagsResult?.status === 'fulfilled') setTopTags((topTagsResult.value || []).map(r => r.tag));
+            if (membersResult?.status === 'fulfilled') setClubMembers(membersResult.value || []);
+
+            // On a cache hit the events came from the prefetch, so read them from there —
+            // the RSVP lookup below needs the ids either way.
+            const eventsData = warmed
+                ? (warmed.events || [])
+                : (eventsResult?.status === 'fulfilled' ? (eventsResult.value || []) : null);
+
+            if (eventsData) {
+                if (!warmed) setClubEvents(eventsData);
                 if (eventsData.length > 0 && authUser) {
                     try {
                         const eventIds = eventsData.map((e) => e.id);
@@ -310,25 +359,9 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     }
                 }
             }
-            if (pageResult.status === 'fulfilled') {
+            if (pageResult?.status === 'fulfilled') {
                 setPageData(pageResult.value);
-                // if no page row exists yet, seed a default basic_info module from base club data
-                const modules = pageResult.value?.modules;
-                setDraft(modules?.length > 0 ? normalizeModules(modules) : normalizeModules([
-                    {
-                        type: 'basic_info',
-                        order: 0,
-                        isDisplayed: true,
-                        data: {
-                            club_name: club.club_name || '',
-                            logo_url: club.image_url || '/raccoon_pfp.png',
-                            description: club.club_description || '',
-                            links: [],
-                        }
-                    },
-                    { type: 'comments', order: 1, isDisplayed: true, data: {} },
-                ]));
-                console.log("Success retrieving data!");
+                setDraft(buildDraft(pageResult.value, club));
             }
             if (approvedResult?.status === 'fulfilled')
                 setMyRole(approvedResult.value?.role ?? null);
@@ -490,6 +523,10 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             });
             setPageData(prev => ({ ...prev, modules: finalDraft }));
             setDraft(finalDraft);
+
+            // The prefetch cache now holds the pre-edit page. Drop it so reopening this
+            // club shows what was just saved rather than a stale copy for up to a minute.
+            invalidateClubPage(id);
 
             // Commit pending hide/show changes for comments
             if (Object.keys(hideDraft).length > 0) {

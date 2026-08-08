@@ -1,0 +1,89 @@
+import { apiFetch } from './api';
+
+// Warms a club's page data before the user opens it.
+//
+// The problem this solves: ExpandedTile mounts and only then fires six-plus requests, so
+// the card animates open against an empty shell and the content pops in afterwards. The
+// animation is fine — it is the blank frame at the end of it that reads as choppy.
+//
+// Hovering a card is a strong signal of intent, and there is roughly 150-400ms between
+// hover and click. That is enough to have the payload in hand by the time the tile mounts.
+//
+// Only the five public requests are prefetched. The authenticated ones (is-approved,
+// RSVPs) are cheap, depend on session state, and do not gate the main content render, so
+// they stay in the component.
+
+const cache = new Map();     // clubId -> { data, at }
+const inflight = new Map();  // clubId -> Promise
+
+// Short enough that an edit made in another tab is not shown stale for long, long enough
+// to cover browsing a grid and opening several clubs.
+const TTL_MS = 60_000;
+
+function isFresh(entry) {
+  return entry && Date.now() - entry.at < TTL_MS;
+}
+
+async function load(clubId) {
+  // allSettled, not all: a club with no page row or no reviews must still open. The
+  // component already handles each field being absent.
+  const [reviews, page, topTags, events, members] = await Promise.allSettled([
+    apiFetch(`/clubs/${clubId}/reviews`, { auth: false }),
+    apiFetch(`/clubs/${clubId}/page`, { auth: false }),
+    apiFetch(`/clubs/${clubId}/top-tags`, { auth: false }),
+    apiFetch(`/clubs/${clubId}/events/upcoming`),
+    apiFetch(`/clubs/${clubId}/members`, { auth: false }),
+  ]);
+
+  return {
+    reviews: reviews.status === 'fulfilled' ? reviews.value : undefined,
+    page: page.status === 'fulfilled' ? page.value : undefined,
+    topTags: topTags.status === 'fulfilled' ? topTags.value : undefined,
+    events: events.status === 'fulfilled' ? events.value : undefined,
+    members: members.status === 'fulfilled' ? members.value : undefined,
+  };
+}
+
+/**
+ * Start (or join) a fetch of a club's public page data.
+ *
+ * Safe to call repeatedly — repeated hovers over the same card join the in-flight promise
+ * rather than issuing another round of requests.
+ */
+export function prefetchClubPage(clubId) {
+  if (!clubId) return Promise.resolve(null);
+
+  const entry = cache.get(clubId);
+  if (isFresh(entry)) return Promise.resolve(entry.data);
+
+  const existing = inflight.get(clubId);
+  if (existing) return existing;
+
+  const promise = load(clubId)
+    .then((data) => {
+      cache.set(clubId, { data, at: Date.now() });
+      inflight.delete(clubId);
+      return data;
+    })
+    .catch((err) => {
+      // Never cache a failure — the next hover should be free to retry.
+      inflight.delete(clubId);
+      console.error('[clubPageCache] prefetch failed:', err);
+      return null;
+    });
+
+  inflight.set(clubId, promise);
+  return promise;
+}
+
+/** Synchronous read, for seeding component state on the very first render. */
+export function readClubPage(clubId) {
+  const entry = cache.get(clubId);
+  return isFresh(entry) ? entry.data : null;
+}
+
+/** Drop a club after its page is edited, so the next open re-reads it. */
+export function invalidateClubPage(clubId) {
+  cache.delete(clubId);
+  inflight.delete(clubId);
+}

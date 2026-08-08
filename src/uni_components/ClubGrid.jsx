@@ -7,6 +7,7 @@ import { apiFetch } from '../lib/api';
 import { motion } from "framer-motion";
 import { useGlobalStore } from "../lib/store";
 import { useClubData } from '../context/useClubData';
+import { prefetchClubPage } from '../lib/clubPageCache';
 //import paperTexture from '/src/assets/white-paper-texture.jpg';
 import posterPin from '/src/assets/poster_pin.png';
 const ClubGridCard = ({ result, onExpand, hideHeart, hidePins }) => {
@@ -56,6 +57,12 @@ const ClubGridCard = ({ result, onExpand, hideHeart, hidePins }) => {
   const handleExpand = () => {
     if (onExpand) onExpand(result);
   };
+
+  // Warm the club's page data on intent, so ExpandedTile mounts with content instead of
+  // animating open against an empty shell. Hover covers pointer devices; pointerdown is
+  // the touch fallback, and still buys the ~100ms between finger-down and click.
+  // prefetchClubPage dedupes, so firing from both is free.
+  const warm = () => prefetchClubPage(result.id);
   const truncate = (text, wordLimit = 5) => {
     if (!text) return "";
     const words = String(text).split(/\s+/).filter(Boolean);
@@ -68,6 +75,9 @@ const ClubGridCard = ({ result, onExpand, hideHeart, hidePins }) => {
     <motion.button
       className = "club-card"
       onClick = {handleExpand}
+      onMouseEnter={warm}
+      onFocus={warm}
+      onPointerDown={warm}
       layoutId={`club-${result.id}`}
 >
       {!hidePins && <img src={posterPin} alt="" className="pin pin-left" />}
