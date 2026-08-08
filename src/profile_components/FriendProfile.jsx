@@ -10,6 +10,7 @@ import { ClubMembershipPanel } from './ClubMembershipPanel'
 import { PolaroidCards } from './PolaroidCards'
 import { useClubData } from '../context/useClubData'
 import { cachedFetch, readCached, invalidatePrefix } from '../lib/queryCache'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { Skeleton, SkeletonCircle, SkeletonRegion } from '../components/Skeleton'
 import Avatar from '../components/Avatar'
 
@@ -30,6 +31,9 @@ export const FriendProfile = () => {
   const [blocking, setBlocking] = useState(false)
   const [blockError, setBlockError] = useState(null)
   const { refetch } = useClubData()
+  // Falsy until the profile resolves, so the tab shows the default rather than
+  // "Backyard | undefined" for a moment.
+  useDocumentTitle(profile?.username ? `Backyard | ${profile.username}` : null)
 
   useEffect(() => {
     let cancelled = false

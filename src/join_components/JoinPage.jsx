@@ -5,12 +5,14 @@ import { apiFetch } from '../lib/api';
 import Form from '../login_components/form';
 import './JoinPage.css';
 import { Skeleton, SkeletonRegion } from '../components/Skeleton';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 export default function JoinPage() {
   const { token } = useParams();
   const navigate = useNavigate();
 
   const [invite, setInvite] = useState(null);
+  useDocumentTitle(invite?.club_name ? `Backyard | Join ${invite.club_name}` : null);
   const [inviteError, setInviteError] = useState(null);
   const [inviteLoading, setInviteLoading] = useState(true);
 
