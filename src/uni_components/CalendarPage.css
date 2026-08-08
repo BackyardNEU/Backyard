@@ -30,27 +30,43 @@
     font-size: 60px;
 }
 
+/* Weekly-view event card — a plain button wrapping the same "ink-bordered
+   image card" used by the lightbox (.cal-portrait-img-wrap), so the two
+   views share one visual language. Clicking it opens the lightbox for that
+   day (see .cal-overlay-backdrop below) rather than acting on the event
+   directly — the RSVP button lives in the lightbox only. */
 .calendar-event {
-    position: relative;
-    padding: 10px;
-    margin: 10px;
-
-    box-shadow: 8px 5px 8px rgba(0, 0, 0, 0.22);
-    margin-bottom: 6px;
-    z-index: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0 0 16px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
 }
 
-.calendar-event::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: url('/src/assets/white-paper-texture.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    border-radius: inherit;
-    filter: brightness(1.25) contrast(0.9);
-    z-index: -1;
+.calendar-event:hover .cal-portrait-img-wrap {
+  filter: brightness(0.97);
+}
+
+/* Title + "friends going" callout live inside the image card itself (below
+   the poster, above its bottom ink border) rather than in a separate
+   un-bordered row — the image card is the whole card, per spec. */
+.calendar-event .cal-portrait-img-wrap {
+  gap: 4px;
+}
+
+.calendar-event .cal-portrait-title-wrap {
+  margin-top: 4px;
+}
+
+.calendar-event .friend-rsvp-callout {
+  margin: 0;
+  text-align: center;
 }
 
 /* --- module wrapper --- */
