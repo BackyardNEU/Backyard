@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
+﻿import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import {
   startOfDay, addDays, format, isSameDay, parseISO,
   getDay, getDaysInMonth, isToday, isBefore,
@@ -8,46 +8,13 @@ import { supabase } from '../lib/supabase';
 import { useClubData } from '../context/useClubData';
 import '../club_page_components/CalendarModule.css';
 import './CalendarPage.css';
+import './EventInfoRow.css';
+import PortraitTitle from './PortraitTitle';
 import treeImg from '/src/assets/tree.png';
 import borderImg from '../assets/border.svg';
 import borderHorizontalImg from '../assets/border-horizontal.svg';
 
 const WEEK_DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-
-// Club name + event name title above the info card. Capped to 75% of the
-// card's width; if the text is wider than that, it becomes an infinite
-// right-to-left ticker — same measure-and-duplicate technique as
-// ClubMediaModule's .cm-poster-text marquee.
-function PortraitTitle({ text }) {
-  const wrapRef = useRef(null);
-  const copyRef = useRef(null);
-  const [marquee, setMarquee] = useState(false);
-  const [dur, setDur] = useState(20);
-
-  useLayoutEffect(() => {
-    const wrap = wrapRef.current;
-    const copy = copyRef.current;
-    if (!wrap || !copy) return;
-    const textW = copy.scrollWidth;
-    const over = textW > wrap.clientWidth + 1;
-    setMarquee(over);
-    if (over) setDur(Math.max(6, textW / 20));
-  }, [text]);
-
-  if (!text) return null;
-
-  return (
-    <div className="cal-portrait-title-wrap" ref={wrapRef}>
-      <div
-        className={`cal-portrait-title-track ${marquee ? 'cal-portrait-title-marquee-on' : ''}`}
-        style={{ '--cal-title-dur': `${dur}s` }}
-      >
-        <span ref={copyRef} className="cal-portrait-title-copy">{text}</span>
-        {marquee && <span className="cal-portrait-title-copy" aria-hidden="true">{text}</span>}
-      </div>
-    </div>
-  );
-}
 
 export function CalendarPage({ onClose }) {
   const { allData } = useClubData();

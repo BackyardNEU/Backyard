@@ -1,0 +1,41 @@
+/* Club name + event name, capped to 75% of the card. Fits: centered single
+   line. Overflows: infinite right-to-left ticker (duplicated copy, track
+   translates -50%) — same technique as ClubMediaModule's .cm-poster-text. */
+.cal-portrait-title-wrap {
+  width: 75%;
+  max-width: 75%;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.cal-portrait-title-track {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.cal-portrait-title-track.cal-portrait-title-marquee-on {
+  width: max-content;
+  justify-content: flex-start;
+  will-change: transform;
+  animation: cal-portrait-title-marquee var(--cal-title-dur, 20s) linear infinite;
+}
+
+.cal-portrait-title-copy {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 600;
+  font-size: 1.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #1a1a1a;
+}
+
+.cal-portrait-title-marquee-on .cal-portrait-title-copy {
+  padding-right: 2rem;
+}
+
+@keyframes cal-portrait-title-marquee {
+  0%, 10% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
