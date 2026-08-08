@@ -10,6 +10,7 @@ import { FriendDiscoveryList } from './FriendDiscoveryList'
 import { PolaroidCards } from './PolaroidCards'
 import Avatar from '../components/Avatar'
 import { useClubData } from '../context/useClubData'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { Skeleton, SkeletonCircle, SkeletonRegion } from '../components/Skeleton'
 
 //this is the landing page for our university club search, most of the info will go through here
@@ -23,6 +24,7 @@ export const ProfilePage = () => {
   // Shared profile — this component used to fetch /me/profile itself, one of several
   // copies of the same request.
   const { profile, setProfile, loading } = useClubData()
+  useDocumentTitle('Backyard | Profile')
   // These two were written as `const setStatus = useState('idle')`, which binds the whole
   // [value, setter] tuple to the name — so calling setStatus('compressing') called an
   // array and threw, killing avatar upload from this page before it started. Neither

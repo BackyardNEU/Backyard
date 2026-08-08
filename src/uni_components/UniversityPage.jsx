@@ -9,6 +9,7 @@ import { CalendarPage } from './CalendarPage';
 import { useGlobalStore } from "../lib/store";
 import { useClubData } from '../context/useClubData';
 import { useCardSize } from '../lib/useCardSize';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { Skeleton, SkeletonRegion } from '../components/Skeleton';
 
 // Import your images
@@ -18,10 +19,6 @@ import headerLogo from '/src/assets/header_logo.png';
 import neuFlag from '/src/assets/neu_flag.png';
 import borderImg from '/src/assets/border.svg';
 import borderHorizontalImg from '/src/assets/border-horizontal.svg';
-
-// Matches the <title> in index.html, so leaving this page restores it rather than
-// stranding the browser tab on whichever school was open last.
-const DEFAULT_TITLE = "Welcome to your school's Backyard!";
 
 export const UniversityPage = () => {
   // Either a slug ("Northeastern") or a UUID — the API resolves both, and old UUID links
@@ -152,12 +149,8 @@ export const UniversityPage = () => {
     return () => { cancelled = true; };
   }, [id]);
 
-  // Tab title. Restored on unmount so other routes do not inherit it.
-  useEffect(() => {
-    if (!university?.uni_name) return;
-    document.title = `Backyard | ${university.uni_name}`;
-    return () => { document.title = DEFAULT_TITLE; };
-  }, [university]);
+  // Falsy until the school resolves, so the tab does not flash a placeholder first.
+  useDocumentTitle(university?.uni_name ? `Backyard | ${university.uni_name}` : null);
 
   // Rewrite a legacy UUID URL to the readable slug once the name resolves. `replace` so
   // it does not add a history entry the back button has to step through.

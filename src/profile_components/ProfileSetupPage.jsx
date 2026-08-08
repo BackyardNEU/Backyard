@@ -2,6 +2,7 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProfileForm } from './useProfileForm'
 import { ProfileFields } from './ProfileFields'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { Skeleton, SkeletonCircle, SkeletonRegion } from '../components/Skeleton'
 import './ProfileSetupPage.css'
 
@@ -10,6 +11,7 @@ import './ProfileSetupPage.css'
 const ProfileSetupPage = () => {
     const navigate = useNavigate()
     const form = useProfileForm()
+    useDocumentTitle('Backyard | Profile Setup')
 
     const handleSubmit = async (event) => {
         event.preventDefault()

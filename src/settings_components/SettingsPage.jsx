@@ -7,6 +7,7 @@ import { CalendarSettings } from './CalendarSettings'
 import { NotificationSettings } from './NotificationSettings'
 import { BlockedUsersSettings } from './BlockedUsersSettings'
 import { AccountSettings } from './AccountSettings'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { Skeleton, SkeletonRegion } from '../components/Skeleton'
 import '../profile_components/ProfilePage.css'
 import '../profile_components/ProfileSetupPage.css'
@@ -20,6 +21,7 @@ export const SettingsPage = () => {
     const navigate = useNavigate()
     const lastPath = useGlobalStore((state) => state.lastPath)
     const [status, setStatus] = useState('loading')
+    useDocumentTitle('Backyard | Settings')
 
     // Auth guard modelled on FriendProfile: a cancelled flag so a resolved promise cannot
     // set state after unmount, and a hard redirect rather than silently rendering nothing.
