@@ -9,9 +9,9 @@ import ForgotPasswordForm from "./ForgotPasswordForm";
 import "./LoginMorph.css";
 import { useGlobalStore } from "../lib/store";
 import { useClubData } from "../context/useClubData";
+import Avatar from "../components/Avatar";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { apiFetch } from "../lib/api";
 import borderImg from '/src/assets/border-green.svg';
 import borderHorizontalImg from '/src/assets/border-horizontal-green.svg';
 
@@ -104,7 +104,20 @@ function LoginMorph({ open, setOpen }) {
             className="login-icon"
             onClick={GlobalValue ? handleProfileClick : () => setOpen(true)}
           >
-            <img src={avatarUrl || "/raccoon_pfp.png"} alt={GlobalValue ? "Profile" : "Login"} />
+            {/* Signed in, this is you — photo or initials, matching every other avatar in
+                the app. Signed out it is the mascot acting as a login affordance, which
+                is a different thing and stays the raccoon. */}
+            {GlobalValue ? (
+              <Avatar
+                url={avatarUrl}
+                firstName={profile?.first_name}
+                lastName={profile?.last_name}
+                username={profile?.username}
+                alt="Your profile"
+              />
+            ) : (
+              <img src="/raccoon_pfp.png" alt="Login" />
+            )}
           </motion.button>
         </div>
       )}
