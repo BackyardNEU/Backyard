@@ -29,7 +29,7 @@ export function useProfileForm() {
     // Prefer the shared copy. It falls back to fetching because onboarding can run before
     // the provider has one — a brand new account's profile row is created by AuthListener
     // after the provider's initial load.
-    const { profile: sharedProfile } = useClubData();
+    const { profile: sharedProfile, setProfile } = useClubData();
 
     // Captured once, on mount. Two reasons it is a ref rather than read each render:
     //
@@ -271,18 +271,26 @@ export function useProfileForm() {
             const avatarUrl = avatarFile ? await uploadAvatar() : avatarPreview;
             const photos = [...existingPhotos, ...(await uploadPhotos())];
 
-            await apiFetch('/me/profile', {
-                method: 'PUT',
-                body: {
-                    first_name: firstName.trim(),
-                    last_name: lastName.trim(),
-                    username: username.trim(),
-                    [AVATAR_COLUMN]: avatarUrl,
-                    biography: biography.trim(),
-                    photos,
-                    ...extraFields,
-                },
-            });
+            const patch = {
+                first_name: firstName.trim(),
+                last_name: lastName.trim(),
+                username: username.trim(),
+                [AVATAR_COLUMN]: avatarUrl,
+                biography: biography.trim(),
+                photos,
+                ...extraFields,
+            };
+
+            await apiFetch('/me/profile', { method: 'PUT', body: patch });
+
+            // Push the saved values into the shared profile.
+            //
+            // Without this the provider keeps the pre-save copy, and since the form and
+            // every other consumer now seed from it, the change would look reverted the
+            // moment you navigated away and came back — the save having actually
+            // succeeded. That is a worse failure than a slow reload, because it looks
+            // like data loss.
+            setProfile(patch);
 
             // Uploaded files are now saved URLs; fold them into the existing set so a
             // second save does not re-upload them.
