@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { isToday, isThisWeek } from 'date-fns';
+// eslint-disable-next-line no-unused-vars
+import { motion } from 'framer-motion';
 import { NotificationItem } from './NotificationItem';
 import './notifications.css';
 
@@ -25,8 +27,25 @@ export function NotificationsPanel({ onClose, notifications, markAllRead, respon
 
   return createPortal(
     <>
-      <div className="notif-backdrop" onClick={onClose} />
-      <div className="notif-panel">
+      <motion.div
+        className="notif-backdrop"
+        onClick={onClose}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
+      />
+      {/* Slides in from the right edge it is anchored to, rather than appearing outright.
+          Animating x as a percentage keeps it correct at both the 420px desktop width and
+          the full-bleed mobile one, and stays on the compositor — animating `right` would
+          lay out on every frame. */}
+      <motion.div
+        className="notif-panel"
+        initial={{ x: '100%' }}
+        animate={{ x: 0 }}
+        exit={{ x: '100%' }}
+        transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+      >
         <div className="notif-panel-header">
           <h2>Activity</h2>
           <button className="notif-panel-close" onClick={onClose}>×</button>
@@ -71,7 +90,7 @@ export function NotificationsPanel({ onClose, notifications, markAllRead, respon
         {notifications.length === 0 && (
           <p className="notif-empty">No notifications yet.</p>
         )}
-      </div>
+      </motion.div>
     </>,
     document.body
   );
