@@ -42,3 +42,35 @@ body::-webkit-scrollbar {
     gap: 24px;
   }
 }
+
+/* ── Card density ──────────────────────────────────────────────────────────────
+   Layered on top of the breakpoints above rather than replacing them, so
+   [data-size="medium"] renders exactly as this grid did before the control
+   existed. --card-scale is consumed by ClubGrid.css to size the card and its
+   image; the column counts below keep the row from going sparse or cramped as
+   the cards resize. */
+
+.clubs-list {
+  --card-scale: 1;
+}
+
+.clubs-list[data-size="small"] { --card-scale: 0.68; }
+.clubs-list[data-size="large"] { --card-scale: 1.45; }
+
+@media (min-width: 650px) and (max-width: 1099px) {
+  .clubs-list[data-size="small"] { grid-template-columns: repeat(3, 1fr); }
+  .clubs-list[data-size="large"] { grid-template-columns: repeat(1, 1fr); }
+}
+
+@media (min-width: 1100px) and (max-width: 1999px) {
+  .clubs-list[data-size="small"] { grid-template-columns: repeat(5, 1fr); }
+  .clubs-list[data-size="large"] { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 2000px) {
+  .clubs-list[data-size="small"] { grid-template-columns: repeat(6, 1fr); }
+  .clubs-list[data-size="large"] { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* Below 650px the grid is a single column and the card is width-based rather
+   than vw-based, so density would have nothing to act on. Left alone. */

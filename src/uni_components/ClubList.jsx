@@ -5,10 +5,10 @@ import './ClubList.css';
 // eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion } from "framer-motion";
 
-export const ClubList = ({ results }) => {
+export const ClubList = ({ results, cardSize = 'medium' }) => {
   const [expandedClub, setExpandedClub] = useState(null);
   const handleClose = useCallback(() => setExpandedClub(null), []);
-  
+
   if ( !results || results.length === 0) {
     return <p>No clubs found.</p>;
   }
@@ -16,7 +16,8 @@ export const ClubList = ({ results }) => {
   return (
     <>
     <AnimatePresence>
-      <div className="clubs-list">
+      {/* data-size drives --card-scale and the column count; see ClubList.css. */}
+      <div className="clubs-list" data-size={cardSize}>
         {results.map((club) => (
 
           <ClubGrid

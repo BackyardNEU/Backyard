@@ -8,6 +8,7 @@ import { ClubList } from './ClubList';
 import { CalendarPage } from './CalendarPage';
 import { useGlobalStore } from "../lib/store";
 import { useClubData } from '../context/useClubData';
+import { useCardSize } from '../lib/useCardSize';
 
 // Import your images
 import ghibliBackground from '/src/assets/ghibili_background.jpg';
@@ -34,6 +35,7 @@ export const UniversityPage = () => {
   const [calendarMounted, setCalendarMounted] = useState(false);
 
   const { allData, favoritesCache } = useClubData();
+  const [cardSize, setCardSize] = useCardSize();
 
   useEffect(() => {
     if (showCalendar) setCalendarMounted(true);
@@ -170,13 +172,19 @@ export const UniversityPage = () => {
 
         <div className={`uni-search-row${showCalendar ? ' uni-fade-hidden' : ''}`}>
           <div className="uni-search-shell">
-            <UniSearchBar setResults={setResults} university={university.uni_name} calendarActive={showCalendar} />
+            <UniSearchBar
+              setResults={setResults}
+              university={university.uni_name}
+              calendarActive={showCalendar}
+              cardSize={cardSize}
+              onCardSizeChange={setCardSize}
+            />
           </div>
         </div>
 
         <main className={`uni-club-stage${showCalendar ? ' uni-fade-hidden' : ''}`}>
           <div className="uni-club-viewport">
-            <ClubList results={results} />
+            <ClubList results={results} cardSize={cardSize} />
           </div>
         </main>
 

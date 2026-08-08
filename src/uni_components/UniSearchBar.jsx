@@ -1,7 +1,7 @@
 ﻿import React, {useState, useEffect} from 'react'
 import { apiFetch } from '../lib/api'
 import { useClubData } from '../context/useClubData'
-import {FaSearch, FaCalendarAlt} from 'react-icons/fa'
+import {FaSearch, FaCalendarAlt, FaTh, FaThLarge, FaSquare} from 'react-icons/fa'
 import './UniSearchBar.css'
 
 const CATEGORIES = [
@@ -26,7 +26,21 @@ const CATEGORIES = [
   { label: "Service", category: "service" },
 ];
 
-export const UniSearchBar = ({ setResults, university, calendarActive = false }) => {
+// Three densities, drawn as increasingly coarse grids so the control reads at a glance
+// without needing labels.
+const CARD_SIZE_OPTIONS = [
+  { value: 'small', label: 'Small cards', glyph: <FaTh /> },
+  { value: 'medium', label: 'Medium cards', glyph: <FaThLarge /> },
+  { value: 'large', label: 'Large cards', glyph: <FaSquare /> },
+];
+
+export const UniSearchBar = ({
+  setResults,
+  university,
+  calendarActive = false,
+  cardSize = 'medium',
+  onCardSizeChange,
+}) => {
 
   const [input, setInput] = useState("")
   const [menuOpen, setMenuOpen] = useState(false)
@@ -191,6 +205,24 @@ useEffect(() => {
               ))}
             </div>
           )}
+        </div>
+
+        {/* Card density, in the spirit of the Xbox library's icon-size control. */}
+        <div className="uni-size-toggle" role="radiogroup" aria-label="Club card size">
+          {CARD_SIZE_OPTIONS.map(({ value, label, glyph }) => (
+            <button
+              key={value}
+              type="button"
+              role="radio"
+              aria-checked={cardSize === value}
+              aria-label={label}
+              title={label}
+              className={`uni-size-btn${cardSize === value ? ' active' : ''}`}
+              onClick={() => onCardSizeChange?.(value)}
+            >
+              {glyph}
+            </button>
+          ))}
         </div>
 
         <button
