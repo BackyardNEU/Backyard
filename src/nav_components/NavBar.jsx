@@ -23,9 +23,16 @@ export function NavBar({ loginOpen, setLoginOpen }) {
 
   useEffect(() => {
     if (!GlobalValue) { setAvatarUrl(null); return; }
+
+    // Logging out flips GlobalValue immediately, but a profile request started
+    // while signed in can still be in flight and would write the previous
+    // user's avatar back onto a signed-out nav bar — and leave it there until
+    // the next reload, which matters on a shared machine.
+    let active = true;
     apiFetch('/me/profile')
-      .then((profile) => setAvatarUrl(profile?.avatar_url))
+      .then((profile) => { if (active) setAvatarUrl(profile?.avatar_url ?? null); })
       .catch(() => {});
+    return () => { active = false; };
   }, [GlobalValue]);
 
   const isOnUniPage = location.pathname.startsWith('/university/');
