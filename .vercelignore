@@ -1,0 +1,4 @@
+# Design docs live in git, not on the marketing domain. Vercel serves whatever
+# it uploads, so without this docs/ would be fetchable at /docs/... the same way
+# the app build was at /dist/.
+docs/
