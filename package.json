@@ -1,7 +1,11 @@
 {
   "name": "backyard-landing",
   "private": true,
+  "type": "module",
   "dependencies": {
     "resend": "^6.12.3"
+  },
+  "scripts": {
+    "test": "node tests/api.test.mjs"
   }
 }

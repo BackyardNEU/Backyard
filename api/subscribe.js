@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { renderConfirmationEmail, SITE } from '../lib/confirmationEmail.js';
 
 const resend = new Resend(process.env.RESEND_KEY);
 // Resend replaced per-list "audiences" with a single account-level audience
@@ -41,6 +42,45 @@ function isValidEmail(email) {
 
 function stripHtml(str) {
   return str.replace(/<[^>]*>/g, '');
+}
+
+// Confirmation mail. Swallows every failure by design — see the call site.
+async function sendConfirmation(email, contactId) {
+  if (!contactId) {
+    // Without an id there is no unsubscribe token, and an email whose
+    // unsubscribe link does not work is worse than no email at all.
+    console.error('[subscribe] no contact id, skipping confirmation');
+    return;
+  }
+
+  const unsubscribeUrl = `${SITE}/api/unsubscribe?id=${encodeURIComponent(contactId)}`;
+  const { subject, html, text } = renderConfirmationEmail({ unsubscribeUrl });
+
+  try {
+    const { error } = await resend.emails.send({
+      from: 'Backyard <waitlist@explorethebackyard.com>',
+      to: email,
+      subject,
+      html,
+      text,
+      headers: {
+        // Renders Gmail and Apple Mail's native unsubscribe control. The
+        // One-Click form POSTs, which is why the endpoint separates GET
+        // (shows a confirmation page) from POST (actually unsubscribes).
+        'List-Unsubscribe': `<${unsubscribeUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+    });
+
+    if (error) {
+      console.error('[subscribe] confirmation not sent:', error.name, error.statusCode, error.message);
+      return;
+    }
+
+    console.log('[subscribe] confirmation sent');
+  } catch (err) {
+    console.error('[subscribe] confirmation threw:', err.message || err);
+  }
 }
 
 export default async function handler(req, res) {
@@ -114,6 +154,12 @@ export default async function handler(req, res) {
     }
 
     console.log('[subscribe] created contact', data?.id);
+
+    // Deliberately awaited but never allowed to change the outcome: the
+    // contact already exists by this point, so a mail failure must not tell
+    // the visitor their signup failed and invite a duplicate attempt.
+    await sendConfirmation(cleaned, data?.id);
+
     return res.status(200).json({ ok: true });
   } catch (err) {
     // Only genuine network or runtime faults reach here now.
