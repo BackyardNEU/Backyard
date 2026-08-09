@@ -81,19 +81,32 @@ export default async function handler(req, res) {
   }
 
   try {
-    await resend.contacts.create({
+    // The SDK resolves with { data, error } instead of throwing on an API
+    // failure, so the error arrives here rather than in the catch below.
+    // Without this check every rejected call fell through to a 200 and the
+    // page celebrated a signup that was never recorded.
+    const { data, error } = await resend.contacts.create({
       audienceId: AUDIENCE_ID,
       email: cleaned,
       unsubscribed: false,
     });
 
-    return res.status(200).json({ ok: true });
-  } catch (err) {
-    if (err.statusCode === 409) {
-      return res.status(200).json({ ok: true });
+    if (error) {
+      // Already subscribed is a success as far as the subscriber is
+      // concerned, and saying so avoids confirming who is on the list.
+      if (error.statusCode === 409) {
+        return res.status(200).json({ ok: true });
+      }
+
+      console.error('[subscribe] resend rejected:', error.name, error.statusCode, error.message);
+      return res.status(500).json({ error: 'Something went wrong. Please try again.' });
     }
 
-    console.error('[subscribe]', err.message || err);
+    console.log('[subscribe] created contact', data?.id);
+    return res.status(200).json({ ok: true });
+  } catch (err) {
+    // Only genuine network or runtime faults reach here now.
+    console.error('[subscribe] unexpected:', err.message || err);
     return res.status(500).json({ error: 'Something went wrong. Please try again.' });
   }
 }
