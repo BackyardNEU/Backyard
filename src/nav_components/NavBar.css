@@ -1,0 +1,46 @@
+.nav-bar {
+  position: fixed;
+  display: flex;
+  gap: 50px;
+  z-index: 30;
+}
+
+.nav-bar-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: block;
+  line-height: 0;
+  cursor: pointer;
+}
+
+.nav-bar-btn img {
+  display: block;
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
+
+.nav-bar-profile-btn img {
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+@media (max-width: 500px) {
+  .nav-bar {
+    flex-direction: row;
+    bottom: 1%;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+@media (min-width: 501px) {
+  .nav-bar {
+    flex-direction: column;
+    left: 1%;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}

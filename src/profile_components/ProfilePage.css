@@ -120,6 +120,13 @@
   color: #1f1f1f;
 }
 
+.profile-account-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 8px;
+}
+
 .profile-close-btn {
   position: fixed;
   top: 32px;

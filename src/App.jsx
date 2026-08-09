@@ -4,6 +4,7 @@ import './App.css';
 import { SearchBar } from './home_components/SearchBar';
 import { UniversityPage } from './uni_components/UniversityPage';
 import LoginMorph from "./login_components/LoginMorph";
+import { NavBar } from "./nav_components/NavBar";
 import ReviewPage from "./review_components/ReviewPage";
 import AuthListener from "./login_components/AuthListener";
 import AuthCallbackPage from './login_components/AuthCallbackPage';
@@ -34,6 +35,7 @@ function App() {
       <div className="App">
           <AuthListener />
           <LoginMorph open={loginOpen} setOpen={setLoginOpen} />
+          <NavBar loginOpen={loginOpen} setLoginOpen={setLoginOpen} />
           <SupportModal open={supportOpen} setOpen={setSupportOpen} />
 
         <Routes>
