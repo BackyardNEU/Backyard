@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { apiFetch } from '../lib/api'
 import { useGlobalStore } from '../lib/store'
@@ -10,6 +10,7 @@ import { FriendDiscoveryList } from './FriendDiscoveryList'
 import { PolaroidCards } from './PolaroidCards'
 import Logout from '../login_components/Logout'
 import { NotificationBell } from '../notifications/NotificationBell'
+import { DEFAULT_UNIVERSITY_PATH } from '../lib/university'
 
 //this is the landing page for our university club search, most of the info will go through here
 
@@ -171,7 +172,7 @@ export const ProfilePage = () => {
           </div>
           <button
             className="profile-close-btn"
-            onClick={() => {navigate(/*lastPath && lastPath !== '/profile' ? lastPath : '/'*/ `/university/38500bfc-e606-46a7-840d-720b11ad2e8b`)}} //neu id
+            onClick={() => navigate(DEFAULT_UNIVERSITY_PATH)}
             aria-label="Close profile"
           >
             ×

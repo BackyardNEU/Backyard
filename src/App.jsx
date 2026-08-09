@@ -17,6 +17,7 @@ import JoinPage from './join_components/JoinPage';
 import AdminPage from './admin_components/AdminPage';
 import { ClubDataProvider } from './context/ClubDataProvider'
 import { SupportModal } from './support_components/SupportModal'
+import { DEFAULT_UNIVERSITY_PATH } from './lib/university'
 
 function App() {
   const [loginOpen, setLoginOpen] = useState(false);
@@ -42,7 +43,7 @@ function App() {
           {/* University selection disabled — defaulting to Northeastern for now */}
           <Route
             path="/"
-            element={<Navigate to="/university/38500bfc-e606-46a7-840d-720b11ad2e8b" replace />}
+            element={<Navigate to={DEFAULT_UNIVERSITY_PATH} replace />}
           />
           <Route path="/university/:id" element={<UniversityPage />} />
           <Route path="/reviews/:id" element={<ReviewPage />} />

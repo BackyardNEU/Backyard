@@ -40,6 +40,11 @@ export const UniversityPage = () => {
     setCalendarViewActive(showCalendar);
   }, [showCalendar, setCalendarViewActive]);
 
+  // Clear it on the way out, or the flag outlives the page: leaving the
+  // calendar for /profile would leave the nav bar's calendar icon lit on a
+  // route where neither view exists.
+  useEffect(() => () => setCalendarViewActive(false), [setCalendarViewActive]);
+
   useEffect(() => {
     const html = document.documentElement;
     html.style.backgroundImage = `url(${ghibliBackground})`;
@@ -60,25 +65,30 @@ export const UniversityPage = () => {
 
   const getClubsBasedOnCategory = (newCategory) => {
     console.log("Category received from function: " + newCategory);
-    
-    if (newCategory === selectedCategory) {
-      console.log("Same category clicked- defaulting");
+
+    // Nav bar view switches. These are destinations, not filters, so they are
+    // handled before the same-category toggle below and are idempotent:
+    // clicking the section you are already in leaves you there. Toggling made
+    // sense for the search bar's calendar button, but that button is gone, and
+    // a nav item that navigates away from itself reads as a misfire — the
+    // calendar would close and the Clubs icon would light up instead.
+    if (newCategory === "calendar") {
+      setShowCalendar(true);
+      setSelectedCategory("calendar");
+      return;
+    }
+
+    if (newCategory === "clubs") {
       setShowCalendar(false);
       setSelectedCategory(null);
       setResults(allData);
-    } else if (newCategory === "calendar") {
-      if (showCalendar) {
-        setShowCalendar(false);
-        setSelectedCategory(null);
-      } else {
-        setShowCalendar(true);
-        setSelectedCategory("calendar");
-      }
       return;
-    } else if (newCategory === "clubs") {
-      // NavBar's "Clubs" button — always resets to the plain, unfiltered list,
-      // regardless of what was previously selected (unlike the other branches,
-      // which toggle off only when the same category is clicked again).
+    }
+
+    // Everything below comes from the search bar's category chips, where
+    // clicking the active chip to clear the filter is the point.
+    if (newCategory === selectedCategory) {
+      console.log("Same category clicked- defaulting");
       setShowCalendar(false);
       setSelectedCategory(null);
       setResults(allData);
