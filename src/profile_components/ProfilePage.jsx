@@ -8,6 +8,7 @@ import imageCompression from 'browser-image-compression'
 import { ClubMembershipPanel } from './ClubMembershipPanel'
 import { FriendDiscoveryList } from './FriendDiscoveryList'
 import { PolaroidCards } from './PolaroidCards'
+import { InterestsModal } from './InterestsModal'
 
 //this is the landing page for our university club search, most of the info will go through here
 
@@ -57,6 +58,8 @@ export const ProfilePage = () => {
 
     loadUser();
   }, [navigate]);
+
+  const [interestsOpen, setInterestsOpen] = useState(false);
 
   const lastPath = useGlobalStore((state) => state.lastPath);
 
@@ -119,6 +122,7 @@ export const ProfilePage = () => {
 
   return (
       <div className="ProfilePage">
+        {interestsOpen && <InterestsModal onClose={() => setInterestsOpen(false)} />}
         <div className='spacer' />
         <div className='profile-header'>
           <label htmlFor="avatar-upload" className="profile-photo-btn">
@@ -138,6 +142,13 @@ export const ProfilePage = () => {
               onClick={() => navigate('/profile-setup')}
             >
               Setup profile
+            </button>
+            <button
+              type="button"
+              className="profile-setup-btn"
+              onClick={() => setInterestsOpen(true)}
+            >
+              My Interests
             </button>
           </div>
           <button

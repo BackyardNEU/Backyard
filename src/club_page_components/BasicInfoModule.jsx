@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { useClubData } from '../context/useClubData';
 import ColorThief from 'colorthief';
 import { FaSearch, FaTimes } from 'react-icons/fa';
@@ -9,7 +9,6 @@ import './BasicInfoModule.css';
  * @param {Object} props.club - object passed down which contains the id used for queries and api fetches.
  * @param {Object} props.data - arbitrary but relevant data passed to the module. This particular module contains the logo url, description, and
  * name of the club, but for other modules the data field would hold different, relevant info (see other modules for info).
- * @param {string[]} props.topTags - the top 3 most frequented selected tags for a club aggregated in the database from reviews left by club memebers.
  * @param {boolean} props.editing - determines whether or not the user is in edit mode or not (should never be true for non approved accounts)
  * @param {Function} props.onChange - callback function that preserves the function and its references from being rerendered every well, rerender.
  * @param {Function} props.onLogoChange - simple function that sets the value of a logo file equal to the current pending file if there 
@@ -19,7 +18,7 @@ import './BasicInfoModule.css';
  * @param {'full'|'hero'|'about'} props.part - which slice to render; hero is fixed above the accordion
  * @param {boolean} props.linksDisplayed - whether the Links module's visibility checkbox is on; hides the action-bar link buttons entirely when false
  */
-function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange, actions, warning, part = 'full', linksDisplayed = true }) {
+function BasicInfoModule({ club, data, editing, onChange, onLogoChange, actions, warning, part = 'full', linksDisplayed = true, taxonomy = [], clubInterests = null, onInterestsChange }) {
   const [dominantColor, setDominantColor] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
   const [descOpen, setDescOpen] = useState(false);
@@ -30,6 +29,9 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   const [imageWarning, setImageWarning] = useState('');
   const [linksExpanded, setLinksExpanded] = useState(false);
   const [linksModalOpen, setLinksModalOpen] = useState(false);
+  // club interests edit state (only used when editing=true)
+  const [subText, setSubText] = useState(['', '']);
+  const [subDropdown, setSubDropdown] = useState(null); // 0 | 1 | null
 
   const imgRef = useRef(null);
   const descRef = useRef(null);
@@ -39,8 +41,6 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   const displayName = data?.club_name || club.club_name || '';
   const displayDescription = data?.description || club.club_description || '';
   const logoUrl = data?.logo_url || club.image_url || '/raccoon_pfp.png';
-  const tagLine = (topTags || []).map(s => s.replaceAll('"', '')).join(' • ');
-
   // Truncate the description to 50 words in view mode; the full text opens in a modal.
   const descWords = displayDescription.trim() ? displayDescription.trim().split(/\s+/) : [];
   const isLongDesc = descWords.length > 50;
@@ -157,6 +157,55 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   const showHero = part === 'full' || part === 'hero';
   const showAbout = part === 'full' || part === 'about';
 
+  // Sync subcategory text inputs when editing opens or the category changes.
+  useEffect(() => {
+    if (!editing) return;
+    if (!clubInterests?.category_id || !taxonomy.length) { setSubText(['', '']); return; }
+    const cat = taxonomy.find(c => c.id === clubInterests.category_id);
+    if (!cat) { setSubText(['', '']); return; }
+    const names = (clubInterests.subcategory_ids || []).slice(0, 2).map(subId => {
+      const sub = cat.subcategories.find(s => s.id === subId);
+      return sub?.name || '';
+    });
+    setSubText([names[0] || '', names[1] || '']);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editing, clubInterests?.category_id]);
+
+  const selectedCat = taxonomy.find(c => c.id === clubInterests?.category_id) || null;
+
+  const getSuggestions = useCallback((index) => {
+    if (!selectedCat) return [];
+    const text = subText[index].toLowerCase().trim();
+    return selectedCat.subcategories.filter(s => s.name.toLowerCase().includes(text));
+  }, [selectedCat, subText]);
+
+  const handleCategoryChange = useCallback((e) => {
+    const catId = e.target.value || null;
+    onInterestsChange?.({ category_id: catId, subcategory_ids: [] });
+    setSubText(['', '']);
+    setSubDropdown(null);
+  }, [onInterestsChange]);
+
+  const handleSubTextChange = useCallback((index, value) => {
+    setSubText(prev => prev.map((t, i) => i === index ? value : t));
+    setSubDropdown(index);
+    if (!value.trim()) {
+      const newSubs = [...(clubInterests?.subcategory_ids || [])];
+      newSubs[index] = undefined;
+      onInterestsChange?.({ category_id: clubInterests?.category_id, subcategory_ids: newSubs.filter(Boolean) });
+    }
+  }, [clubInterests, onInterestsChange]);
+
+  const handleSubSelect = useCallback((index, sub) => {
+    const newSubs = [...(clubInterests?.subcategory_ids || [])];
+    newSubs[index] = sub.id;
+    // Deduplicate: same sub in both slots is not meaningful
+    const deduped = newSubs.filter((id, i, arr) => id && arr.indexOf(id) === i);
+    onInterestsChange?.({ category_id: clubInterests?.category_id, subcategory_ids: deduped });
+    setSubText(prev => prev.map((t, i) => i === index ? sub.name : t));
+    setSubDropdown(null);
+  }, [clubInterests, onInterestsChange]);
+
   return (
     <>
     {editing && showHero && (
@@ -193,21 +242,74 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
                 </div>
               </div>
           }
-          {/* Web: tag sits under the name (hidden on mobile, where the block copy shows instead) */}
-          {topTags.length > 0 && (
-            <h2 className="club-tag1 club-tag1--inline">{tagLine}</h2>
+          {!editing && selectedCat && (
+            <p className="club-interests-tagline">
+              {[
+                selectedCat.name,
+                ...(clubInterests.subcategory_ids || []).map(subId => {
+                  const sub = selectedCat.subcategories?.find(s => s.id === subId);
+                  return sub?.name;
+                }).filter(Boolean)
+              ].join(' · ')}
+            </p>
+          )}
+          {editing && (
+            <div className="club-interests-edit">
+              <label className="interests-edit-label">
+                Category
+                <select
+                  className="interests-edit-select"
+                  value={clubInterests?.category_id || ''}
+                  onChange={handleCategoryChange}
+                >
+                  <option value="">— None —</option>
+                  {taxonomy.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+              </label>
+
+              {selectedCat && [0, 1].map(index => (
+                <div key={index} className="interests-edit-sub-wrap">
+                  <label className="interests-edit-label">
+                    Subcategory {index + 1}
+                    <div className="interests-edit-autocomplete">
+                      <input
+                        className="interests-edit-input"
+                        type="text"
+                        value={subText[index]}
+                        placeholder={`Search ${selectedCat.name} subcategories…`}
+                        onChange={e => handleSubTextChange(index, e.target.value)}
+                        onFocus={() => setSubDropdown(index)}
+                        onBlur={() => setTimeout(() => setSubDropdown(null), 150)}
+                      />
+                      {subDropdown === index && getSuggestions(index).length > 0 && (
+                        <div className="interests-edit-dropdown">
+                          {getSuggestions(index).map(sub => (
+                            <button
+                              key={sub.id}
+                              type="button"
+                              className="interests-edit-suggestion"
+                              onMouseDown={() => handleSubSelect(index, sub)}
+                            >
+                              {sub.name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </label>
+                </div>
+              ))}
+            </div>
           )}
         </div>
 
         <div className="image-stack">
           <div className="rectangle_min" style={{ '--dominant-color': dominantColor }}>
-            {/* Mobile: tag sits inside the rectangle near the top (hidden on web) */}
-            {topTags.length > 0 && (
-              <h2 className="club-tag1 club-tag1--block">{tagLine}</h2>
-            )}
             <div
               className="club-img-exp"
-              style={{ backgroundImage: `url(${logoPreview || logoUrl})`, marginTop: topTags?.length === 0 ? '1rem' : undefined }}
+              style={{ backgroundImage: `url(${logoPreview || logoUrl})`, marginTop: '1rem' }}
               role="img"
               aria-label={club.club_name}
             >
@@ -326,16 +428,6 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   )}
               </span>
             </button>
-          )}
-  {friendsInClub.length > 0 && topTags.length > 0 && (
-    <p className="tag tag-separator">•</p>
-  )}
-          {topTags.length > 0 && (
-            <div className="club-tag2">
-              {topTags.map((tag) => (
-                <div key={tag} className="tag">{tag.replaceAll('"', '')}</div>
-              ))}
-            </div>
           )}
         </div>
 

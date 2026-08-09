@@ -22,13 +22,6 @@ const router = express.Router();
 //    PRIMARY KEY (user_id, club_id)
 //    Rows are inserted manually (or via an admin UI) per approved account.
 //
-// 3. SQL RPC function: get_top_tags(p_club_id uuid, p_limit int DEFAULT 3)
-//    Suggested body:
-//      SELECT tag, count(*)::int AS cnt
-//      FROM reviews, unnest(review_tags) AS tag
-//      WHERE club_id = p_club_id
-//      GROUP BY tag ORDER BY cnt DESC LIMIT p_limit;
-//    Returns: [{ tag: text, cnt: int }, ...]
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Default modules template — written to a club the first time they open edit mode.
@@ -289,24 +282,6 @@ router.put('/:clubId/page', requireAuth, async (req, res) => {
   res.json(data);
 });
 
-// GET /api/clubs/:clubId/top-tags
-// Public. Calls the get_top_tags RPC to return the top 3 review tags for a club.
-// Returns [] if the RPC function doesn't exist yet.
-router.get('/:clubId/top-tags', async (req, res) => {
-  const { clubId } = req.params;
-
-  // Requires SQL RPC: get_top_tags(p_club_id uuid, p_limit int DEFAULT 3)
-  const { data, error } = await supabaseAdmin
-    .rpc('get_top_tags', { p_club_id: clubId, p_limit: 3 });
-
-  if (error) {
-    const err = new Error(error.message);
-    err.status = 502;
-    throw err;
-  }
-
-  res.json(data ?? []); // [{ tag: string, cnt: int }, ...]
-});
 
 // GET /api/clubs/:clubId/is-approved
 // Authenticated. Returns { approved: bool } for the current user + club.
@@ -328,6 +303,76 @@ router.get('/:clubId/is-approved', requireAuth, async (req, res) => {
   }
 
   res.json({ approved: !!data });
+});
+
+// GET /api/clubs/:clubId/interests
+// Public. Returns the club's assigned category and subcategories, or null if none set.
+router.get('/:clubId/interests', async (req, res) => {
+  const { clubId } = req.params;
+
+  const { data, error } = await supabaseAdmin
+    .from('club_interests')
+    .select('category_id, subcategory_ids')
+    .eq('club_id', clubId)
+    .maybeSingle();
+
+  if (error) {
+    const err = new Error(error.message);
+    err.status = 502;
+    throw err;
+  }
+
+  res.json(data || null);
+});
+
+// PUT /api/clubs/:clubId/interests
+// Approved club accounts only. Upserts the club's category + subcategories.
+// Body: { category_id: uuid, subcategory_ids: uuid[] }  (max 2 subcategories)
+router.put('/:clubId/interests', requireAuth, async (req, res) => {
+  const { clubId } = req.params;
+  const { category_id, subcategory_ids } = req.body || {};
+
+  // Verify the requesting user is an approved account for this club
+  const { data: approved, error: approvedError } = await supabaseAdmin
+    .from('approved_club_accounts')
+    .select('user_id')
+    .eq('user_id', req.user.id)
+    .eq('club_id', clubId)
+    .maybeSingle();
+
+  if (approvedError) {
+    const err = new Error(approvedError.message);
+    err.status = 502;
+    throw err;
+  }
+  if (!approved) {
+    return res.status(403).json({ error: 'Not authorized for this club' });
+  }
+
+  if (!category_id) {
+    return res.status(400).json({ error: 'category_id is required' });
+  }
+  if (!Array.isArray(subcategory_ids)) {
+    return res.status(400).json({ error: 'subcategory_ids must be an array' });
+  }
+  if (subcategory_ids.length > 2) {
+    return res.status(400).json({ error: 'Maximum 2 subcategories allowed' });
+  }
+
+  const { error } = await supabaseAdmin
+    .from('club_interests')
+    .upsert(
+      { club_id: clubId, category_id, subcategory_ids },
+      { onConflict: 'club_id' }
+    );
+
+  if (error) {
+    const err = new Error(error.message);
+    err.status = 502;
+    throw err;
+  }
+
+  res.status(204).end();
 });
 
 export default router;

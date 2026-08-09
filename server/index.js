@@ -19,6 +19,8 @@ import clubEventsRouter from './routes/clubEvents.js';
 import clubPageRouter from './routes/clubPage.js';
 import questionsRouter from './routes/questions.js';
 import invitesRouter from './routes/invites.js';
+import interestsRouter from './routes/interests.js';
+import userInterestsRouter from './routes/userInterests.js';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -39,6 +41,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Public reads
+app.use('/api/interests', interestsRouter);
 app.use('/api/clubs', clubsRouter);
 app.use('/api/clubs', clubPageRouter);
 app.use('/api/clubs', questionsRouter);
@@ -51,6 +54,7 @@ app.use('/api/reviews', writeLimiter, reviewsRouter);
 app.use('/api/me/favorites', writeLimiter, favoritesRouter);
 app.use('/api/me/votes', writeLimiter, votesRouter);
 app.use('/api/me/friends', writeLimiter, friendsRouter);
+app.use('/api/me/interests', writeLimiter, userInterestsRouter);
 app.use('/api/me', profilesRouter); // serves /profile and /membership
 app.use('/api/users', usersRouter);
 app.use('/api/events', writeLimiter, eventsRouter);
