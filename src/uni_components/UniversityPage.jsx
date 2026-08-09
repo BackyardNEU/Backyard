@@ -150,7 +150,7 @@ export const UniversityPage = () => {
 
         <div className={`uni-search-row${showCalendar ? ' uni-fade-hidden' : ''}`}>
           <div className="uni-search-shell">
-            <UniSearchBar setResults={setResults} university={university.uni_name} calendarActive={showCalendar} />
+            <UniSearchBar setResults={setResults} university={university.uni_name} />
           </div>
         </div>
 

@@ -57,13 +57,6 @@ export const UniSearchBar = ({ setResults, university }) => {
     setMenuOpen(false);
   };
 
-  const handleCalendarClick = () => {
-    setActiveCategory(null);
-    window.dispatchEvent(
-      new CustomEvent("backyard-category-select", { detail: { category: "calendar" } })
-    );
-  };
-
   const handleClick = () => {
     setIsInteracted(true);
 };
