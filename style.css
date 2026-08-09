@@ -27,6 +27,10 @@ html, body {
 .bg-wood {
   position: fixed;
   inset: 0;
+  /* Sampled average of the photograph. Without it the backdrop stays blank
+     until the JPEG arrives; with it the first frame is already the right
+     colour and the photo simply resolves on top. */
+  background-color: #E2C9B0;
   background-image: url('./assets/ghibili_background.jpg');
   background-size: cover;
   background-position: center;
@@ -112,7 +116,12 @@ html, body {
 
 /* ─── Logo ─── */
 .logo {
+  width: 100%;
   max-width: 300px;
+  /* The intrinsic ratio of header_logo.png. Without it the element has no
+     height until the image decodes, so everything below jumped down when the
+     logo landed. */
+  aspect-ratio: 2479 / 413;
   mix-blend-mode: multiply;
   animation: fadeIn 1s 0.2s both;
 }
@@ -431,6 +440,47 @@ html, body {
 @media (prefers-reduced-motion: reduce) {
   .duo-btn-wrap.is-success .submit-btn,
   .duo-btn-wrap.is-error .submit-btn {
+    animation: none;
+  }
+}
+
+/* ─── Image skeletons ─── */
+/* The shimmer sits on each image's own background, so no wrapper markup is
+   needed: an image that hasn't decoded yet paints its background, and the
+   picture covers it once it arrives. Boxes are already reserved by width,
+   height or aspect-ratio, so swapping one for the other moves nothing. */
+.card img:not(.input-row-border):not(.is-loaded) {
+  background-color: #e4ded3;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.65) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  border-radius: 6px;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.card img.is-loaded {
+  animation: img-fade-in 0.35s ease both;
+}
+
+@keyframes skeleton-shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+@keyframes img-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Keep the placeholder colour, drop the movement. */
+@media (prefers-reduced-motion: reduce) {
+  .card img:not(.input-row-border):not(.is-loaded),
+  .card img.is-loaded {
     animation: none;
   }
 }

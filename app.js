@@ -30,6 +30,27 @@
     }
   });
 
+  // Image skeletons — swap each shimmer for the picture as it resolves.
+  function trackImages(root) {
+    root.querySelectorAll('img').forEach(function (img) {
+      if (img.classList.contains('is-loaded')) return;
+
+      // This script is deferred, so an image may already be complete and its
+      // load event long gone by now. naturalWidth separates decoded from broken.
+      if (img.complete && img.naturalWidth > 0) {
+        img.classList.add('is-loaded');
+        return;
+      }
+
+      var done = function () { img.classList.add('is-loaded'); };
+      img.addEventListener('load', done);
+      // A broken image must not shimmer forever.
+      img.addEventListener('error', done);
+    });
+  }
+
+  trackImages(document);
+
   // Success chime — two rising notes, synthesised rather than loaded, so
   // there is no audio file to download and nothing to fail on slow campus
   // wifi. It is built inside the submit handler, which browsers count as a
@@ -91,7 +112,8 @@
   }
 
   function showSuccessCard() {
-    document.getElementById('main-card').innerHTML =
+    var card = document.getElementById('main-card');
+    card.innerHTML =
       '<div class="pin pin-left" aria-hidden="true"></div>' +
       '<div class="pin pin-right" aria-hidden="true"></div>' +
       '<div class="success-state">' +
@@ -104,6 +126,9 @@
         '<span class="footer-sep">&#x2022;</span>' +
         'Built with care at Northeastern' +
       '</div>';
+
+    // The raccoon was just injected, so it needs the same treatment.
+    trackImages(card);
   }
 
   function celebrate() {
