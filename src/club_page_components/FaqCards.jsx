@@ -6,15 +6,16 @@ import { apiFetch } from '../lib/api';
  * When `canAsk`, a leading "ask" card lets a logged-in non-editor submit one question.
  *
  * @param {string} clubId
+ * @param {string} clubName
  * @param {Array}  faqs   - [{ q, a }]
  * @param {boolean} canAsk
  */
-function FaqCards({ clubId, faqs = [], canAsk = false }) {
+function FaqCards({ clubId, clubName, faqs = [], canAsk = false }) {
   if (faqs.length === 0 && !canAsk) return null;
 
   return (
     <div className="faq-cards-row">
-      {canAsk && <AskCard clubId={clubId} />}
+      {canAsk && <AskCard clubId={clubId} clubName={clubName} />}
       {faqs.map((f, i) => (
         <FlipCard key={i} q={f.q} a={f.a} />
       ))}
@@ -22,7 +23,7 @@ function FaqCards({ clubId, faqs = [], canAsk = false }) {
   );
 }
 
-function AskCard({ clubId }) {
+function AskCard({ clubId, clubName }) {
   const [value, setValue] = useState('');
   const [sent, setSent] = useState(false);
   const [ready, setReady] = useState(false);
@@ -65,13 +66,12 @@ function AskCard({ clubId }) {
             <>
               <textarea
                 className="faq-ask-input"
-                placeholder="ask rac"
+                placeholder={`ask ${clubName || 'a question'}`}
                 rows={1}
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 disabled={!ready}
               />
-              <div className="faq-spacer" />
               <button
                 className={`faq-send ${value.trim() ? 'active' : ''} ${takingOff ? 'takeoff' : ''}`}
                 onClick={submit}

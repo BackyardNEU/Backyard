@@ -8,12 +8,11 @@ export default function InviteLinkButton({ clubId }) {
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
   const [revoking, setRevoking] = useState(false);
-  const [revoked, setRevoked] = useState(false);
+  const [revokedNotice, setRevokedNotice] = useState(false);
 
   const generate = async () => {
     setLoading(true);
     setError(null);
-    setRevoked(false);
     try {
       const data = await apiFetch(`/clubs/${clubId}/invite-link`, { method: 'POST' });
       setLink(data);
@@ -37,8 +36,10 @@ export default function InviteLinkButton({ clubId }) {
     setRevoking(true);
     try {
       await apiFetch(`/invite/${link.token}/revoke`, { method: 'PATCH' });
-      setRevoked(true);
       setLink(null);
+      setCopied(false);
+      setRevokedNotice(true);
+      setTimeout(() => setRevokedNotice(false), 2000);
     } catch (err) {
       setError(err.message || 'Failed to revoke link');
     } finally {
@@ -48,42 +49,44 @@ export default function InviteLinkButton({ clubId }) {
 
   const expiresText = link?.expires_at
     ? `Expires ${new Date(link.expires_at).toLocaleDateString()}`
-    : null;
+    : undefined;
 
   return (
-    <div className="invite-link-btn-wrapper">
-      {!link && !revoked && (
-        <button
-          className="invite-generate-btn"
-          onClick={generate}
-          disabled={loading}
-          type="button"
-        >
-          {loading ? 'Generating...' : 'Generate Invite Link'}
-        </button>
+    <>
+      {!link && (
+        <div className="duo-btn-wrap">
+          <div className="duo-btn-pill" aria-hidden="true" />
+          <button
+            className="invite-generate-btn duo-btn"
+            style={{ '--duo-shadow': '#1c2a44' }}
+            onClick={generate}
+            disabled={loading}
+            type="button"
+          >
+            {loading ? 'Generating...' : 'Generate Invite Link'}
+          </button>
+        </div>
       )}
 
-      {revoked && (
-        <span className="invite-revoked-msg">Link revoked.</span>
-      )}
-
-      {link && !revoked && (
-        <div className="invite-link-panel">
-          <div className="invite-link-row">
-            <input
-              className="invite-link-input"
-              readOnly
-              value={link.url}
-              onFocus={(e) => e.target.select()}
-            />
-            <button className="invite-copy-btn" onClick={copy} type="button">
-              {copied ? 'Copied!' : 'Copy'}
+      {link && (
+        <>
+          <div className="duo-btn-wrap">
+            <div className="duo-btn-pill" aria-hidden="true" />
+            <button
+              className="invite-copy-btn duo-btn"
+              style={{ '--duo-shadow': '#1c2a44' }}
+              onClick={copy}
+              type="button"
+              title={expiresText}
+            >
+              {copied ? 'Copied!' : 'Copy Link'}
             </button>
           </div>
-          <div className="invite-link-meta">
-            {expiresText && <span className="invite-expires">{expiresText}</span>}
+          <div className="duo-btn-wrap">
+            <div className="duo-btn-pill" aria-hidden="true" />
             <button
-              className="invite-revoke-btn"
+              className="invite-revoke-btn duo-btn"
+              style={{ '--duo-shadow': 'rgb(120, 20, 20)' }}
               onClick={revoke}
               disabled={revoking}
               type="button"
@@ -91,10 +94,22 @@ export default function InviteLinkButton({ clubId }) {
               {revoking ? 'Revoking...' : 'Revoke'}
             </button>
           </div>
+        </>
+      )}
+
+      {/* Independent of the buttons above — a standalone confirmation that shows
+          "Link revoked" then fades itself out and unmounts, decoupled from
+          whether Generate/Copy/Revoke are showing. */}
+      {revokedNotice && (
+        <div className="duo-btn-wrap invite-revoked-fade">
+          <div className="duo-btn-pill" aria-hidden="true" />
+          <button className="invite-revoke-btn duo-btn" style={{ '--duo-shadow': 'rgb(120, 20, 20)' }} disabled type="button">
+            Link revoked
+          </button>
         </div>
       )}
 
       {error && <p className="invite-error">{error}</p>}
-    </div>
+    </>
   );
 }

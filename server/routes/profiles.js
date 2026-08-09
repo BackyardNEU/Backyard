@@ -1,6 +1,8 @@
 import express from 'express';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { checkMuted } from '../middleware/checkMuted.js';
+import textModerator from '../lib/textModerator.js';
 
 const router = express.Router();
 
@@ -45,10 +47,20 @@ router.get('/profile', async (req, res) => {
     res.json(data);
 });
 
-router.put('/profile', async (req, res) => {
+router.put('/profile', checkMuted, async (req, res) => {
     const patch = pickWritable(req.body);
     if (Object.keys(patch).length === 0) {
         return res.status(400).json({ error: 'No writable fields supplied' });
+    }
+
+    const textCheck = textModerator.checkFields({
+        biography: patch.biography,
+        first_name: patch.first_name,
+        last_name: patch.last_name,
+        username: patch.username,
+    });
+    if (!textCheck.clean) {
+        return res.status(400).json({ error: textCheck.message });
     }
 
     const { data, error } = await supabaseAdmin
@@ -69,8 +81,19 @@ router.put('/profile', async (req, res) => {
 
 // Upsert variant for first-login profile creation (AuthListener uses this).
 // The id is always forced from the JWT, never trusted from the body.
-router.post('/profile', async (req, res) => {
+router.post('/profile', checkMuted, async (req, res) => {
     const patch = pickWritable(req.body);
+
+    const textCheck = textModerator.checkFields({
+        biography: patch.biography,
+        first_name: patch.first_name,
+        last_name: patch.last_name,
+        username: patch.username,
+    });
+    if (!textCheck.clean) {
+        return res.status(400).json({ error: textCheck.message });
+    }
+
     const row = { id: req.user.id, email: req.user.email, ...patch };
 
     const { data, error } = await supabaseAdmin
@@ -90,10 +113,9 @@ router.post('/profile', async (req, res) => {
 
 router.get('/membership', async (req, res) => {
     const { data, error } = await supabaseAdmin
-        .from('profiles')
-        .select('member_list')
-        .eq('id', req.user.id)
-        .single();
+        .from('club_memberships')
+        .select('club_id')
+        .eq('user_id', req.user.id);
 
     if (error) {
         const err = new Error(error.message);
@@ -101,7 +123,7 @@ router.get('/membership', async (req, res) => {
         throw err;
     }
 
-    res.json({ member_list: data?.member_list || [] });
+    res.json({ member_list: (data || []).map((r) => r.club_id) });
 });
 
 router.put('/membership', async (req, res) => {

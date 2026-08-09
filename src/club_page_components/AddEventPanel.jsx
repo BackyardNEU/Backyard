@@ -20,11 +20,10 @@ function toDatetimeLocalValue(iso) {
 }
 
 /**
- * Fixed "Add Events" panel — pinned at the top of the club page (both editor
- * and public view) for approved club owners, right under the hero/action row.
- * Kept separate from CalendarModule's "Coming Up" list so the two can't be
- * confused with each other, per spec. Also lists the club's existing events
- * (to the right of the add slot) so editors can edit or delete them.
+ * Fixed event-management row — pinned at the top of the club page, right below
+ * CalendarModule's "Coming Up" read-only list, for approved club owners only.
+ * Lists the club's existing events (to the right of the add slot) so editors
+ * can edit or delete them.
  *
  * @param {boolean}  isApproved   - true for approved club owners; renders nothing otherwise
  * @param {Object}   club         - club record (used for its image_url, as a
@@ -33,8 +32,23 @@ function toDatetimeLocalValue(iso) {
  * @param {Function} onAddEvent   - ({ eventName, description, where, startTime, endTime, imageUrl, isMembersOnly }) => Promise<void>
  * @param {Function} onEditEvent  - (eventId, { ...same shape as onAddEvent }) => Promise<void>
  * @param {Function} onDeleteEvent - (eventId) => Promise<void>
+ * @param {Set}      myRsvpSet    - event IDs the current user (an approved editor) has RSVPd to
+ * @param {Map}      friendRsvpMap - event ID → [{ username, ... }]
+ * @param {Function} onRsvp       - (eventId, isCurrentlyGoing) => void
+ * @param {string}   userId       - null if not logged in
  */
-export default function AddEventPanel({ isApproved = false, club, events = [], onAddEvent, onEditEvent, onDeleteEvent }) {
+export default function AddEventPanel({
+  isApproved = false,
+  club,
+  events = [],
+  onAddEvent,
+  onEditEvent,
+  onDeleteEvent,
+  myRsvpSet = new Set(),
+  friendRsvpMap = new Map(),
+  onRsvp,
+  userId,
+}) {
   const imageInputRef = useRef(null);
 
   const [showForm, setShowForm] = useState(false);
@@ -356,8 +370,8 @@ export default function AddEventPanel({ isApproved = false, club, events = [], o
 
   return (
     <div className="add-event-panel">
-      <p className="divider-header">Add Events</p>
-      <p className="add-event-note">"Add Events" is for page editors. "Coming Up" shows your events to page viewers.</p>
+      <p className="divider-header">Coming Up</p>
+      <p className="about-edit-help">Add, manage, and edit your club events here.</p>
 
       <div className="add-event-row">
         <div
@@ -372,6 +386,8 @@ export default function AddEventPanel({ isApproved = false, club, events = [], o
           const isEditingThis = editingEventId === event.id;
           const start = parseISO(event.start_time);
           const end = parseISO(event.end_time);
+          const friends = friendRsvpMap.get(event.id);
+          const isGoing = myRsvpSet.has(event.id);
           return (
             <div
               key={event.id}
@@ -412,7 +428,7 @@ export default function AddEventPanel({ isApproved = false, club, events = [], o
                   </div>
 
                   <img
-                    className="add-event-card-img"
+                    className={`add-event-card-img${!event.event_image_url ? ' add-event-card-img--default' : ''}`}
                     src={event.event_image_url || club?.image_url || '/raccoon_pfp.png'}
                     alt=""
                   />
@@ -422,6 +438,24 @@ export default function AddEventPanel({ isApproved = false, club, events = [], o
                       {format(start, 'h:mm a')} – {format(end, 'h:mm a')}
                     </p>
                     <p className="add-event-card-desc">{event.event_description}</p>
+                    {event.is_members_only && (
+                      <span className="cal-members-badge">Members only</span>
+                    )}
+                    {friends && friends.length > 0 && (
+                      <p className="friend-rsvp-callout">
+                        {friends.length === 1
+                          ? `${friends[0].username} is going`
+                          : `${friends[0].username} and ${friends.length - 1} ${friends.length - 1 === 1 ? 'other' : 'others'} you know are going`}
+                      </p>
+                    )}
+                    {userId && (
+                      <button
+                        className={`rsvp-button${isGoing ? ' rsvp-going' : ''}`}
+                        onClick={() => onRsvp?.(event.id, isGoing)}
+                      >
+                        {isGoing ? 'Going ✓' : "I'm going!"}
+                      </button>
+                    )}
                   </div>
                 </div>
               )}

@@ -2,7 +2,7 @@ import React from 'react';
 import LinksTable from './LinksTable';
 import './LinksModule.css';
 
-const LINK_KEYWORDS = ['instagram', 'facebook', 'discord', 'email', 'album', 'slack', 'tiktok', 'linktree', 'youtube'];
+const LINK_KEYWORDS = ['instagram', 'facebook', 'discord', 'email', 'spotify', 'slack', 'tiktok', 'linktree', 'youtube'];
 function getLinkKeyword(name) {
   const n = (name || '').toLowerCase().trim();
   return LINK_KEYWORDS.find((k) => n === k) || 'default';

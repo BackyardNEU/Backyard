@@ -431,3 +431,9 @@
     border-width: 0 2px 2px 0;
     transform: rotate(45deg);
 }
+
+@media (max-width: 500px) {
+  .review-item {
+    padding-left: 0.3rem;
+  }
+}

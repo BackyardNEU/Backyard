@@ -2,6 +2,13 @@ import React, { useState, useRef, useLayoutEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import borderImg from '../assets/border.svg';
 import borderHorizontalImg from '../assets/border-horizontal.svg';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import {
+  startOfDay, addDays, format, isSameDay, parseISO,
+  getDay, getDaysInMonth, isToday, isBefore,
+} from 'date-fns';
+import { apiFetch } from '../lib/api';
+import { buildGoogleCalendarUrl, downloadIcsFile } from '../lib/calendarExport';
 import './CalendarModule.css';
 
 /**
@@ -52,6 +59,223 @@ export function CalendarModule({
     const el = overlayScrollRef.current;
     if (!el) return;
     setOverlayHasMore(el.scrollHeight - el.scrollTop - el.clientHeight > 10);
+  // ── view toggle ──────────────────────────────────────────────────────────
+  const [viewMode, setViewMode] = useState('week');
+
+  // ── weekly view refs ─────────────────────────────────────────────────────
+  const containerRef = useRef(null);
+  const imageInputRef = useRef(null);
+
+  // ── monthly view state ───────────────────────────────────────────────────
+  const todayDate = startOfDay(new Date());
+  const [displayYear, setDisplayYear] = useState(todayDate.getFullYear());
+  const [displayMonth, setDisplayMonth] = useState(todayDate.getMonth() + 1); // 1-12
+  const [monthlyEvents, setMonthlyEvents] = useState([]);
+  const [monthlyMyRsvpSet, setMonthlyMyRsvpSet] = useState(new Set());
+  const [monthlyLoading, setMonthlyLoading] = useState(false);
+
+  // ── day detail overlay ───────────────────────────────────────────────────
+  const [selectedDay, setSelectedDay] = useState(null); // day number or null
+
+  // ── add event form ───────────────────────────────────────────────────────
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({ description: '', date: '', startTime: '', endTime: '' });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [formWarning, setFormWarning] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // ── weekly scroll ────────────────────────────────────────────────────────
+  const handleWheel = useCallback((e) => {
+    e.preventDefault();
+    if (containerRef.current) containerRef.current.scrollLeft += e.deltaX;
+  }, []);
+  const handleMouseEnter = () => containerRef.current?.addEventListener('wheel', handleWheel, { passive: false });
+  const handleMouseLeave = () => containerRef.current?.removeEventListener('wheel', handleWheel);
+
+  const today = startOfDay(new Date());
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const date = addDays(today, i);
+    const dayEvents = events
+      .filter((event) => isSameDay(parseISO(event.start_time), date))
+      .sort((a, b) => parseISO(a.start_time) - parseISO(b.start_time));
+    return { date, label: format(date, 'EEE'), sublabel: format(date, 'd'), isToday: i === 0, events: dayEvents };
+  });
+
+  // ── monthly data fetch ───────────────────────────────────────────────────
+  useEffect(() => {
+    if (viewMode !== 'month' || !club?.id) return;
+    let cancelled = false;
+    const fetchMonthly = async () => {
+      console.log("UseEffect running!");
+      setMonthlyLoading(true);
+      try {
+        const eventsData = await apiFetch(
+          `/clubs/${club.id}/events/monthly?year=${displayYear}&month=${displayMonth}`
+        );
+        if (cancelled) return;
+        setMonthlyEvents(eventsData || []);
+
+        if (!eventsData || eventsData.length === 0) return;
+        const eventIds = eventsData.map((e) => e.id);
+        const rsvpData = await apiFetch(
+          `/clubs/${club.id}/events/rsvps?eventIds=${eventIds.join(',')}`
+        );
+        if (cancelled) return;
+        setMonthlyMyRsvpSet(
+          new Set((rsvpData || []).filter((r) => r.user_id === userId).map((r) => r.event_id))
+        );
+        console.log(eventsData);
+      } catch (err) {
+        console.error('Failed to fetch monthly events:', err);
+      } finally {
+        if (!cancelled) setMonthlyLoading(false);
+      }
+    };
+    fetchMonthly();
+    return () => { cancelled = true; };
+  }, [viewMode, displayYear, displayMonth, club?.id, userId]);
+
+  // ── build events-by-day map for the displayed month ──────────────────────
+  const monthlyEventsByDay = new Map();
+  for (const event of monthlyEvents) {
+    const d = parseISO(event.start_time);
+    if (d.getFullYear() === displayYear && d.getMonth() + 1 === displayMonth) {
+      const dayNum = d.getDate();
+      if (!monthlyEventsByDay.has(dayNum)) monthlyEventsByDay.set(dayNum, []);
+      monthlyEventsByDay.get(dayNum).push(event);
+    }
+  }
+  for (const [, evts] of monthlyEventsByDay) {
+    evts.sort((a, b) => parseISO(a.start_time) - parseISO(b.start_time));
+  }
+
+  // ── monthly navigation ───────────────────────────────────────────────────
+  function navigateMonth(delta) {
+    
+    const newDate = new Date(displayYear, displayMonth - 1 + delta, 1);
+    setDisplayYear(newDate.getFullYear());
+    setDisplayMonth(newDate.getMonth() + 1);
+    setSelectedDay(null);
+  }
+
+  function getMonthGrid() {
+    const firstDay = new Date(displayYear, displayMonth - 1, 1);
+    const offset = getDay(firstDay); // 0 = Sunday
+    const totalDays = getDaysInMonth(firstDay);
+    return [
+      ...Array(offset).fill(null),
+      ...Array.from({ length: totalDays }, (_, i) => i + 1),
+    ];
+  }
+
+  function getDayClass(dayNum) {
+    const date = new Date(displayYear, displayMonth - 1, dayNum);
+    const hasEvents = monthlyEventsByDay.has(dayNum);
+    if (isBefore(date, today)) return 'cal-day-past';
+    if (isToday(date)) return hasEvents ? 'cal-day-today-events' : 'cal-day-today';
+    return hasEvents ? 'cal-day-has-events' : 'cal-day-normal';
+  }
+
+  // ── overlay helpers ──────────────────────────────────────────────────────
+  function openDayOverlay(dayNum) {
+    if (!monthlyEventsByDay.has(dayNum)) return;
+    const date = new Date(displayYear, displayMonth - 1, dayNum);
+    if (isBefore(date, today)) return; // past days are grey and not clickable
+    setSelectedDay(dayNum);
+  }
+
+  function closeOverlay() {
+    setSelectedDay(null);
+  }
+
+  async function handleMonthlyRsvp(eventId, isCurrentlyGoing) {
+    if (!userId || !club?.id) return;
+    try {
+      if (isCurrentlyGoing) {
+        await apiFetch(`/clubs/${club.id}/events/${eventId}/rsvp`, { method: 'DELETE' });
+        setMonthlyMyRsvpSet((prev) => { const next = new Set(prev); next.delete(eventId); return next; });
+      } else {
+        await apiFetch(`/clubs/${club.id}/events/${eventId}/rsvp`, { method: 'POST' });
+        setMonthlyMyRsvpSet((prev) => new Set([...prev, eventId]));
+      }
+    } catch (err) {
+      console.error('Monthly RSVP failed:', err);
+    }
+  }
+
+  // ── add-event form helpers ───────────────────────────────────────────────
+  function validateForm() {
+    const { description, date, startTime, endTime } = formData;
+    if (!description.trim()) { setFormWarning('Description is required.'); return false; }
+    if (description.length > 200) { setFormWarning('Description must be 200 characters or fewer.'); return false; }
+    if (!date || !startTime || !endTime) { setFormWarning('Please fill in all date and time fields.'); return false; }
+    const start = new Date(`${date}T${startTime}:00`);
+    const end = new Date(`${date}T${endTime}:00`);
+    if (isNaN(start) || isNaN(end)) { setFormWarning('Invalid date or time format.'); return false; }
+    if (start < new Date()) { setFormWarning('Event cannot begin in the past.'); return false; }
+    if (start >= end) { setFormWarning('Start time must be before end time.'); return false; }
+    if (end - start > 12 * 60 * 60 * 1000) { setFormWarning('Event cannot last more than 12 hours.'); return false; }
+    setFormWarning('');
+    return true;
+  }
+
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+    setIsSubmitting(true);
+    try {
+      let imageUrl = null;
+      if (imageFile) {
+        const ext = imageFile.name.split('.').pop() || 'jpg';
+        const { signedUrl, publicUrl } = await apiFetch('/storage/event-poster-upload-url', {
+          method: 'POST',
+          body: { ext },
+        });
+        const uploadRes = await fetch(signedUrl, {
+          method: 'PUT',
+          body: imageFile,
+          headers: { 'Content-Type': imageFile.type || 'application/octet-stream' },
+        });
+        if (!uploadRes.ok) throw new Error('Image upload failed.');
+
+        const verification = await apiFetch('/storage/verify-image', {
+          method: 'POST',
+          body: { publicUrl },
+        });
+        if (!verification.ok) {
+          throw new Error(verification.error || 'Image rejected by content policy');
+        }
+
+        imageUrl = publicUrl;
+      }
+      await onAddEvent?.({
+        description: formData.description,
+        startTime: `${formData.date}T${formData.startTime}:00`,
+        endTime: `${formData.date}T${formData.endTime}:00`,
+        imageUrl,
+      });
+      setShowForm(false);
+      setFormData({ description: '', date: '', startTime: '', endTime: '' });
+      setImageFile(null);
+      setImagePreview(null);
+      setFormWarning('');
+    } catch (err) {
+      setFormWarning(err.message || 'Failed to add event. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // sorting events passed in through events prop by closest to current date
@@ -187,6 +411,138 @@ export function CalendarModule({
                           {evIsGoing ? 'Going ✓' : "I'm going!"}
                         </button>
                       )}
+                    </div>
+                      <div className="cal-export-row">
+                        <a
+                          href={buildGoogleCalendarUrl(event)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="cal-export-btn"
+                        >
+                          Google Cal
+                        </a>
+                        <button
+                          className="cal-export-btn"
+                          onClick={() => downloadIcsFile(event)}
+                        >
+                          Apple Cal
+                        </button>
+                      </div>
+                      {(() => {
+                        const friends = friendRsvpMap.get(event.id);
+                        if (!friends || friends.length === 0) return null;
+                        const first = friends[0].username;
+                        const rest = friends.length - 1;
+                        return (
+                          <p className="friend-rsvp-callout">
+                            {rest === 0
+                              ? `${first} is going`
+                              : `${first} and ${rest} ${rest === 1 ? 'other' : 'others'} you know are going`}
+                          </p>
+                        );
+                      })()}
+                    </div>
+                  ))
+                )}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* ══ MONTHLY VIEW ══════════════════════════════════════════════════ */}
+      {viewMode === 'month' && (
+        <div className="cal-monthly-card">
+          {/* Seasonal tree placeholder */}
+          <div className="cal-monthly-tree">
+            <img src="/raccoon_pfp.png" alt="seasonal tree" className="cal-tree-img" />
+          </div>
+
+          {/* Month name + navigation */}
+          <div className="cal-monthly-header">
+            <span className="cal-month-name">{format(monthDisplayDate, 'MMM').toUpperCase()}</span>
+            <div className="cal-month-nav">
+              <button className="cal-nav-btn" onClick={() => navigateMonth(-1)}>‹</button>
+              <button className="cal-nav-btn" onClick={() => navigateMonth(1)}>›</button>
+            </div>
+          </div>
+
+          {monthlyLoading ? (
+            <p className="cal-loading">Loading…</p>
+          ) : (
+            <div className="cal-grid">
+              {/* Day-of-week headers */}
+              {WEEK_DAYS.map((d, i) => (
+                <div key={i} className="cal-weekday-label">{d}</div>
+              ))}
+              {/* Day cells */}
+              {cells.map((dayNum, i) => (
+                <div
+                  key={i}
+                  className={`cal-day-cell${dayNum ? ` ${getDayClass(dayNum)}` : ' cal-day-empty'}`}
+                  onClick={
+                    dayNum && monthlyEventsByDay.has(dayNum)
+                      ? () => openDayOverlay(dayNum)
+                      : undefined
+                  }
+                >
+                  {dayNum || ''}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ══ DAY DETAIL OVERLAY ════════════════════════════════════════════ */}
+      {selectedDay !== null && (
+        <div className="cal-overlay-backdrop" onClick={closeOverlay}>
+          <div className="cal-overlay-portrait" onClick={(e) => e.stopPropagation()}>
+            <button className="cal-overlay-close" onClick={closeOverlay}>✕</button>
+            <h2 className="cal-overlay-date">
+              {format(new Date(displayYear, displayMonth - 1, selectedDay), 'EEEE, MMMM d')}
+            </h2>
+
+            {/* Scrollable stack of event cards */}
+            <div className="cal-portrait-scroll">
+              {selectedDayEvents.map((event) => (
+                <div key={event.id} className="cal-portrait-event">
+                  <div className="cal-portrait-img-wrap">
+                    {event.event_image_url ? (
+                      <img src={event.event_image_url} alt="Event" className="cal-portrait-img" />
+                    ) : (
+                      <img src={club?.logo_url} className="cal-portrait-img" alt="No image" />
+                    )}
+                  </div>
+                  <div className="cal-portrait-info">
+                    <p className="cal-overlay-desc">{event.event_description}</p>
+                    <p className="cal-overlay-time">
+                      {format(parseISO(event.start_time), 'h:mm a')} –{' '}
+                      {format(parseISO(event.end_time), 'h:mm a')}
+                    </p>
+                    {userId && (
+                      <button
+                        className="rsvp-button"
+                        onClick={() => handleMonthlyRsvp(event.id, monthlyMyRsvpSet.has(event.id))}
+                      >
+                        {monthlyMyRsvpSet.has(event.id) ? 'Going ✓' : "I'm going!"}
+                      </button>
+                    )}
+                    <div className="cal-export-row">
+                      <a
+                        href={buildGoogleCalendarUrl(event)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="cal-export-btn"
+                      >
+                        Google Cal
+                      </a>
+                      <button
+                        className="cal-export-btn"
+                        onClick={() => downloadIcsFile(event)}
+                      >
+                        Apple Cal
+                      </button>
                     </div>
                   </div>
                 );

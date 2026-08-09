@@ -1,6 +1,8 @@
 import express from 'express';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { checkMuted } from '../middleware/checkMuted.js';
+import textModerator from '../lib/textModerator.js';
 
 const router = express.Router();
 
@@ -106,6 +108,16 @@ router.post('/', async (req, res) => {
     if (validationError) return res.status(400).json({ error: validationError });
 
     const { clubId, clubName, eventName, description, where, startTime, endTime, imageUrl, isMembersOnly } = req.body;
+router.post('/', checkMuted, async (req, res) => {
+    const validationError = validateEvent(req.body);
+    if (validationError) return res.status(400).json({ error: validationError });
+
+    const textCheck = textModerator.check(req.body.description);
+    if (!textCheck.clean) {
+        return res.status(400).json({ error: textCheck.message });
+    }
+
+    const { clubId, clubName, description, startTime, endTime, imageUrl } = req.body;
 
     const { data: profile } = await supabaseAdmin
         .from('profiles')
@@ -199,6 +211,7 @@ router.delete('/:eventId', async (req, res) => {
 });
 
 router.post('/:eventId/rsvp', async (req, res) => {
+router.post('/:eventId/rsvp', checkMuted, async (req, res) => {
     const { error } = await supabaseAdmin
         .from('attendees')
         .upsert(

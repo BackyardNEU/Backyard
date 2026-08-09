@@ -1,7 +1,7 @@
 .faq-module {
   width: 100%;
   box-sizing: border-box;
-  padding-left: 1.5%;   /* mobile 0.4rem, web 0 (rectangle's left) */
+  padding-left: 1.5%;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -132,7 +132,13 @@
 
 .faq-ask-input {
   width: 100%;
-  max-height: 140px;
+  /* Fill all remaining vertical space in the card down to the send button,
+     instead of sitting at its intrinsic 1-row height — flex-basis:0 + min-height:0
+     is required for a textarea to actually stretch via flex-grow rather than
+     just using its content-based auto height as the basis. Scrolls internally
+     once typed content exceeds that space, instead of growing the card. */
+  flex: 1 1 0;
+  min-height: 0;
   border: none;
   outline: none;
   background: transparent;
@@ -146,10 +152,6 @@
 
 .faq-ask-input::placeholder {
   color: #cfcfcf;
-}
-
-.faq-spacer {
-  flex: 1;
 }
 
 .faq-send {
@@ -220,4 +222,10 @@
   background: #fff;
   clip-path: polygon(50% 8%, 8% 100%, 92% 100%);
   margin-bottom: 2px;
+}
+
+@media (max-width: 500px) {
+  .faq-module {
+    padding-left: 0.3rem;
+  }
 }

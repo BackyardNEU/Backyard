@@ -1,7 +1,7 @@
 .club-media-module {
   width: 100%;
   box-sizing: border-box;
-  padding-left: 1.5%;   /* mobile 0.4rem, web 0 (rectangle's left) */
+  padding-left: 1.5%;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -125,7 +125,7 @@
   width: 100%;
   height: 100%;
   color: rgba(255, 255, 255, 0.5);
-  font-family: 'Barlow', sans-serif;
+  font-family: 'Barlow Condensed', sans-serif;
   font-size: 0.95rem;
 }
 
@@ -373,15 +373,17 @@
 
 /* Add-poster card */
 .cm-add-poster {
+  position: relative;
   flex: 0 0 auto;
   width: 300px;
   height: 450px;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   background: #ffffff;
-  border:2px solid #c4c4c4;
-  border-radius: 15px;
+
+ 
   color: #c4c4c4;
   font-size: 10rem;
   font-weight: 300;
@@ -393,6 +395,48 @@
 
 .cm-add-poster:hover {
    background: #2e4064; border-color: #d9d9d9;  color: #Ece7e5;
+}
+
+/* Ink-line border overlay (black) — visible in both normal and hover states */
+.cm-add-poster-border {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: auto;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.cm-add-poster-border-left {
+  left: 0;
+  transform: scaleX(0.5);
+  transform-origin: left center;
+}
+
+.cm-add-poster-border-right {
+  right: -1px;
+  transform: scaleX(-0.5);
+  transform-origin: center;
+}
+
+.cm-add-poster-border-h-wrap {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2.5px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  background-size: auto 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.cm-add-poster-border-top-wrap {
+  top: 0;
+}
+
+.cm-add-poster-border-bottom-wrap {
+  bottom: 0;
 }
 
 /* ── Expanded portrait modal ── */
@@ -413,10 +457,62 @@
   width: calc(96vh * 0.62);
   max-width: 92vw;
   background: #fff;
-  border-radius: 18px;
+
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+/* Subtle noise/grain overlay on top of the solid background */
+.cm-modal::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.19'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Ink-line border overlay (brown, matches the poster border) */
+.cm-modal-border {
+  position: absolute;
+  top: -2px;
+  height: 100%;
+  width: auto;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.cm-modal-border-left {
+  left: -2px;
+  transform: scaleX(0.75);
+  transform-origin: left center;
+}
+
+.cm-modal-border-right {
+  right: -4px;
+  transform: scaleX(-0.75);
+  transform-origin: center;
+}
+
+.cm-modal-border-h-wrap {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  background-size: auto 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.cm-modal-border-top-wrap {
+  top: 0;
+}
+
+.cm-modal-border-bottom-wrap {
+  bottom: 0;
 }
 
 .cm-modal-close {
@@ -424,23 +520,20 @@
   top: 12px;
   right: 12px;
   z-index: 3;
-  width: 34px;
-  height: 34px;
+ padding: 10px 5px;
   display: flex;
   align-items: center;
   justify-content: center;
+  
   border: none;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.45);
-  color: #fff;
+  border-radius: 8px;
+ 
+  color: #37291E;
   font-size: 1.5rem;
   line-height: 1;
   cursor: pointer;
 }
 
-.cm-modal-close:hover {
-  background: rgba(0, 0, 0, 0.7);
-}
 
 /* No image — just the poster text centered along the top */
 .cm-modal-header {
@@ -469,13 +562,13 @@
 .cm-modal-empty {
   color: #999;
   font-style: italic;
-  font-family: 'Barlow', sans-serif;
+  font-family: 'Barlow Condensed', sans-serif;
 }
 
 /* ── Content blocks (view) ── */
 .cm-block-title {
   margin: 0;
-  font-family: "Bebas Neue", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-weight: 400;
   font-size: 3rem;
   letter-spacing: 0.3px;
@@ -484,7 +577,7 @@
 
 .cm-block-text {
   margin: 0;
-  font-family: 'Barlow', sans-serif;
+  font-family: 'Barlow Condensed', sans-serif;
   font-size: 1.05rem;
   line-height: 1.55;
   color: rgb(66, 66, 66);
@@ -502,40 +595,84 @@
 .cm-add-btn {
   padding: 8px 16px;
   border-radius: 999px;
-  border: 1px dashed #bbb;
-  background: #fafafa;
-  color: #444;
+  border: 1px dashed #Ece7e5;
+  background: #2e4064;
+  color: #Ece7e5;
   cursor: pointer;
-  font-family: 'Barlow', sans-serif;
+  font-family: 'Barlow Condensed', sans-serif;
   font-size: 0.95rem;
 }
 
 .cm-add-btn:hover {
-  border-color: #777;
-  color: #000;
+  border-color: #fff;
+  color: #fff;
 }
 
 .cm-add-menu {
-  background: #f3f3f3;
-  border-radius: 12px;
+  position: relative;
+  background: #2e4064;
+
   padding: 8px;
+}
+
+/* Ink-line border overlay (black) */
+.cm-add-menu-border {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: auto;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.cm-add-menu-border-left {
+  left: 0;
+  transform: scaleX(1.2);
+  transform-origin: left center;
+}
+
+.cm-add-menu-border-right {
+  right: 0;
+  transform: scaleX(-1.2);
+  transform-origin: center;
+}
+
+.cm-add-menu-border-h-wrap {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  background-size: auto 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.cm-add-menu-border-top-wrap {
+  top: 0;
+}
+
+.cm-add-menu-border-bottom-wrap {
+  bottom: 0;
 }
 
 .cm-add-menu > button,
 .cm-add-upload {
   padding: 6px 12px;
   border-radius: 8px;
-  border: 1px solid #ccc;
-  background: #fff;
+  border: 1px solid #Ece7e5;
+  background: #2e4064;
   cursor: pointer;
-  font-family: 'Barlow', sans-serif;
+  font-family: 'Barlow Condensed', sans-serif;
   font-size: 0.9rem;
-  color: #333;
+  color: #Ece7e5;
 }
 
 .cm-add-menu > button:hover,
 .cm-add-upload:hover {
-  border-color: #888;
+  border-color: #fff;
+  color: #fff;
 }
 
 .cm-add-video {
@@ -551,6 +688,16 @@
   border-radius: 8px;
   font-size: 0.9rem;
   outline: none;
+  color: #Ece7e5;
+  background: transparent;
+}
+
+.cm-add-video input::placeholder {
+  color: #Ece7e5;
+}
+
+.cm-add-video button {
+  color: #Ece7e5;
 }
 
 .cm-add-cancel {
@@ -564,7 +711,7 @@
 
 .cm-block-edit {
   position: relative;
-  border: 1px solid #e2e2e2;
+  border: 1px solid #2e4064;
   border-radius: 12px;
   padding: 12px;
 }
@@ -573,7 +720,8 @@
   position: absolute;
   top: 8px;
   right: 8px;
-  
+  z-index: 10;
+
   display: flex;
   background: #2e4064;
   padding: 0px 5px;
@@ -601,7 +749,7 @@
   border: none;
   border-bottom: 1px solid #ddd;
   outline: none;
-  font-family: "Bebas Neue", sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 2rem;
   color: rgb(44, 27, 43);
 }
@@ -619,7 +767,7 @@
   border-radius: 8px;
   outline: none;
   resize: vertical;
-  font-family: 'Barlow', sans-serif;
+  font-family: 'Barlow Condensed', sans-serif;
   font-size: 1rem;
   color: rgb(66, 66, 66);
 }
@@ -634,7 +782,7 @@
   width: 100%;
   border-radius: 12px;
   overflow: hidden;
-  background: #000;
+  background: transparent;
 }
 
 .cm-carousel-track {
@@ -656,7 +804,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #000;
+  background: transparent;
 }
 
 .cm-media-img,
@@ -731,5 +879,11 @@
 
   .cm-modal-overlay {
     padding: 0;
+  }
+}
+
+@media (max-width: 500px) {
+  .club-media-module {
+    padding-left: 0.3rem;
   }
 }

@@ -1,14 +1,17 @@
 ﻿import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
 import { FaSearch, FaTimes } from 'react-icons/fa';
 import './FriendDiscoveryList.css';
 
 export const FriendDiscoveryList = ({ userId }) => {
+  const navigate = useNavigate();
   const [friends, setFriends] = useState([]);
   const [friendIds, setFriendIds] = useState([]);
   const [searchInput, setSearchInput] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [addingId, setAddingId] = useState(null);
+  const [pendingIds, setPendingIds] = useState(new Set());
   const [modalOpen, setModalOpen] = useState(false);
 
   const fetchFriends = useCallback(async () => {
@@ -48,24 +51,18 @@ export const FriendDiscoveryList = ({ userId }) => {
   }, [searchInput, userId]);
 
   async function handleAddFriend(friendId) {
-    if (addingId) return;
+    if (addingId || pendingIds.has(friendId) || friendIds.includes(friendId)) return;
     setAddingId(friendId);
 
-    if (friendIds.includes(friendId)) {
-      setAddingId(null);
-      return;
-    }
-
-    // PUT replaces the whole friend_list. If two tabs add concurrently, last write wins
-    // — same behavior as the previous supabase-based code.
-    const newList = [...friendIds, friendId];
-
     try {
-      await apiFetch('/me/friends', { method: 'PUT', body: { friend_list: newList } });
-      setFriendIds(newList);
-      await fetchFriends();
+      await apiFetch('/friend-requests', { method: 'POST', body: { recipientId: friendId } });
+      setPendingIds((prev) => new Set([...prev, friendId]));
     } catch (err) {
-      console.error('Error adding friend:', err);
+      if (err.status === 409) {
+        setPendingIds((prev) => new Set([...prev, friendId]));
+      } else {
+        console.error('Error sending friend request:', err);
+      }
     }
     setAddingId(null);
   }
@@ -74,11 +71,9 @@ export const FriendDiscoveryList = ({ userId }) => {
     if (addingId) return;
     setAddingId(friendId);
 
-    const newList = friendIds.filter((id) => id !== friendId);
-
     try {
-      await apiFetch('/me/friends', { method: 'PUT', body: { friend_list: newList } });
-      setFriendIds(newList);
+      await apiFetch(`/me/friends/${friendId}`, { method: 'DELETE' });
+      setFriendIds((prev) => prev.filter((id) => id !== friendId));
       setFriends((prev) => prev.filter((f) => f.id !== friendId));
     } catch (err) {
       console.error('Error removing friend:', err);
@@ -103,14 +98,20 @@ export const FriendDiscoveryList = ({ userId }) => {
       {/* Clean friend cards + Find More button */}
       <div className="friends-scroll">
         {friends.map((friend) => (
-          <div className="friend-card" key={friend.id}>
+          <button
+            type="button"
+            className="friend-card friend-card-button"
+            key={friend.id}
+            onClick={() => navigate(`/friend/${friend.id}`)}
+            aria-label={`View ${friend.username}'s profile`}
+          >
             <img
               className="friend-avatar"
               src={friend.avatar_url || '/raccoon_pfp.png'}
               alt={friend.username}
             />
             <span className="friend-card-name">{friend.username}</span>
-          </div>
+          </button>
         ))}
         <button className="find-friends-card" onClick={openModal}>
           <span className="find-friends-plus">+</span>
@@ -156,6 +157,8 @@ export const FriendDiscoveryList = ({ userId }) => {
                       <span className="friend-result-name">{person.username}</span>
                       {alreadyFriend ? (
                         <span className="friend-already-tag">Added</span>
+                      ) : pendingIds.has(person.id) ? (
+                        <span className="friend-already-tag">Requested</span>
                       ) : (
                         <button
                           className="friend-add-btn"

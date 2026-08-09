@@ -19,6 +19,7 @@ import MemberRosterModule from '../club_page_components/MemberRosterModule';
 import { CalendarModule } from '../club_page_components/CalendarModule';
 import AddEventPanel from '../club_page_components/AddEventPanel';
 import ModuleAccordion from '../club_page_components/accordion';
+import ClubMembersPanel from '../club_page_components/ClubMembersPanel';
 import { useClubData } from '../context/useClubData';
 import { useGlobalStore } from '../lib/store';
 import InviteLinkButton from '../club_page_components/InviteLinkButton';
@@ -105,10 +106,6 @@ function validateMemberRoster(data) {
     return null;
 }
 
-function validateCalendar(_data) {
-    return null;
-}
-
 function validateComments() { return null; }
 
 function validateClubMedia(data) {
@@ -138,7 +135,6 @@ function getModuleWarnings(draft) {
         if (m.type === 'faqs') w.faqs = validateFaq(m.data);
         if (m.type === 'member_roster') w.member_roster = validateMemberRoster(m.data);
         if (m.type === 'club_media') w.club_media = validateClubMedia(m.data);
-        if (m.type === 'calendar') w.calendar = validateCalendar(m.data);
         if (m.type === 'comments') w.comments = validateComments(m.data);
     }
     return w;
@@ -173,12 +169,12 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const [isClicked, setIsClicked] = useState(false);
     // records the user itself
     const [user, setUser] = useState(null);
-    // determines if someone is a member of a club- derived from supabase table
-    const [isMember, setIsMember] = useState(false);
+    // null = not a member; 'member' | 'moderator' | 'top_moderator' = current role
+    const [myRole, setMyRole] = useState(null);
     // NOTE2SELF: THIS WILL BECOME IRRELEVANT LATER AS A LOADING STATE ACROSS ALL MODULES/INFO IS PUT IN PLACE
     const [memberLoading, setMemberLoading] = useState(false);
-    // determines if a user is an approved club account- derived from auth
-    const [isApproved, setIsApproved] = useState(false);
+    // active tab: 'page' | 'members'
+    const [activeTab, setActiveTab] = useState('page');
     // info from modules data to be displayed from db
     const [pageData, setPageData] = useState(null);
     // editing state for changing modules
@@ -206,6 +202,9 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const [taxonomy, setTaxonomy] = useState([]);
     const [clubInterestsSaved, setClubInterestsSaved] = useState(null);
     const [clubInterestsDraft, setClubInterestsDraft] = useState(null);
+
+    const isMember = myRole !== null;
+    const isApproved = myRole === 'moderator' || myRole === 'top_moderator';
 
     const id = club.id;
 
@@ -266,7 +265,6 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 apiFetch(`/clubs/${id}/interests`, { auth: false }),
             ];
             const authFetches = authUser ? [
-                apiFetch('/me/membership'),
                 apiFetch(`/clubs/${id}/is-approved`),
             ] : [];
 
@@ -328,10 +326,8 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 ]));
                 console.log("Success retrieving data!");
             }
-            if (membershipResult?.status === 'fulfilled')
-                setIsMember((membershipResult.value?.member_list || []).includes(id));
             if (approvedResult?.status === 'fulfilled')
-                setIsApproved(approvedResult.value?.approved ?? false);
+                setMyRole(approvedResult.value?.role ?? null);
         }
 
         fetchAll();
@@ -351,21 +347,15 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
         if (!user || memberLoading) return;
         setMemberLoading(true);
         try {
-            const { member_list } = await apiFetch('/me/membership');
-            let list = member_list || [];
-            // check if user is currently a member of the club (if the club's id can be found in the list of club id's under 
-            // the member_list arrary column in profiles).
             if (isMember) {
-                list = list.filter((cid) => cid !== club.id);
+                await apiFetch(`/clubs/${club.id}/members/me`, { method: 'DELETE' });
+                setMyRole(null);
+                if (onMembershipChange) onMembershipChange(club.id, false);
             } else {
-                // otherwise, add clubId to user's membership list of clubs they belong to
-                list = [...list, club.id];
+                const result = await apiFetch(`/clubs/${club.id}/members/me`, { method: 'POST' });
+                setMyRole(result?.role ?? 'member');
+                if (onMembershipChange) onMembershipChange(club.id, true);
             }
-            // updates user member_list
-            await apiFetch('/me/membership', { method: 'PUT', body: { member_list: list } });
-            const wasJoined = isMember;
-            setIsMember(!isMember);
-            if (onMembershipChange) onMembershipChange(club.id, !wasJoined);
         } catch (err) {
             console.error('Error updating membership:', err);
         }
@@ -477,6 +467,15 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     body: { club_id: id, ext: pendingLogoFile.type.split('/')[1] },
                 });
                 await fetch(signedUrl, { method: 'PUT', body: pendingLogoFile });
+
+                const verification = await apiFetch('/storage/verify-image', {
+                    method: 'POST',
+                    body: { publicUrl },
+                });
+                if (!verification.ok) {
+                    throw new Error(verification.error || 'Logo rejected by content policy');
+                }
+
                 finalDraft = draft.map(m =>
                     m.type === 'basic_info' ? { ...m, data: { ...m.data, logo_url: publicUrl } } : m
                 );
@@ -549,10 +548,12 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
     const sortedDraft = [...(draft ?? [])].sort((a, b) => a.order - b.order);
     const basicInfoModule = sortedDraft.find((m) => m.type === 'basic_info');
-    const accordionModules = sortedDraft;
+    // Calendar ("Coming Up") is pinned above the accordion/view stream and rendered
+    // unconditionally, not toggleable/reorderable like the other modules — exclude it here.
+    const accordionModules = sortedDraft.filter((m) => m.type !== 'calendar');
     // Links has no separate public section of its own (see renderModule) — exclude it from the
     // view-mode stream entirely so it doesn't leave a stray divider where its content would be.
-    const viewModules = sortedDraft.filter((m) => m.isDisplayed !== false && m.type !== 'links');
+    const viewModules = sortedDraft.filter((m) => m.isDisplayed !== false && m.type !== 'links' && m.type !== 'calendar');
     // Its checkbox instead controls whether the action-bar link buttons show at all.
     const linksModuleEntry = sortedDraft.find((m) => m.type === 'links');
     const linksDisplayed = linksModuleEntry ? linksModuleEntry.isDisplayed !== false : true;
@@ -713,23 +714,6 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 />
             );
         }
-        if (module.type === 'calendar') {
-            return (
-                <CalendarModule
-                    key="calendar"
-                    club={club}
-                    data={module.data}
-                    editing={isEditing}
-                    onChange={(updatedData) => handleModuleChange('calendar', updatedData)}
-                    warning={moduleWarnings.calendar ?? null}
-                    events={clubEvents}
-                    myRsvpSet={clubMyRsvpSet}
-                    friendRsvpMap={clubFriendRsvpMap}
-                    onRsvp={handleClubRsvp}
-                    userId={user?.id ?? null}
-                />
-            );
-        }
         if (module.type === 'comments') {
             return (
                 <ReviewList
@@ -759,27 +743,74 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             <button className="close-btn" onClick={handleClose}>×</button>
 
             {isApproved && !isEditing && (
-                <div className="exp-editor-toolbar">
-                    <button className="exp-edit-btn" onClick={async () => {
-                        if (!pageData?.modules?.length) {
-                            try {
-                                const result = await apiFetch(`/clubs/${id}/page/init`, { method: 'POST' });
-                                if (result?.modules?.length) {
-                                    setPageData(result);
-                                    setDraft(normalizeModules(result.modules));
+                <div className="exp-toolbar">
+                    <div className="duo-btn-wrap">
+                        <div className="duo-btn-pill" aria-hidden="true" />
+                        <button
+                            className="exp-edit-btn duo-btn"
+                            style={{ '--duo-shadow': 'rgb(30, 60, 90)' }}
+                            onClick={async () => {
+                                if (!pageData?.modules?.length) {
+                                    try {
+                                        const result = await apiFetch(`/clubs/${id}/page/init`, { method: 'POST' });
+                                        if (result?.modules?.length) {
+                                            setPageData(result);
+                                            setDraft(normalizeModules(result.modules));
+                                        }
+                                    } catch (err) {
+                                        console.error('Failed to initialize page defaults:', err);
+                                    }
                                 }
-                            } catch (err) {
-                                console.error('Failed to initialize page defaults:', err);
-                            }
-                        }
-                        setIsEditing(true);
-                    }}>Edit Page</button>
+                                setIsEditing(true);
+                            }}
+                        >
+                            Edit Page
+                        </button>
+                    </div>
                     <InviteLinkButton clubId={id} />
                 </div>
             )}
 
+            <div className="club-tab-switcher">
+                <button
+                    className={`club-tab-btn${activeTab === 'page' ? ' club-tab-btn--active' : ''}`}
+                    onClick={() => setActiveTab('page')}
+                >
+                    Page
+                </button>
+                <button
+                    className={`club-tab-btn${activeTab === 'members' ? ' club-tab-btn--active' : ''}`}
+                    onClick={() => setActiveTab('members')}
+                >
+                    Members
+                </button>
+            </div>
+
+            {activeTab === 'members' ? (
+                <ClubMembersPanel
+                    clubId={id}
+                    myRole={myRole}
+                    currentUserId={user?.id ?? null}
+                    onMembershipChange={(newRole) => {
+                        setMyRole(newRole);
+                        if (onMembershipChange) onMembershipChange(club.id, newRole !== null);
+                    }}
+                />
+            ) : (
+
             <div className="club-modules">
                 {basicInfoModule && renderModule(basicInfoModule, 'hero')}
+                {!isApproved && (
+                    <CalendarModule
+                        club={club}
+                        editing={false}
+                        events={clubEvents}
+                        myRsvpSet={clubMyRsvpSet}
+                        friendRsvpMap={clubFriendRsvpMap}
+                        onRsvp={handleClubRsvp}
+                        userId={user?.id ?? null}
+                    />
+                )}
                 <AddEventPanel
                     isApproved={isApproved}
                     club={club}
@@ -787,6 +818,10 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     onAddEvent={handleAddEvent}
                     onEditEvent={handleEditEvent}
                     onDeleteEvent={handleDeleteEvent}
+                    myRsvpSet={clubMyRsvpSet}
+                    friendRsvpMap={clubFriendRsvpMap}
+                    onRsvp={handleClubRsvp}
+                    userId={user?.id ?? null}
                 />
                 {isEditing ? (
                     <ModuleAccordion
@@ -821,12 +856,32 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 )}
             </div>
 
+            )} {/* end activeTab === 'page' */}
+
             {isApproved && isEditing && (
-                <div className="expanded-edit-actions">
-                    <button onClick={handleCancel} disabled={isSaving}>Cancel</button>
-                    <button className="save-btn" onClick={handleSave} disabled={isSaving || !isDraftValid}>
-                        {isSaving ? 'Saving...' : 'Save'}
-                    </button>
+                <div className="exp-toolbar exp-toolbar--start">
+                    <div className="duo-btn-wrap">
+                        <div className="duo-btn-pill" aria-hidden="true" />
+                        <button
+                            className="save-btn duo-btn"
+                            style={{ '--duo-shadow': 'rgb(0, 0, 0)' }}
+                            onClick={handleSave}
+                            disabled={isSaving || !isDraftValid}
+                        >
+                            {isSaving ? 'Saving...' : 'Save'}
+                        </button>
+                    </div>
+                    <div className="duo-btn-wrap">
+                        <div className="duo-btn-pill" aria-hidden="true" />
+                        <button
+                            className="cancel-btn duo-btn"
+                            style={{ '--duo-shadow': 'rgb(120, 120, 120)' }}
+                            onClick={handleCancel}
+                            disabled={isSaving}
+                        >
+                            Cancel
+                        </button>
+                    </div>
                 </div>
             )}
 

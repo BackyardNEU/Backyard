@@ -109,7 +109,6 @@ export const UniversityPage = () => {
   return (
     <div className="UniPage">
       <div className="uni-background-layer" />
-      <img src={neuFlag} alt="" className="uni-neu-flag" />
       <img
         src={ghibliPlant}
         alt=""
@@ -118,6 +117,7 @@ export const UniversityPage = () => {
 
       <div className="uni-layout">
         <header className="uni-header-spacer">
+          <img src={neuFlag} alt="" className="uni-neu-flag" />
           <img src={headerLogo} alt="Backyard" className="uni-header-logo" />
         </header>
 

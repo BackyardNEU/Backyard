@@ -39,9 +39,9 @@
 
 /* Keep modules centered the way .expanded-card did before they were wrapped */
 .club-modules {
-  /* Shared left inset for every module + the hero. Mobile: 0.4rem. Web (>500px): 0,
+  /* Shared left inset for every module + the hero. Mobile: 0.3rem. Web (>500px): 0,
      so all content starts where the full-bleed rectangle banner starts. */
-  --mod-pad: 0.4rem;
+  --mod-pad: 0.3rem;
   display: flex;
   flex-direction: column;
   align-items: center;

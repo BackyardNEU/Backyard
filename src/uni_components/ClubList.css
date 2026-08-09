@@ -38,7 +38,7 @@ body::-webkit-scrollbar {
 
 @media (max-width: 649px) {
   .clubs-list {
-    margin-top: 88vh;
+
     gap: 24px;
   }
 }
