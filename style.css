@@ -394,6 +394,47 @@ html, body {
 .form-msg.success { color: rgb(46, 120, 139); }
 .form-msg.error { color: #b70000; }
 
+/* ─── Submit button feedback states ─── */
+/* The state class goes on the wrapper, not the button: the drop-shadow pill is
+   a *preceding* sibling of the button, and CSS has no way to reach backwards. */
+.duo-btn-wrap.is-success .submit-btn,
+.duo-btn-wrap.is-success .submit-btn:hover,
+.duo-btn-wrap.is-success .submit-btn:disabled {
+  background: #2F8F57;
+  box-shadow: 0 5px 0 #216B40;
+  /* The button stays disabled so a second submit can't fire, but it should
+     read as celebratory rather than dimmed out. */
+  opacity: 1;
+  cursor: default;
+  animation: btn-pop 0.34s ease-out;
+}
+
+.duo-btn-wrap.is-success .duo-btn-pill { background: #1B5734; }
+
+.duo-btn-wrap.is-error .submit-btn { animation: btn-shake 0.4s ease-in-out; }
+
+@keyframes btn-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes btn-shake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-5px); }
+  40%      { transform: translateX(5px); }
+  60%      { transform: translateX(-3px); }
+  80%      { transform: translateX(3px); }
+}
+
+/* Colour still communicates the result; only the movement is dropped. */
+@media (prefers-reduced-motion: reduce) {
+  .duo-btn-wrap.is-success .submit-btn,
+  .duo-btn-wrap.is-error .submit-btn {
+    animation: none;
+  }
+}
+
 /* ─── Footer ─── */
 .footer {
   font-family: "Barlow Condensed", sans-serif;
