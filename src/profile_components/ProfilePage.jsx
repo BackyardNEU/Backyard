@@ -136,20 +136,22 @@ export const ProfilePage = () => {
           <div className="profile-copy">
             <h1 className='ProfileName'>Hello, {profile?.username}</h1>
             <p className="user-description">{profileDescription}</p>
-            <button
-              type="button"
-              className="profile-setup-btn"
-              onClick={() => navigate('/profile-setup')}
-            >
-              Setup profile
-            </button>
-            <button
-              type="button"
-              className="profile-setup-btn"
-              onClick={() => setInterestsOpen(true)}
-            >
-              My Interests
-            </button>
+            <div className="profile-btn-row">
+              <button
+                type="button"
+                className="profile-setup-btn"
+                onClick={() => navigate('/profile-setup')}
+              >
+                Setup profile
+              </button>
+              <button
+                type="button"
+                className="profile-setup-btn"
+                onClick={() => setInterestsOpen(true)}
+              >
+                My Interests
+              </button>
+            </div>
           </div>
           <button
             className="profile-close-btn"

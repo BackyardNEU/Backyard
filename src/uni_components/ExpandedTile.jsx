@@ -488,7 +488,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             setPageData(prev => ({ ...prev, modules: finalDraft }));
             setDraft(finalDraft);
 
-            // Save club interests if the draft has a category set
+            // Save club interests: PUT if a category is set, DELETE if cleared
             if (clubInterestsDraft?.category_id) {
                 await apiFetch(`/clubs/${id}/interests`, {
                     method: 'PUT',
@@ -498,6 +498,10 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     },
                 });
                 setClubInterestsSaved(clubInterestsDraft);
+            } else if (clubInterestsSaved?.category_id) {
+                // Category was cleared — remove the row entirely
+                await apiFetch(`/clubs/${id}/interests`, { method: 'DELETE' });
+                setClubInterestsSaved(null);
             }
 
             // Commit pending hide/show changes for comments

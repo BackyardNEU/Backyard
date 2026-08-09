@@ -168,8 +168,7 @@ function BasicInfoModule({ club, data, editing, onChange, onLogoChange, actions,
       return sub?.name || '';
     });
     setSubText([names[0] || '', names[1] || '']);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editing, clubInterests?.category_id]);
+  }, [editing, clubInterests?.category_id, taxonomy]);
 
   const selectedCat = taxonomy.find(c => c.id === clubInterests?.category_id) || null;
 
@@ -199,12 +198,19 @@ function BasicInfoModule({ club, data, editing, onChange, onLogoChange, actions,
   const handleSubSelect = useCallback((index, sub) => {
     const newSubs = [...(clubInterests?.subcategory_ids || [])];
     newSubs[index] = sub.id;
-    // Deduplicate: same sub in both slots is not meaningful
+    // Deduplicate: same sub selected in both slots is not meaningful
     const deduped = newSubs.filter((id, i, arr) => id && arr.indexOf(id) === i);
     onInterestsChange?.({ category_id: clubInterests?.category_id, subcategory_ids: deduped });
-    setSubText(prev => prev.map((t, i) => i === index ? sub.name : t));
+    // Sync both text inputs to match the deduped IDs — clears a slot if its ID was removed
+    setSubText(prev => prev.map((t, i) => {
+      const savedId = deduped[i];
+      if (!savedId) return '';
+      if (i === index) return sub.name;
+      const existing = selectedCat?.subcategories?.find(s => s.id === savedId);
+      return existing?.name ?? t;
+    }));
     setSubDropdown(null);
-  }, [clubInterests, onInterestsChange]);
+  }, [clubInterests, onInterestsChange, selectedCat]);
 
   return (
     <>

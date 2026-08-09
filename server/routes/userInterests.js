@@ -50,6 +50,30 @@ router.put('/', async (req, res) => {
     }
   }
 
+  // Validate that every subcategory ID actually belongs to its claimed category.
+  const allSubIds = interests.flatMap(item => item.subcategory_ids);
+  if (allSubIds.length > 0) {
+    const { data: validSubs, error: subError } = await supabaseAdmin
+      .from('interest_subcategories')
+      .select('id, category_id')
+      .in('id', allSubIds);
+
+    if (subError) {
+      const err = new Error(subError.message);
+      err.status = 502;
+      throw err;
+    }
+
+    const subCatMap = new Map((validSubs || []).map(s => [s.id, s.category_id]));
+    for (const item of interests) {
+      for (const subId of item.subcategory_ids) {
+        if (subCatMap.get(subId) !== item.category_id) {
+          return res.status(400).json({ error: 'A subcategory does not belong to its claimed category' });
+        }
+      }
+    }
+  }
+
   // Delete all existing rows for this user then re-insert — simpler than diffing.
   const { error: delError } = await supabaseAdmin
     .from('user_interests')

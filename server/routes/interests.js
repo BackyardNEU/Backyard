@@ -39,6 +39,7 @@ router.get('/', async (req, res) => {
     subcategories: subMap.get(cat.id) || [],
   }));
 
+  res.set('Cache-Control', 'public, max-age=300');
   res.json(taxonomy);
 });
 

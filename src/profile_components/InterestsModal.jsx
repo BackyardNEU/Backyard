@@ -8,6 +8,7 @@ const MAX_SUBCATEGORIES = 3;
 export function InterestsModal({ onClose }) {
   const [taxonomy, setTaxonomy] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -38,6 +39,7 @@ export function InterestsModal({ onClose }) {
       } catch (err) {
         console.error('Failed to load interests:', err);
         setError('Failed to load interests. Please try again.');
+        setLoadError(true);
       } finally {
         setLoading(false);
       }
@@ -191,7 +193,7 @@ export function InterestsModal({ onClose }) {
             <button
               className="interests-save-btn duo-btn"
               onClick={handleSave}
-              disabled={saving || loading}
+              disabled={saving || loading || loadError}
               style={{ '--duo-shadow': '#1a1a1a' }}
             >
               {saving ? 'Saving…' : 'Save Interests'}

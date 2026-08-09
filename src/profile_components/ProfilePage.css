@@ -101,8 +101,23 @@
   line-height: 1.35;
 }
 
-.profile-setup-btn {
+.profile-btn-row {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
   margin-top: 8px;
+  flex-wrap: nowrap;
+}
+
+@media (max-width: 500px) {
+  .profile-btn-row {
+    flex-direction: column;
+    width: 100%;
+  }
+}
+
+.profile-setup-btn {
+  margin-top: 0;
   border: 1px solid #7a7a7a;
   background: #f7f7f7;
   color: #404040;

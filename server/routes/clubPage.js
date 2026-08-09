@@ -1,6 +1,9 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+
+const writeLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 60 });
 
 const router = express.Router();
 
@@ -328,7 +331,7 @@ router.get('/:clubId/interests', async (req, res) => {
 // PUT /api/clubs/:clubId/interests
 // Approved club accounts only. Upserts the club's category + subcategories.
 // Body: { category_id: uuid, subcategory_ids: uuid[] }  (max 2 subcategories)
-router.put('/:clubId/interests', requireAuth, async (req, res) => {
+router.put('/:clubId/interests', writeLimiter, requireAuth, async (req, res) => {
   const { clubId } = req.params;
   const { category_id, subcategory_ids } = req.body || {};
 
@@ -359,12 +362,68 @@ router.put('/:clubId/interests', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'Maximum 2 subcategories allowed' });
   }
 
+  // Validate that every subcategory ID actually belongs to the claimed category.
+  if (subcategory_ids.length > 0) {
+    const { data: validSubs, error: subError } = await supabaseAdmin
+      .from('interest_subcategories')
+      .select('id, category_id')
+      .in('id', subcategory_ids);
+
+    if (subError) {
+      const err = new Error(subError.message);
+      err.status = 502;
+      throw err;
+    }
+
+    const subCatMap = new Map((validSubs || []).map(s => [s.id, s.category_id]));
+    for (const subId of subcategory_ids) {
+      if (subCatMap.get(subId) !== category_id) {
+        return res.status(400).json({ error: 'A subcategory does not belong to the given category' });
+      }
+    }
+  }
+
   const { error } = await supabaseAdmin
     .from('club_interests')
     .upsert(
       { club_id: clubId, category_id, subcategory_ids },
       { onConflict: 'club_id' }
     );
+
+  if (error) {
+    const err = new Error(error.message);
+    err.status = 502;
+    throw err;
+  }
+
+  res.status(204).end();
+});
+
+// DELETE /api/clubs/:clubId/interests
+// Approved club accounts only. Removes the club's category assignment entirely.
+router.delete('/:clubId/interests', writeLimiter, requireAuth, async (req, res) => {
+  const { clubId } = req.params;
+
+  const { data: approved, error: approvedError } = await supabaseAdmin
+    .from('approved_club_accounts')
+    .select('user_id')
+    .eq('user_id', req.user.id)
+    .eq('club_id', clubId)
+    .maybeSingle();
+
+  if (approvedError) {
+    const err = new Error(approvedError.message);
+    err.status = 502;
+    throw err;
+  }
+  if (!approved) {
+    return res.status(403).json({ error: 'Not authorized for this club' });
+  }
+
+  const { error } = await supabaseAdmin
+    .from('club_interests')
+    .delete()
+    .eq('club_id', clubId);
 
   if (error) {
     const err = new Error(error.message);
