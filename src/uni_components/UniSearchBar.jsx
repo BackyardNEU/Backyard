@@ -1,7 +1,7 @@
 ﻿import React, {useState, useEffect} from 'react'
 import { apiFetch } from '../lib/api'
 import { useClubData } from '../context/useClubData'
-import {FaSearch, FaCalendarAlt} from 'react-icons/fa'
+import {FaSearch} from 'react-icons/fa'
 import './UniSearchBar.css'
 
 const CATEGORIES = [
@@ -26,7 +26,7 @@ const CATEGORIES = [
   { label: "Service", category: "service" },
 ];
 
-export const UniSearchBar = ({ setResults, university, calendarActive = false }) => {
+export const UniSearchBar = ({ setResults, university }) => {
 
   const [input, setInput] = useState("")
   const [menuOpen, setMenuOpen] = useState(false)
@@ -57,12 +57,20 @@ export const UniSearchBar = ({ setResults, university, calendarActive = false })
     setMenuOpen(false);
   };
 
-  const handleCalendarClick = () => {
-    setActiveCategory(null);
-    window.dispatchEvent(
-      new CustomEvent("backyard-category-select", { detail: { category: "calendar" } })
-    );
-  };
+  // The nav bar's Clubs and Calendar buttons clear the page's category filter,
+  // but this control keeps its own copy of that selection to render the label.
+  // Without this it goes on advertising a filter that is no longer applied —
+  // pick "Service", press Clubs, and the full list comes back while the button
+  // still reads "Service". Neither name is a real category, so nothing the
+  // menu itself dispatches is caught here.
+  useEffect(() => {
+    const handler = (e) => {
+      const category = e?.detail?.category;
+      if (category === "clubs" || category === "calendar") setActiveCategory(null);
+    };
+    window.addEventListener("backyard-category-select", handler);
+    return () => window.removeEventListener("backyard-category-select", handler);
+  }, []);
 
   const handleClick = () => {
     setIsInteracted(true);
@@ -192,15 +200,6 @@ useEffect(() => {
             </div>
           )}
         </div>
-
-        <button
-          className={`uni-calendar-btn${calendarActive ? ' active' : ''}`}
-          type="button"
-          onClick={handleCalendarClick}
-          aria-label="View events calendar"
-        >
-          <FaCalendarAlt />
-        </button>
     </div>
   )
 }

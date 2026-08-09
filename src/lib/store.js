@@ -11,10 +11,15 @@ export const useGlobalStore = create((set) => ({
   GlobalValue: false,
   lastPath: "/",
   unreadCount: 0,
+  // Which view UniversityPage is showing — read by NavBar (a sibling, global
+  // component) to light up the calendar/clubs icon, since that view lives in
+  // UniversityPage's own local state and isn't otherwise reachable from outside it.
+  calendarViewActive: false,
 
   setGlobalValue: (newValue) => set({ GlobalValue: newValue }),
   setLastPath: (path) => set({ lastPath: path }),
   setUnreadCount: (count) => set({ unreadCount: count }),
+  setCalendarViewActive: (value) => set({ calendarViewActive: value }),
 }));
 
 /*

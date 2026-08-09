@@ -2,30 +2,6 @@
    Shared login morph styles
    ================================ */
 
-/* --- Small state: circular button --- */
-.login-icon {
-  top: 1rem;
-  width: 2.9rem;
-  height: 2.9rem;
-  padding: 0;
-  border-radius: 50%;
-
-  cursor: pointer;
-}
-
-.logged-in-controls {
-  position: fixed;
-  top: 0.5rem;
-  right: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  z-index: 20;
-  color: rgb(255, 255, 255);
-
- 
-}
-
 .hamburger-menu-wrapper {
   position: relative;
 }
@@ -73,13 +49,6 @@
 
 .hamburger-item:hover {
   background: #f2f2f2;
-}
-
-.login-icon img {
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-  border-radius: 50%;
 }
 
 .logout-btn {
@@ -334,13 +303,6 @@
 }
 
 @media (max-width: 600px) {
-.login-icon img {
-  width: 1.5rem;
-  height: 1.5rem;
-  object-fit: cover;
-  border-radius: 50%;
-}
-
 .logout-btn {
   height: 1.5rem;
   padding: 0 0.85rem;
@@ -352,12 +314,5 @@
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-}
-.logged-in-controls{
-  gap:.5rem;
-  right: -1rem;
-  padding: 0rem 0rem;
-  top: 0rem;
-  
 }
 }
