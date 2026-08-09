@@ -1,7 +1,12 @@
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_KEY);
-const AUDIENCE_ID = process.env.RESEND_AUDIENCE_ID;
+// Resend replaced per-list "audiences" with a single account-level audience
+// that segments subdivide; the audiences API is now an alias for segments.
+// Contacts land in the account audience either way, so this is optional — it
+// only files them under a segment, and a stale value must not cost a signup.
+// RESEND_AUDIENCE_ID is still read so an existing deployment keeps working.
+const SEGMENT_ID = process.env.RESEND_SEGMENT_ID || process.env.RESEND_AUDIENCE_ID || '';
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '';
 
 const rateMap = new Map();
@@ -75,21 +80,27 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Please enter a valid email address.' });
   }
 
-  if (!AUDIENCE_ID) {
-    console.error('[subscribe] RESEND_AUDIENCE_ID not configured');
-    return res.status(500).json({ error: 'Something went wrong. Please try again.' });
-  }
-
   try {
     // The SDK resolves with { data, error } instead of throwing on an API
     // failure, so the error arrives here rather than in the catch below.
     // Without this check every rejected call fell through to a 200 and the
     // page celebrated a signup that was never recorded.
-    const { data, error } = await resend.contacts.create({
-      audienceId: AUDIENCE_ID,
+    let { data, error } = await resend.contacts.create({
       email: cleaned,
       unsubscribed: false,
+      ...(SEGMENT_ID ? { segments: [SEGMENT_ID] } : {}),
     });
+
+    // Getting the address is what matters; the segment is filing. If the
+    // segment is what Resend objected to, save the contact without it rather
+    // than lose a subscriber to a misconfigured id.
+    if (error && SEGMENT_ID && error.statusCode !== 409) {
+      console.error('[subscribe] segment rejected, retrying unsegmented:', error.name, error.message);
+      ({ data, error } = await resend.contacts.create({
+        email: cleaned,
+        unsubscribed: false,
+      }));
+    }
 
     if (error) {
       // Already subscribed is a success as far as the subscriber is
