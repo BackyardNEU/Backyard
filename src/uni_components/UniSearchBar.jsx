@@ -1,7 +1,8 @@
 ﻿import React, {useState, useEffect} from 'react'
 import { apiFetch } from '../lib/api'
 import { useClubData } from '../context/useClubData'
-import {FaSearch, FaCalendarAlt} from 'react-icons/fa'
+import { prefetchCalendar } from '../lib/calendarCache'
+import {FaSearch, FaCalendarAlt, FaTh, FaThLarge, FaSquare} from 'react-icons/fa'
 import './UniSearchBar.css'
 
 const CATEGORIES = [
@@ -25,7 +26,21 @@ const CATEGORIES = [
   { label: "Interests & Hobbies",  category: "interests_hobbies" },
 ];
 
-export const UniSearchBar = ({ setResults, university, calendarActive = false }) => {
+// Three densities, drawn as increasingly coarse grids so the control reads at a glance
+// without needing labels.
+const CARD_SIZE_OPTIONS = [
+  { value: 'small', label: 'Small cards', glyph: <FaTh /> },
+  { value: 'medium', label: 'Medium cards', glyph: <FaThLarge /> },
+  { value: 'large', label: 'Large cards', glyph: <FaSquare /> },
+];
+
+export const UniSearchBar = ({
+  setResults,
+  university,
+  calendarActive = false,
+  cardSize = 'medium',
+  onCardSizeChange,
+}) => {
 
   const [input, setInput] = useState("")
   const [menuOpen, setMenuOpen] = useState(false)
@@ -48,6 +63,13 @@ export const UniSearchBar = ({ setResults, university, calendarActive = false })
                   ];
   
 
+  const handleCalendarClick = () => {
+    setActiveCategory(null);
+    window.dispatchEvent(
+      new CustomEvent("backyard-category-select", { detail: { category: "calendar" } })
+    );
+  };
+
   const handleCategorySelect = (category) => {
     setActiveCategory(prev => prev === category ? null : category);
     window.dispatchEvent(
@@ -56,12 +78,20 @@ export const UniSearchBar = ({ setResults, university, calendarActive = false })
     setMenuOpen(false);
   };
 
-  const handleCalendarClick = () => {
-    setActiveCategory(null);
-    window.dispatchEvent(
-      new CustomEvent("backyard-category-select", { detail: { category: "calendar" } })
-    );
-  };
+  // The nav bar's Clubs and Calendar buttons clear the page's category filter,
+  // but this control keeps its own copy of that selection to render the label.
+  // Without this it goes on advertising a filter that is no longer applied —
+  // pick "Service", press Clubs, and the full list comes back while the button
+  // still reads "Service". Neither name is a real category, so nothing the
+  // menu itself dispatches is caught here.
+  useEffect(() => {
+    const handler = (e) => {
+      const category = e?.detail?.category;
+      if (category === "clubs" || category === "calendar") setActiveCategory(null);
+    };
+    window.addEventListener("backyard-category-select", handler);
+    return () => window.removeEventListener("backyard-category-select", handler);
+  }, []);
 
   const handleClick = () => {
     setIsInteracted(true);
@@ -103,36 +133,41 @@ useEffect(() => {
   
    
     useEffect(() => {
-    async function getClubs() {
-      if (input.trim() !== "") {
-        // Full Text Search + Exact Match via the backend search route
-        try {
-          const data = await apiFetch(
-            `/search?q=${encodeURIComponent(input)}&school=${encodeURIComponent(university)}`,
-            { auth: false }
-          );
-          console.log("NL result sample:", data[0]);
-          setClubs(data);
-          setResults(data);
-        } catch (err) {
-          console.error("Error fetching clubs via search:", err);
-        }
-      } else {
-        // Default state: no input. allData is already loaded by ClubDataProvider, so we
-        // just filter it client-side rather than burn a second round trip.
-        const data = allData.filter((c) => c.school === university).slice(0, 100);
-        setClubs(data);
-        setResults(data);
-      }
+    // No input: allData is already loaded by ClubDataProvider, so filter client-side
+    // immediately rather than burning a round trip or making the user wait on a debounce.
+    if (input.trim() === "") {
+      const data = allData.filter((c) => c.school === university).slice(0, 100);
+      setClubs(data);
+      setResults(data);
+      return;
     }
 
-    // Debounce the search: wait 300ms after the user stops typing before querying
-    const delayDebounceFn = setTimeout(() => {
-      getClubs();
-    }, 0);
+    let cancelled = false;
 
-    // Cleanup function clears the timeout if the input changes before 300ms
-    return () => clearTimeout(delayDebounceFn);
+    // Debounce the search: wait 300ms after the user stops typing before querying.
+    // This delay was previously 0, which defeated the debounce entirely — setTimeout(fn, 0)
+    // fires on the next macrotask, before the cleanup below can cancel it, so every
+    // keystroke issued its own /search request.
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        const data = await apiFetch(
+          `/search?q=${encodeURIComponent(input)}&school=${encodeURIComponent(university)}`,
+          { auth: false }
+        );
+        // A newer query superseded this one while it was in flight; dropping the result
+        // keeps a slow early response from overwriting fresher matches.
+        if (cancelled) return;
+        setClubs(data);
+        setResults(data);
+      } catch (err) {
+        if (!cancelled) console.error("Error fetching clubs via search:", err);
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(delayDebounceFn);
+    };
   }, [input, university, setResults, allData]);
 
   return (
@@ -187,10 +222,33 @@ useEffect(() => {
           )}
         </div>
 
+        {/* Card density, in the spirit of the Xbox library's icon-size control. */}
+        <div className="uni-size-toggle" role="radiogroup" aria-label="Club card size">
+          {CARD_SIZE_OPTIONS.map(({ value, label, glyph }) => (
+            <button
+              key={value}
+              type="button"
+              role="radio"
+              aria-checked={cardSize === value}
+              aria-label={label}
+              title={label}
+              className={`uni-size-btn${cardSize === value ? ' active' : ''}`}
+              onClick={() => onCardSizeChange?.(value)}
+            >
+              {glyph}
+            </button>
+          ))}
+        </div>
+
+        {/* Warmed on intent for the same reason club cards are: the panel used to fade in
+            showing "Loading events…" and swap to content once three requests returned. */}
         <button
           className={`uni-calendar-btn${calendarActive ? ' active' : ''}`}
           type="button"
           onClick={handleCalendarClick}
+          onMouseEnter={prefetchCalendar}
+          onFocus={prefetchCalendar}
+          onPointerDown={prefetchCalendar}
           aria-label="View events calendar"
         >
           <FaCalendarAlt />

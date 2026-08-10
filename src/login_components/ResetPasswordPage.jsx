@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import BorderedInput from "./BorderedInput";
 import "./form.css";
+import { Skeleton, SkeletonRegion } from '../components/Skeleton';
 
 function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -58,7 +59,10 @@ function ResetPasswordPage() {
       <div className="reset-page">
         <div className="reset-card">
           <img className="raccoon" src="/raccoon_pfp.png" alt="Backyard" />
-          <p>Loading...</p>
+          <SkeletonRegion label="Loading">
+            <Skeleton width="60%" height="1.4rem" style={{ margin: '0 auto 12px' }} />
+            <Skeleton height="2.4rem" radius={4} />
+          </SkeletonRegion>
         </div>
       </div>
     );

@@ -1,0 +1,36 @@
+.avatar {
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* Two classes rather than one, deliberately.
+   Call sites pass their own sizing class — .profile-image, .friend-avatar-img — and
+   several of those set `display: block`. At equal specificity the later stylesheet wins,
+   which left the initials as inline content in the top-left corner of the circle instead
+   of centred in it. .avatar.avatar-initials outranks a single class, so the flex
+   centering holds no matter which stylesheet loads last. */
+.avatar.avatar-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  user-select: none;
+  font-family: 'Barlow', sans-serif;
+  line-height: 1;
+  overflow: hidden;
+
+  /* The initials have to scale with the circle, and the circle is sized by whichever
+     class the call site passed — anywhere from 28px in a friend row to 150px on a
+     profile. Container queries let the text derive from the box itself, so a single rule
+     covers every size without each call site having to pass one. inline-size rather than
+     size: size containment would collapse the height of any avatar sized only by CSS. */
+  container-type: inline-size;
+}
+
+.avatar-initials > span {
+  font-size: 38cqw;
+  line-height: 1;
+}

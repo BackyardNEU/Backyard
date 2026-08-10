@@ -1,4 +1,8 @@
-.invite-generate-btn,
+.invite-generate-btn {
+  background: #EE3124;
+  color: #fff;
+}
+
 .invite-copy-btn {
   background: #2e4064;
   color: #Ece7e5;
@@ -14,6 +18,12 @@
 .invite-revoke-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.duo-btn-pill:has(+ .invite-generate-btn:disabled),
+.duo-btn-pill:has(+ .invite-copy-btn:disabled),
+.duo-btn-pill:has(+ .invite-revoke-btn:disabled) {
+  opacity: 0.5;
 }
 
 /* Standalone "Link revoked" confirmation — holds fully visible (no animation

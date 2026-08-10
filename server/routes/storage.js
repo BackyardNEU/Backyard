@@ -13,6 +13,17 @@ const imageModerator = process.env.CLOUD_VISION_API
     ? new ImageModerator(process.env.CLOUD_VISION_API)
     : null;
 
+// Without the key every upload is waved through unscanned. That is survivable in local
+// development but means no nudity detection at all in production, and previously it
+// happened silently — nothing distinguished "moderation passed" from "moderation never
+// ran". Say so loudly at boot so a missing Railway variable cannot go unnoticed.
+if (!imageModerator) {
+    console.warn(
+        '[moderation] CLOUD_VISION_API is not set — image moderation is DISABLED. ' +
+        'Every upload will be accepted without a nudity or violence scan.'
+    );
+}
+
 // Pattern: backend mints a short-lived signed upload URL, browser PUTs the
 // file bytes directly to Supabase Storage. We never proxy megabytes through
 // Express, but the service-role key stays on the server.
@@ -172,8 +183,10 @@ router.post('/verify-image', async (req, res) => {
         return res.status(400).json({ ok: false, error: 'File is not a valid image' });
     }
 
+    // Fails open rather than blocking uploads outright, but flags the response so the
+    // gap is visible rather than looking identical to a passing scan.
     if (!imageModerator) {
-        return res.json({ ok: true });
+        return res.json({ ok: true, scanned: false });
     }
 
     const result = await imageModerator.scan(publicUrl);

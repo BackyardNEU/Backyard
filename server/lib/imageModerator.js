@@ -9,11 +9,19 @@ const LIKELIHOOD = {
   VERY_LIKELY: 5,
 };
 
+// An image is rejected when its SafeSearch likelihood is >= the threshold.
+//
+// These were previously adult:2 and violence:2 — rejecting anything Vision rated merely
+// UNLIKELY, i.e. images it had already judged probably fine. On a campus social app that
+// means beach photos, gym selfies and Halloween costumes. Same policy as the text side:
+// block what is actually abusive, not what is merely suggestive.
 const DEFAULT_THRESHOLDS = {
-  adult: 2,
-  violence: 2,
-  racy: 3,
-  medical: 3,
+  adult: LIKELIHOOD.LIKELY,        // real nudity / explicit content
+  violence: LIKELIHOOD.LIKELY,     // gore, not a bruised knee or a fencing match
+  racy: LIKELIHOOD.VERY_LIKELY,    // the most false-positive-prone signal by far —
+                                   // swimwear, dance and athletics all score high
+  medical: null,                   // disabled: pre-med, nursing and EMS clubs post
+                                   // anatomy diagrams and first-aid demos legitimately
   spoof: null,
 };
 

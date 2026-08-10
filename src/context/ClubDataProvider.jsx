@@ -10,12 +10,20 @@ const initialState = {
     userId: null,
     friendMembershipMap: new Map(),
     friendsArray: [],
+    clubTopTags: new Map(),
+    // The signed-in user's own profile row. Fetched here rather than by each consumer:
+    // it was previously requested independently by ProfilePage, LoginMorph,
+    // CalendarModule, and three separate Settings sections, so simply opening Settings
+    // issued the same request three times.
+    profile: null
 };
 
 function reducer(state, action) {
     switch (action.type) {
         case 'FETCH_COMPLETE':
             return { ...state, ...action.payload, loading: false };
+        case 'SET_PROFILE':
+            return { ...state, profile: { ...(state.profile ?? {}), ...action.patch } };
         case 'SET_FAVORITES': {
             const next = new Set(state.favoritesCache);
             if (action.isAdding) {
@@ -46,6 +54,7 @@ export const ClubDataProvider = ({ children }) => {
         let newAllData = [];
         let newFavoritesCache = new Set();
         let newUserId = null;
+        let newProfile = null;
         let newFriendMembershipMap = new Map();
         let newFriendsArray = [];
 
@@ -68,10 +77,17 @@ export const ClubDataProvider = ({ children }) => {
             newUserId = userData.user.id;
 
             // Tier 2: needs the user, but favorites and friends are independent of each other.
-            const [favResult, friendsResult] = await Promise.allSettled([
+            const [favResult, friendsResult, profileResult] = await Promise.allSettled([
                 apiFetch('/me/favorites'),
                 apiFetch('/me/friends'),
+                apiFetch('/me/profile'),
             ]);
+
+            if (profileResult.status === 'fulfilled') {
+                newProfile = profileResult.value;
+            } else {
+                console.error("Error retrieving profile:", profileResult.reason);
+            }
 
             if (favResult.status === 'fulfilled') {
                 const favData = favResult.value;
@@ -87,6 +103,8 @@ export const ClubDataProvider = ({ children }) => {
                     id: f.id,
                     username: f.username,
                     avatar_url: f.avatar_url,
+                    first_name: f.first_name,
+                    last_name: f.last_name,
                 }));
                 for (const friend of friendProfiles || []) {
                     const clubs = friend.member_list || [];
@@ -96,6 +114,8 @@ export const ClubDataProvider = ({ children }) => {
                             id: friend.id,
                             username: friend.username,
                             avatar_url: friend.avatar_url,
+                            first_name: friend.first_name,
+                            last_name: friend.last_name,
                         });
                     }
                 }
@@ -113,6 +133,7 @@ export const ClubDataProvider = ({ children }) => {
                 userId: newUserId,
                 friendMembershipMap: newFriendMembershipMap,
                 friendsArray: newFriendsArray,
+                profile: newProfile,
             }
         });
     }, []);
@@ -120,6 +141,12 @@ export const ClubDataProvider = ({ children }) => {
     // called by favorite button handlers — single dispatch, one render
     const invalidateFavoritesCache = useCallback((clubId, isAdding) => {
         dispatch({ type: 'SET_FAVORITES', clubId, isAdding });
+    }, []);
+
+    // Lets a component that just PUT /me/profile push the result back into the shared
+    // copy, so every other consumer updates without another round trip.
+    const setProfile = useCallback((patch) => {
+        dispatch({ type: 'SET_PROFILE', patch });
     }, []);
 
     useEffect(() => {
@@ -133,6 +160,9 @@ export const ClubDataProvider = ({ children }) => {
         userId: state.userId,
         friendMembershipMap: state.friendMembershipMap,
         friendsArray: state.friendsArray,
+        clubTopTags: state.clubTopTags,
+        profile: state.profile,
+        setProfile,
         invalidateFavoritesCache,
         refetch: fetchAllData
     }), [state, invalidateFavoritesCache, fetchAllData]);

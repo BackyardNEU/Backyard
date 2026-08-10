@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { apiFetch } from '../lib/api'
 import { useGlobalStore } from '../lib/store'
@@ -9,6 +9,13 @@ import { ClubMembershipPanel } from './ClubMembershipPanel'
 import { FriendDiscoveryList } from './FriendDiscoveryList'
 import { PolaroidCards } from './PolaroidCards'
 import { InterestsModal } from './InterestsModal'
+import Avatar from '../components/Avatar'
+import { useClubData } from '../context/useClubData'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
+import { Skeleton, SkeletonCircle, SkeletonRegion } from '../components/Skeleton'
+import Logout from '../login_components/Logout'
+import { NotificationBell } from '../notifications/NotificationBell'
+import { DEFAULT_UNIVERSITY_PATH } from '../lib/university'
 
 //this is the landing page for our university club search, most of the info will go through here
 
@@ -18,10 +25,17 @@ import { InterestsModal } from './InterestsModal'
 export const ProfilePage = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null)
-  const [profile, setProfile] = useState(null)
-  const setStatus = useState('idle')
+  // Shared profile — this component used to fetch /me/profile itself, one of several
+  // copies of the same request.
+  const { profile, setProfile, loading } = useClubData()
+  useDocumentTitle('Backyard | Profile')
+  // These two were written as `const setStatus = useState('idle')`, which binds the whole
+  // [value, setter] tuple to the name — so calling setStatus('compressing') called an
+  // array and threw, killing avatar upload from this page before it started. Neither
+  // value is rendered, so the value half stays discarded.
+  const [, setStatus] = useState('idle')
   const [preview, setPreview]   = useState(null)
-  const setImageUrl = useState(null)
+  const [, setImageUrl] = useState(null)
   //const inputRef = useRef(null)
 
   const BUCKET = 'profile_images'
@@ -48,12 +62,8 @@ export const ProfilePage = () => {
 
       if (!authUser) return;
 
-      try {
-        const profileData = await apiFetch('/me/profile');
-        setProfile(profileData);
-      } catch (err) {
-        console.error('Error fetching profile data:', err);
-      }
+      // Profile itself comes from ClubDataProvider, which already loaded it — this
+      // component only needs to know whether anyone is signed in.
     }
 
     loadUser();
@@ -115,7 +125,7 @@ export const ProfilePage = () => {
           body: { [URL_COL]: publicUrl },
         });
 
-        setProfile(prev => ({ ...prev, [URL_COL]: publicUrl }))
+        setProfile({ [URL_COL]: publicUrl })
         setImageUrl(publicUrl)
         setStatus('success')
     }
@@ -128,16 +138,46 @@ export const ProfilePage = () => {
 
   const profileDescription = profile?.biography ?? ''
 
+  if (loading) {
+    return (
+      <SkeletonRegion className="ProfilePage" label="Loading your profile">
+        <div className='spacer' />
+        <div className='profile-header'>
+          <SkeletonCircle size={140} />
+          <div className="profile-copy">
+            <Skeleton width="240px" height="2.2rem" />
+            <Skeleton width="70%" height="1rem" style={{ marginTop: 10 }} />
+            <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+              <Skeleton width="130px" height="2.1rem" radius={999} />
+              <Skeleton width="100px" height="2.1rem" radius={999} />
+            </div>
+          </div>
+        </div>
+        <hr className="profile-divider" />
+        <div className="profile-section">
+          <Skeleton width="180px" height="1.4rem" />
+        </div>
+      </SkeletonRegion>
+    )
+  }
+
   return (
       <div className="ProfilePage">
         {interestsOpen && <InterestsModal onClose={() => setInterestsOpen(false)} />}
         <div className='spacer' />
         <div className='profile-header'>
           <label htmlFor="avatar-upload" className="profile-photo-btn">
-            <img
-              src={preview || profile?.avatar_url}
-              alt="Profile"
+            {/* Had no fallback at all: with no avatar_url the src was undefined, React
+                dropped the attribute, and the browser rendered a broken image — which
+                collapsed to almost nothing and dragged the whole header out of place.
+                Avatar shows initials instead. */}
+            <Avatar
+              url={preview || profile?.avatar_url}
+              firstName={profile?.first_name}
+              lastName={profile?.last_name}
+              username={profile?.username}
               className="profile-image"
+              alt="Your profile photo"
             />
           </label>
           <input type="file" accept="image/*" id="avatar-upload" hidden onChange={handleAvatarUpload} />
@@ -159,11 +199,24 @@ export const ProfilePage = () => {
               >
                 My Interests
               </button>
+              <button
+                type="button"
+                className="profile-setup-btn"
+                onClick={() => navigate('/settings')}
+              >
+                Settings
+              </button>
+              {user && (
+                <div className="profile-account-actions">
+                  <NotificationBell />
+                  <Logout />
+                </div>
+              )}
             </div>
           </div>
           <button
             className="profile-close-btn"
-            onClick={() => {navigate(/*lastPath && lastPath !== '/profile' ? lastPath : '/'*/ `/university/38500bfc-e606-46a7-840d-720b11ad2e8b`)}} //neu id
+            onClick={() => navigate(DEFAULT_UNIVERSITY_PATH)}
             aria-label="Close profile"
           >
             ×

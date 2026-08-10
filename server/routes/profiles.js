@@ -3,6 +3,7 @@ import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { checkMuted } from '../middleware/checkMuted.js';
 import textModerator from '../lib/textModerator.js';
+import { WILDCARD_TYPE } from '../notifications/decisionLayer.js';
 
 const router = express.Router();
 
@@ -21,6 +22,9 @@ export const PROFILE_WRITABLE = new Set([
     'school',
     'graduation_year',
     'major',
+    // Which format "Add to calendar" uses: 'ics' (universal) or 'google'. Set from the
+    // settings page. Without an entry here pickWritable would silently drop it.
+    'calendar_preference',
 ]);
 
 export function pickWritable(body) {
@@ -84,6 +88,19 @@ router.put('/profile', checkMuted, async (req, res) => {
 router.post('/profile', checkMuted, async (req, res) => {
     const patch = pickWritable(req.body);
 
+    // This route exists to guarantee a profile row on first login, and it upserts — so
+    // anything present in the body overwrites what is already stored. A caller passing a
+    // blank field therefore erases real data, which is exactly what AuthListener did on
+    // every auth state change.
+    //
+    // Empty values are dropped here rather than only fixed in the caller, because the
+    // damage is silent and permanent and any future caller would hit the same edge.
+    // PUT /profile is the update path and still accepts empty strings, so clearing a
+    // biography deliberately continues to work.
+    for (const key of Object.keys(patch)) {
+        if (typeof patch[key] === 'string' && patch[key].trim() === '') delete patch[key];
+    }
+
     const textCheck = textModerator.checkFields({
         biography: patch.biography,
         first_name: patch.first_name,
@@ -136,6 +153,69 @@ router.put('/membership', async (req, res) => {
         .from('profiles')
         .update({ member_list })
         .eq('id', req.user.id);
+
+    if (error) {
+        const err = new Error(error.message);
+        err.status = 502;
+        throw err;
+    }
+
+    res.status(204).end();
+});
+
+// ─── Notification preferences ────────────────────────────────────────────────────────
+// Rows in notification_preferences are negative overrides: no row means enabled. The
+// settings page offers per-channel master toggles rather than a type x channel matrix, so
+// it reads and writes only WILDCARD_TYPE rows, which decisionLayer applies to every type.
+
+// Only channels a user can meaningfully control. 'push' is excluded deliberately —
+// channels/push.js is a stub that returns 'skipped:not-implemented', so a toggle for it
+// would claim to do something it does not.
+const SETTABLE_CHANNELS = ['in_app', 'email'];
+
+router.get('/notification-preferences', async (req, res) => {
+    const { data, error } = await supabaseAdmin
+        .from('notification_preferences')
+        .select('channel, enabled')
+        .eq('user_id', req.user.id)
+        .eq('type', WILDCARD_TYPE);
+
+    if (error) {
+        const err = new Error(error.message);
+        err.status = 502;
+        throw err;
+    }
+
+    // Absence of a row means enabled, so start everything on and let rows turn things off.
+    const prefs = Object.fromEntries(SETTABLE_CHANNELS.map((c) => [c, true]));
+    for (const row of data || []) {
+        if (row.channel in prefs) prefs[row.channel] = row.enabled;
+    }
+
+    res.json(prefs);
+});
+
+router.put('/notification-preferences', async (req, res) => {
+    const body = req.body || {};
+
+    const updates = SETTABLE_CHANNELS
+        .filter((channel) => typeof body[channel] === 'boolean')
+        .map((channel) => ({
+            user_id: req.user.id,
+            type: WILDCARD_TYPE,
+            channel,
+            enabled: body[channel],
+        }));
+
+    if (updates.length === 0) {
+        return res.status(400).json({ error: 'No settable channels supplied' });
+    }
+
+    // Upsert rather than insert-or-delete: keeping an explicit `enabled: true` row is
+    // harmless, and it means re-enabling a channel does not depend on a delete succeeding.
+    const { error } = await supabaseAdmin
+        .from('notification_preferences')
+        .upsert(updates, { onConflict: 'user_id,type,channel' });
 
     if (error) {
         const err = new Error(error.message);

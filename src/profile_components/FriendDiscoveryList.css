@@ -33,7 +33,7 @@
   align-items: center;
   gap: 6px;
   padding: 14px 10px;
-  border-radius: 10px;
+  border-radius: 8px;
 }
 
 /* When a .friend-card is rendered as a <button> (clickable to open a profile),
@@ -86,7 +86,7 @@
   padding: 14px 10px;
   background: transparent;
   border: 1.5px dashed #bbb;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
   color: #666;
   font-family: "Barlow", sans-serif;
@@ -122,7 +122,7 @@
 
 .friends-modal {
   background: #fff;
-  border-radius: 16px;
+  border-radius: 0px;
   padding: 24px;
   width: 440px;
   max-width: 92vw;
@@ -169,7 +169,7 @@
 .friend-search-wrapper {
   width: 100%;
   height: 2.5rem;
-  border-radius: 20px;
+  border-radius: 8px;
   background-color: #fbfbfb;
   padding: 0 10px;
   display: flex;

@@ -40,6 +40,32 @@ const TAG_SYNONYMS = [
 
 const FILLER_RE = /\b(show me|find me|i want|i need|looking for|search for|give me|get me|list|clubs? for|clubs? about|clubs? that are|clubs? with|clubs? in|clubs?|organizations?|groups?|some|the|a|an|all|any|me|my|please|can you|could you|and|or)\b/gi;
 
+// Index of `phrase` in `text` only when it sits on word boundaries, so "art" does not
+// match inside "cartography". Returns -1 otherwise.
+function matchIndex(text, phrase) {
+  const idx = text.indexOf(phrase);
+  if (idx === -1) return -1;
+  const before = idx === 0 || /\W/.test(text[idx - 1]);
+  const after = idx + phrase.length >= text.length || /\W/.test(text[idx + phrase.length]);
+  return before && after ? idx : -1;
+}
+
+// Collects every matching phrase into `into` and returns the text with those matches
+// removed. Consuming as it goes is what makes longest-match-first meaningful: once
+// "computer science" is taken, the shorter "science" can no longer match the same words.
+function extractPhrases(text, phrases, valueKey, into) {
+  let residue = text;
+  for (const entry of phrases) {
+    const idx = matchIndex(residue, entry.phrase);
+    if (idx === -1) continue;
+    into.add(entry[valueKey]);
+    residue = (residue.slice(0, idx) + residue.slice(idx + entry.phrase.length))
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+  return residue;
+}
+
 class NLSearchParser {
   constructor() {
     this.categoryPhrases = [];
@@ -62,41 +88,32 @@ class NLSearchParser {
   parse(query) {
     if (!query || typeof query !== 'string') return null;
 
-    let text = query.slice(0, 200).toLowerCase().trim();
-
-    text = text.replace(FILLER_RE, ' ');
-    text = text.replace(/\s+/g, ' ').trim();
-
-    if (!text) return null;
+    // Filler is deliberately NOT stripped here. Several synonyms legitimately contain
+    // filler words — "book club", "mock trial" — and removing "club" up front made those
+    // phrases impossible to match at all.
+    const base = query.slice(0, 200).toLowerCase().trim().replace(/\s+/g, ' ');
+    if (!base) return null;
 
     const categories = new Set();
     const tags = new Set();
 
-    for (const { phrase, key } of this.categoryPhrases) {
-      const idx = text.indexOf(phrase);
-      if (idx !== -1) {
-        const before = idx === 0 || /\W/.test(text[idx - 1]);
-        const after = idx + phrase.length >= text.length || /\W/.test(text[idx + phrase.length]);
-        if (before && after) {
-          categories.add(key);
-          text = (text.slice(0, idx) + text.slice(idx + phrase.length)).replace(/\s+/g, ' ').trim();
-        }
-      }
-    }
+    // Both passes start from the same text. Each consumes only its own matches, which
+    // keeps longest-match-first exclusivity within a pass ("computer science" still beats
+    // "science"), while letting a phrase listed under both — "web dev" is a programming
+    // category *and* a Web Dev tag — register as each. Threading one shared residue
+    // through both passes meant whichever ran first swallowed the words outright.
+    const categoryResidue = extractPhrases(base, this.categoryPhrases, 'key', categories);
+    const tagResidue = extractPhrases(base, this.tagPhrases, 'tag', tags);
 
-    for (const { phrase, tag } of this.tagPhrases) {
-      const idx = text.indexOf(phrase);
-      if (idx !== -1) {
-        const before = idx === 0 || /\W/.test(text[idx - 1]);
-        const after = idx + phrase.length >= text.length || /\W/.test(text[idx + phrase.length]);
-        if (before && after) {
-          tags.add(tag);
-          text = (text.slice(0, idx) + text.slice(idx + phrase.length)).replace(/\s+/g, ' ').trim();
-        }
-      }
-    }
-
-    const keywords = text.replace(/\s+/g, ' ').trim();
+    // Keywords are the tokens neither pass claimed, with filler removed last.
+    const unclaimedByCategories = new Set(categoryResidue.split(' ').filter(Boolean));
+    const keywords = tagResidue
+      .split(' ')
+      .filter((token) => token && unclaimedByCategories.has(token))
+      .join(' ')
+      .replace(FILLER_RE, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
 
     if (categories.size === 0 && tags.size === 0 && !keywords) return null;
 

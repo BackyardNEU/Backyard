@@ -11,6 +11,7 @@ import thanksImage from "../assets/thanks.png"
 import ThanksPage from './ThanksPage';
 
 import "./ReviewPage.css"
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 export default function ReviewPage({clubId, onClose}) {
 
@@ -21,6 +22,7 @@ export default function ReviewPage({clubId, onClose}) {
     const [user_review, set_user_review] = useState('');
     const [user_title, set_user_title] = useState('');
     const [club, setClub] = useState(null);
+    useDocumentTitle(club?.club_name ? `Backyard | Review ${club.club_name}` : null);
     const [username, setUsername] = useState("");
     const [reviewPosted, setReviewPosted] = useState(false);
     const [sectionVisible, setSectionVisible] = useState(false);
@@ -101,16 +103,6 @@ export default function ReviewPage({clubId, onClose}) {
     const replaceImage = (imgId, newFile) => {
         setStagedImages((prev) => prev.map((img) => (img.id === imgId ? { ...img, file: newFile } : img)));
     };
-                const verification = await apiFetch('/storage/verify-image', {
-                    method: 'POST',
-                    body: { publicUrl },
-                });
-                if (!verification.ok) {
-                    throw new Error(verification.error || 'Image rejected by content policy');
-                }
-
-                urls.push(publicUrl);
-            }
 
     const reorderImages = (reorderedPreview) => {
         setStagedImages((prev) => reorderedPreview.map((p) => prev.find((img) => img.id === p.id)));
@@ -142,23 +134,14 @@ export default function ReviewPage({clubId, onClose}) {
         }
         if (!((user_review && user_title) || stagedImages.length > 0)) return;
 
-        for (let i = 0; i < badWords.length; i++) {
-            const regex = new RegExp(badWords[i], 'gi');
-            if (regex.test(user_review) || regex.test(user_title)) {
-                setWarning("Review contains harmful content. Please do not use derogatory or harmful speech.");
-                return;
-            }
+        const textCheck = textModerator.checkFields({
+            review_title: user_title,
+            review_text: user_review,
+        });
+        if (!textCheck.clean) {
+            setWarning(textCheck.message);
+            return;
         }
-        if (GlobalValue) {
-            if((user_review && user_title) || uploadedUrls.length > 0)  {
-                const textCheck = textModerator.checkFields({
-                    review_title: user_title,
-                    review_text: user_review,
-                });
-                if (!textCheck.clean) {
-                    setWarning(textCheck.message);
-                    return;
-                }
 
         setWarning("");
         setPosting(true);
@@ -166,6 +149,13 @@ export default function ReviewPage({clubId, onClose}) {
             const urls = [];
             for (const { file } of stagedImages) {
                 const publicUrl = await uploadImage(file);
+                const verification = await apiFetch('/storage/verify-image', {
+                    method: 'POST',
+                    body: { publicUrl },
+                });
+                if (!verification.ok) {
+                    throw new Error(verification.error || 'Image rejected by content policy');
+                }
                 urls.push(publicUrl);
             }
 

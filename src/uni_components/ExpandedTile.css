@@ -123,6 +123,16 @@
   animation: exp-heart-pop 0.25s ease forwards;
 }
 
+/* Shown when favoriting fails — a rate limit, or the request not going through. */
+.exp-fav-error {
+  color: #8a3b2f;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 14px;
+  text-transform: uppercase;
+  line-height: 1.15;
+  margin-top: 6px;
+}
+
 @keyframes exp-heart-pop {
   0% { transform: scale(1); }
   40% { transform: scale(1.35); }
@@ -140,6 +150,17 @@
   line-height: 1;
   z-index: 8300;
   padding: 4px 6px;
+}
+
+/* Editors: the close button lives at the end of .exp-editor-header instead
+   of floating fixed over the viewport corner. */
+.close-btn--header {
+  position: static;
+  top: auto;
+  right: auto;
+  z-index: auto;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .review-btn {
@@ -193,6 +214,10 @@
 .membership-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.duo-btn-pill:has(+ .membership-btn:disabled) {
+  opacity: 0.5;
 }
 
 .membership-btn.join {

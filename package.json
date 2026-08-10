@@ -20,7 +20,6 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@react-oauth/google": "^0.12.2",
     "@supabase/supabase-js": "^2.101.1",
-    "bad-words": "^4.0.0",
     "browser-image-compression": "^2.0.2",
     "colorthief": "^2.6.0",
     "concurrently": "^9.2.1",

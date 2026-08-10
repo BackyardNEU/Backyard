@@ -2,6 +2,7 @@ import express from 'express';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { NotificationService } from '../notifications/service.js';
+import { isBlockedBetween } from '../lib/blocks.js';
 
 const router = express.Router();
 router.use(requireAuth);
@@ -11,6 +12,13 @@ router.post('/', async (req, res) => {
   const { recipientId } = req.body || {};
   if (!recipientId) return res.status(400).json({ error: 'recipientId required' });
   if (recipientId === req.user.id) return res.status(400).json({ error: 'cannot send a request to yourself' });
+
+  // 404, matching GET /users/:id/profile — a distinct error here would tell the sender
+  // that the account exists and that a block is in place. Blocking someone must also
+  // stop them from re-requesting.
+  if (await isBlockedBetween(req.user.id, recipientId)) {
+    return res.status(404).json({ error: 'User not found' });
+  }
 
   const { data: request, error } = await supabaseAdmin
     .from('friend_requests')

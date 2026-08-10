@@ -1,56 +1,28 @@
-﻿import React, { useState, useMemo, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
+﻿import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import {
   startOfDay, addDays, format, isSameDay, parseISO,
   getDay, getDaysInMonth, isToday, isBefore,
 } from 'date-fns';
 import { apiFetch } from '../lib/api';
-import { supabase } from '../lib/supabase';
 import { useClubData } from '../context/useClubData';
+import { prefetchCalendar, readCalendar } from '../lib/calendarCache';
+import { Skeleton, SkeletonRegion } from '../components/Skeleton';
 import '../club_page_components/CalendarModule.css';
 import './CalendarPage.css';
+import './EventInfoRow.css';
+import PortraitTitle from './PortraitTitle';
 import treeImg from '/src/assets/tree.png';
 import borderImg from '../assets/border.svg';
 import borderHorizontalImg from '../assets/border-horizontal.svg';
+import minimizedPosterActiveIcon from '../assets/Minimized_poster_icon_active.png';
+import minimizedPosterInactiveIcon from '../assets/Minimized_poster_icon_inactive.png';
+import maximizedPosterActiveIcon from '../assets/Maximized_poster_icon_active.png';
+import maximizedPosterInactiveIcon from '../assets/Maximized_poster_icon_inactive.png';
 
 const WEEK_DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
-// Club name + event name title above the info card. Capped to 75% of the
-// card's width; if the text is wider than that, it becomes an infinite
-// right-to-left ticker — same measure-and-duplicate technique as
-// ClubMediaModule's .cm-poster-text marquee.
-function PortraitTitle({ text }) {
-  const wrapRef = useRef(null);
-  const copyRef = useRef(null);
-  const [marquee, setMarquee] = useState(false);
-  const [dur, setDur] = useState(20);
-
-  useLayoutEffect(() => {
-    const wrap = wrapRef.current;
-    const copy = copyRef.current;
-    if (!wrap || !copy) return;
-    const textW = copy.scrollWidth;
-    const over = textW > wrap.clientWidth + 1;
-    setMarquee(over);
-    if (over) setDur(Math.max(6, textW / 20));
-  }, [text]);
-
-  if (!text) return null;
-
-  return (
-    <div className="cal-portrait-title-wrap" ref={wrapRef}>
-      <div
-        className={`cal-portrait-title-track ${marquee ? 'cal-portrait-title-marquee-on' : ''}`}
-        style={{ '--cal-title-dur': `${dur}s` }}
-      >
-        <span ref={copyRef} className="cal-portrait-title-copy">{text}</span>
-        {marquee && <span className="cal-portrait-title-copy" aria-hidden="true">{text}</span>}
-      </div>
-    </div>
-  );
-}
-
 export function CalendarPage({ onClose }) {
-  const { allData } = useClubData();
+  const { allData, friendsArray, profile: viewerProfile } = useClubData();
   const clubImageById = useMemo(
     () => new Map(allData.map(club => [club.id, club.image_url])),
     [allData]
@@ -61,13 +33,47 @@ export function CalendarPage({ onClose }) {
   );
 
   const todayDate = startOfDay(new Date());
-  const [status, setStatus] = useState('loading'); // 'loading' | 'ready' | 'unauthed'
-  const [userId, setUserId] = useState(null);
 
-  const [weeklyEvents, setWeeklyEvents] = useState([]);
-  const [myRsvpSet, setMyRsvpSet] = useState(new Set());
+  // Warmed by prefetchCalendar when the calendar button was hovered. Read synchronously
+  // during render rather than in an effect — an effect runs after the first paint, so the
+  // panel would still flash "Loading events…" before swapping to content, which is the
+  // exact seam this removes.
+  const warmed = readCalendar();
+
+  const [status, setStatus] = useState(() => {
+    if (!warmed) return 'loading';
+    return warmed.userId ? 'ready' : 'unauthed';
+  });
+  const [userId, setUserId] = useState(() => warmed?.userId ?? null);
+
+  const [weeklyEvents, setWeeklyEvents] = useState(() => warmed?.events ?? []);
+  const [myRsvpSet, setMyRsvpSet] = useState(() => new Set(
+    (warmed?.rsvps ?? [])
+      .filter((r) => r.user_id === warmed?.userId)
+      .map((r) => r.event_id)
+  ));
+  const [weeklyRsvps, setWeeklyRsvps] = useState(() => warmed?.rsvps ?? []); // raw { user_id, event_id } rows, so friend RSVPs can be derived alongside myRsvpSet
+
+  // Same derivation ExpandedTile uses for a club page's "X is going" callouts —
+  // cross-reference the raw rsvp rows against the current user's friends list.
+  const weeklyFriendRsvpMap = useMemo(() => {
+    const friendIdSet = new Set(friendsArray.map(f => f.id));
+    const friendProfileMap = new Map(friendsArray.map(f => [f.id, f]));
+    const map = new Map();
+    for (const rsvp of weeklyRsvps) {
+      if (friendIdSet.has(rsvp.user_id)) {
+        if (!map.has(rsvp.event_id)) map.set(rsvp.event_id, []);
+        map.get(rsvp.event_id).push(friendProfileMap.get(rsvp.user_id));
+      }
+    }
+    return map;
+  }, [weeklyRsvps, friendsArray]);
 
   const [viewMode, setViewMode] = useState('week');
+  // Week-view-only: whether each event renders as a tall poster card or a
+  // shrunken single-line row. Toggled via the two icon buttons above the
+  // Week/Month button.
+  const [posterSize, setPosterSize] = useState('maximized'); // 'maximized' | 'minimized'
 
   const [displayYear, setDisplayYear] = useState(todayDate.getFullYear());
   const [displayMonth, setDisplayMonth] = useState(todayDate.getMonth() + 1);
@@ -76,7 +82,8 @@ export function CalendarPage({ onClose }) {
   const [nextMonthlyEvents, setNextMonthlyEvents] = useState([]);
   const [nextMonthlyMyRsvpSet, setNextMonthlyMyRsvpSet] = useState(new Set());
   const [monthlyLoading, setMonthlyLoading] = useState(false);
-  const [selectedDayInfo, setSelectedDayInfo] = useState(null); // { year, month, day } | null
+  // { type: 'month', year, month, day } | { type: 'week', date: Date } | null
+  const [selectedOverlay, setSelectedOverlay] = useState(null);
 
   const containerRef = useRef(null);
   const handleWheel = useCallback((e) => {
@@ -86,28 +93,37 @@ export function CalendarPage({ onClose }) {
   const handleMouseEnter = () => containerRef.current?.addEventListener('wheel', handleWheel, { passive: false });
   const handleMouseLeave = () => containerRef.current?.removeEventListener('wheel', handleWheel);
 
+  // Populates state when the calendar was opened without a prior hover (keyboard, touch,
+  // a very fast click). On a warm cache prefetchCalendar resolves from memory, so this
+  // re-sets the same values and nothing flashes.
+  //
+  // Freshness is handled at the edges rather than by refetching on every open: the TTL is
+  // 30s, RSVPs made inside this component update local state directly, and AuthListener
+  // drops the cache on sign-in and sign-out — which is the only case where the payload
+  // would otherwise belong to a different user.
   useEffect(() => {
+    let cancelled = false;
+
     async function init() {
-      const { data: authData } = await supabase.auth.getUser();
-      const user = authData?.user;
-      if (!user) { setStatus('unauthed'); return; }
-      setUserId(user.id);
-      try {
-        const events = await apiFetch('/events/weekly');
-        setWeeklyEvents(events || []);
-        if (events?.length) {
-          const ids = events.map(e => e.id);
-          const rsvps = await apiFetch(`/events/rsvps?eventIds=${ids.join(',')}`);
-          setMyRsvpSet(new Set(
-            (rsvps || []).filter(r => r.user_id === user.id).map(r => r.event_id)
-          ));
-        }
-      } catch (err) {
-        console.error('Failed to load weekly events:', err);
+      const data = await prefetchCalendar();
+      if (cancelled) return;
+
+      if (!data || !data.userId) {
+        setStatus('unauthed');
+        return;
       }
+
+      setUserId(data.userId);
+      setWeeklyEvents(data.events);
+      setWeeklyRsvps(data.rsvps);
+      setMyRsvpSet(new Set(
+        data.rsvps.filter((r) => r.user_id === data.userId).map((r) => r.event_id)
+      ));
       setStatus('ready');
     }
+
     init();
+    return () => { cancelled = true; };
   }, []);
 
   const weekDays = useMemo(() => {
@@ -127,14 +143,14 @@ export function CalendarPage({ onClose }) {
     const nextYear = nextDate.getFullYear();
     const nextMonthNum = nextDate.getMonth() + 1;
 
+    // One batched request instead of one per club. Fanning out client-side meant a user
+    // in N clubs fired 2N requests every time this view opened, which was a large part of
+    // what tripped the rate limiter.
     async function fetchClubEventsForMonth(memberList, year, month) {
-      const settled = await Promise.allSettled(
-        memberList.map(clubId =>
-          apiFetch(`/clubs/${clubId}/events/monthly?year=${year}&month=${month}`)
-            .then(evts => (evts || []).map(e => ({ ...e, club_id: clubId })))
-        )
+      const events = await apiFetch(
+        `/clubs/events/monthly-batch?clubIds=${memberList.join(',')}&year=${year}&month=${month}`
       );
-      return settled.filter(r => r.status === 'fulfilled').flatMap(r => r.value);
+      return events || [];
     }
 
     async function buildRsvpSet(events) {
@@ -147,8 +163,9 @@ export function CalendarPage({ onClose }) {
     async function fetchMonthly() {
       setMonthlyLoading(true);
       try {
-        const profile = await apiFetch('/me/profile');
-        const memberList = profile?.member_list || [];
+        // member_list comes from the shared profile; this used to be yet another
+        // /me/profile request, fired every time the month view opened.
+        const memberList = viewerProfile?.member_list || [];
         if (!memberList.length) {
           if (!cancelled) {
             setMonthlyEvents([]);
@@ -180,7 +197,7 @@ export function CalendarPage({ onClose }) {
     }
     fetchMonthly();
     return () => { cancelled = true; };
-  }, [viewMode, displayYear, displayMonth, userId]);
+  }, [viewMode, displayYear, displayMonth, userId, viewerProfile]);
 
   const handleWeeklyRsvp = async (eventId, isGoing) => {
     const event = weeklyEvents.find(e => e.id === eventId);
@@ -230,7 +247,7 @@ export function CalendarPage({ onClose }) {
     const d = new Date(displayYear, displayMonth - 1 + delta, 1);
     setDisplayYear(d.getFullYear());
     setDisplayMonth(d.getMonth() + 1);
-    setSelectedDayInfo(null);
+    setSelectedOverlay(null);
   }
 
   function getMonthGrid(year, month) {
@@ -259,20 +276,36 @@ export function CalendarPage({ onClose }) {
   const cells = getMonthGrid(displayYear, displayMonth);
   const nextCells = getMonthGrid(nextYear, nextMonthNum);
 
-  const isSelectedInNextMonth = selectedDayInfo && selectedDayInfo.year === nextYear && selectedDayInfo.month === nextMonthNum;
-  const selectedDayEvents = selectedDayInfo
-    ? (isSelectedInNextMonth
-        ? (nextMonthlyEventsByDay.get(selectedDayInfo.day) || [])
-        : (monthlyEventsByDay.get(selectedDayInfo.day) || []))
-    : [];
-  const selectedDayRsvpSet = isSelectedInNextMonth ? nextMonthlyMyRsvpSet : monthlyMyRsvpSet;
-  const selectedDayRsvpHandler = isSelectedInNextMonth ? handleNextMonthlyRsvp : handleMonthlyRsvp;
+  const isWeekOverlay = selectedOverlay?.type === 'week';
+  const isSelectedInNextMonth = selectedOverlay?.type === 'month' && selectedOverlay.year === nextYear && selectedOverlay.month === nextMonthNum;
+  const selectedDayEvents = !selectedOverlay
+    ? []
+    : isWeekOverlay
+      ? (weekDays.find(d => isSameDay(d.date, selectedOverlay.date))?.events || [])
+      : (isSelectedInNextMonth
+          ? (nextMonthlyEventsByDay.get(selectedOverlay.day) || [])
+          : (monthlyEventsByDay.get(selectedOverlay.day) || []));
+  const selectedDayFriendRsvpMap = isWeekOverlay ? weeklyFriendRsvpMap : new Map();
+  const selectedDayRsvpSet = isWeekOverlay ? myRsvpSet : (isSelectedInNextMonth ? nextMonthlyMyRsvpSet : monthlyMyRsvpSet);
+  const selectedDayRsvpHandler = isWeekOverlay ? handleWeeklyRsvp : (isSelectedInNextMonth ? handleNextMonthlyRsvp : handleMonthlyRsvp);
+  const selectedOverlayDate = !selectedOverlay
+    ? null
+    : isWeekOverlay
+      ? selectedOverlay.date
+      : new Date(selectedOverlay.year, selectedOverlay.month - 1, selectedOverlay.day);
 
   if (status === 'loading') {
     return (
-      <div className="calpg-card">
-        <p className="cal-loading">Loading events…</p>
-      </div>
+      <SkeletonRegion className="calpg-card" label="Loading events">
+        <div className="calendar-container">
+          {Array.from({ length: 7 }, (_, i) => (
+            <div key={i} className="cal-day-col">
+              <Skeleton width="60%" height="1rem" style={{ margin: '0 auto 12px' }} />
+              <Skeleton height="9rem" radius={4} />
+            </div>
+          ))}
+        </div>
+      </SkeletonRegion>
     );
   }
 
@@ -327,29 +360,71 @@ export function CalendarPage({ onClose }) {
                 {day.events.length === 0 ? (
                   <p>No events</p>
                 ) : (
-                  day.events.map(event => (
-                    <div key={event.id} className="calendar-event">
-                      {event.image_url && <img className="club-img" src={event.image_url} alt="" />}
-                      <div className="club-name">{event.club_name}</div>
-                      <div className="event-description">
-                        <p>about<span className="club-info">{event.event_description}</span></p>
-                      </div>
-                      <div>
-                        <span>time </span>
-                        <span className="club-info">
-                          {format(parseISO(event.start_time), 'h:mm a')} – {format(parseISO(event.end_time), 'h:mm a')}
-                        </span>
-                      </div>
-                      {userId && event.club_id && (
-                        <button
-                          className="rsvp-button"
-                          onClick={() => handleWeeklyRsvp(event.id, myRsvpSet.has(event.id))}
-                        >
-                          {myRsvpSet.has(event.id) ? 'Going ✓' : "I'm going!"}
-                        </button>
-                      )}
-                    </div>
-                  ))
+                  day.events.map(event => {
+                    const clubName = event.club_name || clubNameById.get(event.club_id) || '';
+                    const eventName = event.event_name || '';
+                    const titleText = clubName && eventName
+                      ? `${clubName} • ${eventName}`
+                      : (clubName || eventName);
+                    const friends = weeklyFriendRsvpMap.get(event.id);
+                    const posterUrl = event.event_image_url || event.image_url || clubImageById.get(event.club_id);
+                    const isMinimized = posterSize === 'minimized';
+                    return (
+                      <button
+                        type="button"
+                        key={event.id}
+                        className={`calendar-event${isMinimized ? ' calendar-event--minimized' : ''}`}
+                        onClick={() => setSelectedOverlay({ type: 'week', date: day.date })}
+                      >
+                        {isMinimized ? (
+                          <div className="calendar-event-min-row">
+                            <img src={borderImg} alt="" className="cal-portrait-card-border cal-portrait-card-border-left" />
+                            <img src={borderImg} alt="" className="cal-portrait-card-border cal-portrait-card-border-right" />
+                            <div
+                              className="cal-portrait-card-border-h cal-portrait-card-border-h-top"
+                              style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+                            />
+                            <div
+                              className="cal-portrait-card-border-h cal-portrait-card-border-h-bottom"
+                              style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+                            />
+                            <img
+                              src={posterUrl || '/raccoon_pfp.png'}
+                              alt=""
+                              className={`calendar-event-min-thumb${posterUrl ? '' : ' calendar-event-min-thumb--default'}`}
+                            />
+                            <PortraitTitle text={titleText} />
+                          </div>
+                        ) : (
+                          <div className="cal-portrait-img-wrap">
+                            <img src={borderImg} alt="" className="cal-portrait-card-border cal-portrait-card-border-left" />
+                            <img src={borderImg} alt="" className="cal-portrait-card-border cal-portrait-card-border-right" />
+                            <div
+                              className="cal-portrait-card-border-h cal-portrait-card-border-h-top"
+                              style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+                            />
+                            <div
+                              className="cal-portrait-card-border-h cal-portrait-card-border-h-bottom"
+                              style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+                            />
+                            <img
+                              src={posterUrl || '/raccoon_pfp.png'}
+                              alt=""
+                              className={`cal-portrait-img${posterUrl ? '' : ' cal-portrait-img--default'}`}
+                            />
+                            <PortraitTitle text={titleText} />
+                            {friends && friends.length > 0 && (
+                              <p className="friend-rsvp-callout">
+                                {friends.length === 1
+                                  ? `${friends[0].username} is going`
+                                  : `${friends[0].username} and ${friends.length - 1} ${friends.length - 1 === 1 ? 'other' : 'others'} you know are going`}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })
                 )}
               </div>
             ))}
@@ -357,7 +432,9 @@ export function CalendarPage({ onClose }) {
         )}
         {viewMode === 'month' && (
           monthlyLoading ? (
-            <p className="cal-loading">Loading…</p>
+            <SkeletonRegion label="Loading month">
+              <Skeleton height="14rem" radius={4} />
+            </SkeletonRegion>
           ) : (
             <div className="calpg-align-row calpg-dual-grid-row">
               <div className="cal-grid calpg-grid-panel">
@@ -366,7 +443,7 @@ export function CalendarPage({ onClose }) {
                   <div
                     key={i}
                     className={`cal-day-cell${dayNum ? ` ${getDayClass(displayYear, displayMonth, dayNum, monthlyEventsByDay)}` : ' cal-day-empty'}`}
-                    onClick={dayNum && monthlyEventsByDay.has(dayNum) ? () => setSelectedDayInfo({ year: displayYear, month: displayMonth, day: dayNum }) : undefined}
+                    onClick={dayNum && monthlyEventsByDay.has(dayNum) ? () => setSelectedOverlay({ type: 'month', year: displayYear, month: displayMonth, day: dayNum }) : undefined}
                   >
                     {dayNum || ''}
                   </div>
@@ -379,7 +456,7 @@ export function CalendarPage({ onClose }) {
                   <div
                     key={i}
                     className={`cal-day-cell${dayNum ? ` ${getDayClass(nextYear, nextMonthNum, dayNum, nextMonthlyEventsByDay)}` : ' cal-day-empty'}`}
-                    onClick={dayNum && nextMonthlyEventsByDay.has(dayNum) ? () => setSelectedDayInfo({ year: nextYear, month: nextMonthNum, day: dayNum }) : undefined}
+                    onClick={dayNum && nextMonthlyEventsByDay.has(dayNum) ? () => setSelectedOverlay({ type: 'month', year: nextYear, month: nextMonthNum, day: dayNum }) : undefined}
                   >
                     {dayNum || ''}
                   </div>
@@ -389,12 +466,12 @@ export function CalendarPage({ onClose }) {
           )
         )}
 
-        {selectedDayInfo !== null && (
-          <div className="cal-overlay-backdrop" onClick={() => setSelectedDayInfo(null)}>
+        {selectedOverlay !== null && (
+          <div className="cal-overlay-backdrop" onClick={() => setSelectedOverlay(null)}>
             <div className="cal-overlay-portrait" onClick={e => e.stopPropagation()}>
-              <button className="cal-overlay-close" onClick={() => setSelectedDayInfo(null)}>✕</button>
+              <button className="cal-overlay-close" onClick={() => setSelectedOverlay(null)}>✕</button>
               <h2 className="cal-overlay-date">
-                {format(new Date(selectedDayInfo.year, selectedDayInfo.month - 1, selectedDayInfo.day), 'EEE d').toUpperCase()}
+                {format(selectedOverlayDate, 'EEE d').toUpperCase()}
               </h2>
               <div className="cal-portrait-scroll">
                 {selectedDayEvents.map(event => {
@@ -403,6 +480,8 @@ export function CalendarPage({ onClose }) {
                   const titleText = clubName && eventName
                     ? `${clubName} • ${eventName}`
                     : (clubName || eventName);
+                  const friends = selectedDayFriendRsvpMap.get(event.id);
+                  const posterUrl = event.event_image_url || event.image_url || clubImageById.get(event.club_id);
                   return (
                   <div key={event.id} className="cal-portrait-event">
                     <div className="cal-portrait-img-wrap">
@@ -413,9 +492,9 @@ export function CalendarPage({ onClose }) {
                         style={{ backgroundImage: `url(${borderHorizontalImg})` }}
                       />
                       <img
-                        src={event.event_image_url || event.image_url || clubImageById.get(event.club_id) || '/raccoon_pfp.png'}
+                        src={posterUrl || '/raccoon_pfp.png'}
                         alt="Event"
-                        className={`cal-portrait-img${event.event_image_url ? '' : ' cal-portrait-img--default'}`}
+                        className={`cal-portrait-img${posterUrl ? '' : ' cal-portrait-img--default'}`}
                       />
                     </div>
                     <div className="cal-portrait-info">
@@ -444,6 +523,13 @@ export function CalendarPage({ onClose }) {
                           <span className="cal-info-value">{event.event_description}</span>
                         </p>
                       )}
+                      {friends && friends.length > 0 && (
+                        <p className="friend-rsvp-callout">
+                          {friends.length === 1
+                            ? `${friends[0].username} is going`
+                            : `${friends[0].username} and ${friends.length - 1} ${friends.length - 1 === 1 ? 'other' : 'others'} you know are going`}
+                        </p>
+                      )}
                       {userId && event.club_id && (
                         <button
                           className="rsvp-button"
@@ -461,6 +547,29 @@ export function CalendarPage({ onClose }) {
           </div>
         )}
       </div>
+
+      {viewMode === 'week' && (
+        <div className="calpg-poster-size-toggle">
+          <button
+            type="button"
+            className="calpg-poster-size-btn"
+            aria-label="Minimized poster view"
+            aria-pressed={posterSize === 'minimized'}
+            onClick={() => setPosterSize('minimized')}
+          >
+            <img src={posterSize === 'minimized' ? minimizedPosterActiveIcon : minimizedPosterInactiveIcon} alt="" />
+          </button>
+          <button
+            type="button"
+            className="calpg-poster-size-btn"
+            aria-label="Maximized poster view"
+            aria-pressed={posterSize === 'maximized'}
+            onClick={() => setPosterSize('maximized')}
+          >
+            <img src={posterSize === 'maximized' ? maximizedPosterActiveIcon : maximizedPosterInactiveIcon} alt="" />
+          </button>
+        </div>
+      )}
 
       <button
         className="calpg-toggle-btn"

@@ -1,0 +1,26 @@
+/* where / when / about rows — label in a lighter weight, value in a
+   lighter-still all-caps weight, separated by a small gap. Shared between
+   the calendar lightbox card and the add-event-card's expanded view. */
+.cal-info-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.cal-info-label {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 400;
+  font-size: 1.2rem;
+  color: #1a1a1a;
+  flex-shrink: 0;
+}
+
+.cal-info-value {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 300;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  color: #1a1a1a;
+}

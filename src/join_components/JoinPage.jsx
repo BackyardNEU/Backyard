@@ -4,12 +4,16 @@ import { supabase } from '../lib/supabase';
 import { apiFetch } from '../lib/api';
 import Form from '../login_components/form';
 import './JoinPage.css';
+import { Skeleton, SkeletonRegion } from '../components/Skeleton';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
+import { DEFAULT_UNIVERSITY_PATH } from '../lib/university';
 
 export default function JoinPage() {
   const { token } = useParams();
   const navigate = useNavigate();
 
   const [invite, setInvite] = useState(null);
+  useDocumentTitle(invite?.club_name ? `Backyard | Join ${invite.club_name}` : null);
   const [inviteError, setInviteError] = useState(null);
   const [inviteLoading, setInviteLoading] = useState(true);
 
@@ -19,7 +23,7 @@ export default function JoinPage() {
   const [redeemState, setRedeemState] = useState(null); // null | 'loading' | 'success' | 'already' | string (error)
   const [isEditorGrant, setIsEditorGrant] = useState(false);
 
-  const neuID = '/university/38500bfc-e606-46a7-840d-720b11ad2e8b'
+  const neuID = DEFAULT_UNIVERSITY_PATH
 
   // Store token so AuthCallbackPage and ProfileSetupPage can redirect back here after auth
   useEffect(() => {
@@ -80,7 +84,11 @@ export default function JoinPage() {
     return (
       <div className="join-page">
         <div className="join-card">
-          <p className="join-loading">Loading...</p>
+          <SkeletonRegion label="Loading invite">
+            <Skeleton width="70%" height="1.8rem" style={{ margin: '0 auto 14px' }} />
+            <Skeleton width="90%" height="1rem" style={{ margin: '0 auto 8px' }} />
+            <Skeleton width="150px" height="2.4rem" radius={999} style={{ margin: '18px auto 0' }} />
+          </SkeletonRegion>
         </div>
       </div>
     );

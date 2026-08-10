@@ -3,6 +3,7 @@ import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { checkMuted } from '../middleware/checkMuted.js';
 import textModerator from '../lib/textModerator.js';
+import { getBlockedIds, filterBlocked } from '../lib/blocks.js';
 
 const router = express.Router();
 
@@ -46,7 +47,11 @@ router.get('/rsvps', async (req, res) => {
         throw err;
     }
 
-    res.json(data);
+    // Strip blocked users before the payload leaves the server. Filtering GET /me/friends
+    // already removes them from the "X is going" callouts, which are computed client-side,
+    // but their raw user_id would still be sitting in this response.
+    const blockedIds = await getBlockedIds(req.user.id);
+    res.json(filterBlocked(data, blockedIds, (r) => r.user_id));
 });
 
 // Server-side validation — the frontend does this too, but never trust it.
@@ -103,21 +108,28 @@ async function requireClubMembershipForEvent(req, res) {
     return existing;
 }
 
-router.post('/', async (req, res) => {
-    const validationError = validateEvent(req.body);
-    if (validationError) return res.status(400).json({ error: validationError });
-
-    const { clubId, clubName, eventName, description, where, startTime, endTime, imageUrl, isMembersOnly } = req.body;
 router.post('/', checkMuted, async (req, res) => {
     const validationError = validateEvent(req.body);
     if (validationError) return res.status(400).json({ error: validationError });
 
-    const textCheck = textModerator.check(req.body.description);
+    // event_name and where are written to club_events and render prominently on the
+    // calendar, but only description used to be moderated — leaving two user-controlled
+    // text fields unchecked.
+    const textCheck = textModerator.checkFields({
+        description: req.body.description,
+        event_name: req.body.eventName,
+        where: req.body.where,
+    });
     if (!textCheck.clean) {
-        return res.status(400).json({ error: textCheck.message });
+        return res.status(400).json({ error: textCheck.message, field: textCheck.field });
     }
 
-    const { clubId, clubName, description, startTime, endTime, imageUrl } = req.body;
+    const {
+        clubId, clubName, description, startTime, endTime, imageUrl,
+        // eventName, where and isMembersOnly are used below but were missing from this
+        // destructure, so every POST threw ReferenceError before reaching the insert.
+        eventName, where, isMembersOnly,
+    } = req.body;
 
     const { data: profile } = await supabaseAdmin
         .from('profiles')
@@ -157,9 +169,20 @@ router.post('/', checkMuted, async (req, res) => {
     res.status(201).json(data);
 });
 
-router.put('/:eventId', async (req, res) => {
+router.put('/:eventId', checkMuted, async (req, res) => {
     const validationError = validateEventFields(req.body);
     if (validationError) return res.status(400).json({ error: validationError });
+
+    // The edit path had no moderation and no mute check at all, so a member could post a
+    // clean event and immediately edit it to say anything.
+    const textCheck = textModerator.checkFields({
+        description: req.body.description,
+        event_name: req.body.eventName,
+        where: req.body.where,
+    });
+    if (!textCheck.clean) {
+        return res.status(400).json({ error: textCheck.message, field: textCheck.field });
+    }
 
     const existing = await requireClubMembershipForEvent(req, res);
     if (!existing) return;
@@ -210,7 +233,6 @@ router.delete('/:eventId', async (req, res) => {
     res.status(204).end();
 });
 
-router.post('/:eventId/rsvp', async (req, res) => {
 router.post('/:eventId/rsvp', checkMuted, async (req, res) => {
     const { error } = await supabaseAdmin
         .from('attendees')

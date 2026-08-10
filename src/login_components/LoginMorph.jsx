@@ -2,35 +2,25 @@
 import { useState, useEffect } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
-import Logout from "./Logout";
-import { NotificationBell } from "../notifications/NotificationBell";
 import Form from "./form";
 import ForgotPasswordForm from "./ForgotPasswordForm";
 import "./LoginMorph.css";
 import { useGlobalStore } from "../lib/store";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { apiFetch } from "../lib/api";
 import borderImg from '/src/assets/border-green.svg';
 import borderHorizontalImg from '/src/assets/border-horizontal-green.svg';
 
+// The compact trigger (avatar/login icon) now lives in NavBar, sharing this
+// component's layoutId="login" so the icon-to-card morph still animates —
+// LoginMorph itself only owns the expanded login/signup/forgot-password card.
 function LoginMorph({ open, setOpen }) {
-  let GlobalValue = useGlobalStore((state) => state.GlobalValue);
   const setLastPath = useGlobalStore((state) => state.setLastPath);
   const navigate = useNavigate();
   const location = useLocation();
-  const isProfilePage = location.pathname === '/profile';
   const [view, setView] = useState("login");
-  const [avatarUrl, setAvatarUrl] = useState(null);
   const [signupFirstName, setSignupFirstName] = useState("");
   const [typedGreeting, setTypedGreeting] = useState("");
-
-  useEffect(() => {
-    if (!GlobalValue) { setAvatarUrl(null); return; }
-    apiFetch('/me/profile')
-      .then((profile) => setAvatarUrl(profile?.avatar_url))
-      .catch(() => {});
-  }, [GlobalValue]);
 
   useEffect(() => {
     if (!open) setView("login");
@@ -55,11 +45,6 @@ function LoginMorph({ open, setOpen }) {
     }, 60);
     return () => clearInterval(timer);
   }, [signupFirstName]);
-
-  const handleProfileClick = () => {
-    setOpen(false);
-    navigate("/profile");
-  };
 
   const handleAuth = (flow) => {
     setOpen(false);
@@ -95,19 +80,6 @@ function LoginMorph({ open, setOpen }) {
 
   return (
     <AnimatePresence>
-      {!open && !isProfilePage && (
-        <div className="logged-in-controls">
-          {GlobalValue && <Logout />}
-          {GlobalValue && <NotificationBell />}
-          <motion.button
-            layoutId="login"
-            className="login-icon"
-            onClick={GlobalValue ? handleProfileClick : () => setOpen(true)}
-          >
-            <img src={avatarUrl || "/raccoon_pfp.png"} alt={GlobalValue ? "Profile" : "Login"} />
-          </motion.button>
-        </div>
-      )}
       {open && (
         <motion.div
           layoutId="login"
