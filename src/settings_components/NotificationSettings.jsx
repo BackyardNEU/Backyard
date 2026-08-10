@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { apiFetch } from '../lib/api'
+import { cachedFetch, readCached, writeCached } from '../lib/queryCache'
+import { Skeleton, SkeletonRegion } from '../components/Skeleton'
 
 // Per-channel master toggles. The backend stores these as `type = '*'` wildcard rows so
 // they cover notification types added later — a row per known type would silently miss
@@ -7,21 +9,25 @@ import { apiFetch } from '../lib/api'
 //
 // 'push' is deliberately absent: that channel is a stub returning
 // 'skipped:not-implemented', so offering a toggle would be a lie.
+const CACHE_KEY = 'me:notification-prefs'
+
 const CHANNELS = [
     { key: 'in_app', label: 'In-app', hint: 'The bell in the corner.' },
     { key: 'email', label: 'Email', hint: 'Sent to your account email.' },
 ]
 
 export const NotificationSettings = () => {
-    const [prefs, setPrefs] = useState(null)
-    const [loading, setLoading] = useState(true)
+    // Seeded from cache, so reopening Settings shows the toggles already set rather than
+    // a skeleton for something that has not changed.
+    const [prefs, setPrefs] = useState(() => readCached(CACHE_KEY))
+    const [loading, setLoading] = useState(() => readCached(CACHE_KEY) === null)
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState(null)
 
     useEffect(() => {
         let cancelled = false
 
-        apiFetch('/me/notification-preferences')
+        cachedFetch(CACHE_KEY, () => apiFetch('/me/notification-preferences'))
             .then((data) => { if (!cancelled) setPrefs(data) })
             .catch((err) => {
                 if (cancelled) return
@@ -46,6 +52,9 @@ export const NotificationSettings = () => {
                 method: 'PUT',
                 body: { [channel]: next },
             })
+            // Write the new value through rather than invalidating — the next visit is
+            // then both instant and correct.
+            writeCached(CACHE_KEY, { ...previous, [channel]: next })
         } catch (err) {
             console.error('Error saving notification preference:', err)
             setPrefs(previous)
@@ -57,10 +66,13 @@ export const NotificationSettings = () => {
 
     if (loading) {
         return (
-            <section className="settings-section">
+            <SkeletonRegion className="settings-section" label="Loading notification settings">
                 <h2 className="profile-divider-header">Notifications</h2>
-                <p className="settings-status">Loading…</p>
-            </section>
+                <div className="settings-toggle-group">
+                    <Skeleton width="260px" height="1.1rem" />
+                    <Skeleton width="260px" height="1.1rem" />
+                </div>
+            </SkeletonRegion>
         )
     }
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useProfileForm } from '../profile_components/useProfileForm'
 import { ProfileFields } from '../profile_components/ProfileFields'
+import { Skeleton, SkeletonCircle, SkeletonRegion } from '../components/Skeleton'
 
 // Edit your profile without going through onboarding. Same fields, same uploads, same
 // moderation — useProfileForm carries all of it.
@@ -20,10 +21,21 @@ export const ProfileSettings = () => {
 
     if (form.loading) {
         return (
-            <section className="settings-section">
+            <SkeletonRegion className="settings-section" label="Loading profile">
                 <h2 className="profile-divider-header">Profile</h2>
-                <p className="settings-status">Loading…</p>
-            </section>
+                <div className="settings-form">
+                    <Skeleton width="60px" height="0.8rem" />
+                    <Skeleton height="2.4rem" radius={4} />
+                    <Skeleton width="90px" height="0.8rem" />
+                    <Skeleton height="2.4rem" radius={4} />
+                    <SkeletonCircle size={96} />
+                    <Skeleton width="120px" height="0.8rem" />
+                    <Skeleton height="6rem" radius={4} />
+                    <div className="settings-actions">
+                        <Skeleton width="130px" height="2.2rem" radius={999} />
+                    </div>
+                </div>
+            </SkeletonRegion>
         )
     }
 

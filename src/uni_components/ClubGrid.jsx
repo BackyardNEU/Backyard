@@ -7,8 +7,10 @@ import { apiFetch } from '../lib/api';
 import { motion } from "framer-motion";
 import { useGlobalStore } from "../lib/store";
 import { useClubData } from '../context/useClubData';
+import { prefetchClubPage } from '../lib/clubPageCache';
 //import paperTexture from '/src/assets/white-paper-texture.jpg';
 import posterPin from '/src/assets/poster_pin.png';
+import Avatar from '../components/Avatar';
 const ClubGridCard = ({ result, onExpand, hideHeart, hidePins }) => {
   const [animating, setAnimating] = useState(false);
   const [favError, setFavError] = useState(null);
@@ -56,6 +58,12 @@ const ClubGridCard = ({ result, onExpand, hideHeart, hidePins }) => {
   const handleExpand = () => {
     if (onExpand) onExpand(result);
   };
+
+  // Warm the club's page data on intent, so ExpandedTile mounts with content instead of
+  // animating open against an empty shell. Hover covers pointer devices; pointerdown is
+  // the touch fallback, and still buys the ~100ms between finger-down and click.
+  // prefetchClubPage dedupes, so firing from both is free.
+  const warm = () => prefetchClubPage(result.id);
   const truncate = (text, wordLimit = 5) => {
     if (!text) return "";
     const words = String(text).split(/\s+/).filter(Boolean);
@@ -63,12 +71,19 @@ const ClubGridCard = ({ result, onExpand, hideHeart, hidePins }) => {
     return words.slice(0, wordLimit).join(" ") + "...";
   };
 
-  return ( 
+  // No layoutId on the card: it paired this element with the expanded tile as a
+  // shared-element morph, and framer-motion interpolating between a small square card and
+  // a full-viewport panel is what produced the distortion on open. The tile does a plain
+  // pop now. Dropping it also means resizing the grid via the density toggle settles
+  // instantly instead of animating every card's layout at once.
+  return (
 
     <motion.button
       className = "club-card"
       onClick = {handleExpand}
-      layoutId={`club-${result.id}`}
+      onMouseEnter={warm}
+      onFocus={warm}
+      onPointerDown={warm}
 >
       {!hidePins && <img src={posterPin} alt="" className="pin pin-left" />}
       {!hidePins && <img src={posterPin} alt="" className="pin pin-right" />}
@@ -85,11 +100,13 @@ const ClubGridCard = ({ result, onExpand, hideHeart, hidePins }) => {
         {GlobalValue && friendsInClub.length > 0 && (
           <div className="friend-avatars">
             {friendsInClub.slice(0, 3).map((friend) => (
-              <img
+              <Avatar
                 key={friend.id}
+                url={friend.avatar_url}
+                firstName={friend.first_name}
+                lastName={friend.last_name}
+                username={friend.username}
                 className="friend-avatar-img"
-                src={friend.avatar_url || "/raccoon_pfp.png"}
-                alt={friend.username}
               />
             ))}
             {friendsInClub.length > 3 && (

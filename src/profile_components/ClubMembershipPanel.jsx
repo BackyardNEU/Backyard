@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { apiFetch } from '../lib/api';
+import { cachedFetch } from '../lib/queryCache';
 import { useClubData } from '../context/useClubData';
 import { ClubGrid } from '../uni_components/ClubGrid';
 import ExpandedTile from '../uni_components/ExpandedTile';
@@ -28,7 +29,7 @@ export const ClubMembershipPanel = ({ userId, memberList, readOnly = false }) =>
 
     async function fetchMemberships() {
       try {
-        const { member_list } = await apiFetch('/me/membership');
+        const { member_list } = await cachedFetch('me:membership', () => apiFetch('/me/membership'));
         const list = member_list || [];
         const clubs = allData.filter((club) => list.includes(club.id));
         setMemberClubs(clubs);

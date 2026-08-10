@@ -36,7 +36,8 @@ router.get('/:clubId/members', async (req, res) => {
   const userIds = memberships.map((m) => m.user_id);
   const { data: profiles, error: pError } = await supabaseAdmin
     .from('profiles')
-    .select('id, username, avatar_url')
+    // first/last name feed Avatar's initials fallback for members with no photo
+    .select('id, username, avatar_url, first_name, last_name')
     .in('id', userIds);
 
   if (pError) {

@@ -2,6 +2,7 @@
 import { useNavigate } from 'react-router-dom'
 import { apiFetch } from '../lib/api'
 import { FaGraduationCap, FaSearch } from 'react-icons/fa'
+import { slugifyUniversity } from '../../shared/slug'
 import './SearchBar.css'
 
 export const SearchBar = () => {
@@ -42,14 +43,15 @@ export const SearchBar = () => {
       setActiveIndex(i => Math.max(i - 1, -1));
     } else if (e.key === "Enter") {
       const target = filtered[activeIndex >= 0 ? activeIndex : 0];
-      if (target) { navigate(`/university/${target.id}`); close(); }
+      if (target) { handleSelect(target); close(); }
     } else if (e.key === "Escape") {
       close();
     }
   };
 
-  const handleSelect = (id) => {
-    navigate(`/university/${id}`);
+  // Takes the university rather than its id, since the slug comes from the name.
+  const handleSelect = (uni) => {
+    navigate(`/university/${uni.slug || slugifyUniversity(uni.uni_name)}`);
     close();
   };
 
@@ -96,9 +98,11 @@ export const SearchBar = () => {
         <div className="school-dropdown">
           {filtered.map((u, i) => (
             <div
-              key={u.id}
+              // Keyed by name, not id: at least one uni_names row has a NULL id, and a
+              // null key makes React fall back to the array index.
+              key={u.uni_name}
               className={`school-dropdown-item${i === activeIndex ? ' school-dropdown-item--active' : ''}`}
-              onMouseDown={() => handleSelect(u.id)}
+              onMouseDown={() => handleSelect(u)}
               onMouseEnter={() => setActiveIndex(i)}
             >
               <FaSearch className="suggestion-icon" />

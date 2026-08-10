@@ -190,14 +190,14 @@
 /* 75 / 2 = 37.5. We use 34vw to account for gaps. */
 @media (min-width: 650px) and (max-width: 1099px) {
   .club-card {
-    width: 34vw;
+    width: calc(34vw * var(--card-scale, 1));
   }
   .image-container, .club-img {
-    width: 28vw;
-    height: 28vw;
+    width: calc(28vw * var(--card-scale, 1));
+    height: calc(28vw * var(--card-scale, 1));
   }
   .club-name {
-    max-width: 28vw;
+    max-width: calc(28vw * var(--card-scale, 1));
   }
 }
 
@@ -205,14 +205,14 @@
 /* 75 / 3 = 25. We use 22vw to account for gaps. */
 @media (min-width: 1100px) and (max-width: 1999px) {
   .club-card {
-    width: 22vw;
+    width: calc(22vw * var(--card-scale, 1));
   }
   .image-container, .club-img {
-    width: 18vw;
-    height: 18vw;
+    width: calc(18vw * var(--card-scale, 1));
+    height: calc(18vw * var(--card-scale, 1));
   }
   .club-name {
-    max-width: 18vw;
+    max-width: calc(18vw * var(--card-scale, 1));
   }
 }
 
@@ -220,20 +220,20 @@
 /* 75 / 4 = 18.75. We use 16vw to account for gaps. */
 @media (min-width: 2000px) {
   .club-card {
-    width: 16vw;
+    width: calc(16vw * var(--card-scale, 1));
 
     max-width: 530px;
 
   }
   .image-container, .club-img {
-    width: 14vw;
+    width: calc(14vw * var(--card-scale, 1));
     max-width: 450px;
-    height: 14vw;
+    height: calc(14vw * var(--card-scale, 1));
     max-height: 450px;
 
   }
   .club-name {
-    max-width: 14vw;
+    max-width: calc(14vw * var(--card-scale, 1));
   }
 }
 

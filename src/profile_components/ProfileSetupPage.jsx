@@ -2,6 +2,8 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProfileForm } from './useProfileForm'
 import { ProfileFields } from './ProfileFields'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
+import { Skeleton, SkeletonCircle, SkeletonRegion } from '../components/Skeleton'
 import './ProfileSetupPage.css'
 
 // Onboarding. Shares its fields and save logic with the settings page via useProfileForm;
@@ -9,6 +11,7 @@ import './ProfileSetupPage.css'
 const ProfileSetupPage = () => {
     const navigate = useNavigate()
     const form = useProfileForm()
+    useDocumentTitle('Backyard | Profile Setup')
 
     const handleSubmit = async (event) => {
         event.preventDefault()
@@ -30,7 +33,21 @@ const ProfileSetupPage = () => {
     }
 
     if (form.loading) {
-        return <div className="profile-setup-page">Loading profile setup...</div>
+        return (
+            <div className='profile-setup-page'>
+                <div className="uni-background-layer" />
+                <SkeletonRegion className="profile-setup-card" label="Loading profile setup">
+                    <Skeleton width="70%" height="2.4rem" style={{ margin: '0 auto 20px' }} />
+                    <Skeleton width="60px" height="0.8rem" />
+                    <Skeleton height="2.4rem" radius={4} style={{ marginBottom: 14 }} />
+                    <Skeleton width="90px" height="0.8rem" />
+                    <Skeleton height="2.4rem" radius={4} style={{ marginBottom: 14 }} />
+                    <SkeletonCircle size={110} />
+                    <Skeleton width="120px" height="0.8rem" style={{ marginTop: 14 }} />
+                    <Skeleton height="7rem" radius={4} />
+                </SkeletonRegion>
+            </div>
+        )
     }
 
     return (

@@ -22,6 +22,8 @@ import ModuleAccordion from '../club_page_components/accordion';
 import ClubMembersPanel from '../club_page_components/ClubMembersPanel';
 import { useClubData } from '../context/useClubData';
 import { useGlobalStore } from '../lib/store';
+import { readClubPage, invalidateClubPage } from '../lib/clubPageCache';
+import { Skeleton, SkeletonText } from '../components/Skeleton';
 import InviteLinkButton from '../club_page_components/InviteLinkButton';
 import dividerLineImg from '/src/assets/border-horizontal-gray.svg';
 
@@ -159,30 +161,78 @@ function applyAccordionOrder(reorderedModules) {
     return reorderedModules.map((m, i) => ({ ...m, order: i }));
 }
 
+// Turns a /clubs/:id/page response into the editable draft. A club with no page row yet
+// gets a default basic_info module seeded from its base record.
+//
+// Shared by the prefetch-seeded initial state and the network path below, so both produce
+// an identical draft — if they diverged, a cache hit and a cache miss would render
+// different pages for the same club.
+function buildDraft(pageValue, club) {
+    const modules = pageValue?.modules;
+    if (modules?.length > 0) return normalizeModules(modules);
+
+    return normalizeModules([
+        {
+            type: 'basic_info',
+            order: 0,
+            isDisplayed: true,
+            data: {
+                club_name: club?.club_name || '',
+                logo_url: club?.image_url || '/raccoon_pfp.png',
+                description: club?.club_description || '',
+                links: [],
+            },
+        },
+        { type: 'comments', order: 1, isDisplayed: true, data: {} },
+    ]);
+}
+
 
 function ExpandedTile({ club, onClose, onMembershipChange }) {
+    // Page data warmed by prefetchClubPage when the card was hovered. Read synchronously
+    // here rather than in an effect: an effect runs after the first paint, which would
+    // still show one empty frame — exactly the flicker the prefetch exists to remove.
+    // null when the user opened the card without hovering first (keyboard, touch, a very
+    // fast click), in which case the effect below fetches as before.
+    const warmed = readClubPage(club.id);
+
+    // Read before the state block so viewerId can seed `user` below.
+    const { favoritesCache, invalidateFavoritesCache, friendsArray, userId: viewerId } = useClubData();
+
     // determines when to begin the data requesting- animationDone triggers most data requests here
     const [animationDone, setAnimationDone] = useState(true);
     const [isOpen, setIsOpen] = useState(false);
     const [isClosing, setIsClosing] = useState(false);
-    const [reviews, set_reviews] = useState([]);
+    const [reviews, set_reviews] = useState(() => warmed?.reviews ?? []);
     const [isClicked, setIsClicked] = useState(false);
     // records the user itself
-    const [user, setUser] = useState(null);
+    // Seeded from the provider, which resolved the session on app load. This is only ever
+    // truthiness-tested, and it gates the Join/Leave button — deriving it from an awaited
+    // getUser() inside the fetch effect meant that button popped in after the page had
+    // already drawn.
+    const [user, setUser] = useState(() => (viewerId ? { id: viewerId } : null));
     // null = not a member; 'member' | 'moderator' | 'top_moderator' = current role
-    const [myRole, setMyRole] = useState(null);
+    // False only when the card was opened without a prior hover — keyboard, touch, or a
+    // click faster than the prefetch. In that window the page renders a skeleton rather
+    // than an empty shell that fills in piece by piece.
+    const [hydrated, setHydrated] = useState(() => !!warmed);
+
+    // Seeded from the prefetch. This decides between the editor header and a plain close
+    // button, so resolving it after mount used to swap the header and shove everything
+    // below it down — the buttons visibly jumping on open.
+    const [myRole, setMyRole] = useState(() => warmed?.role ?? null);
     // NOTE2SELF: THIS WILL BECOME IRRELEVANT LATER AS A LOADING STATE ACROSS ALL MODULES/INFO IS PUT IN PLACE
     const [memberLoading, setMemberLoading] = useState(false);
     // active tab: 'page' | 'members'
     const [activeTab, setActiveTab] = useState('page');
     // info from modules data to be displayed from db
-    const [pageData, setPageData] = useState(null);
+    const [pageData, setPageData] = useState(() => warmed?.page ?? null);
     // top tags derived from reviews
-    const [topTags, setTopTags] = useState([]);
+    const [topTags, setTopTags] = useState(() => (warmed?.topTags ?? []).map((r) => r.tag));
     // editing state for changing modules
     const [isEditing, setIsEditing] = useState(false);
     // copy of the pageData.modules array initially so that it can record changes aggregated over all the modules
-    const [draft, setDraft] = useState([]);
+    const [draft, setDraft] = useState(() => (warmed ? buildDraft(warmed.page, club) : []));
     // determines state of saving progress from changes
     const [isSaving, setIsSaving] = useState(false);
     // determines if a new logo has been uploaded- requires a new signed URL upload to the supabase storage bucket
@@ -194,11 +244,11 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const [userFaqs, setUserFaqs] = useState([]);
     const [questionDeletes, setQuestionDeletes] = useState(() => new Set());
     // club events (for the calendar module)
-    const [clubEvents, setClubEvents] = useState([]);
+    const [clubEvents, setClubEvents] = useState(() => warmed?.events ?? []);
     const [clubMyRsvpSet, setClubMyRsvpSet] = useState(new Set());
     const [clubFriendRsvpMap, setClubFriendRsvpMap] = useState(new Map());
     // club members (for comments module authorized/unauthorized tabs)
-    const [clubMembers, setClubMembers] = useState([]);
+    const [clubMembers, setClubMembers] = useState(() => warmed?.members ?? []);
     // pending hide/show changes for comments — keyed by reviewId, only committed on Save
     const [hideDraft, setHideDraft] = useState({});
 
@@ -207,7 +257,6 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
     const id = club.id;
 
-    const { favoritesCache, invalidateFavoritesCache, friendsArray } = useClubData();
     const GlobalValue = useGlobalStore((state) => state.GlobalValue);
     const liked = favoritesCache?.has(club.id) ?? false;
 
@@ -266,28 +315,46 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             const { data: { user: authUser } } = await supabase.auth.getUser();
             setUser(authUser ?? null);
 
-            const publicFetches = [
+            // Already rendered from the prefetch cache, so the five public requests would
+            // be re-fetching what is on screen. Only the auth-dependent calls are left,
+            // and those cannot be prefetched — they depend on who is signed in.
+            const publicFetches = warmed ? [] : [
                 apiFetch(`/clubs/${id}/reviews`, { auth: false }),
                 apiFetch(`/clubs/${id}/page`, { auth: false }),
                 apiFetch(`/clubs/${id}/top-tags`, { auth: false }),
                 apiFetch(`/clubs/${id}/events/upcoming`), // optional auth: sends token if logged in
                 apiFetch(`/clubs/${id}/members`, { auth: false }),
             ];
-            const authFetches = authUser ? [
+            // undefined means the prefetch never resolved it; null is a real answer
+            // (signed in, not an editor) and does not need asking again.
+            const roleKnown = warmed && warmed.role !== undefined;
+            const authFetches = authUser && !roleKnown ? [
                 apiFetch(`/clubs/${id}/is-approved`),
             ] : [];
 
-            console.log("Awaiting info...");
+            // Settled separately rather than as one concatenated array: publicFetches is
+            // empty on a cache hit, and positional destructuring across both would then
+            // slide the is-approved result into the reviews slot. Still one round trip.
+            const [publicSettled, authSettled] = await Promise.all([
+                Promise.allSettled(publicFetches),
+                Promise.allSettled(authFetches),
+            ]);
 
-            const [reviewsResult, pageResult, topTagsResult, eventsResult, membersResult, approvedResult] =
-                await Promise.allSettled([...publicFetches, ...authFetches]);
+            const [reviewsResult, pageResult, topTagsResult, eventsResult, membersResult] = publicSettled;
+            const [approvedResult] = authSettled;
 
-            if (reviewsResult.status === 'fulfilled') set_reviews(reviewsResult.value);
-            if (topTagsResult.status === 'fulfilled') setTopTags((topTagsResult.value || []).map(r => r.tag));
-            if (membersResult.status === 'fulfilled') setClubMembers(membersResult.value || []);
-            if (eventsResult.status === 'fulfilled') {
-                const eventsData = eventsResult.value || [];
-                setClubEvents(eventsData);
+            if (reviewsResult?.status === 'fulfilled') set_reviews(reviewsResult.value);
+            if (topTagsResult?.status === 'fulfilled') setTopTags((topTagsResult.value || []).map(r => r.tag));
+            if (membersResult?.status === 'fulfilled') setClubMembers(membersResult.value || []);
+
+            // On a cache hit the events came from the prefetch, so read them from there —
+            // the RSVP lookup below needs the ids either way.
+            const eventsData = warmed
+                ? (warmed.events || [])
+                : (eventsResult?.status === 'fulfilled' ? (eventsResult.value || []) : null);
+
+            if (eventsData) {
+                if (!warmed) setClubEvents(eventsData);
                 if (eventsData.length > 0 && authUser) {
                     try {
                         const eventIds = eventsData.map((e) => e.id);
@@ -310,31 +377,22 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     }
                 }
             }
-            if (pageResult.status === 'fulfilled') {
+            if (pageResult?.status === 'fulfilled') {
                 setPageData(pageResult.value);
-                // if no page row exists yet, seed a default basic_info module from base club data
-                const modules = pageResult.value?.modules;
-                setDraft(modules?.length > 0 ? normalizeModules(modules) : normalizeModules([
-                    {
-                        type: 'basic_info',
-                        order: 0,
-                        isDisplayed: true,
-                        data: {
-                            club_name: club.club_name || '',
-                            logo_url: club.image_url || '/raccoon_pfp.png',
-                            description: club.club_description || '',
-                            links: [],
-                        }
-                    },
-                    { type: 'comments', order: 1, isDisplayed: true, data: {} },
-                ]));
-                console.log("Success retrieving data!");
+                setDraft(buildDraft(pageResult.value, club));
             }
             if (approvedResult?.status === 'fulfilled')
                 setMyRole(approvedResult.value?.role ?? null);
+
+            setHydrated(true);
         }
 
-        fetchAll();
+        // Marks hydrated even if fetchAll throws, so a failed load shows the (empty) page
+        // rather than a skeleton that never resolves.
+        fetchAll().catch((err) => {
+            console.error('Failed to load club page:', err);
+            setHydrated(true);
+        });
     }, [id, animationDone, club]);
 
     // Approved editors: load the club's pending user-submitted FAQ questions.
@@ -490,6 +548,10 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             });
             setPageData(prev => ({ ...prev, modules: finalDraft }));
             setDraft(finalDraft);
+
+            // The prefetch cache now holds the pre-edit page. Drop it so reopening this
+            // club shows what was just saved rather than a stale copy for up to a minute.
+            invalidateClubPage(id);
 
             // Commit pending hide/show changes for comments
             if (Object.keys(hideDraft).length > 0) {
@@ -721,12 +783,57 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
     return (
         <motion.div
-            layoutId={`club-${club.id}`}
             className="expanded-card"
             style={{ pointerEvents: isClosing ? "none" : "auto" }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            // A plain scale-and-fade rather than a layoutId morph from the grid card.
+            // The shared-element version had to interpolate between a small square card
+            // and this full-viewport panel, which distorted the contents mid-flight and
+            // went visibly wrong whenever the grid reflowed underneath it.
+            //
+            // A fixed-duration tween instead of a spring: springs overshoot by design and
+            // their settle time varies with whatever interrupted them, which is the other
+            // half of why this felt unpredictable.
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
             onAnimationComplete={() => setAnimationDone(true)}
         >
+            {/* Shown only on a cold open — hovering a card warms the page, so this is the
+                keyboard, touch and very-fast-click path. Rendered inside the same
+                motion.div as the real page, so the container and the open animation are
+                identical and the content swaps in without the layout moving. */}
+            {!hydrated ? (
+                <div className="club-modules" role="status" aria-busy="true" aria-label="Loading club page">
+                    <button className="close-btn" onClick={handleClose}>×</button>
+
+                    {/* Hero: colour band, club name, logo, action links */}
+                    <div className="content-col">
+                        <Skeleton height="120px" radius={2} />
+                        <div className="text-flex" style={{ marginTop: 18 }}>
+                            <Skeleton width="55%" height="2.6rem" />
+                        </div>
+                        <div className="image-stack" style={{ marginTop: 18 }}>
+                            <Skeleton width="180px" height="180px" radius={4} />
+                        </div>
+                        <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
+                            <Skeleton width="110px" height="2.1rem" radius={999} />
+                            <Skeleton width="90px" height="2.1rem" radius={999} />
+                            <Skeleton width="130px" height="2.1rem" radius={999} />
+                        </div>
+                        <SkeletonText lines={3} />
+                    </div>
+
+                    {/* Two module blocks, roughly the height of a stats or calendar module */}
+                    {[0, 1].map((i) => (
+                        <div key={i} style={{ marginTop: 34 }}>
+                            <Skeleton width="200px" height="1.6rem" />
+                            <Skeleton height="9rem" radius={4} style={{ marginTop: 14 }} />
+                        </div>
+                    ))}
+                </div>
+            ) : (
+            <>
             {!isApproved && (
                 <button className="close-btn" onClick={handleClose}>×</button>
             )}
@@ -893,6 +1000,8 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 <div>
                     <ReviewPage clubId={club.id} onClose={() => setIsOpen(false)} />
                 </div>
+            )}
+            </>
             )}
         </motion.div>
     );

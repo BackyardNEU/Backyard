@@ -1,20 +1,23 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { apiFetch } from '../lib/api'
 import { useClubData } from '../context/useClubData'
+import { cachedFetch, readCached, invalidateKey } from '../lib/queryCache'
+import { Skeleton, SkeletonCircle, SkeletonRegion } from '../components/Skeleton'
+import Avatar from '../components/Avatar'
 
 // The management screen GET /api/me/blocks was built for. Until now that route and its
 // DELETE counterpart had no frontend callers at all — blocking was one-way with no way
 // to see or undo it.
 export const BlockedUsersSettings = () => {
-    const [blocked, setBlocked] = useState([])
-    const [loading, setLoading] = useState(true)
+    const [blocked, setBlocked] = useState(() => readCached('me:blocks') ?? [])
+    const [loading, setLoading] = useState(() => readCached('me:blocks') === null)
     const [unblockingId, setUnblockingId] = useState(null)
     const [error, setError] = useState(null)
     const { refetch } = useClubData()
 
     const load = useCallback(async () => {
         try {
-            const data = await apiFetch('/me/blocks')
+            const data = await cachedFetch('me:blocks', () => apiFetch('/me/blocks'))
             setBlocked(data || [])
         } catch (err) {
             console.error('Error loading blocked users:', err)
@@ -32,6 +35,7 @@ export const BlockedUsersSettings = () => {
 
         try {
             await apiFetch(`/me/blocks/${user.id}`, { method: 'DELETE' })
+            invalidateKey('me:blocks')
             setBlocked((prev) => prev.filter((b) => b.id !== user.id))
             // They become visible again across the app, so drop the cached friend and
             // membership maps that were built while they were hidden.
@@ -48,7 +52,19 @@ export const BlockedUsersSettings = () => {
         <section className="settings-section">
             <h2 className="profile-divider-header">Blocked users</h2>
 
-            {loading && <p className="settings-status">Loading…</p>}
+            {loading && (
+                <SkeletonRegion label="Loading blocked users">
+                    <ul className="settings-blocked-list">
+                        {[0, 1].map((i) => (
+                            <li key={i} className="settings-blocked-item">
+                                <SkeletonCircle size={36} />
+                                <Skeleton width="40%" height="1rem" />
+                                <Skeleton width="92px" height="2.1rem" radius={999} />
+                            </li>
+                        ))}
+                    </ul>
+                </SkeletonRegion>
+            )}
 
             {!loading && blocked.length === 0 && (
                 <p className="settings-status">You haven&apos;t blocked anyone.</p>
@@ -63,10 +79,10 @@ export const BlockedUsersSettings = () => {
                     <ul className="settings-blocked-list">
                         {blocked.map((user) => (
                             <li key={user.id} className="settings-blocked-item">
-                                <img
+                                <Avatar
                                     className="settings-blocked-avatar"
-                                    src={user.avatar_url || '/raccoon_pfp.png'}
-                                    alt=""
+                                    url={user.avatar_url}
+                                    username={user.username}
                                 />
                                 <span className="settings-blocked-name">{user.username}</span>
                                 <button

@@ -26,6 +26,82 @@
     fill: #000000;
 }
 
+.uni-calendar-btn {
+  height: 2rem;
+  min-width: 2rem;
+  padding: 0 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgb(202, 200, 200);
+  color: #666;
+  background: #e5e5e5;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-left: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.uni-calendar-btn:hover {
+  background: #d0d0d0;
+}
+
+.uni-calendar-btn.active {
+  background: rgb(44, 33, 18);
+  color: white;
+  border-color: rgb(44, 33, 18);
+}
+
+/* Card density control. Segmented rather than three separate pills so it reads as one
+   control, matching the height and palette of the calendar button beside it. */
+.uni-size-toggle {
+  display: flex;
+  align-items: center;
+  height: 2rem;
+  margin-left: 6px;
+  border: 1px solid rgb(202, 200, 200);
+  border-radius: 999px;
+  background: #e5e5e5;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.uni-size-btn {
+  height: 100%;
+  min-width: 2rem;
+  padding: 0 0.55rem;
+  border: none;
+  background: transparent;
+  color: #666;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.uni-size-btn:hover {
+  background: #d0d0d0;
+}
+
+.uni-size-btn.active {
+  background: rgb(44, 33, 18);
+  color: white;
+}
+
+/* The control is a convenience, not a necessity — drop it first when the row gets
+   tight so the search input keeps its width. */
+@media (max-width: 649px) {
+  .uni-size-toggle {
+    display: none;
+  }
+}
+
 .hamburger-wrapper {
   position: relative;
   flex-shrink: 0;

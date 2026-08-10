@@ -1,7 +1,8 @@
 ﻿import React, {useState, useEffect} from 'react'
 import { apiFetch } from '../lib/api'
 import { useClubData } from '../context/useClubData'
-import {FaSearch} from 'react-icons/fa'
+import { prefetchCalendar } from '../lib/calendarCache'
+import {FaSearch, FaCalendarAlt, FaTh, FaThLarge, FaSquare} from 'react-icons/fa'
 import './UniSearchBar.css'
 
 const CATEGORIES = [
@@ -26,7 +27,21 @@ const CATEGORIES = [
   { label: "Service", category: "service" },
 ];
 
-export const UniSearchBar = ({ setResults, university }) => {
+// Three densities, drawn as increasingly coarse grids so the control reads at a glance
+// without needing labels.
+const CARD_SIZE_OPTIONS = [
+  { value: 'small', label: 'Small cards', glyph: <FaTh /> },
+  { value: 'medium', label: 'Medium cards', glyph: <FaThLarge /> },
+  { value: 'large', label: 'Large cards', glyph: <FaSquare /> },
+];
+
+export const UniSearchBar = ({
+  setResults,
+  university,
+  calendarActive = false,
+  cardSize = 'medium',
+  onCardSizeChange,
+}) => {
 
   const [input, setInput] = useState("")
   const [menuOpen, setMenuOpen] = useState(false)
@@ -48,6 +63,13 @@ export const UniSearchBar = ({ setResults, university }) => {
                     "Show me clubs for foodies"
                   ];
   
+
+  const handleCalendarClick = () => {
+    setActiveCategory(null);
+    window.dispatchEvent(
+      new CustomEvent("backyard-category-select", { detail: { category: "calendar" } })
+    );
+  };
 
   const handleCategorySelect = (category) => {
     setActiveCategory(prev => prev === category ? null : category);
@@ -200,6 +222,38 @@ useEffect(() => {
             </div>
           )}
         </div>
+
+        {/* Card density, in the spirit of the Xbox library's icon-size control. */}
+        <div className="uni-size-toggle" role="radiogroup" aria-label="Club card size">
+          {CARD_SIZE_OPTIONS.map(({ value, label, glyph }) => (
+            <button
+              key={value}
+              type="button"
+              role="radio"
+              aria-checked={cardSize === value}
+              aria-label={label}
+              title={label}
+              className={`uni-size-btn${cardSize === value ? ' active' : ''}`}
+              onClick={() => onCardSizeChange?.(value)}
+            >
+              {glyph}
+            </button>
+          ))}
+        </div>
+
+        {/* Warmed on intent for the same reason club cards are: the panel used to fade in
+            showing "Loading events…" and swap to content once three requests returned. */}
+        <button
+          className={`uni-calendar-btn${calendarActive ? ' active' : ''}`}
+          type="button"
+          onClick={handleCalendarClick}
+          onMouseEnter={prefetchCalendar}
+          onFocus={prefetchCalendar}
+          onPointerDown={prefetchCalendar}
+          aria-label="View events calendar"
+        >
+          <FaCalendarAlt />
+        </button>
     </div>
   )
 }

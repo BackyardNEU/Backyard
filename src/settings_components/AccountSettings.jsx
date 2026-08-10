@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { apiFetch } from '../lib/api'
+import { useClubData } from '../context/useClubData'
+import { Skeleton, SkeletonRegion } from '../components/Skeleton'
 
 export const AccountSettings = () => {
     const navigate = useNavigate()
-    const [profile, setProfile] = useState(null)
-    const [loading, setLoading] = useState(true)
+    // Shared profile — this was the third component on the page requesting /me/profile.
+    const { profile, loading } = useClubData()
 
     // Password
     const [password, setPassword] = useState('')
@@ -19,17 +21,6 @@ export const AccountSettings = () => {
     const [confirmUsername, setConfirmUsername] = useState('')
     const [deleting, setDeleting] = useState(false)
     const [deleteError, setDeleteError] = useState(null)
-
-    useEffect(() => {
-        let cancelled = false
-
-        apiFetch('/me/profile')
-            .then((data) => { if (!cancelled) setProfile(data) })
-            .catch((err) => console.error('Error loading account:', err))
-            .finally(() => { if (!cancelled) setLoading(false) })
-
-        return () => { cancelled = true }
-    }, [])
 
     const changePassword = async (event) => {
         event.preventDefault()
@@ -89,10 +80,21 @@ export const AccountSettings = () => {
 
     if (loading) {
         return (
-            <section className="settings-section">
+            <SkeletonRegion className="settings-section" label="Loading account settings">
                 <h2 className="profile-divider-header">Account</h2>
-                <p className="settings-status">Loading…</p>
-            </section>
+                <div className="settings-readonly">
+                    <Skeleton width="60px" height="0.8rem" />
+                    <Skeleton width="220px" height="1rem" />
+                </div>
+                <div className="settings-form">
+                    <Skeleton width="140px" height="0.8rem" />
+                    <Skeleton height="2.4rem" radius={4} />
+                    <Skeleton height="2.4rem" radius={4} />
+                </div>
+                <div className="settings-actions">
+                    <Skeleton width="150px" height="2.2rem" radius={999} />
+                </div>
+            </SkeletonRegion>
         )
     }
 

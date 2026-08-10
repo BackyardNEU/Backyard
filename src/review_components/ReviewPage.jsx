@@ -11,6 +11,7 @@ import thanksImage from "../assets/thanks.png"
 import ThanksPage from './ThanksPage';
 
 import "./ReviewPage.css"
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 export default function ReviewPage({clubId, onClose}) {
 
@@ -21,6 +22,7 @@ export default function ReviewPage({clubId, onClose}) {
     const [user_review, set_user_review] = useState('');
     const [user_title, set_user_title] = useState('');
     const [club, setClub] = useState(null);
+    useDocumentTitle(club?.club_name ? `Backyard | Review ${club.club_name}` : null);
     const [username, setUsername] = useState("");
     const [reviewPosted, setReviewPosted] = useState(false);
     const [sectionVisible, setSectionVisible] = useState(false);

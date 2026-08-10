@@ -89,7 +89,7 @@
 }
 
 .thanks-feedback-text {
-    font-family: 'barlow ', sans-serif;
+    font-family: 'Barlow', sans-serif;
     font-weight: 300;
     font-size: clamp(1.5rem, 3vw, 3rem);
     color: black;

@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Bell } from 'lucide-react';
+// eslint-disable-next-line no-unused-vars
+import { AnimatePresence } from 'framer-motion';
 import { useGlobalStore } from '../lib/store';
 import { useNotifications } from './useNotifications';
 import { NotificationsPanel } from './NotificationsPanel';
@@ -18,14 +20,18 @@ export function NotificationBell() {
         )}
       </button>
 
-      {panelOpen && (
-        <NotificationsPanel
-          onClose={() => setPanelOpen(false)}
-          notifications={notifications}
-          markAllRead={markAllRead}
-          respondToRequest={respondToRequest}
-        />
-      )}
+      {/* Has to live here rather than inside the panel: AnimatePresence can only play an
+          exit animation for a child it still owns, so the conditional must be its child. */}
+      <AnimatePresence>
+        {panelOpen && (
+          <NotificationsPanel
+            onClose={() => setPanelOpen(false)}
+            notifications={notifications}
+            markAllRead={markAllRead}
+            respondToRequest={respondToRequest}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }

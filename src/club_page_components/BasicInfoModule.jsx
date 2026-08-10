@@ -7,6 +7,7 @@ import { FaSearch, FaTimes } from 'react-icons/fa';
 import borderImg from '/src/assets/border-green.svg';
 import borderHorizontalImg from '/src/assets/border-horizontal-green.svg';
 import './BasicInfoModule.css';
+import Avatar from '../components/Avatar';
 
 /**
  * @param {Object} props
@@ -309,11 +310,13 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
           {friendsInClub.length > 0 && (
             <button className="friend-avatars-btn" onClick={() => setFriendsModalOpen(true)}>
               {friendsInClub.slice(0, 3).map((friend) => (
-                <img
+                <Avatar
                   key={friend.id}
                   className="friend-avatar-img-bio"
-                  src={friend.avatar_url || "/raccoon_pfp.png"}
-                  alt={friend.username}
+                  url={friend.avatar_url}
+                  firstName={friend.first_name}
+                  lastName={friend.last_name}
+                  username={friend.username}
                 />
               ))}
               {friendsInClub.length > 3 && (
@@ -444,7 +447,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
                     const customRole = customRoleByUserId.get(friend.id);
                     return (
                       <div className="friend-modal-row" key={friend.id}>
-                        <img className="friend-avatar-sm" src={friend.avatar_url || '/raccoon_pfp.png'} alt={friend.username} />
+                        <Avatar className="friend-avatar-sm" url={friend.avatar_url} firstName={friend.first_name} lastName={friend.last_name} username={friend.username} />
                         <span className="friend-result-name">{friend.username}</span>
                         {customRole && (
                           <span className="role-badge friend-result-badge" style={roleColorStyle(customRole.role_color)}>
@@ -466,7 +469,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
                     const customRole = customRoleByUserId.get(friend.id);
                     return (
                       <div className="friend-modal-row" key={friend.id}>
-                        <img className="friend-avatar-sm" src={friend.avatar_url || '/raccoon_pfp.png'} alt={friend.username} />
+                        <Avatar className="friend-avatar-sm" url={friend.avatar_url} firstName={friend.first_name} lastName={friend.last_name} username={friend.username} />
                         <span className="friend-result-name">{friend.username}</span>
                         {customRole && (
                           <span className="role-badge friend-result-badge" style={roleColorStyle(customRole.role_color)}>

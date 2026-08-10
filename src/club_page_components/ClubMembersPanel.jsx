@@ -4,6 +4,8 @@ import { hexToRgba, roleColorStyle } from '../lib/roleColor';
 import borderHorizontalImg from '../assets/border-horizontal.svg';
 import dividerLineImg from '../assets/border-horizontal-gray.svg';
 import './ClubMembersPanel.css';
+import { Skeleton, SkeletonCircle, SkeletonRegion } from '../components/Skeleton';
+import Avatar from '../components/Avatar';
 
 const ROLE_LABEL = {
   top_moderator: 'Owner',
@@ -33,11 +35,15 @@ function MemberCard({ entry, myRole, currentUserId, customRoles, onAssignCustomR
 
   return (
     <div className="member-card">
-      {profiles?.avatar_url ? (
-        <img className="member-avatar" src={profiles.avatar_url} alt={profiles.username} />
-      ) : (
-        <div className="member-avatar member-avatar--placeholder" />
-      )}
+      {/* Was a blank grey circle for anyone without a photo, so a roster of members
+          without photos was a column of identical placeholders. */}
+      <Avatar
+        className="member-avatar"
+        url={profiles?.avatar_url}
+        firstName={profiles?.first_name}
+        lastName={profiles?.last_name}
+        username={profiles?.username}
+      />
 
       <div className="member-info">
         <span className="member-username">{profiles?.username ?? 'Unknown'}</span>
@@ -388,7 +394,14 @@ export default function ClubMembersPanel({ clubId, myRole, currentUserId, onMemb
       {error && <p className="club-members-panel__error">{error}</p>}
 
       {loading ? (
-        <p className="club-members-panel__loading">Loading...</p>
+        <SkeletonRegion label="Loading members">
+          {Array.from({ length: 4 }, (_, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0' }}>
+              <SkeletonCircle size={36} />
+              <Skeleton width="45%" height="1rem" />
+            </div>
+          ))}
+        </SkeletonRegion>
       ) : members.length === 0 ? (
         <p className="club-members-panel__empty">No members yet.</p>
       ) : (
