@@ -8,6 +8,7 @@ import imageCompression from 'browser-image-compression'
 import { ClubMembershipPanel } from './ClubMembershipPanel'
 import { FriendDiscoveryList } from './FriendDiscoveryList'
 import { PolaroidCards } from './PolaroidCards'
+import { InterestsModal } from './InterestsModal'
 
 //this is the landing page for our university club search, most of the info will go through here
 
@@ -57,6 +58,8 @@ export const ProfilePage = () => {
 
     loadUser();
   }, [navigate]);
+
+  const [interestsOpen, setInterestsOpen] = useState(false);
 
   const lastPath = useGlobalStore((state) => state.lastPath);
 
@@ -127,6 +130,7 @@ export const ProfilePage = () => {
 
   return (
       <div className="ProfilePage">
+        {interestsOpen && <InterestsModal onClose={() => setInterestsOpen(false)} />}
         <div className='spacer' />
         <div className='profile-header'>
           <label htmlFor="avatar-upload" className="profile-photo-btn">
@@ -140,13 +144,22 @@ export const ProfilePage = () => {
           <div className="profile-copy">
             <h1 className='ProfileName'>Hello, {profile?.username}</h1>
             <p className="user-description">{profileDescription}</p>
-            <button
-              type="button"
-              className="profile-setup-btn"
-              onClick={() => navigate('/profile-setup')}
-            >
-              Setup profile
-            </button>
+            <div className="profile-btn-row">
+              <button
+                type="button"
+                className="profile-setup-btn"
+                onClick={() => navigate('/profile-setup')}
+              >
+                Setup profile
+              </button>
+              <button
+                type="button"
+                className="profile-setup-btn"
+                onClick={() => setInterestsOpen(true)}
+              >
+                My Interests
+              </button>
+            </div>
           </div>
           <button
             className="profile-close-btn"

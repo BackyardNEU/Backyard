@@ -177,8 +177,6 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const [activeTab, setActiveTab] = useState('page');
     // info from modules data to be displayed from db
     const [pageData, setPageData] = useState(null);
-    // top tags derived from reviews
-    const [topTags, setTopTags] = useState([]);
     // editing state for changing modules
     const [isEditing, setIsEditing] = useState(false);
     // copy of the pageData.modules array initially so that it can record changes aggregated over all the modules
@@ -200,6 +198,10 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const [clubMembers, setClubMembers] = useState([]);
     // pending hide/show changes for comments — keyed by reviewId, only committed on Save
     const [hideDraft, setHideDraft] = useState({});
+    // club interests (category + subcategories set by the club owner)
+    const [taxonomy, setTaxonomy] = useState([]);
+    const [clubInterestsSaved, setClubInterestsSaved] = useState(null);
+    const [clubInterestsDraft, setClubInterestsDraft] = useState(null);
 
     const isMember = myRole !== null;
     const isApproved = myRole === 'moderator' || myRole === 'top_moderator';
@@ -257,9 +259,10 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             const publicFetches = [
                 apiFetch(`/clubs/${id}/reviews`, { auth: false }),
                 apiFetch(`/clubs/${id}/page`, { auth: false }),
-                apiFetch(`/clubs/${id}/top-tags`, { auth: false }),
                 apiFetch(`/clubs/${id}/events/upcoming`), // optional auth: sends token if logged in
                 apiFetch(`/clubs/${id}/members`, { auth: false }),
+                apiFetch('/interests', { auth: false }),
+                apiFetch(`/clubs/${id}/interests`, { auth: false }),
             ];
             const authFetches = authUser ? [
                 apiFetch(`/clubs/${id}/is-approved`),
@@ -267,12 +270,17 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
             console.log("Awaiting info...");
 
-            const [reviewsResult, pageResult, topTagsResult, eventsResult, membersResult, approvedResult] =
+            const [reviewsResult, pageResult, eventsResult, membersResult, taxonomyResult, clubInterestsResult, membershipResult, approvedResult] =
                 await Promise.allSettled([...publicFetches, ...authFetches]);
 
             if (reviewsResult.status === 'fulfilled') set_reviews(reviewsResult.value);
-            if (topTagsResult.status === 'fulfilled') setTopTags((topTagsResult.value || []).map(r => r.tag));
             if (membersResult.status === 'fulfilled') setClubMembers(membersResult.value || []);
+            if (taxonomyResult?.status === 'fulfilled') setTaxonomy(taxonomyResult.value || []);
+            if (clubInterestsResult?.status === 'fulfilled') {
+                const ci = clubInterestsResult.value || null;
+                setClubInterestsSaved(ci);
+                setClubInterestsDraft(ci);
+            }
             if (eventsResult.status === 'fulfilled') {
                 const eventsData = eventsResult.value || [];
                 setClubEvents(eventsData);
@@ -479,6 +487,22 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             setPageData(prev => ({ ...prev, modules: finalDraft }));
             setDraft(finalDraft);
 
+            // Save club interests: PUT if a category is set, DELETE if cleared
+            if (clubInterestsDraft?.category_id) {
+                await apiFetch(`/clubs/${id}/interests`, {
+                    method: 'PUT',
+                    body: {
+                        category_id: clubInterestsDraft.category_id,
+                        subcategory_ids: clubInterestsDraft.subcategory_ids || [],
+                    },
+                });
+                setClubInterestsSaved(clubInterestsDraft);
+            } else if (clubInterestsSaved?.category_id) {
+                // Category was cleared — remove the row entirely
+                await apiFetch(`/clubs/${id}/interests`, { method: 'DELETE' });
+                setClubInterestsSaved(null);
+            }
+
             // Commit pending hide/show changes for comments
             if (Object.keys(hideDraft).length > 0) {
                 await Promise.allSettled(
@@ -518,6 +542,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
         setPendingLogoFile(null);
         setQuestionDeletes(new Set()); // restore optimistically-removed questions
         setHideDraft({});
+        setClubInterestsDraft(clubInterestsSaved);
         setIsEditing(false);
     };
 
@@ -598,7 +623,6 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     key={`basic_info-${part}`}
                     club={club}
                     data={module.data}
-                    topTags={topTags}
                     editing={isEditing}
                     onChange={(updatedData) => handleModuleChange('basic_info', updatedData)}
                     onLogoChange={(file) => setPendingLogoFile(file)}
@@ -606,6 +630,9 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     warning={moduleWarnings.basic_info ?? null}
                     part={part}
                     linksDisplayed={linksDisplayed}
+                    taxonomy={taxonomy}
+                    clubInterests={clubInterestsDraft}
+                    onInterestsChange={setClubInterestsDraft}
                 />
             );
         }

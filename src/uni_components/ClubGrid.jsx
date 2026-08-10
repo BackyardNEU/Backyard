@@ -13,7 +13,7 @@ export const ClubGrid = ({ result, onExpand, hideHeart, hidePins }) => {
   const [animating, setAnimating] = useState(false);
   let GlobalValue = useGlobalStore((state) => state.GlobalValue);
 
-  const { favoritesCache, invalidateFavoritesCache, friendMembershipMap, clubTopTags } = useClubData();
+  const { favoritesCache, invalidateFavoritesCache, friendMembershipMap } = useClubData();
 
   // meant to determine if a particular card is liked or not, depending on if it 
   // is found in the partulcar liked table or all false if the user is not logged
@@ -21,7 +21,6 @@ export const ClubGrid = ({ result, onExpand, hideHeart, hidePins }) => {
   let liked = favoritesCache?.has(result.id) ?? false;
 
   const friendsInClub = friendMembershipMap?.get(result.id) || [];
-  const topTags = clubTopTags?.get(result.id) || [];
 
   //if a user likes a club, refresh cache and add this favorite to it
   const updateFavorite = async (newLiked) => {
@@ -96,9 +95,6 @@ export const ClubGrid = ({ result, onExpand, hideHeart, hidePins }) => {
           {truncate(result.club_name)}
         </div>
         <div className = "club-info">
-          {topTags.length > 0 && (
-            <p>{topTags[0]}{topTags[1] && <span style={{marginLeft: '.5rem'}}>{topTags[1]}</span>}</p>
-          )}
         </div>
       </div>
     </motion.button>

@@ -73,7 +73,6 @@ const REVIEW_WRITABLE = new Set([
     'club_id',
     'review_text',
     'review_title',
-    'review_tags',
     'club_hours',
     'club_leadership',
     'club_fun',

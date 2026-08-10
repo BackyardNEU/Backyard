@@ -20,6 +20,8 @@ import clubEventsRouter from './routes/clubEvents.js';
 import clubPageRouter from './routes/clubPage.js';
 import questionsRouter from './routes/questions.js';
 import invitesRouter from './routes/invites.js';
+import interestsRouter from './routes/interests.js';
+import userInterestsRouter from './routes/userInterests.js';
 import { startQueue } from './notifications/queue.js';
 import friendRequestsRouter from './routes/friend-requests.js';
 import notificationsRouter from './routes/notifications.js';
@@ -52,6 +54,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Public reads
+app.use('/api/interests', interestsRouter);
 app.use('/api/clubs', clubMembersRouter);
 app.use('/api/clubs', clubsRouter);
 app.use('/api/clubs', clubPageRouter);
@@ -65,6 +68,7 @@ app.use('/api/reviews', writeLimiter, reviewsRouter);
 app.use('/api/me/favorites', writeLimiter, favoritesRouter);
 app.use('/api/me/votes', writeLimiter, votesRouter);
 app.use('/api/me/friends', writeLimiter, friendsRouter);
+app.use('/api/me/interests', writeLimiter, userInterestsRouter);
 app.use('/api/friend-requests', writeLimiter, friendRequestsRouter);
 app.use('/api/me/notifications', writeLimiter, notificationsRouter);
 app.use('/api/me', profilesRouter); // serves /profile and /membership

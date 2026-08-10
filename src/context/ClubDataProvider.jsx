@@ -10,7 +10,6 @@ const initialState = {
     userId: null,
     friendMembershipMap: new Map(),
     friendsArray: [],
-    clubTopTags: new Map()
 };
 
 function reducer(state, action) {
@@ -45,7 +44,6 @@ export const ClubDataProvider = ({ children }) => {
         console.log("Fetching data from Supabase: this should only occur once unless switchting to favorites tab.");
 
         let newAllData = [];
-        let newClubTopTags = new Map();
         let newFavoritesCache = new Set();
         let newUserId = null;
         let newFriendMembershipMap = new Map();
@@ -53,9 +51,8 @@ export const ClubDataProvider = ({ children }) => {
 
         // Tier 1: independent fetches fire together. allSettled keeps one failure
         // from killing the rest — matches the old per-fetch try/catch behavior.
-        const [clubsResult, tagsResult, userResult] = await Promise.allSettled([
+        const [clubsResult, userResult] = await Promise.allSettled([
             apiFetch('/clubs'),
-            apiFetch('/clubs/review-tags', { auth: false }),
             supabase.auth.getUser(),
         ]);
 
@@ -64,24 +61,6 @@ export const ClubDataProvider = ({ children }) => {
             console.log("successful fetching from server");
         } else {
             console.error("Error fetching from server: " + clubsResult.reason);
-        }
-
-        if (tagsResult.status === 'fulfilled') {
-            const reviewTags = tagsResult.value;
-            const tagCounts = {};
-            for (const review of reviewTags) {
-                if (!review.review_tags || !Array.isArray(review.review_tags)) continue;
-                if (!tagCounts[review.club_id]) tagCounts[review.club_id] = {};
-                for (const tag of review.review_tags) {
-                    tagCounts[review.club_id][tag] = (tagCounts[review.club_id][tag] || 0) + 1;
-                }
-            }
-            for (const [clubId, counts] of Object.entries(tagCounts)) {
-                const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-                newClubTopTags.set(clubId, sorted.slice(0, 2).map(([tag]) => tag));
-            }
-        } else {
-            console.error("Error fetching review tags:", tagsResult.reason);
         }
 
         const userData = userResult.status === 'fulfilled' ? userResult.value.data : null;
@@ -130,7 +109,6 @@ export const ClubDataProvider = ({ children }) => {
             type: 'FETCH_COMPLETE',
             payload: {
                 allData: newAllData,
-                clubTopTags: newClubTopTags,
                 favoritesCache: newFavoritesCache,
                 userId: newUserId,
                 friendMembershipMap: newFriendMembershipMap,
@@ -155,7 +133,6 @@ export const ClubDataProvider = ({ children }) => {
         userId: state.userId,
         friendMembershipMap: state.friendMembershipMap,
         friendsArray: state.friendsArray,
-        clubTopTags: state.clubTopTags,
         invalidateFavoritesCache,
         refetch: fetchAllData
     }), [state, invalidateFavoritesCache, fetchAllData]);
