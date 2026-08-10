@@ -5,6 +5,7 @@ import { decide } from './decisionLayer.js';
 const HANDLERS = {
   friend_request:  () => import('./handlers/friendRequest.js'),
   friend_accepted: () => import('./handlers/friendAccepted.js'),
+  new_club_event:  () => import('./handlers/newClubEvent.js'),
 };
 
 export const NotificationService = {
