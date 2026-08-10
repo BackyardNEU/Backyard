@@ -6,6 +6,7 @@ const HANDLERS = {
   friend_request:  () => import('./handlers/friendRequest.js'),
   friend_accepted: () => import('./handlers/friendAccepted.js'),
   new_club_event:  () => import('./handlers/newClubEvent.js'),
+  new_review:      () => import('./handlers/newReview.js'),
 };
 
 export const NotificationService = {
