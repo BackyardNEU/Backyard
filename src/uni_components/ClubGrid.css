@@ -14,7 +14,8 @@
   container-type: inline-size;
   gap: 0.5rem;
  
-  box-shadow: 2px 3px 6px rgba(0, 0, 0, 0.82);
+  box-shadow:0 9px 10px rgba(41, 36, 29, 0.22),
+    6px 8px 0 rgba(41, 36, 29, 0.12);
   cursor: pointer;
   transition: transform 0.6s ease, border-color 0.3s ease;
   z-index: 100;
