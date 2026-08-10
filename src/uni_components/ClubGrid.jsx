@@ -16,7 +16,7 @@ const ClubGridCard = ({ result, onExpand, hideHeart, hidePins }) => {
   const [favError, setFavError] = useState(null);
   const GlobalValue = useGlobalStore((state) => state.GlobalValue);
 
-  const { favoritesCache, invalidateFavoritesCache, friendMembershipMap, clubTopTags } = useClubData();
+  const { favoritesCache, invalidateFavoritesCache, friendMembershipMap } = useClubData();
 
   // Whether this card is favorited. Derived straight from the shared cache — it used to be
   // a `let` that the click handler reassigned during render, which React never observes,
@@ -24,7 +24,6 @@ const ClubGridCard = ({ result, onExpand, hideHeart, hidePins }) => {
   const liked = favoritesCache?.has(result.id) ?? false;
 
   const friendsInClub = friendMembershipMap?.get(result.id) || [];
-  const topTags = clubTopTags?.get(result.id) || [];
 
   const handleHeartClick = async (e) => {
     e.stopPropagation();
@@ -120,9 +119,6 @@ const ClubGridCard = ({ result, onExpand, hideHeart, hidePins }) => {
           {truncate(result.club_name)}
         </div>
         <div className = "club-info">
-          {topTags.length > 0 && (
-            <p>{topTags[0]}{topTags[1] && <span style={{marginLeft: '.5rem'}}>{topTags[1]}</span>}</p>
-          )}
         </div>
       </div>
     </motion.button>

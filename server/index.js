@@ -23,6 +23,8 @@ import clubEventsRouter from './routes/clubEvents.js';
 import clubPageRouter from './routes/clubPage.js';
 import questionsRouter from './routes/questions.js';
 import invitesRouter from './routes/invites.js';
+import interestsRouter from './routes/interests.js';
+import userInterestsRouter from './routes/userInterests.js';
 import { startQueue } from './notifications/queue.js';
 import friendRequestsRouter from './routes/friend-requests.js';
 import notificationsRouter from './routes/notifications.js';
@@ -96,6 +98,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Public reads
+app.use('/api/interests', interestsRouter);
 app.use('/api/clubs', clubMembersRouter);
 app.use('/api/clubs', clubsRouter);
 app.use('/api/clubs', clubPageRouter);
@@ -112,6 +115,7 @@ app.use('/api/me/friends', friendsLimiter, friendsRouter);
 app.use('/api/me/blocks', friendsLimiter, blocksRouter);
 // Irreversible, so it gets its own tight bucket rather than sharing one.
 app.use('/api/me/account', limiter(10), accountRouter);
+app.use('/api/me/interests', limiter(100), userInterestsRouter);
 app.use('/api/friend-requests', friendRequestsLimiter, friendRequestsRouter);
 app.use('/api/me/notifications', notificationsLimiter, notificationsRouter);
 app.use('/api/me', profilesRouter); // serves /profile and /membership

@@ -1070,7 +1070,7 @@
   background: rgb(44, 27, 43);
   color: #fff;
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 0.85rem;
+  font-size: 1.1rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -1185,4 +1185,139 @@
 
 .links-add-btn:hover {
   background: rgba(79, 131, 180, 0.22);
+}
+/* ── Club interests edit UI (edit mode only) ── */
+.club-interests-edit {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 0 4px;
+  border-top: 1px solid #efefef;
+  margin-bottom: 12px;
+}
+
+.club-interests-edit > *,
+.interests-edit-sub-wrap {
+  flex: 1 1 120px;
+  min-width: 0;
+}
+
+@media (max-width: 500px) {
+  .club-interests-edit {
+    flex-direction: column;
+  }
+
+  .club-interests-edit > *,
+  .interests-edit-sub-wrap {
+    flex: none;
+    width: 100%;
+  }
+}
+
+.interests-edit-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #555;
+}
+
+.interests-edit-select {
+  width: 100%;
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.95rem;
+  color: #333;
+  background: #fafafa;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
+}
+
+.interests-edit-select:focus {
+  border-color: #888;
+}
+
+.interests-edit-sub-wrap {
+  position: relative;
+}
+
+.interests-edit-autocomplete {
+  position: relative;
+}
+
+.interests-edit-input {
+  width: 100%;
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.95rem;
+  color: #333;
+  background: #fafafa;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease;
+}
+
+.interests-edit-input:focus {
+  border-color: #888;
+}
+
+.interests-edit-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  max-height: min(180px, 40vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.interests-edit-suggestion {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 9px 12px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.9rem;
+  color: #333;
+  cursor: pointer;
+  border-bottom: 1px solid #f2f2f2;
+  transition: background 0.12s ease;
+}
+
+.interests-edit-suggestion:last-child {
+  border-bottom: none;
+}
+
+.interests-edit-suggestion:hover {
+  background: #f5f5f5;
+}
+
+.club-interests-tagline {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #888;
+  margin: 2px 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

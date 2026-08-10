@@ -251,6 +251,10 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const [clubMembers, setClubMembers] = useState(() => warmed?.members ?? []);
     // pending hide/show changes for comments — keyed by reviewId, only committed on Save
     const [hideDraft, setHideDraft] = useState({});
+    // club interests (category + subcategories set by the club owner)
+    const [taxonomy, setTaxonomy] = useState([]);
+    const [clubInterestsSaved, setClubInterestsSaved] = useState(null);
+    const [clubInterestsDraft, setClubInterestsDraft] = useState(null);
 
     const isMember = myRole !== null;
     const isApproved = myRole === 'moderator' || myRole === 'top_moderator';
@@ -321,9 +325,10 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             const publicFetches = warmed ? [] : [
                 apiFetch(`/clubs/${id}/reviews`, { auth: false }),
                 apiFetch(`/clubs/${id}/page`, { auth: false }),
-                apiFetch(`/clubs/${id}/top-tags`, { auth: false }),
                 apiFetch(`/clubs/${id}/events/upcoming`), // optional auth: sends token if logged in
                 apiFetch(`/clubs/${id}/members`, { auth: false }),
+                apiFetch('/interests', { auth: false }),
+                apiFetch(`/clubs/${id}/interests`, { auth: false }),
             ];
             // undefined means the prefetch never resolved it; null is a real answer
             // (signed in, not an editor) and does not need asking again.
@@ -340,12 +345,17 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 Promise.allSettled(authFetches),
             ]);
 
-            const [reviewsResult, pageResult, topTagsResult, eventsResult, membersResult] = publicSettled;
+            const [reviewsResult, pageResult, eventsResult, membersResult, taxonomyResult, clubInterestsResult] = publicSettled;
             const [approvedResult] = authSettled;
 
             if (reviewsResult?.status === 'fulfilled') set_reviews(reviewsResult.value);
-            if (topTagsResult?.status === 'fulfilled') setTopTags((topTagsResult.value || []).map(r => r.tag));
             if (membersResult?.status === 'fulfilled') setClubMembers(membersResult.value || []);
+            if (taxonomyResult?.status === 'fulfilled') setTaxonomy(taxonomyResult.value || []);
+            if (clubInterestsResult?.status === 'fulfilled') {
+                const ci = clubInterestsResult.value || null;
+                setClubInterestsSaved(ci);
+                setClubInterestsDraft(ci);
+            }
 
             // On a cache hit the events came from the prefetch, so read them from there —
             // the RSVP lookup below needs the ids either way.
@@ -549,6 +559,22 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             setPageData(prev => ({ ...prev, modules: finalDraft }));
             setDraft(finalDraft);
 
+            // Save club interests: PUT if a category is set, DELETE if cleared
+            if (clubInterestsDraft?.category_id) {
+                await apiFetch(`/clubs/${id}/interests`, {
+                    method: 'PUT',
+                    body: {
+                        category_id: clubInterestsDraft.category_id,
+                        subcategory_ids: clubInterestsDraft.subcategory_ids || [],
+                    },
+                });
+                setClubInterestsSaved(clubInterestsDraft);
+            } else if (clubInterestsSaved?.category_id) {
+                // Category was cleared — remove the row entirely
+                await apiFetch(`/clubs/${id}/interests`, { method: 'DELETE' });
+                setClubInterestsSaved(null);
+            }
+
             // The prefetch cache now holds the pre-edit page. Drop it so reopening this
             // club shows what was just saved rather than a stale copy for up to a minute.
             invalidateClubPage(id);
@@ -592,6 +618,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
         setPendingLogoFile(null);
         setQuestionDeletes(new Set()); // restore optimistically-removed questions
         setHideDraft({});
+        setClubInterestsDraft(clubInterestsSaved);
         setIsEditing(false);
     };
 
@@ -673,7 +700,6 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     key={`basic_info-${part}`}
                     club={club}
                     data={module.data}
-                    topTags={topTags}
                     editing={isEditing}
                     onChange={(updatedData) => handleModuleChange('basic_info', updatedData)}
                     onLogoChange={(file) => setPendingLogoFile(file)}
@@ -681,6 +707,9 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     warning={moduleWarnings.basic_info ?? null}
                     part={part}
                     linksDisplayed={linksDisplayed}
+                    taxonomy={taxonomy}
+                    clubInterests={clubInterestsDraft}
+                    onInterestsChange={setClubInterestsDraft}
                     currentUserId={user?.id ?? null}
                 />
             );

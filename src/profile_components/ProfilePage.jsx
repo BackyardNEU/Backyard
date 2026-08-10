@@ -8,6 +8,7 @@ import imageCompression from 'browser-image-compression'
 import { ClubMembershipPanel } from './ClubMembershipPanel'
 import { FriendDiscoveryList } from './FriendDiscoveryList'
 import { PolaroidCards } from './PolaroidCards'
+import { InterestsModal } from './InterestsModal'
 import Avatar from '../components/Avatar'
 import { useClubData } from '../context/useClubData'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
@@ -67,6 +68,8 @@ export const ProfilePage = () => {
 
     loadUser();
   }, [navigate]);
+
+  const [interestsOpen, setInterestsOpen] = useState(false);
 
   const lastPath = useGlobalStore((state) => state.lastPath);
 
@@ -160,6 +163,7 @@ export const ProfilePage = () => {
 
   return (
       <div className="ProfilePage">
+        {interestsOpen && <InterestsModal onClose={() => setInterestsOpen(false)} />}
         <div className='spacer' />
         <div className='profile-header'>
           <label htmlFor="avatar-upload" className="profile-photo-btn">
@@ -180,32 +184,35 @@ export const ProfilePage = () => {
           <div className="profile-copy">
             <h1 className='ProfileName'>Hello, {profile?.username}</h1>
             <p className="user-description">{profileDescription}</p>
-            <button
-              type="button"
-              className="profile-setup-btn"
-              onClick={() => navigate('/profile-setup')}
-            >
-              Setup profile
-            </button>
-            {/* The nav bar's calendar/clubs/profile buttons don't cover settings —
-                this stays the only entry point to it. */}
-            <button
-              type="button"
-              className="profile-setup-btn"
-              onClick={() => navigate('/settings')}
-            >
-              Settings
-            </button>
-            {/* Notifications and logout used to float globally (top-right, on every
-                page) via LoginMorph's .logged-in-controls cluster. That cluster is
-                gone now that the nav bar's profile button is the login/profile entry
-                point, so they live here instead. */}
-            {user && (
-              <div className="profile-account-actions">
-                <NotificationBell />
-                <Logout />
-              </div>
-            )}
+            <div className="profile-btn-row">
+              <button
+                type="button"
+                className="profile-setup-btn"
+                onClick={() => navigate('/profile-setup')}
+              >
+                Setup profile
+              </button>
+              <button
+                type="button"
+                className="profile-setup-btn"
+                onClick={() => setInterestsOpen(true)}
+              >
+                My Interests
+              </button>
+              <button
+                type="button"
+                className="profile-setup-btn"
+                onClick={() => navigate('/settings')}
+              >
+                Settings
+              </button>
+              {user && (
+                <div className="profile-account-actions">
+                  <NotificationBell />
+                  <Logout />
+                </div>
+              )}
+            </div>
           </div>
           <button
             className="profile-close-btn"
