@@ -25,13 +25,13 @@ export function NotificationItem({ notification, onRespond }) {
           <div className="notif-actions">
             <button
               className="notif-action-btn notif-action-btn--accept"
-              onClick={() => onRespond(notification.entity_id, 'accepted')}
+              onClick={() => onRespond(notification.entity_id, 'accepted', notification.id)}
             >
               Accept
             </button>
             <button
               className="notif-action-btn notif-action-btn--decline"
-              onClick={() => onRespond(notification.entity_id, 'declined')}
+              onClick={() => onRespond(notification.entity_id, 'declined', notification.id)}
             >
               Decline
             </button>

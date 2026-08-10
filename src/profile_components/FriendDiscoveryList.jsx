@@ -15,6 +15,7 @@ export const FriendDiscoveryList = ({ userId }) => {
   const [addingId, setAddingId] = useState(null);
   const [pendingIds, setPendingIds] = useState(new Set());
   const [modalOpen, setModalOpen] = useState(false);
+  const [toast, setToast] = useState(null);
 
   // ClubDataProvider already loaded /me/friends, and it carries exactly the three fields
   // rendered here — id, username, avatar_url. Fetching it again on mount meant every visit
@@ -28,6 +29,12 @@ export const FriendDiscoveryList = ({ userId }) => {
     setFriends(friendsArray);
     setFriendIds(friendsArray.map((f) => f.id));
   }, [friendsArray]);
+
+  useEffect(() => {
+    apiFetch('/friend-requests/sent-pending')
+      .then((ids) => setPendingIds(new Set(ids)))
+      .catch(() => {});
+  }, [userId]);
 
   useEffect(() => {
     if (!searchInput.trim()) {
@@ -55,6 +62,11 @@ export const FriendDiscoveryList = ({ userId }) => {
     };
   }, [searchInput, userId]);
 
+  function showToast(message) {
+    setToast(message);
+    setTimeout(() => setToast(null), 3000);
+  }
+
   async function handleAddFriend(friendId) {
     if (addingId || pendingIds.has(friendId) || friendIds.includes(friendId)) return;
     setAddingId(friendId);
@@ -62,6 +74,7 @@ export const FriendDiscoveryList = ({ userId }) => {
     try {
       await apiFetch('/friend-requests', { method: 'POST', body: { recipientId: friendId } });
       setPendingIds((prev) => new Set([...prev, friendId]));
+      showToast('Friend request sent!');
     } catch (err) {
       if (err.status === 409) {
         setPendingIds((prev) => new Set([...prev, friendId]));
@@ -210,6 +223,10 @@ export const FriendDiscoveryList = ({ userId }) => {
             )}
           </div>
         </div>
+      )}
+
+      {toast && (
+        <div className="friend-toast">{toast}</div>
       )}
     </div>
   );

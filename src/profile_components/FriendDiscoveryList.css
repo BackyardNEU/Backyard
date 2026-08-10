@@ -316,3 +316,17 @@
   font-size: 0.9rem;
   margin: 0;
 }
+
+.friend-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a1a;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  z-index: 9999;
+  pointer-events: none;
+}

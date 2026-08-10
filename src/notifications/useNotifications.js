@@ -72,12 +72,18 @@ export function useNotifications() {
     }
   }, [setUnreadCount]);
 
-  const respondToRequest = useCallback(async (requestId, action) => {
+  const respondToRequest = useCallback(async (requestId, action, notificationId) => {
     try {
       await apiFetch(`/friend-requests/${requestId}`, {
         method: 'PATCH',
         body: { status: action },
       });
+      if (notificationId) {
+        await apiFetch(`/me/notifications/${notificationId}`, {
+          method: 'PATCH',
+          body: { action_taken: true },
+        });
+      }
       fetchNotifications();
     } catch (err) {
       console.error('[useNotifications] respondToRequest error:', err);

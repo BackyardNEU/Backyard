@@ -6,7 +6,7 @@ export const registry = {
     message: ({ actor }) => `${actor?.username ?? 'Someone'} sent you a friend request`,
     actions: ['accepted', 'declined'],
   },
-  friend_accepted: {
+friend_accepted: {
     icon: UserCheck,
     message: ({ actor }) => `${actor?.username ?? 'Someone'} accepted your friend request`,
   },
