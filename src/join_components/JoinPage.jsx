@@ -6,6 +6,7 @@ import Form from '../login_components/form';
 import './JoinPage.css';
 import { Skeleton, SkeletonRegion } from '../components/Skeleton';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
+import { DEFAULT_UNIVERSITY_PATH } from '../lib/university';
 
 export default function JoinPage() {
   const { token } = useParams();
@@ -22,7 +23,7 @@ export default function JoinPage() {
   const [redeemState, setRedeemState] = useState(null); // null | 'loading' | 'success' | 'already' | string (error)
   const [isEditorGrant, setIsEditorGrant] = useState(false);
 
-  const neuID = '/university/Northeastern'
+  const neuID = DEFAULT_UNIVERSITY_PATH
 
   // Store token so AuthCallbackPage and ProfileSetupPage can redirect back here after auth
   useEffect(() => {

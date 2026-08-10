@@ -4,6 +4,7 @@ import './App.css';
 import { SearchBar } from './home_components/SearchBar';
 import { UniversityPage } from './uni_components/UniversityPage';
 import LoginMorph from "./login_components/LoginMorph";
+import { NavBar } from "./nav_components/NavBar";
 import ReviewPage from "./review_components/ReviewPage";
 import AuthListener from "./login_components/AuthListener";
 import AuthCallbackPage from './login_components/AuthCallbackPage';
@@ -16,6 +17,7 @@ import JoinPage from './join_components/JoinPage';
 import AdminPage from './admin_components/AdminPage';
 import { ClubDataProvider } from './context/ClubDataProvider'
 import { SupportModal } from './support_components/SupportModal'
+import { DEFAULT_UNIVERSITY_PATH } from './lib/university'
 
 function App() {
   const [loginOpen, setLoginOpen] = useState(false);
@@ -34,13 +36,14 @@ function App() {
       <div className="App">
           <AuthListener />
           <LoginMorph open={loginOpen} setOpen={setLoginOpen} />
+          <NavBar loginOpen={loginOpen} setLoginOpen={setLoginOpen} />
           <SupportModal open={supportOpen} setOpen={setSupportOpen} />
 
         <Routes>
           {/* University selection disabled — defaulting to Northeastern for now */}
           <Route
             path="/"
-            element={<Navigate to="/university/Northeastern" replace />}
+            element={<Navigate to={DEFAULT_UNIVERSITY_PATH} replace />}
           />
           <Route path="/university/:id" element={<UniversityPage />} />
           <Route path="/reviews/:id" element={<ReviewPage />} />

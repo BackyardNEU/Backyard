@@ -2,33 +2,23 @@
 import { useState, useEffect } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
-import Logout from "./Logout";
-import { NotificationBell } from "../notifications/NotificationBell";
 import Form from "./form";
 import ForgotPasswordForm from "./ForgotPasswordForm";
 import "./LoginMorph.css";
 import { useGlobalStore } from "../lib/store";
-import { useClubData } from "../context/useClubData";
-import Avatar from "../components/Avatar";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import borderImg from '/src/assets/border-green.svg';
 import borderHorizontalImg from '/src/assets/border-horizontal-green.svg';
 
+// The compact trigger (avatar/login icon) now lives in NavBar, sharing this
+// component's layoutId="login" so the icon-to-card morph still animates —
+// LoginMorph itself only owns the expanded login/signup/forgot-password card.
 function LoginMorph({ open, setOpen }) {
-  let GlobalValue = useGlobalStore((state) => state.GlobalValue);
   const setLastPath = useGlobalStore((state) => state.setLastPath);
   const navigate = useNavigate();
   const location = useLocation();
-  // Pages that render their own account chrome. The floating avatar cluster would
-  // otherwise overlay them.
-  const isProfilePage = location.pathname === '/profile' || location.pathname === '/settings';
   const [view, setView] = useState("login");
-  // Avatar comes from the shared profile rather than its own /me/profile call. It also
-  // stays correct now when the profile is edited, which the previous fetch-once-on-login
-  // approach did not.
-  const { profile } = useClubData();
-  const avatarUrl = GlobalValue ? profile?.avatar_url : null;
   const [signupFirstName, setSignupFirstName] = useState("");
   const [typedGreeting, setTypedGreeting] = useState("");
 
@@ -55,11 +45,6 @@ function LoginMorph({ open, setOpen }) {
     }, 60);
     return () => clearInterval(timer);
   }, [signupFirstName]);
-
-  const handleProfileClick = () => {
-    setOpen(false);
-    navigate("/profile");
-  };
 
   const handleAuth = (flow) => {
     setOpen(false);
@@ -95,32 +80,6 @@ function LoginMorph({ open, setOpen }) {
 
   return (
     <AnimatePresence>
-      {!open && !isProfilePage && (
-        <div className="logged-in-controls">
-          {GlobalValue && <Logout />}
-          {GlobalValue && <NotificationBell />}
-          <motion.button
-            layoutId="login"
-            className="login-icon"
-            onClick={GlobalValue ? handleProfileClick : () => setOpen(true)}
-          >
-            {/* Signed in, this is you — photo or initials, matching every other avatar in
-                the app. Signed out it is the mascot acting as a login affordance, which
-                is a different thing and stays the raccoon. */}
-            {GlobalValue ? (
-              <Avatar
-                url={avatarUrl}
-                firstName={profile?.first_name}
-                lastName={profile?.last_name}
-                username={profile?.username}
-                alt="Your profile"
-              />
-            ) : (
-              <img src="/raccoon_pfp.png" alt="Login" />
-            )}
-          </motion.button>
-        </div>
-      )}
       {open && (
         <motion.div
           layoutId="login"

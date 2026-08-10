@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
 import { isUuid, slugifyUniversity, slugMatches } from '../../shared/slug';
 import { UniSearchBar } from './UniSearchBar';
@@ -24,11 +24,13 @@ export const UniversityPage = () => {
   // Either a slug ("Northeastern") or a UUID — the API resolves both, and old UUID links
   // are rewritten to the slug once the name is known.
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const [university, setUniversity] = useState(null);
   const [results, setResults] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   let GlobalValue = useGlobalStore((state) => state.GlobalValue);
+  const setCalendarViewActive = useGlobalStore((state) => state.setCalendarViewActive);
   const [showCalendar, setShowCalendar] = useState(false);
   const [calendarMounted, setCalendarMounted] = useState(false);
   const [calendarRevealed, setCalendarRevealed] = useState(false);
@@ -52,6 +54,17 @@ export const UniversityPage = () => {
     return () => cancelAnimationFrame(raf);
   }, [calendarMounted, showCalendar]);
 
+  // NavBar lives outside this page and has no other way to know which view
+  // is showing, since that's local state here.
+  useEffect(() => {
+    setCalendarViewActive(showCalendar);
+  }, [showCalendar, setCalendarViewActive]);
+
+  // Clear it on the way out, or the flag outlives the page: leaving the
+  // calendar for /profile would leave the nav bar's calendar icon lit on a
+  // route where neither view exists.
+  useEffect(() => () => setCalendarViewActive(false), [setCalendarViewActive]);
+
   useEffect(() => {
     const html = document.documentElement;
     html.style.backgroundImage = `url(${ghibliBackground})`;
@@ -72,21 +85,33 @@ export const UniversityPage = () => {
 
   const getClubsBasedOnCategory = (newCategory) => {
     console.log("Category received from function: " + newCategory);
-    
+
+    // Nav bar view switches. These are destinations, not filters, so they are
+    // handled before the same-category toggle below and are idempotent:
+    // clicking the section you are already in leaves you there. Toggling made
+    // sense for the search bar's calendar button, but that button is gone, and
+    // a nav item that navigates away from itself reads as a misfire — the
+    // calendar would close and the Clubs icon would light up instead.
+    if (newCategory === "calendar") {
+      setShowCalendar(true);
+      setSelectedCategory("calendar");
+      return;
+    }
+
+    if (newCategory === "clubs") {
+      setShowCalendar(false);
+      setSelectedCategory(null);
+      setResults(allData);
+      return;
+    }
+
+    // Everything below comes from the search bar's category chips, where
+    // clicking the active chip to clear the filter is the point.
     if (newCategory === selectedCategory) {
       console.log("Same category clicked- defaulting");
       setShowCalendar(false);
       setSelectedCategory(null);
       setResults(allData);
-    } else if (newCategory === "calendar") {
-      if (showCalendar) {
-        setShowCalendar(false);
-        setSelectedCategory(null);
-      } else {
-        setShowCalendar(true);
-        setSelectedCategory("calendar");
-      }
-      return;
     } else if (newCategory === "favorites") {
       console.log("If triggering");
       setShowCalendar(false);
@@ -111,6 +136,17 @@ export const UniversityPage = () => {
     window.addEventListener("backyard-category-select", handler);
     return () => window.removeEventListener("backyard-category-select", handler);
   }, [selectedCategory, allData, showCalendar, favoritesCache]);
+
+  // NavBar's calendar button dispatches backyard-category-select directly when
+  // already on this page, but when clicked from elsewhere it has to navigate
+  // here first — it flags that via router state since there's no listener
+  // mounted yet to catch the event.
+  useEffect(() => {
+    if (location.state?.openCalendar) {
+      getClubsBasedOnCategory("calendar");
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state]);
   
   useEffect(() => {
     let cancelled = false;

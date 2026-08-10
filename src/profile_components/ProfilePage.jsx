@@ -12,6 +12,9 @@ import Avatar from '../components/Avatar'
 import { useClubData } from '../context/useClubData'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { Skeleton, SkeletonCircle, SkeletonRegion } from '../components/Skeleton'
+import Logout from '../login_components/Logout'
+import { NotificationBell } from '../notifications/NotificationBell'
+import { DEFAULT_UNIVERSITY_PATH } from '../lib/university'
 
 //this is the landing page for our university club search, most of the info will go through here
 
@@ -184,7 +187,8 @@ export const ProfilePage = () => {
             >
               Setup profile
             </button>
-            {/* There is no nav bar, so the profile page is the entry point to settings. */}
+            {/* The nav bar's calendar/clubs/profile buttons don't cover settings —
+                this stays the only entry point to it. */}
             <button
               type="button"
               className="profile-setup-btn"
@@ -192,10 +196,20 @@ export const ProfilePage = () => {
             >
               Settings
             </button>
+            {/* Notifications and logout used to float globally (top-right, on every
+                page) via LoginMorph's .logged-in-controls cluster. That cluster is
+                gone now that the nav bar's profile button is the login/profile entry
+                point, so they live here instead. */}
+            {user && (
+              <div className="profile-account-actions">
+                <NotificationBell />
+                <Logout />
+              </div>
+            )}
           </div>
           <button
             className="profile-close-btn"
-            onClick={() => {navigate(/*lastPath && lastPath !== '/profile' ? lastPath : '/'*/ `/university/Northeastern`)}}
+            onClick={() => navigate(DEFAULT_UNIVERSITY_PATH)}
             aria-label="Close profile"
           >
             ×

@@ -64,6 +64,13 @@ export const UniSearchBar = ({
                   ];
   
 
+  const handleCalendarClick = () => {
+    setActiveCategory(null);
+    window.dispatchEvent(
+      new CustomEvent("backyard-category-select", { detail: { category: "calendar" } })
+    );
+  };
+
   const handleCategorySelect = (category) => {
     setActiveCategory(prev => prev === category ? null : category);
     window.dispatchEvent(
@@ -72,12 +79,20 @@ export const UniSearchBar = ({
     setMenuOpen(false);
   };
 
-  const handleCalendarClick = () => {
-    setActiveCategory(null);
-    window.dispatchEvent(
-      new CustomEvent("backyard-category-select", { detail: { category: "calendar" } })
-    );
-  };
+  // The nav bar's Clubs and Calendar buttons clear the page's category filter,
+  // but this control keeps its own copy of that selection to render the label.
+  // Without this it goes on advertising a filter that is no longer applied —
+  // pick "Service", press Clubs, and the full list comes back while the button
+  // still reads "Service". Neither name is a real category, so nothing the
+  // menu itself dispatches is caught here.
+  useEffect(() => {
+    const handler = (e) => {
+      const category = e?.detail?.category;
+      if (category === "clubs" || category === "calendar") setActiveCategory(null);
+    };
+    window.addEventListener("backyard-category-select", handler);
+    return () => window.removeEventListener("backyard-category-select", handler);
+  }, []);
 
   const handleClick = () => {
     setIsInteracted(true);
