@@ -36,6 +36,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   const [linksModalOpen, setLinksModalOpen] = useState(false);
   // club interests edit state (only used when editing=true)
   const [subText, setSubText] = useState(['', '']);
+  const [subQuery, setSubQuery] = useState(['', '']); // live filter text while dropdown open
   const [subDropdown, setSubDropdown] = useState(null); // 0 | 1 | null
   const [clubRoster, setClubRoster] = useState([]);
   // Drives how many links show before "More" — 2 on narrow viewports, 5 otherwise.
@@ -209,27 +210,30 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
       return sub?.name || '';
     });
     setSubText([names[0] || '', names[1] || '']);
+    setSubQuery(['', '']);
   }, [editing, clubInterests?.category_id, taxonomy]);
 
   const selectedCat = taxonomy.find(c => c.id === clubInterests?.category_id) || null;
 
   const getSuggestions = useCallback((index) => {
     if (!selectedCat) return [];
-    const text = subText[index].toLowerCase().trim();
+    const text = subQuery[index].toLowerCase().trim();
     return selectedCat.subcategories.filter(s => s.name.toLowerCase().includes(text));
-  }, [selectedCat, subText]);
+  }, [selectedCat, subQuery]);
 
   const handleCategoryChange = useCallback((e) => {
     const catId = e.target.value || null;
     onInterestsChange?.({ category_id: catId, subcategory_ids: [] });
     setSubText(['', '']);
+    setSubQuery(['', '']);
     setSubDropdown(null);
   }, [onInterestsChange]);
 
   const handleSubTextChange = useCallback((index, value) => {
-    setSubText(prev => prev.map((t, i) => i === index ? value : t));
+    setSubQuery(prev => prev.map((t, i) => i === index ? value : t));
     setSubDropdown(index);
     if (!value.trim()) {
+      setSubText(prev => prev.map((t, i) => i === index ? '' : t));
       const newSubs = [...(clubInterests?.subcategory_ids || [])];
       newSubs[index] = undefined;
       onInterestsChange?.({ category_id: clubInterests?.category_id, subcategory_ids: newSubs.filter(Boolean) });
@@ -250,6 +254,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
       const existing = selectedCat?.subcategories?.find(s => s.id === savedId);
       return existing?.name ?? t;
     }));
+    setSubQuery(['', '']);
     setSubDropdown(null);
   }, [clubInterests, onInterestsChange, selectedCat]);
 
@@ -319,10 +324,13 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
                       <input
                         className="interests-edit-input"
                         type="text"
-                        value={subText[index]}
-                        placeholder={`Search ${selectedCat.name} subcategories…`}
+                        value={subDropdown === index ? subQuery[index] : subText[index]}
+                        placeholder={subText[index] ? subText[index] : `Search ${selectedCat.name} subcategories…`}
                         onChange={e => handleSubTextChange(index, e.target.value)}
-                        onFocus={() => setSubDropdown(index)}
+                        onFocus={() => {
+                          setSubQuery(prev => prev.map((t, i) => i === index ? '' : t));
+                          setSubDropdown(index);
+                        }}
                         onBlur={() => setTimeout(() => setSubDropdown(null), 150)}
                       />
                       {subDropdown === index && getSuggestions(index).length > 0 && (
