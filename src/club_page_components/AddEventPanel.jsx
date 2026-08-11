@@ -151,6 +151,23 @@ export default function AddEventPanel({
     setShowCropModal(false);
   };
 
+  // When editing an existing event the poster is a remote URL, not a local File.
+  // Fetch it as a blob so the crop modal (which needs a File) can work with it.
+  const handleScaleClick = async () => {
+    if (imageFile) { setShowCropModal(true); return; }
+    if (!imagePreview) return;
+    try {
+      const res = await fetch(imagePreview);
+      if (!res.ok) throw new Error('fetch failed');
+      const blob = await res.blob();
+      const fetched = new File([blob], 'poster.jpg', { type: blob.type || 'image/jpeg' });
+      setImageFile(fetched);
+      setShowCropModal(true);
+    } catch {
+      setFormWarning('Could not load the existing poster for cropping. Try uploading a new image instead.');
+    }
+  };
+
   const resetForm = () => {
     setShowForm(false);
     setEditingEventId(null);
@@ -276,9 +293,8 @@ export default function AddEventPanel({
           <button
             type="button"
             className="cal-image-scale-btn"
-            onClick={() => setShowCropModal(true)}
+            onClick={handleScaleClick}
             aria-label="Scale poster"
-            disabled={!imageFile}
           >
             SCALE
           </button>
