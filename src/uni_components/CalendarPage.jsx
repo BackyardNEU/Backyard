@@ -87,8 +87,13 @@ export function CalendarPage({ onClose }) {
 
   const containerRef = useRef(null);
   const handleWheel = useCallback((e) => {
-    e.preventDefault();
-    if (containerRef.current) containerRef.current.scrollLeft += e.deltaX || e.deltaY;
+    if (!containerRef.current) return;
+    // Only intercept horizontal gestures (trackpad swipe). Let vertical scroll
+    // (deltaY dominant, e.g. mouse wheel) pass through to the page.
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+      e.preventDefault();
+      containerRef.current.scrollLeft += e.deltaX;
+    }
   }, []);
   const handleMouseEnter = () => containerRef.current?.addEventListener('wheel', handleWheel, { passive: false });
   const handleMouseLeave = () => containerRef.current?.removeEventListener('wheel', handleWheel);
