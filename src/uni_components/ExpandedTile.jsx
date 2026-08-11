@@ -966,7 +966,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
             <div className="club-modules">
                 {basicInfoModule && renderModule(basicInfoModule, 'hero')}
-                {!isApproved && (
+                {!isApproved && clubEvents.length > 0 && (
                     <CalendarModule
                         club={club}
                         editing={false}
@@ -977,9 +977,11 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                         userId={user?.id ?? null}
                     />
                 )}
-                <div className="module-view-divider">
-                    <div className="divider" style={{ backgroundImage: `url(${dividerLineImg})` }} aria-hidden="true" />
-                </div>
+                {(isApproved || clubEvents.length > 0) && (
+                    <div className="module-view-divider">
+                        <div className="divider" style={{ backgroundImage: `url(${dividerLineImg})` }} aria-hidden="true" />
+                    </div>
+                )}
                 <AddEventPanel
                     isApproved={isApproved}
                     club={club}
@@ -992,9 +994,11 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     onRsvp={handleClubRsvp}
                     userId={user?.id ?? null}
                 />
-                <div className="module-view-divider">
-                    <div className="divider" style={{ backgroundImage: `url(${dividerLineImg})` }} aria-hidden="true" />
-                </div>
+                {isApproved && (
+                    <div className="module-view-divider">
+                        <div className="divider" style={{ backgroundImage: `url(${dividerLineImg})` }} aria-hidden="true" />
+                    </div>
+                )}
                 {isEditing ? (
                     <ModuleAccordion
                         modules={accordionModules}
