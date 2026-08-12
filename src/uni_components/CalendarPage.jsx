@@ -126,6 +126,10 @@ export function CalendarPage({ onClose }) {
   const handleMouseEnter = () => containerRef.current?.addEventListener('wheel', handleWheel, { passive: false });
   const handleMouseLeave = () => containerRef.current?.removeEventListener('wheel', handleWheel);
 
+  // Tracks which day column sits closest to the row's horizontal center as the
+  // user scrolls, so its label can highlight the same way the day dots do.
+  const [activeDayIndex, setActiveDayIndex] = useState(0);
+
   // Populates state when the calendar was opened without a prior hover (keyboard, touch,
   // a very fast click). On a warm cache prefetchCalendar resolves from memory, so this
   // re-sets the same values and nothing flashes.
@@ -165,9 +169,55 @@ export function CalendarPage({ onClose }) {
       const dayEvents = weeklyEvents
         .filter(e => isSameDay(parseISO(e.start_time), date))
         .sort((a, b) => parseISO(a.start_time) - parseISO(b.start_time));
-      return { date, label: format(date, 'EEE'), sublabel: format(date, 'd'), isToday: i === 0, events: dayEvents };
+      return { date, label: format(date, 'EEE'), fullLabel: format(date, 'EEEE'), sublabel: format(date, 'd'), isToday: i === 0, events: dayEvents };
     });
   }, [weeklyEvents, todayDate]);
+
+  useEffect(() => {
+    const row = containerRef.current;
+    if (!row || viewMode !== 'week') return;
+    let ticking = false;
+    const updateActiveDay = () => {
+      // With no scroll padding, the first/last day's center can never
+      // actually reach the row's center — so at either scroll extreme,
+      // just force that end's day active instead of nearest-to-center math.
+      const maxScroll = row.scrollWidth - row.clientWidth;
+      const dayEls = row.querySelectorAll('.calpg-week-day');
+      if (row.scrollLeft <= 1) {
+        setActiveDayIndex(0);
+        ticking = false;
+        return;
+      }
+      if (row.scrollLeft >= maxScroll - 1) {
+        setActiveDayIndex(dayEls.length - 1);
+        ticking = false;
+        return;
+      }
+      const rowRect = row.getBoundingClientRect();
+      const center = rowRect.left + rowRect.width / 2;
+      let closestIndex = 0;
+      let closestDistance = Infinity;
+      dayEls.forEach((dayEl, i) => {
+        const rect = dayEl.getBoundingClientRect();
+        const distance = Math.abs(center - (rect.left + rect.width / 2));
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestIndex = i;
+        }
+      });
+      setActiveDayIndex(closestIndex);
+      ticking = false;
+    };
+    const onScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(updateActiveDay);
+        ticking = true;
+      }
+    };
+    updateActiveDay();
+    row.addEventListener('scroll', onScroll);
+    return () => row.removeEventListener('scroll', onScroll);
+  }, [viewMode, weekDays]);
 
   useEffect(() => {
     if (viewMode !== 'month' || !userId) return;
@@ -356,8 +406,8 @@ export function CalendarPage({ onClose }) {
   return (
     <>
       <div className="calpg-card">
-        <button className="calpg-close" onClick={onClose}>✕</button>
         <div className="calpg-header">
+          <button className="calpg-close" onClick={onClose}>✕</button>
           <div className="calpg-tree-wrap">
             <img src={treeImg} alt="" className="calpg-tree-img" />
           </div>
@@ -384,11 +434,14 @@ export function CalendarPage({ onClose }) {
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
           >
-            {weekDays.map(day => (
+            {weekDays.map((day, i) => (
               <div key={day.date.toISOString()} className={`calendar-day calpg-week-day${day.isToday ? ' today' : ''}`}>
                 <div className="day-title-number calpg-day-title">
-                  <span className="calpg-day-label">{day.label}</span>
-                  <span className="calpg-day-num">{day.sublabel}</span>
+                  <span className={`calpg-day-label${i === activeDayIndex ? ' calpg-day-label--active' : ''}`}>
+                    <span className="calpg-day-full">{day.fullLabel}</span>
+                    <span className="calpg-day-abbr">{day.label}</span>
+                  </span>
+                  <span className={`calpg-day-num${i === activeDayIndex ? ' calpg-day-num--active' : ''}`}>{day.sublabel}</span>
                 </div>
                 {day.events.length === 0 ? (
                   <p>No events</p>

@@ -608,13 +608,15 @@
   position: relative;
   background: #fff;
 
-  padding: 20px 20px 64px;
+padding: 0 10px;
+
+  
   width: 100%;
- 
+
   height: 100%;
   box-sizing: border-box;
   overflow-y: auto;
-  
+
   scrollbar-width: none;
 }
 
@@ -663,8 +665,22 @@
   margin: 0;
 }
 
-/* ===== INLINE CALENDAR HEADER (tree + month name) ===== */
+/* ===== INLINE CALENDAR HEADER (tree + month name) =====
+   Sticks to the top of .calpg-card's own scroll area so events scroll
+   underneath it instead of the whole header scrolling away. Expands into
+   .calpg-card's own top/side padding (negative margin sized off the same
+   --calpg-pad-* vars) so that padding area is covered by the header's
+   background too, instead of being a gap the scrolled content peeks
+   through above it — then re-adds the same amount as padding so the
+   header's own content still lines up with the rest of the card. */
 .calpg-header {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  background: #fff;
+  margin: calc(-1 * var(--calpg-pad-top)) calc(-1 * var(--calpg-pad-x)) 0;
+  padding: var(--calpg-pad-top) var(--calpg-pad-x) 0;
+
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -875,10 +891,51 @@
   display: none;
 }
 
-/* ===== INLINE CALENDAR WEEK VIEW DAY LABELS ===== */
+/* ===== INLINE CALENDAR WEEK VIEW DAY LABELS =====
+   Same active/inactive scroll-highlight as a horizontal day slider: whichever
+   day column sits centered in .calpg-week-row gets the accent color + a
+   slight scale-up (see activeDayIndex in CalendarPage.jsx), everything else
+   stays muted. Text itself mirrors .calpg-month-full/-abbr: full weekday
+   name by default, short "MON" form under the same 700px breakpoint. */
 .calpg-day-label {
   font-family: "Barlow Condensed", sans-serif;
   text-transform: uppercase;
+  color: #999;
+  transition: color 180ms ease, transform 180ms ease;
+  display: inline-block;
+}
+
+.calpg-day-label--active {
+  color: #e8793a;
+  transform: scale(1.15);
+}
+
+.calpg-day-num {
+  color: #999;
+  transition: color 180ms ease, transform 180ms ease;
+  display: inline-block;
+}
+
+.calpg-day-num--active {
+  color: #e8793a;
+  transform: scale(1.15);
+}
+
+.calpg-day-full {
+  display: inline;
+}
+
+.calpg-day-abbr {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .calpg-day-full {
+    display: none;
+  }
+  .calpg-day-abbr {
+    display: inline;
+  }
 }
 
 /* ===== INLINE CALENDAR MONTH VIEW WEEKDAY HEADER (S M T W T F S) ===== */
