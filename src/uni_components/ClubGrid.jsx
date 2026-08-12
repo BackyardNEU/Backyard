@@ -13,7 +13,7 @@ import posterPin from '/src/assets/poster_pin.png';
 import borderImg from '/src/assets/border.svg';
 import borderHorizontalImg from '/src/assets/border-horizontal.svg';
 import Avatar from '../components/Avatar';
-const ClubGridCard = ({ result, onExpand, hideHeart, hidePins, showBorder }) => {
+const ClubGridCard = ({ result, onExpand, hideHeart, hidePins, showBorder, isModerator }) => {
   const [animating, setAnimating] = useState(false);
   const [favError, setFavError] = useState(null);
   const GlobalValue = useGlobalStore((state) => state.GlobalValue);
@@ -114,23 +114,26 @@ const ClubGridCard = ({ result, onExpand, hideHeart, hidePins, showBorder }) => 
         /> : null}
         </div>
         {favError && <div className="club-fav-error">{favError}</div>}
-        {GlobalValue && friendsInClub.length > 0 && (
+        {(isModerator || (GlobalValue && friendsInClub.length > 0)) && (
           <div className="friend-avatars">
-            {friendsInClub.slice(0, 3).map((friend) => (
-              <Avatar
-                key={friend.id}
-                url={friend.avatar_url}
-                firstName={friend.first_name}
-                lastName={friend.last_name}
-                username={friend.username}
-                className="friend-avatar-img"
-              />
-            ))}
-            {friendsInClub.length > 3 && (
-              <span className="friend-avatar-overflow">
-                +{friendsInClub.length - 3}
-              </span>
-            )}
+            <div className="friend-avatars-left">
+              {GlobalValue && friendsInClub.slice(0, 3).map((friend) => (
+                <Avatar
+                  key={friend.id}
+                  url={friend.avatar_url}
+                  firstName={friend.first_name}
+                  lastName={friend.last_name}
+                  username={friend.username}
+                  className="friend-avatar-img"
+                />
+              ))}
+              {GlobalValue && friendsInClub.length > 3 && (
+                <span className="friend-avatar-overflow">
+                  +{friendsInClub.length - 3}
+                </span>
+              )}
+            </div>
+            {isModerator && <span className="mod-badge">MOD</span>}
           </div>
         )}
         <div className = "club-name"> 
