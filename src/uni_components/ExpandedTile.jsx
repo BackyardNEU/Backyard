@@ -339,10 +339,10 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             // be re-fetching what is on screen. Only the auth-dependent calls are left,
             // and those cannot be prefetched — they depend on who is signed in.
             const publicFetches = warmed ? [] : [
-                apiFetch(`/clubs/${id}/reviews`, { auth: false }),
+                apiFetch(`/clubs/${id}/reviews`),
                 apiFetch(`/clubs/${id}/page`, { auth: false }),
                 apiFetch(`/clubs/${id}/events/upcoming`), // optional auth: sends token if logged in
-                apiFetch(`/clubs/${id}/members`, { auth: false }),
+                apiFetch(`/clubs/${id}/members`),
                 apiFetch('/interests', { auth: false }),
                 apiFetch(`/clubs/${id}/interests`, { auth: false }),
             ];
