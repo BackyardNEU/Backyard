@@ -228,6 +228,63 @@
   background-color: rgb(120, 30, 30);
 }
 
+/* Waiting on a moderator. Amber rather than green so it doesn't read as "you're in",
+   and it stays clickable because that click withdraws the request. */
+.membership-btn.pending {
+  background-color: rgb(122, 90, 0);
+}
+
+/* ─── Join policy toggle (club owner only) ─── */
+.join-policy-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 10px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: "Barlow condensed", sans-serif;
+  font-size: 13px;
+  color: rgb(70, 62, 55);
+}
+
+.join-policy-track {
+  position: relative;
+  flex-shrink: 0;
+  width: 34px;
+  height: 18px;
+  border-radius: 999px;
+  background: rgb(184, 178, 170);
+  transition: background 0.18s ease;
+}
+
+.join-policy-toggle.on .join-policy-track {
+  background: rgb(0, 62, 11);
+}
+
+.join-policy-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.18s ease;
+}
+
+.join-policy-toggle.on .join-policy-thumb {
+  transform: translateX(16px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .join-policy-track,
+  .join-policy-thumb {
+    transition: none;
+  }
+}
+
 .content-col-divider {
   width: 100%;
 }

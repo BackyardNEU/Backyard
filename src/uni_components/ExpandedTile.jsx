@@ -221,6 +221,8 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     // button, so resolving it after mount used to swap the header and shove everything
     // below it down — the buttons visibly jumping on open.
     const [myRole, setMyRole] = useState(() => warmed?.role ?? null);
+    const [requestPending, setRequestPending] = useState(() => warmed?.joinRequestPending ?? false);
+    const [joinPolicy, setJoinPolicy] = useState(() => club?.join_policy ?? 'open');
     // NOTE2SELF: THIS WILL BECOME IRRELEVANT LATER AS A LOADING STATE ACROSS ALL MODULES/INFO IS PUT IN PLACE
     const [memberLoading, setMemberLoading] = useState(false);
     // active tab: 'page' | 'members'
@@ -258,6 +260,20 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
     const isMember = myRole !== null;
     const isApproved = myRole === 'moderator' || myRole === 'top_moderator';
+    // Deliberately narrower than isApproved: changing who can get in is an ownership
+    // decision, so a plain moderator does not get the toggle.
+    const isOwner = myRole === 'top_moderator';
+
+    // The membership button used to be a straight isMember ternary. It now has to say
+    // whether clicking will join outright or only ask, and offer a way back out of the
+    // queue — a pending request the user cannot cancel is a dead end.
+    const membershipAction = isMember
+        ? { label: 'Leave Club', variant: 'leave', shadow: 'rgb(90, 20, 20)' }
+        : requestPending
+            ? { label: 'Requested', variant: 'pending', shadow: 'rgb(92, 68, 0)' }
+            : joinPolicy === 'request'
+                ? { label: 'Request to Join', variant: 'join', shadow: 'rgb(0, 45, 8)' }
+                : { label: 'Join Club', variant: 'join', shadow: 'rgb(0, 45, 8)' };
 
     const id = club.id;
 
@@ -391,8 +407,10 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 setPageData(pageResult.value);
                 setDraft(buildDraft(pageResult.value, club));
             }
-            if (approvedResult?.status === 'fulfilled')
+            if (approvedResult?.status === 'fulfilled') {
                 setMyRole(approvedResult.value?.role ?? null);
+                setRequestPending(Boolean(approvedResult.value?.joinRequestPending));
+            }
 
             setHydrated(true);
         }
@@ -423,15 +441,38 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 await apiFetch(`/clubs/${club.id}/members/me`, { method: 'DELETE' });
                 setMyRole(null);
                 if (onMembershipChange) onMembershipChange(club.id, false);
+            } else if (requestPending) {
+                await apiFetch(`/clubs/${club.id}/join-requests/me`, { method: 'DELETE' });
+                setRequestPending(false);
             } else {
                 const result = await apiFetch(`/clubs/${club.id}/members/me`, { method: 'POST' });
-                setMyRole(result?.role ?? 'member');
-                if (onMembershipChange) onMembershipChange(club.id, true);
+                // A request-to-join club answers with a status instead of a role — the
+                // user is queued, not admitted, so membership must not flip yet.
+                if (result?.status === 'requested') {
+                    setRequestPending(true);
+                } else {
+                    setMyRole(result?.role ?? 'member');
+                    if (onMembershipChange) onMembershipChange(club.id, true);
+                }
             }
         } catch (err) {
             console.error('Error updating membership:', err);
         }
         setMemberLoading(false);
+    }
+
+    async function handleJoinPolicyToggle() {
+        const next = joinPolicy === 'request' ? 'open' : 'request';
+        setJoinPolicy(next); // optimistic; reverted below if the call fails
+        try {
+            await apiFetch(`/clubs/${club.id}/join-policy`, {
+                method: 'PATCH',
+                body: { join_policy: next },
+            });
+        } catch (err) {
+            console.error('Error updating join policy:', err);
+            setJoinPolicy(joinPolicy);
+        }
     }
 
     const handleModuleChange = useCallback((type, updatedData) => {
@@ -658,14 +699,31 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     <div className="duo-btn-wrap">
                         <div className="duo-btn-pill" aria-hidden="true" />
                         <button
-                            className={`membership-btn duo-btn ${isMember ? 'leave' : 'join'}`}
-                            style={{ '--duo-shadow': isMember ? 'rgb(90, 20, 20)' : 'rgb(0, 45, 8)' }}
+                            className={`membership-btn duo-btn ${membershipAction.variant}`}
+                            style={{ '--duo-shadow': membershipAction.shadow }}
                             onClick={handleMembership}
                             disabled={memberLoading}
                         >
-                            {memberLoading ? '...' : isMember ? 'Leave Club' : 'Join Club'}
+                            {memberLoading ? '...' : membershipAction.label}
                         </button>
                     </div>
+                )}
+
+                {isOwner && (
+                    <button
+                        type="button"
+                        className={`join-policy-toggle${joinPolicy === 'request' ? ' on' : ''}`}
+                        role="switch"
+                        aria-checked={joinPolicy === 'request'}
+                        onClick={handleJoinPolicyToggle}
+                    >
+                        <span className="join-policy-track" aria-hidden="true">
+                            <span className="join-policy-thumb" />
+                        </span>
+                        <span className="join-policy-label">
+                            {joinPolicy === 'request' ? 'Approval required' : 'Anyone can join'}
+                        </span>
+                    </button>
                 )}
 
                 {/* Placeholder — event creation to be wired up later */}

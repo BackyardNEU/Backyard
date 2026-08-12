@@ -473,3 +473,84 @@
 .club-tab-btn--active {
   color: #1a1a1a;
 }
+
+/* ─── Signed-out roster ─── */
+/* The roster now requires a token, so a logged-out visitor gets a prompt rather than
+   the red error banner — this is an expected state, not a failure. */
+.club-members-panel__signed-out {
+  margin: 12px 0;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 16px;
+  color: #6f6862;
+  text-align: center;
+}
+
+/* ─── Pending join requests (moderators only) ─── */
+.join-requests {
+  margin-bottom: 14px;
+}
+
+.join-requests__heading {
+  margin: 0 0 8px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6f6862;
+}
+
+.join-request-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.join-request-row__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.join-request-row__name {
+  flex: 1;
+  min-width: 0;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 17px;
+  color: #1a1a1a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.join-request-row__actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.join-request-btn {
+  padding: 5px 14px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  color: #fff;
+  transition: filter 0.15s ease;
+}
+
+.join-request-btn:hover {
+  filter: brightness(1.12);
+}
+
+.join-request-btn.approve {
+  background: rgb(0, 62, 11);
+}
+
+.join-request-btn.deny {
+  background: rgb(120, 30, 30);
+}
