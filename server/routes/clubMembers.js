@@ -80,13 +80,7 @@ router.post('/:clubId/members/me', requireAuth, async (req, res) => {
 
   if (existing) return res.status(409).json({ error: 'Already a member of this club.' });
 
-  // First member of a club becomes the top_moderator (owner).
-  const { count } = await supabaseAdmin
-    .from('club_memberships')
-    .select('user_id', { count: 'exact', head: true })
-    .eq('club_id', clubId);
-
-  const role = count === 0 ? 'top_moderator' : 'member';
+  const role = 'member';
 
   const { error: insertError } = await supabaseAdmin
     .from('club_memberships')
