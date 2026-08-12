@@ -104,7 +104,6 @@ function StatsModule({ data, editing, onChange, warning }) {
     if (stats.length === 0 && !editing) return null;
 
     const quantCount = stats.filter(s => s.type === 'quantitative').length;
-    const qualCount = stats.length - quantCount;
 
     return (
         <div className="stats-module" ref={!editing ? cardRef : null}>
@@ -172,9 +171,9 @@ function StatsModule({ data, editing, onChange, warning }) {
                         <button
                             className="stats-add-btn"
                             onClick={() => addStat(false)}
-                            disabled={quantCount >= 8}
+                            disabled={stats.length >= 8}
                         >
-                            + QUANTITATIVE {quantCount >= 8 ? '(limit reached)' : `  (${quantCount}/8)`}
+                            + QUANTITATIVE {stats.length >= 8 ? '(limit reached)' : `  (${stats.length}/8)`}
                         </button>
                     </div>
 
@@ -252,9 +251,9 @@ function StatsModule({ data, editing, onChange, warning }) {
                         <button
                             className="stats-add-btn"
                             onClick={() => addStat(true)}
-                            disabled={qualCount >= 8}
+                            disabled={stats.length >= 8}
                         >
-                            + QUALITATIVE {qualCount >= 8 ? '(limit reached)' : `(${qualCount}/8)`}
+                            + QUALITATIVE {stats.length >= 8 ? '(limit reached)' : `(${stats.length}/8)`}
                         </button>
                     </div>
                 </div>

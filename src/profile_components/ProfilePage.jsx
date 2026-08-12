@@ -185,33 +185,42 @@ export const ProfilePage = () => {
             <h1 className='ProfileName'>Hello, {profile?.username}</h1>
             <p className="user-description">{profileDescription}</p>
             <div className="profile-btn-row">
-              <button
-                type="button"
-                className="profile-setup-btn"
-                onClick={() => navigate('/profile-setup')}
-              >
-                Setup profile
-              </button>
-              <button
-                type="button"
-                className="profile-setup-btn"
-                onClick={() => setInterestsOpen(true)}
-              >
-                My Interests
-              </button>
-              <button
-                type="button"
-                className="profile-setup-btn"
-                onClick={() => navigate('/settings')}
-              >
-                Settings
-              </button>
-              {user && (
-                <div className="profile-account-actions">
-                  <NotificationBell />
-                  <Logout />
+              <div className="profile-btn-row-inner">
+                <div className="duo-btn-wrap">
+                  <div className="duo-btn-pill" aria-hidden="true" />
+                  <button
+                    type="button"
+                    className="profile-setup-btn duo-btn profile-duo-btn--interests"
+                    style={{ '--duo-shadow': 'rgb(76, 102, 57)' }}
+                    onClick={() => setInterestsOpen(true)}
+                  >
+                    My Interests
+                  </button>
                 </div>
-              )}
+                {user && (
+                  <div className="duo-btn-wrap">
+                    <div className="duo-btn-pill" aria-hidden="true" />
+                    <Logout className="duo-btn profile-duo-btn--logout" style={{ '--duo-shadow': 'rgb(122, 48, 47)' }} />
+                  </div>
+                )}
+                {user && (
+                  <div className="duo-btn-wrap">
+                    <div className="duo-btn-pill" aria-hidden="true" />
+                    <NotificationBell className="duo-btn profile-duo-btn--notif" style={{ '--duo-shadow': 'rgb(49, 90, 116)' }} />
+                  </div>
+                )}
+                <div className="duo-btn-wrap">
+                  <div className="duo-btn-pill" aria-hidden="true" />
+                  <button
+                    type="button"
+                    className="profile-setup-btn duo-btn profile-duo-btn--settings"
+                    style={{ '--duo-shadow': 'rgb(0, 0, 0)' }}
+                    onClick={() => navigate('/settings')}
+                  >
+                    Settings
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
           <button
@@ -227,15 +236,15 @@ export const ProfilePage = () => {
           <>
             <div className="profile-section">
                <div className="profile-section">
-              <h2 className="profile-divider-header">Your Photos</h2>
+              <h2 className="divider-header">Your Photos</h2>
               <PolaroidCards photos={profile?.photos || []} />
             </div>
-              <h2 className="profile-divider-header">Clubs You've Joined</h2>
+              <h2 className="divider-header">Clubs You've Joined</h2>
               <ClubMembershipPanel userId={user.id} />
             </div>
            
             <div className="profile-section">
-              <h2 className="profile-divider-header">Friends</h2>
+              <h2 className="divider-header">Friends</h2>
               <FriendDiscoveryList userId={user.id} />
             </div>
           </>

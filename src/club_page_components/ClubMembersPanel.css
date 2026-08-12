@@ -143,9 +143,9 @@
 
 /* Owner — warm amber */
 .role-badge--top_moderator {
-  background: #f5e4b0;
-  color: #7a5000;
-  border: 1px solid #e5c96a;
+  background: #2a2a2a;
+  color: #ffffff;
+  border: 1px solid #000000;
 }
 
 /* Moderator — cool slate blue */
@@ -207,7 +207,7 @@
   font-weight: 600;
   padding: 3px 10px;
   border: none;
-  border-radius: 90px;
+  border-radius: 8px;
   cursor: pointer;
   transition: opacity 0.15s ease;
   white-space: nowrap;
@@ -216,18 +216,18 @@
 .member-role-btn:hover { opacity: 0.85; }
 
 .member-role-btn--promote {
-  background: #dce8f7;
-  color: #1a4a80;
+    background: rgb(234, 234, 230);
+  color: #444;
 }
 
 .member-role-btn--demote {
-  background: #f5e4b0;
-  color: #7a5000;
+  background: #ec958f;
+  color: #7a0000;
 }
 
 .member-role-btn--transfer {
-  background: #ebebeb;
-  color: #444;
+  background: #000000;
+  color: #ffffff;
 }
 
 /* ── Manage Roles panel ──────────────────────────────────────────────────── */

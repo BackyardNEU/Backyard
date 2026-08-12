@@ -84,6 +84,19 @@
   transform-origin: center;
 }
 
+/* Safari-only (matches WebKit desktop + iOS, not Chrome/Firefox): the ink-line
+   SVG border doesn't render reliably here, so swap it for a plain 1px solid
+   border in the same color instead of trying to fix the SVG rendering. */
+@supports (-webkit-hyphens: none) {
+  .cm-poster-border,
+  .cm-poster-border-h-wrap {
+    display: none;
+  }
+  .cm-poster-card {
+    border: 1px solid #37291E;
+  }
+}
+
 .cm-poster-border-h-wrap {
   position: absolute;
   left: 0;
@@ -233,6 +246,19 @@
   right: 0;
   transform: scaleX(-1.2);
   transform-origin: center;
+}
+
+/* Safari-only (matches WebKit desktop + iOS, not Chrome/Firefox): the ink-line
+   SVG border doesn't render reliably here, so swap it for a plain 1px solid
+   border in the same color instead of trying to fix the SVG rendering. */
+@supports (-webkit-hyphens: none) {
+  .cm-edit-border,
+  .cm-edit-border-h-wrap {
+    display: none;
+  }
+  .cm-poster-edit {
+    border: 1px solid #231f20;
+  }
 }
 
 .cm-edit-border-h-wrap {
@@ -513,6 +539,19 @@
 
 .cm-modal-border-bottom-wrap {
   bottom: 0;
+}
+
+/* Safari-only (matches WebKit desktop + iOS, not Chrome/Firefox): the ink-line
+   SVG border doesn't render reliably here, so swap it for a plain 1px solid
+   border in the same color instead of trying to fix the SVG rendering. */
+@supports (-webkit-hyphens: none) {
+  .cm-modal-border,
+  .cm-modal-border-h-wrap {
+    display: none;
+  }
+  .cm-modal {
+    border: 1px solid #37291E;
+  }
 }
 
 .cm-modal-close {

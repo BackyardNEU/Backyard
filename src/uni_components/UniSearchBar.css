@@ -30,7 +30,7 @@
   height: 2rem;
   min-width: 2rem;
   padding: 0 0.5rem;
-  border-radius: 999px;
+  border-radius: 8px;
   border: 1px solid rgb(202, 200, 200);
   color: #666;
   background: #e5e5e5;
@@ -63,7 +63,7 @@
   height: 2rem;
   margin-left: 6px;
   border: 1px solid rgb(202, 200, 200);
-  border-radius: 999px;
+  border-radius: 8px;
   background: #e5e5e5;
   overflow: hidden;
   flex-shrink: 0;
@@ -113,7 +113,7 @@
   font-family: "Barlow", sans-serif;
   min-width: 2rem;
   padding: 0 0.5rem;
-  border-radius: 999px;
+  border-radius: 8px;
   border: 1px solid rgb(202, 200, 200);
   
   /* Default: Grey */

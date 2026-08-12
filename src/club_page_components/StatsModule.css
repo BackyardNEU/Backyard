@@ -22,8 +22,8 @@
     font-size: 1rem;
     height: 40px;
     align-self: center;
-  
-
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .qual-stats .stats-add-btn {
