@@ -23,6 +23,15 @@ const isValidUrl = (url) => {
   catch { return false; }
 };
 
+const normalizeContactLink = (v) => {
+  const s = v.trim();
+  if (!s) return '';
+  try { new URL(s); return s; } catch {}
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return `mailto:${s}`;
+  if (/^[+\d][\d\s\-().]{6,}$/.test(s)) return `tel:${s}`;
+  return s;
+};
+
 // Contact links accept web URLs, mailto:/tel: URIs, bare email addresses, and phone numbers.
 const isValidContactLink = (url) => {
   const v = url.trim();
@@ -119,7 +128,7 @@ function JoinModule({ data, editing, onChange, warning }) {
               <a
                 className="contact-link-btn duo-btn"
                 style={{ '--duo-shadow': 'rgb(30, 85, 125)' }}
-                href={contactLink}
+                href={normalizeContactLink(contactLink)}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={editing ? (e) => e.preventDefault() : undefined}
