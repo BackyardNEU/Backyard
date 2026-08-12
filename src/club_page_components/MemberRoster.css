@@ -179,6 +179,19 @@
   bottom: 0;
 }
 
+/* Safari-only (matches WebKit desktop + iOS, not Chrome/Firefox): the ink-line
+   SVG border doesn't render reliably here, so swap it for a plain 1px solid
+   border in the same color instead of trying to fix the SVG rendering. */
+@supports (-webkit-hyphens: none) {
+  .mr-detail-border,
+  .mr-detail-border-h-wrap {
+    display: none;
+  }
+  .mr-detail {
+    border: 1px solid #37291E;
+  }
+}
+
 /* Scrolls internally so the outer .mr-detail (and its border) stays put */
 .mr-detail-scroll {
   max-height: 80vh;

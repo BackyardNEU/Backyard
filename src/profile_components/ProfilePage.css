@@ -101,45 +101,76 @@
   line-height: 1.35;
 }
 
+/* Mirrors .exp-action-row: centered when it fits, scrolls horizontally on overflow */
 .profile-btn-row {
-  display: flex;
-  flex-direction: row;
-  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
   margin-top: 8px;
-  flex-wrap: nowrap;
+  padding: 10px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
-@media (max-width: 500px) {
-  .profile-btn-row {
-    flex-direction: column;
-    width: 100%;
-  }
+.profile-btn-row::-webkit-scrollbar {
+  height: 6px;
+}
+
+.profile-btn-row::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.profile-btn-row-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: max-content;
+}
+
+.profile-btn-row-inner > * {
+  flex: 0 0 auto;
 }
 
 .profile-setup-btn {
   margin-top: 0;
-  border: 1px solid #7a7a7a;
-  background: #f7f7f7;
-  color: #404040;
   font-family: "Barlow Condensed", sans-serif;
-  font-size: 1rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 6px 10px;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.profile-setup-btn:hover {
-  background: #ebebeb;
-  color: #1f1f1f;
+.profile-duo-btn--interests,
+.profile-duo-btn--logout,
+.profile-duo-btn--notif,
+.profile-duo-btn--settings {
+  border: none !important;
+  color: #fff !important;
 }
 
-.profile-account-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: 8px;
+.profile-duo-btn--interests { background-color: #759D57 !important; }
+.profile-duo-btn--logout    { background-color: #BC4A49 !important; }
+.profile-duo-btn--notif     { background-color: #4B8AB3 !important; }
+.profile-duo-btn--settings  { background-color: #1E1A18 !important; }
+
+.profile-duo-btn--notif.duo-btn {
+  width: auto !important;
+  height: auto !important;
+  padding: 5px 14px !important;
+  min-height: 34px;
+}
+
+/* .logout-btn sets its own fixed height (2.9rem desktop / 1.5rem under the
+   600px media query in LoginMorph.css), independent of duo-btn's font-size-
+   driven sizing — override it here so it matches the row's other buttons. */
+.profile-duo-btn--logout.duo-btn {
+  height: auto !important;
+  min-height: 34px;
+}
+
+@media (min-width: 501px) {
+  .profile-duo-btn--notif.duo-btn,
+  .profile-duo-btn--logout.duo-btn {
+    min-height: 40px;
+  }
 }
 
 .profile-close-btn {
@@ -165,7 +196,7 @@
 
 .profile-section {
   width: 100%;
-  margin-top: 32px;
+
 }
 
 .profile-divider-header {

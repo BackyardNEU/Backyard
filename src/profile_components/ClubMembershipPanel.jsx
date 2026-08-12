@@ -61,6 +61,7 @@ export const ClubMembershipPanel = ({ userId, memberList, readOnly = false }) =>
                 onExpand={() => setExpandedClub(club)}
                 hideHeart
                 hidePins
+                showBorder
               />
             </div>
           ))}

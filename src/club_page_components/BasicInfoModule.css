@@ -638,6 +638,19 @@
   transform-origin: center;
 }
 
+/* Safari-only (matches WebKit desktop + iOS, not Chrome/Firefox): the ink-line
+   SVG border doesn't render reliably here, so swap it for a plain 1px solid
+   border in the same color instead of trying to fix the SVG rendering. */
+@supports (-webkit-hyphens: none) {
+  .desc-modal-border,
+  .desc-modal-border-h-wrap {
+    display: none;
+  }
+  .desc-modal {
+    border: 1px solid #37291E;
+  }
+}
+
 .desc-modal-border-h-wrap {
   position: absolute;
   left: 0;
@@ -977,13 +990,20 @@
    (duplicated from .duo-btn in index.css, not shared via that class,
    so link-specific per-keyword shadow colors can be stored alongside
    each keyword's background-color below). */
+/* min-height matches .exp-action-row's .duo-btn buttons (e.g. Subscribe)
+   exactly — measured at 34px here and 40px at the 501px breakpoint below.
+   Text buttons reach that height via line-height alone, but a single icon
+   has no line-height to lean on, so height needs to be forced explicitly.
+   Width is intentionally NOT matched — narrow icon-only pills, not full-width
+   text-button pills. */
 .link-btn {
   position: relative;
   z-index: 1;
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 1rem;
-  padding: 5px 10px;
+  padding: 5px 12px;
   margin: 0;
+  min-height: 34px;
   border-radius: 10px;
   text-decoration: none;
   cursor: pointer;
@@ -1012,6 +1032,7 @@
 @media (min-width: 501px) {
   .link-btn {
     font-size: 1.25rem;
+    min-height: 40px;
   }
 
   .action-links-wrapper {
@@ -1031,6 +1052,7 @@
 .link-btn--slack     { background-color: #5F3B62; color: white; --duo-shadow: #552E57 }
 .link-btn--tiktok    { background-color: rgb(37, 37, 37); color: #ffffff; --duo-shadow: rgb(0, 0, 0); }
 .link-btn--linktree  { background-color: #94F58F; color: black; --duo-shadow: #73DB6E;}
+.link-btn--linkedin  { background-color: #0072b1; color: #ffffff; --duo-shadow: #00507d;}
 
 /* ── Edit mode: links table ── */
 

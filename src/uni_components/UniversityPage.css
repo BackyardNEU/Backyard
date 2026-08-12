@@ -207,6 +207,16 @@
   bottom: -3px;
 }
 
+/* Safari-only (matches WebKit desktop + iOS, not Chrome/Firefox): the ink-line
+   SVG border doesn't render reliably here — just remove it, no replacement
+   border (calpg-card already gets its own box-shadow on Safari instead). */
+@supports (-webkit-hyphens: none) {
+  .uni-calendar-border,
+  .uni-calendar-border-h-wrap {
+    display: none;
+  }
+}
+
 .uni-calendar-inline.uni-calendar-visible {
   opacity: 1;
   pointer-events: auto;

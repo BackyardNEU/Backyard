@@ -3,7 +3,13 @@ import { useClubData } from '../context/useClubData';
 import { apiFetch } from '../lib/api';
 import { roleColorStyle } from '../lib/roleColor';
 import ColorThief from 'colorthief';
-import { FaSearch, FaTimes } from 'react-icons/fa';
+import { FaSearch, FaTimes, FaInstagram, FaFacebookF } from 'react-icons/fa';
+import { FaTiktok, FaSlack, FaLinkedinIn } from 'react-icons/fa6';
+import { IoIosMail } from 'react-icons/io';
+import { SlSocialSpotify } from 'react-icons/sl';
+import { SiLinktree } from 'react-icons/si';
+import { TbBrandDiscord } from 'react-icons/tb';
+import { FiYoutube } from 'react-icons/fi';
 import borderImg from '/src/assets/border-green.svg';
 import borderHorizontalImg from '/src/assets/border-horizontal-green.svg';
 import './BasicInfoModule.css';
@@ -105,9 +111,27 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
 
   const getLinkKeyword = (name) => {
     const n = (name || '').toLowerCase().trim();
-    const keywords = ['instagram', 'facebook', 'discord', 'email', 'spotify', 'slack', 'tiktok', 'linktree', 'youtube'];
+    const keywords = ['instagram', 'facebook', 'discord', 'email', 'spotify', 'slack', 'tiktok', 'linktree', 'youtube', 'linkedin'];
     return keywords.find(k => n === k) || 'default';
   };
+
+  // Each of these renders a logo instead of the platform name text. Icons default to
+  // 1em, so they auto-match .link-btn's font-size at every breakpoint.
+  const LINK_ICONS = {
+    instagram: FaInstagram,
+    facebook: FaFacebookF,
+    email: IoIosMail,
+    youtube: FiYoutube,
+    discord: TbBrandDiscord,
+    spotify: SlSocialSpotify,
+    tiktok: FaTiktok,
+    linktree: SiLinktree,
+    slack: FaSlack,
+    linkedin: FaLinkedinIn,
+  };
+  // Spotify's icon keeps the same green .link-btn--spotify already uses for its text,
+  // instead of the white used everywhere else.
+  const LINK_ICON_COLORS = { spotify: '#65D46E' };
 
   const handleMoreLinks = () => setLinksExpanded(prev => !prev);
 
@@ -400,19 +424,23 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
             <>
               <span className="links-sep">|</span>
               <div className="links-bar">
-                {visibleLinks.map((link, i) => (
+                {visibleLinks.map((link, i) => {
+                  const keyword = getLinkKeyword(link.name);
+                  const Icon = LINK_ICONS[keyword];
+                  return (
                   <div className="duo-btn-wrap" key={link.id || i}>
                     <div className="duo-btn-pill" aria-hidden="true" />
                     <a
-                      className={`review-btn link-btn link-btn--${getLinkKeyword(link.name)}`}
+                      className={`review-btn link-btn link-btn--${keyword}`}
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      {link.name}
+                      {Icon ? <Icon size="1.6rem" color={LINK_ICON_COLORS[keyword] || '#fff'} /> : link.name}
                     </a>
                   </div>
-                ))}
+                  );
+                })}
                 {showMoreToggle && (
                   <div className="duo-btn-wrap">
                     <div className="duo-btn-pill" aria-hidden="true" />

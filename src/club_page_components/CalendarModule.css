@@ -86,6 +86,19 @@
 .cal-event-item-border-h-top { top: 0; }
 .cal-event-item-border-h-bottom { bottom: 0; }
 
+/* Safari-only (matches WebKit desktop + iOS, not Chrome/Firefox): the ink-line
+   SVG border doesn't render reliably here, so swap it for a plain 1px solid
+   border in the same color instead of trying to fix the SVG rendering. */
+@supports (-webkit-hyphens: none) {
+  .cal-event-item-border,
+  .cal-event-item-border-h {
+    display: none;
+  }
+  .cal-event-item {
+    border: 1px solid #231f20;
+  }
+}
+
 .cal-event-img {
   width: calc(100% + 24px);
   margin: 0;
