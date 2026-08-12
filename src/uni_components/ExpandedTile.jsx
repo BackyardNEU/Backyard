@@ -7,8 +7,6 @@ import ReviewList from "../review_components/ReviewList";
 import { supabase } from '../lib/supabase';
 import { apiFetch } from '../lib/api';
 import logImage from '/src/assets/logImage.png';
-import heartEmpty from '/src/assets/empty_heart.png';
-import heartFull from '/src/assets/full_heart.png';
 import BasicInfoModule from '../club_page_components/BasicInfoModule';
 import LinksModule from '../club_page_components/LinksModule';
 import JoinModule from '../club_page_components/JoinModule';
@@ -240,6 +238,8 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     // favorites heart — mirrors the behavior in ClubGrid
     const [heartAnimating, setHeartAnimating] = useState(false);
     const [favError, setFavError] = useState(null);
+    // Subscribe/Unsubscribe — UI-only toggle for now, no backend persistence yet
+    const [subscribed, setSubscribed] = useState(false);
     // pending user-submitted FAQ questions (approved editors only) + ids to delete on Save
     const [userFaqs, setUserFaqs] = useState([]);
     const [questionDeletes, setQuestionDeletes] = useState(() => new Set());
@@ -638,28 +638,12 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const actionRow = (
         <div className="exp-action-row">
             <div className="exp-action-row-inner">
-                {isClicked
-                    ? <img src={logImage} className="log-btn" alt="Clicked state" />
-                    : (
-                        <div className="duo-btn-wrap">
-                            <div className="duo-btn-pill" aria-hidden="true" />
-                            <button
-                                className="review-btn duo-btn"
-                                style={{ '--duo-shadow': 'rgb(52, 32, 0)' }}
-                                onClick={handleClick}
-                            >
-                                Share your experience
-                            </button>
-                        </div>
-                    )
-                }
-
                 {user && (
                     <div className="duo-btn-wrap">
                         <div className="duo-btn-pill" aria-hidden="true" />
                         <button
                             className={`membership-btn duo-btn ${isMember ? 'leave' : 'join'}`}
-                            style={{ '--duo-shadow': isMember ? 'rgb(90, 20, 20)' : 'rgb(0, 45, 8)' }}
+                            style={{ '--duo-shadow': isMember ? 'rgb(90, 20, 20)' : 'rgb(76, 102, 57)' }}
                             onClick={handleMembership}
                             disabled={memberLoading}
                         >
@@ -668,26 +652,48 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     </div>
                 )}
 
-                {/* Placeholder — event creation to be wired up later */}
+                {GlobalValue && (
+                    <div className="duo-btn-wrap">
+                        <div className="duo-btn-pill" aria-hidden="true" />
+                        <button
+                            className="exp-favorite-btn duo-btn"
+                            style={{ '--duo-shadow': 'rgb(122, 48, 47)' }}
+                            onClick={handleHeartClick}
+                            disabled={heartAnimating}
+                        >
+                            {liked ? 'Unfavorite' : 'Favorite'}
+                        </button>
+                    </div>
+                )}
+
+                {isClicked
+                    ? <img src={logImage} className="log-btn" alt="Clicked state" />
+                    : (
+                        <div className="duo-btn-wrap">
+                            <div className="duo-btn-pill" aria-hidden="true" />
+                            <button
+                                className="review-btn exp-make-post-btn duo-btn"
+                                style={{ '--duo-shadow': 'rgb(49, 90, 116)' }}
+                                onClick={handleClick}
+                            >
+                                Make Post
+                            </button>
+                        </div>
+                    )
+                }
+
                 <div className="duo-btn-wrap">
                     <div className="duo-btn-pill" aria-hidden="true" />
                     <button
                         className="add-events-btn duo-btn"
-                        style={{ '--duo-shadow': 'rgb(157, 62, 47)' }}
+                        style={{ '--duo-shadow': 'rgb(0, 0, 0)' }}
                         type="button"
+                        onClick={() => setSubscribed(prev => !prev)}
                     >
-                        Add Events
+                        {subscribed ? 'Unsubscribe' : 'Subscribe'}
                     </button>
                 </div>
 
-                {GlobalValue && (
-                    <img
-                        className={`exp-action-heart ${heartAnimating ? 'pop' : ''}`}
-                        src={liked ? heartFull : heartEmpty}
-                        onClick={handleHeartClick}
-                        alt={liked ? 'Remove favorite' : 'Add favorite'}
-                    />
-                )}
                 {favError && <div className="exp-fav-error">{favError}</div>}
             </div>
         </div>
