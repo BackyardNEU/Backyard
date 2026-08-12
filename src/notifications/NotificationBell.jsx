@@ -6,14 +6,14 @@ import { useGlobalStore } from '../lib/store';
 import { useNotifications } from './useNotifications';
 import { NotificationsPanel } from './NotificationsPanel';
 
-export function NotificationBell() {
+export function NotificationBell({ className = '', style }) {
   const [panelOpen, setPanelOpen] = useState(false);
   const unreadCount = useGlobalStore((s) => s.unreadCount);
   const { notifications, markAllRead, respondToRequest } = useNotifications();
 
   return (
     <>
-      <button className="notif-bell" onClick={() => setPanelOpen(true)} aria-label="Notifications">
+      <button className={`notif-bell ${className}`.trim()} style={style} onClick={() => setPanelOpen(true)} aria-label="Notifications">
         <Bell size={22} />
         {unreadCount > 0 && (
           <span className="notif-dot" />

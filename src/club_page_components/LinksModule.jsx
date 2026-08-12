@@ -2,9 +2,10 @@ import React from 'react';
 import { FaInstagram, FaFacebookF } from 'react-icons/fa';
 import { FaTiktok, FaSlack, FaLinkedinIn } from 'react-icons/fa6';
 import { IoIosMail } from 'react-icons/io';
-import { SlSocialYoutube, SlSocialSpotify } from 'react-icons/sl';
+import { SlSocialSpotify } from 'react-icons/sl';
 import { SiLinktree } from 'react-icons/si';
 import { TbBrandDiscord } from 'react-icons/tb';
+import { FiYoutube } from 'react-icons/fi';
 import LinksTable from './LinksTable';
 import './LinksModule.css';
 
@@ -20,7 +21,7 @@ const LINK_ICONS = {
   instagram: FaInstagram,
   facebook: FaFacebookF,
   email: IoIosMail,
-  youtube: SlSocialYoutube,
+  youtube: FiYoutube,
   discord: TbBrandDiscord,
   spotify: SlSocialSpotify,
   tiktok: FaTiktok,

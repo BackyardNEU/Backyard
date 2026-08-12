@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { useGlobalStore } from "../lib/store";
 
-function Logout() {
+function Logout({ className = '', style }) {
   const navigate = useNavigate();
   const lastPath = useGlobalStore((state) => state.lastPath);
 
@@ -13,7 +13,7 @@ function Logout() {
   };
 
   return (
-    <button className="logout-btn" onClick={handleLogout}>
+    <button className={`logout-btn ${className}`.trim()} style={style} onClick={handleLogout}>
       Logout
     </button>
   );
