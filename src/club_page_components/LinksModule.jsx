@@ -1,12 +1,36 @@
 import React from 'react';
+import { FaInstagram, FaFacebookF } from 'react-icons/fa';
+import { FaTiktok, FaSlack, FaLinkedinIn } from 'react-icons/fa6';
+import { IoIosMail } from 'react-icons/io';
+import { SlSocialYoutube, SlSocialSpotify } from 'react-icons/sl';
+import { SiLinktree } from 'react-icons/si';
+import { TbBrandDiscord } from 'react-icons/tb';
 import LinksTable from './LinksTable';
 import './LinksModule.css';
 
-const LINK_KEYWORDS = ['instagram', 'facebook', 'discord', 'email', 'spotify', 'slack', 'tiktok', 'linktree', 'youtube'];
+const LINK_KEYWORDS = ['instagram', 'facebook', 'discord', 'email', 'spotify', 'slack', 'tiktok', 'linktree', 'youtube', 'linkedin'];
 function getLinkKeyword(name) {
   const n = (name || '').toLowerCase().trim();
   return LINK_KEYWORDS.find((k) => n === k) || 'default';
 }
+
+// Each of these renders a logo instead of the platform name text. Icons default to
+// 1em, so they auto-match .link-btn's font-size at every breakpoint.
+const LINK_ICONS = {
+  instagram: FaInstagram,
+  facebook: FaFacebookF,
+  email: IoIosMail,
+  youtube: SlSocialYoutube,
+  discord: TbBrandDiscord,
+  spotify: SlSocialSpotify,
+  tiktok: FaTiktok,
+  linktree: SiLinktree,
+  slack: FaSlack,
+  linkedin: FaLinkedinIn,
+};
+// Spotify's icon keeps the same green .link-btn--spotify already uses for its text,
+// instead of the white used everywhere else.
+const LINK_ICON_COLORS = { spotify: '#65D46E' };
 
 /**
  * Links module — edits the same `links` array that lives on the basic_info module's data
@@ -39,18 +63,22 @@ function LinksModule({ data, editing, onChange, warning }) {
 
       {enabledLinks.length > 0 ? (
         <div className="links-module-preview">
-          {enabledLinks.map((link, i) => (
+          {enabledLinks.map((link, i) => {
+            const keyword = getLinkKeyword(link.name);
+            const Icon = LINK_ICONS[keyword];
+            return (
             <a
               key={link.id || i}
-              className={`review-btn link-btn link-btn--${getLinkKeyword(link.name)}`}
+              className={`review-btn link-btn link-btn--${keyword}`}
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => editing && e.preventDefault()}
             >
-              {link.name}
+              {Icon ? <Icon size="1.6rem" color={LINK_ICON_COLORS[keyword] || '#fff'} /> : link.name}
             </a>
-          ))}
+            );
+          })}
         </div>
       ) : (
         editing && <p className="links-module-empty">No enabled links yet — add one below.</p>
