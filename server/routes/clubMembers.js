@@ -376,6 +376,52 @@ router.delete('/:clubId/members/me', requireAuth, async (req, res) => {
   res.status(204).end();
 });
 
+// DELETE /:clubId/members/:userId — remove a member (moderator+ only)
+// Moderators can only remove plain members; top_moderator can also remove moderators.
+router.delete('/:clubId/members/:userId', requireAuth, async (req, res) => {
+  const { clubId, userId } = req.params;
+
+  const callerRole = await requireModerator(req.user.id, clubId);
+
+  const { data: target } = await supabaseAdmin
+    .from('club_memberships')
+    .select('role')
+    .eq('user_id', userId)
+    .eq('club_id', clubId)
+    .maybeSingle();
+
+  if (!target) return res.status(404).json({ error: 'Member not found.' });
+  if (target.role === 'top_moderator') {
+    return res.status(403).json({ error: 'Cannot remove the club owner.' });
+  }
+  if (target.role === 'moderator' && callerRole !== 'top_moderator') {
+    return res.status(403).json({ error: 'Only the owner can remove moderators.' });
+  }
+
+  const { error: deleteError } = await supabaseAdmin
+    .from('club_memberships')
+    .delete()
+    .eq('user_id', userId)
+    .eq('club_id', clubId);
+
+  if (deleteError) {
+    const err = new Error(deleteError.message);
+    err.status = 502;
+    throw err;
+  }
+
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('member_list')
+    .eq('id', userId)
+    .single();
+
+  const newList = (profile?.member_list || []).filter((id) => id !== clubId);
+  await supabaseAdmin.from('profiles').update({ member_list: newList }).eq('id', userId);
+
+  res.status(204).end();
+});
+
 // POST /:clubId/members/transfer-ownership — top_moderator only
 // Atomically promotes newTopModeratorId, demotes self to moderator.
 router.post('/:clubId/members/transfer-ownership', requireAuth, async (req, res) => {
