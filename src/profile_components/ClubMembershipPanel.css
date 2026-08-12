@@ -41,8 +41,7 @@
   width: 100%;
   background: transparent;
   box-shadow: none;
-  border: 1px solid #ccc;
-  border-radius: 15px;
+  border-radius: 0;
   background-color: rgb(255, 255, 255);
 }
 
