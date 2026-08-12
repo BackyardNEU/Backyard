@@ -65,15 +65,31 @@ const OWNER = 'owner-1';
 
 const find = (table, op) => calls.filter((c) => c.table === table && c.op === op);
 
+// club_memberships.select serves two different questions — "what role does the caller
+// have" (requireModerator) and "is this person already in" (admitMember) — so the mock
+// has to answer per user id rather than return one fixed row, or the second lookup
+// reports everyone as already a member and short-circuits every admission.
+let memberships = {};
+let memberCount = 3;
+
 beforeEach(() => {
   calls.length = 0;
+  memberships = { [OWNER]: 'top_moderator' };
+  memberCount = 3;
+
   results = {
     // Same school, so the school guard passes and never masks the behaviour under test.
     'profiles.select': { data: { school: 'Northeastern', member_list: [] }, error: null },
     'profiles.update': { data: null, error: null },
     'demo_club_data.select': { data: { school: 'Northeastern', join_policy: 'open' }, error: null },
     'demo_club_data.update': { data: null, error: null },
-    'club_memberships.select': { data: null, error: null, count: 3 },
+    'club_memberships.select': (state) => {
+      const uid = state.filters.find(([k]) => k === 'user_id')?.[1];
+      // No user_id filter means the head:true count query.
+      if (uid === undefined) return { data: null, error: null, count: memberCount };
+      const role = memberships[uid];
+      return { data: role ? { role } : null, error: null, count: memberCount };
+    },
     'club_memberships.insert': { data: null, error: null },
     'club_join_requests.select': { data: null, error: null },
     'club_join_requests.insert': { data: null, error: null },
@@ -116,7 +132,7 @@ describe('POST /api/clubs/:clubId/members/me', () => {
     results['demo_club_data.select'] = {
       data: { school: 'Northeastern', join_policy: 'request' }, error: null,
     };
-    results['club_memberships.select'] = { data: null, error: null, count: 0 };
+    memberCount = 0;
 
     const res = await request(makeApp())
       .post(`/api/clubs/${CLUB}/members/me`)
@@ -158,7 +174,6 @@ describe('POST /api/clubs/:clubId/members/me', () => {
 
 describe('approving a request', () => {
   beforeEach(() => {
-    results['club_memberships.select'] = { data: { role: 'top_moderator' }, error: null, count: 3 };
     results['club_join_requests.select'] = { data: { id: 'req-1' }, error: null };
   });
 
@@ -175,6 +190,22 @@ describe('approving a request', () => {
     expect(find('club_join_requests', 'update')[0].row.status).toBe('approved');
   });
 
+  it('does not fail when the requester joined by some other route while queued', async () => {
+    // Request to join, get added through an invite link while still pending, then have
+    // the original request approved. A second insert violates the primary key, and the
+    // moderator would see a 502 for someone who is already a member.
+    memberships[USER] = 'member';
+
+    const res = await request(makeApp())
+      .post(`/api/clubs/${CLUB}/join-requests/${USER}/approve`)
+      .set('x-test-user', OWNER);
+
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('approved');
+    // No duplicate insert attempted.
+    expect(find('club_memberships', 'insert')).toHaveLength(0);
+  });
+
   it('404s when there is no pending request', async () => {
     results['club_join_requests.select'] = { data: null, error: null };
 
@@ -187,7 +218,7 @@ describe('approving a request', () => {
   });
 
   it('refuses a plain member', async () => {
-    results['club_memberships.select'] = { data: { role: 'member' }, error: null, count: 3 };
+    memberships[USER] = 'member';
 
     const res = await request(makeApp())
       .post(`/api/clubs/${CLUB}/join-requests/${USER}/approve`)
@@ -200,7 +231,6 @@ describe('approving a request', () => {
 
 describe('PATCH /api/clubs/:clubId/join-policy', () => {
   it('admits everyone still queued when the club is reopened', async () => {
-    results['club_memberships.select'] = { data: { role: 'top_moderator' }, error: null, count: 3 };
     results['club_join_requests.select'] = {
       data: [{ id: 'r1', user_id: 'u1' }, { id: 'r2', user_id: 'u2' }], error: null,
     };
@@ -211,13 +241,38 @@ describe('PATCH /api/clubs/:clubId/join-policy', () => {
       .send({ join_policy: 'open' });
 
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ join_policy: 'open', auto_approved: 2 });
+    expect(res.body).toEqual({ join_policy: 'open', auto_approved: 2, failed: 0 });
     expect(find('club_memberships', 'insert')).toHaveLength(2);
   });
 
-  it('does not touch pending requests when switching to request-only', async () => {
-    results['club_memberships.select'] = { data: { role: 'top_moderator' }, error: null, count: 3 };
+  it('keeps admitting the rest of the queue when one row fails', async () => {
+    // The policy row is committed before this loop runs, so an unhandled throw would
+    // leave the club open with everyone behind the failure still queued — the exact
+    // state auto-approval exists to prevent.
+    results['club_join_requests.select'] = {
+      data: [{ id: 'r1', user_id: 'u1' }, { id: 'r2', user_id: 'u2' }, { id: 'r3', user_id: 'u3' }],
+      error: null,
+    };
+    let attempt = 0;
+    results['club_memberships.insert'] = () => {
+      attempt += 1;
+      return attempt === 2
+        ? { data: null, error: { message: 'boom' } }
+        : { data: null, error: null };
+    };
 
+    const res = await request(makeApp())
+      .patch(`/api/clubs/${CLUB}/join-policy`)
+      .set('x-test-user', OWNER)
+      .send({ join_policy: 'open' });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ join_policy: 'open', auto_approved: 2, failed: 1 });
+    // All three were attempted; the middle failure did not abort the loop.
+    expect(find('club_memberships', 'insert')).toHaveLength(3);
+  });
+
+  it('does not touch pending requests when switching to request-only', async () => {
     const res = await request(makeApp())
       .patch(`/api/clubs/${CLUB}/join-policy`)
       .set('x-test-user', OWNER)
@@ -229,7 +284,7 @@ describe('PATCH /api/clubs/:clubId/join-policy', () => {
   });
 
   it('refuses a moderator who is not the owner', async () => {
-    results['club_memberships.select'] = { data: { role: 'moderator' }, error: null, count: 3 };
+    memberships[USER] = 'moderator';
 
     const res = await request(makeApp())
       .patch(`/api/clubs/${CLUB}/join-policy`)

@@ -49,6 +49,12 @@ async function load(clubId) {
     events: events.status === 'fulfilled' ? events.value : undefined,
     members: members.status === 'fulfilled' ? members.value : undefined,
     role: approved.status === 'fulfilled' ? (approved.value?.role ?? null) : undefined,
+    // Same reason the role is seeded here: without it the membership button renders
+    // "Request to Join" for someone who has already asked, then corrects itself once the
+    // real fetch lands — the flicker this prefetch exists to avoid.
+    joinRequestPending: approved.status === 'fulfilled'
+      ? Boolean(approved.value?.joinRequestPending)
+      : undefined,
   };
 }
 

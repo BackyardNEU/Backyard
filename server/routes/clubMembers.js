@@ -68,6 +68,19 @@ router.get('/:clubId/members', requireAuth, async (req, res) => {
 // through here for exactly that reason: an approval that inserted the membership alone
 // would leave a member who cannot see their own club's events.
 async function admitMember(userId, clubId) {
+  // Idempotent on purpose. Someone can be admitted twice by two different routes —
+  // request to join, get added through an invite link while still queued, then have the
+  // original request approved. Inserting again violates the (user_id, club_id) primary
+  // key, and the caller would surface a 502 for a user who is in fact already a member.
+  const { data: existing } = await supabaseAdmin
+    .from('club_memberships')
+    .select('role')
+    .eq('user_id', userId)
+    .eq('club_id', clubId)
+    .maybeSingle();
+
+  if (existing) return existing.role;
+
   // First member of a club becomes the top_moderator (owner).
   const { count } = await supabaseAdmin
     .from('club_memberships')
@@ -294,6 +307,7 @@ router.patch('/:clubId/join-policy', requireAuth, async (req, res) => {
   // worse than either state on its own: new arrivals walk straight in while the people
   // who asked first are still stuck behind a review step nobody is watching any more.
   let admitted = 0;
+  let failed = 0;
   if (joinPolicy === 'open') {
     const { data: pending } = await supabaseAdmin
       .from('club_join_requests')
@@ -302,16 +316,25 @@ router.patch('/:clubId/join-policy', requireAuth, async (req, res) => {
       .eq('status', 'pending');
 
     for (const request of pending || []) {
-      await supabaseAdmin
-        .from('club_join_requests')
-        .update({ status: 'approved', decided_at: new Date().toISOString(), decided_by: req.user.id })
-        .eq('id', request.id);
-      await admitMember(request.user_id, clubId);
-      admitted += 1;
+      // Isolated per request. The policy row is already committed by this point, so
+      // letting one bad row throw would flip the club open and leave everyone after it
+      // stuck in a queue nobody is reviewing any more — the exact state this branch
+      // exists to prevent.
+      try {
+        await supabaseAdmin
+          .from('club_join_requests')
+          .update({ status: 'approved', decided_at: new Date().toISOString(), decided_by: req.user.id })
+          .eq('id', request.id);
+        await admitMember(request.user_id, clubId);
+        admitted += 1;
+      } catch (err) {
+        console.error('[join-policy] could not admit', request.user_id, err.message || err);
+        failed += 1;
+      }
     }
   }
 
-  res.json({ join_policy: joinPolicy, auto_approved: admitted });
+  res.json({ join_policy: joinPolicy, auto_approved: admitted, failed });
 });
 
 // DELETE /:clubId/members/me — leave (auth required)

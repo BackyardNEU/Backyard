@@ -325,6 +325,13 @@ export default function ClubMembersPanel({ clubId, myRole, currentUserId, onMemb
   useEffect(() => {
     fetchMembers();
     fetchRoles();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clubId]);
+
+  // Separate from the roster fetch above. myRole often resolves a moment after mount, so
+  // keying the two together would refetch the whole member list every time the viewer's
+  // role landed — twice per club open, for a list that had not changed.
+  useEffect(() => {
     fetchJoinRequests();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clubId, canManage]);
