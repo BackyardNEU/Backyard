@@ -81,7 +81,7 @@ function MemberCard({ entry, myRole, currentUserId, customRoles, onAssignCustomR
                 className="member-role-btn member-role-btn--promote"
                 onClick={() => onChangeRole(user_id, 'moderator')}
               >
-                Promote
+                Make Moderator
               </button>
             ) : (
               <>
