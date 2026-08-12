@@ -7,8 +7,6 @@ import ReviewList from "../review_components/ReviewList";
 import { supabase } from '../lib/supabase';
 import { apiFetch } from '../lib/api';
 import logImage from '/src/assets/logImage.png';
-import heartEmpty from '/src/assets/empty_heart.png';
-import heartFull from '/src/assets/full_heart.png';
 import BasicInfoModule from '../club_page_components/BasicInfoModule';
 import LinksModule from '../club_page_components/LinksModule';
 import JoinModule from '../club_page_components/JoinModule';
@@ -221,6 +219,8 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     // button, so resolving it after mount used to swap the header and shove everything
     // below it down — the buttons visibly jumping on open.
     const [myRole, setMyRole] = useState(() => warmed?.role ?? null);
+    const [requestPending, setRequestPending] = useState(() => warmed?.joinRequestPending ?? false);
+    const [joinPolicy, setJoinPolicy] = useState(() => club?.join_policy ?? 'open');
     // NOTE2SELF: THIS WILL BECOME IRRELEVANT LATER AS A LOADING STATE ACROSS ALL MODULES/INFO IS PUT IN PLACE
     const [memberLoading, setMemberLoading] = useState(false);
     // active tab: 'page' | 'members'
@@ -241,6 +241,8 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     // favorites heart — mirrors the behavior in ClubGrid
     const [heartAnimating, setHeartAnimating] = useState(false);
     const [favError, setFavError] = useState(null);
+    // Subscribe/Unsubscribe — UI-only toggle for now, no backend persistence yet
+    const [subscribed, setSubscribed] = useState(false);
     // pending user-submitted FAQ questions (approved editors only) + ids to delete on Save
     const [userFaqs, setUserFaqs] = useState([]);
     const [questionDeletes, setQuestionDeletes] = useState(() => new Set());
@@ -259,6 +261,20 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
     const isMember = myRole !== null;
     const isApproved = myRole === 'moderator' || myRole === 'top_moderator';
+    // Deliberately narrower than isApproved: changing who can get in is an ownership
+    // decision, so a plain moderator does not get the toggle.
+    const isOwner = myRole === 'top_moderator';
+
+    // The membership button used to be a straight isMember ternary. It now has to say
+    // whether clicking will join outright or only ask, and offer a way back out of the
+    // queue — a pending request the user cannot cancel is a dead end.
+    const membershipAction = isMember
+        ? { label: 'Leave Club', variant: 'leave', shadow: 'rgb(90, 20, 20)' }
+        : requestPending
+            ? { label: 'Requested', variant: 'pending', shadow: 'rgb(92, 68, 0)' }
+            : joinPolicy === 'request'
+                ? { label: 'Request to Join', variant: 'join', shadow: 'rgb(0, 45, 8)' }
+                : { label: 'Join Club', variant: 'join', shadow: 'rgb(0, 45, 8)' };
 
     const id = club.id;
 
@@ -324,10 +340,10 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             // be re-fetching what is on screen. Only the auth-dependent calls are left,
             // and those cannot be prefetched — they depend on who is signed in.
             const publicFetches = warmed ? [] : [
-                apiFetch(`/clubs/${id}/reviews`, { auth: false }),
+                apiFetch(`/clubs/${id}/reviews`),
                 apiFetch(`/clubs/${id}/page`, { auth: false }),
                 apiFetch(`/clubs/${id}/events/upcoming`), // optional auth: sends token if logged in
-                apiFetch(`/clubs/${id}/members`, { auth: false }),
+                apiFetch(`/clubs/${id}/members`),
                 apiFetch('/interests', { auth: false }),
                 apiFetch(`/clubs/${id}/interests`, { auth: false }),
             ];
@@ -392,8 +408,10 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 setPageData(pageResult.value);
                 setDraft(buildDraft(pageResult.value, club));
             }
-            if (approvedResult?.status === 'fulfilled')
+            if (approvedResult?.status === 'fulfilled') {
                 setMyRole(approvedResult.value?.role ?? null);
+                setRequestPending(Boolean(approvedResult.value?.joinRequestPending));
+            }
 
             setHydrated(true);
         }
@@ -424,15 +442,38 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 await apiFetch(`/clubs/${club.id}/members/me`, { method: 'DELETE' });
                 setMyRole(null);
                 if (onMembershipChange) onMembershipChange(club.id, false);
+            } else if (requestPending) {
+                await apiFetch(`/clubs/${club.id}/join-requests/me`, { method: 'DELETE' });
+                setRequestPending(false);
             } else {
                 const result = await apiFetch(`/clubs/${club.id}/members/me`, { method: 'POST' });
-                setMyRole(result?.role ?? 'member');
-                if (onMembershipChange) onMembershipChange(club.id, true);
+                // A request-to-join club answers with a status instead of a role — the
+                // user is queued, not admitted, so membership must not flip yet.
+                if (result?.status === 'requested') {
+                    setRequestPending(true);
+                } else {
+                    setMyRole(result?.role ?? 'member');
+                    if (onMembershipChange) onMembershipChange(club.id, true);
+                }
             }
         } catch (err) {
             console.error('Error updating membership:', err);
         }
         setMemberLoading(false);
+    }
+
+    async function handleJoinPolicyToggle() {
+        const next = joinPolicy === 'request' ? 'open' : 'request';
+        setJoinPolicy(next); // optimistic; reverted below if the call fails
+        try {
+            await apiFetch(`/clubs/${club.id}/join-policy`, {
+                method: 'PATCH',
+                body: { join_policy: next },
+            });
+        } catch (err) {
+            console.error('Error updating join policy:', err);
+            setJoinPolicy(joinPolicy);
+        }
     }
 
     const handleModuleChange = useCallback((type, updatedData) => {
@@ -649,56 +690,62 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const actionRow = (
         <div className="exp-action-row">
             <div className="exp-action-row-inner">
+                {user && (
+                    <div className="duo-btn-wrap">
+                        <div className="duo-btn-pill" aria-hidden="true" />
+                        <button
+                            className={`membership-btn duo-btn ${isMember ? 'leave' : 'join'}`}
+                            style={{ '--duo-shadow': isMember ? 'rgb(90, 20, 20)' : 'rgb(76, 102, 57)' }}
+                            onClick={handleMembership}
+                            disabled={memberLoading}
+                        >
+                            {memberLoading ? '...' : membershipAction.label}
+                        </button>
+                    </div>
+                )}
+
+                {GlobalValue && (
+                    <div className="duo-btn-wrap">
+                        <div className="duo-btn-pill" aria-hidden="true" />
+                        <button
+                            className="exp-favorite-btn duo-btn"
+                            style={{ '--duo-shadow': 'rgb(122, 48, 47)' }}
+                            onClick={handleHeartClick}
+                            disabled={heartAnimating}
+                        >
+                            {liked ? 'Unfavorite' : 'Favorite'}
+                        </button>
+                    </div>
+                )}
+
                 {isClicked
                     ? <img src={logImage} className="log-btn" alt="Clicked state" />
                     : (
                         <div className="duo-btn-wrap">
                             <div className="duo-btn-pill" aria-hidden="true" />
                             <button
-                                className="review-btn duo-btn"
-                                style={{ '--duo-shadow': 'rgb(52, 32, 0)' }}
+                                className="review-btn exp-make-post-btn duo-btn"
+                                style={{ '--duo-shadow': 'rgb(49, 90, 116)' }}
                                 onClick={handleClick}
                             >
-                                Share your experience
+                                Make Post
                             </button>
                         </div>
                     )
                 }
 
-                {user && (
-                    <div className="duo-btn-wrap">
-                        <div className="duo-btn-pill" aria-hidden="true" />
-                        <button
-                            className={`membership-btn duo-btn ${isMember ? 'leave' : 'join'}`}
-                            style={{ '--duo-shadow': isMember ? 'rgb(90, 20, 20)' : 'rgb(0, 45, 8)' }}
-                            onClick={handleMembership}
-                            disabled={memberLoading}
-                        >
-                            {memberLoading ? '...' : isMember ? 'Leave Club' : 'Join Club'}
-                        </button>
-                    </div>
-                )}
-
-                {/* Placeholder — event creation to be wired up later */}
                 <div className="duo-btn-wrap">
                     <div className="duo-btn-pill" aria-hidden="true" />
                     <button
                         className="add-events-btn duo-btn"
-                        style={{ '--duo-shadow': 'rgb(157, 62, 47)' }}
+                        style={{ '--duo-shadow': 'rgb(0, 0, 0)' }}
                         type="button"
+                        onClick={() => setSubscribed(prev => !prev)}
                     >
-                        Add Events
+                        {subscribed ? 'Unsubscribe' : 'Subscribe'}
                     </button>
                 </div>
 
-                {GlobalValue && (
-                    <img
-                        className={`exp-action-heart ${heartAnimating ? 'pop' : ''}`}
-                        src={liked ? heartFull : heartEmpty}
-                        onClick={handleHeartClick}
-                        alt={liked ? 'Remove favorite' : 'Add favorite'}
-                    />
-                )}
                 {favError && <div className="exp-fav-error">{favError}</div>}
             </div>
         </div>

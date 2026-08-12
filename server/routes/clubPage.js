@@ -366,7 +366,27 @@ router.get('/:clubId/is-approved', requireAuth, async (req, res) => {
   }
 
   const role = data?.role ?? null;
-  res.json({ approved: ['top_moderator', 'moderator'].includes(role), role });
+
+  // Non-members may be waiting on approval. The membership button cannot render a
+  // "Requested" state without this, and the club page already fetches this endpoint,
+  // so folding it in here avoids a second round trip on every card open.
+  let joinRequestPending = false;
+  if (!role) {
+    const { data: pending } = await supabaseAdmin
+      .from('club_join_requests')
+      .select('id')
+      .eq('user_id', req.user.id)
+      .eq('club_id', clubId)
+      .eq('status', 'pending')
+      .maybeSingle();
+    joinRequestPending = Boolean(pending);
+  }
+
+  res.json({
+    approved: ['top_moderator', 'moderator'].includes(role),
+    role,
+    joinRequestPending,
+  });
 });
 
 // GET /api/clubs/:clubId/interests

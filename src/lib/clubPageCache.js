@@ -32,11 +32,11 @@ async function load(clubId) {
   // allSettled, not all: a club with no page row or no reviews must still open. The
   // component already handles each field being absent.
   const [reviews, page, topTags, events, members, approved] = await Promise.allSettled([
-    apiFetch(`/clubs/${clubId}/reviews`, { auth: false }),
+    apiFetch(`/clubs/${clubId}/reviews`),
     apiFetch(`/clubs/${clubId}/page`, { auth: false }),
     apiFetch(`/clubs/${clubId}/top-tags`, { auth: false }),
     apiFetch(`/clubs/${clubId}/events/upcoming`),
-    apiFetch(`/clubs/${clubId}/members`, { auth: false }),
+    apiFetch(`/clubs/${clubId}/members`),
     // 401s for signed-out visitors; allSettled turns that into a rejection we ignore,
     // which lands on the same `undefined` a signed-out viewer should see anyway.
     apiFetch(`/clubs/${clubId}/is-approved`),
@@ -49,6 +49,12 @@ async function load(clubId) {
     events: events.status === 'fulfilled' ? events.value : undefined,
     members: members.status === 'fulfilled' ? members.value : undefined,
     role: approved.status === 'fulfilled' ? (approved.value?.role ?? null) : undefined,
+    // Same reason the role is seeded here: without it the membership button renders
+    // "Request to Join" for someone who has already asked, then corrects itself once the
+    // real fetch lands — the flicker this prefetch exists to avoid.
+    joinRequestPending: approved.status === 'fulfilled'
+      ? Boolean(approved.value?.joinRequestPending)
+      : undefined,
   };
 }
 

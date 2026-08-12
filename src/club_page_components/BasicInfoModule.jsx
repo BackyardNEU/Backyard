@@ -3,7 +3,13 @@ import { useClubData } from '../context/useClubData';
 import { apiFetch } from '../lib/api';
 import { roleColorStyle } from '../lib/roleColor';
 import ColorThief from 'colorthief';
-import { FaSearch, FaTimes } from 'react-icons/fa';
+import { FaSearch, FaTimes, FaInstagram, FaFacebookF } from 'react-icons/fa';
+import { FaTiktok, FaSlack, FaLinkedinIn } from 'react-icons/fa6';
+import { IoIosMail } from 'react-icons/io';
+import { SlSocialSpotify } from 'react-icons/sl';
+import { SiLinktree } from 'react-icons/si';
+import { TbBrandDiscord } from 'react-icons/tb';
+import { FiYoutube } from 'react-icons/fi';
 import borderImg from '/src/assets/border-green.svg';
 import borderHorizontalImg from '/src/assets/border-horizontal-green.svg';
 import './BasicInfoModule.css';
@@ -38,6 +44,10 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   const [subText, setSubText] = useState(['', '']);
   const [subQuery, setSubQuery] = useState(['', '']); // live filter text while dropdown open
   const [subDropdown, setSubDropdown] = useState(null); // 0 | 1 | null
+  // Whether the text in each box should narrow the list. False until the user actually
+  // types, so opening a field that already holds a saved subcategory shows every option
+  // rather than filtering down to the one already chosen.
+  const [subFiltering, setSubFiltering] = useState([false, false]);
   const [clubRoster, setClubRoster] = useState([]);
   // Drives how many links show before "More" — 2 on narrow viewports, 5 otherwise.
   // Tracked reactively (not just read once) so resizing across the breakpoint updates it.
@@ -66,7 +76,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   useEffect(() => {
     if (!friendsModalOpen) return;
     let cancelled = false;
-    apiFetch(`/clubs/${club.id}/members`, { auth: false })
+    apiFetch(`/clubs/${club.id}/members`)
       .then((data) => { if (!cancelled) setClubRoster(data || []); })
       .catch((err) => console.error('Failed to fetch club roster:', err));
     return () => { cancelled = true; };
@@ -102,9 +112,27 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
 
   const getLinkKeyword = (name) => {
     const n = (name || '').toLowerCase().trim();
-    const keywords = ['instagram', 'facebook', 'discord', 'email', 'spotify', 'slack', 'tiktok', 'linktree', 'youtube'];
+    const keywords = ['instagram', 'facebook', 'discord', 'email', 'spotify', 'slack', 'tiktok', 'linktree', 'youtube', 'linkedin'];
     return keywords.find(k => n === k) || 'default';
   };
+
+  // Each of these renders a logo instead of the platform name text. Icons default to
+  // 1em, so they auto-match .link-btn's font-size at every breakpoint.
+  const LINK_ICONS = {
+    instagram: FaInstagram,
+    facebook: FaFacebookF,
+    email: IoIosMail,
+    youtube: FiYoutube,
+    discord: TbBrandDiscord,
+    spotify: SlSocialSpotify,
+    tiktok: FaTiktok,
+    linktree: SiLinktree,
+    slack: FaSlack,
+    linkedin: FaLinkedinIn,
+  };
+  // Spotify's icon keeps the same green .link-btn--spotify already uses for its text,
+  // instead of the white used everywhere else.
+  const LINK_ICON_COLORS = { spotify: '#65D46E' };
 
   const handleMoreLinks = () => setLinksExpanded(prev => !prev);
 
@@ -206,7 +234,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
     const cat = taxonomy.find(c => c.id === clubInterests.category_id);
     if (!cat) { setSubText(['', '']); return; }
     const names = (clubInterests.subcategory_ids || []).slice(0, 2).map(subId => {
-      const sub = cat.subcategories.find(s => s.id === subId);
+      const sub = (cat.subcategories || []).find(s => s.id === subId);
       return sub?.name || '';
     });
     setSubText([names[0] || '', names[1] || '']);
@@ -217,9 +245,20 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
 
   const getSuggestions = useCallback((index) => {
     if (!selectedCat) return [];
-    const text = subQuery[index].toLowerCase().trim();
-    return selectedCat.subcategories.filter(s => s.name.toLowerCase().includes(text));
-  }, [selectedCat, subQuery]);
+    const subs = selectedCat.subcategories || [];
+    // Show the whole list until the user types. Previously the box was seeded with the
+    // saved subcategory's name and filtered on it, so opening the field matched exactly
+    // one option — the one already chosen — and the only way to see the others was to
+    // clear the box by hand. There was nothing on screen to suggest that.
+    if (!subFiltering[index]) return subs;
+    const text = subText[index].toLowerCase().trim();
+    return subs.filter(s => s.name.toLowerCase().includes(text));
+  }, [selectedCat, subText, subFiltering]);
+
+  const openSubDropdown = useCallback((index) => {
+    setSubDropdown(index);
+    setSubFiltering(prev => prev.map((v, i) => (i === index ? false : v)));
+  }, []);
 
   const handleCategoryChange = useCallback((e) => {
     const catId = e.target.value || null;
@@ -232,6 +271,8 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   const handleSubTextChange = useCallback((index, value) => {
     setSubQuery(prev => prev.map((t, i) => i === index ? value : t));
     setSubDropdown(index);
+    // Typing is what turns the box into a filter.
+    setSubFiltering(prev => prev.map((v, i) => (i === index ? true : v)));
     if (!value.trim()) {
       setSubText(prev => prev.map((t, i) => i === index ? '' : t));
       const newSubs = [...(clubInterests?.subcategory_ids || [])];
@@ -324,17 +365,20 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
                       <input
                         className="interests-edit-input"
                         type="text"
-                        value={subDropdown === index ? subQuery[index] : subText[index]}
-                        placeholder={subText[index] ? subText[index] : `Search ${selectedCat.name} subcategories…`}
+                        value={subText[index]}
+                        placeholder={`Choose or search ${selectedCat.name} subcategories…`}
+                        role="combobox"
+                        aria-expanded={subDropdown === index}
+                        aria-controls={`sub-listbox-${index}`}
                         onChange={e => handleSubTextChange(index, e.target.value)}
-                        onFocus={() => {
-                          setSubQuery(prev => prev.map((t, i) => i === index ? '' : t));
-                          setSubDropdown(index);
-                        }}
+                        onFocus={() => openSubDropdown(index)}
                         onBlur={() => setTimeout(() => setSubDropdown(null), 150)}
                       />
+                      {/* Without this the field reads as a plain search box and nothing
+                          suggests there is a list behind it. */}
+                      <span className="interests-edit-caret" aria-hidden="true" />
                       {subDropdown === index && getSuggestions(index).length > 0 && (
-                        <div className="interests-edit-dropdown">
+                        <div className="interests-edit-dropdown" id={`sub-listbox-${index}`} role="listbox">
                           {getSuggestions(index).map(sub => (
                             <button
                               key={sub.id}
@@ -385,19 +429,23 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
             <>
               <span className="links-sep">|</span>
               <div className="links-bar">
-                {visibleLinks.map((link, i) => (
+                {visibleLinks.map((link, i) => {
+                  const keyword = getLinkKeyword(link.name);
+                  const Icon = LINK_ICONS[keyword];
+                  return (
                   <div className="duo-btn-wrap" key={link.id || i}>
                     <div className="duo-btn-pill" aria-hidden="true" />
                     <a
-                      className={`review-btn link-btn link-btn--${getLinkKeyword(link.name)}`}
+                      className={`review-btn link-btn link-btn--${keyword}`}
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      {link.name}
+                      {Icon ? <Icon size="1.6rem" color={LINK_ICON_COLORS[keyword] || '#fff'} /> : link.name}
                     </a>
                   </div>
-                ))}
+                  );
+                })}
                 {showMoreToggle && (
                   <div className="duo-btn-wrap">
                     <div className="duo-btn-pill" aria-hidden="true" />

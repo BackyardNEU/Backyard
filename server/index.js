@@ -93,6 +93,16 @@ const storageLimiter = limiter(100); // uploads are expensive downstream (Vision
 const invitesLimiter = limiter(100);
 const supportLimiter = limiter(30); // abuse-prone, and nobody files 30 tickets legitimately
 
+// /users/check-username has to stay reachable without a token — signup calls it before
+// an account exists — which makes it an account-existence oracle. On the global 1000
+// bucket that is 1000 guesses per window against a username list. Nobody picks a
+// handle in 30 tries, and the limiter keys by user id once signed in, so a real user
+// hitting the profile-settings path is not throttled by whatever the IP has been doing.
+const usernameCheckLimiter = limiter(30);
+// Covers the rest of the router. /users/search is an authenticated username
+// autocomplete, so it is a second, quieter enumeration surface.
+const usersLimiter = limiter(200);
+
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, timestamp: Date.now() });
 });
@@ -119,7 +129,10 @@ app.use('/api/me/interests', limiter(100), userInterestsRouter);
 app.use('/api/friend-requests', friendRequestsLimiter, friendRequestsRouter);
 app.use('/api/me/notifications', notificationsLimiter, notificationsRouter);
 app.use('/api/me', profilesRouter); // serves /profile and /membership
-app.use('/api/users', usersRouter);
+// The specific path has to be registered before the router mount, or Express reaches the
+// router first and the tighter bucket never runs.
+app.use('/api/users/check-username', usernameCheckLimiter);
+app.use('/api/users', usersLimiter, usersRouter);
 app.use('/api/events', eventsLimiter, eventsRouter);
 
 // Signed upload URLs (auth required; service role stays on the server)

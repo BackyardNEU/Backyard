@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import borderImg from '/src/assets/border.svg';
+import borderHorizontalImg from '/src/assets/border-horizontal.svg';
 import './PolaroidCards.css';
 
 const determineLayout = (ratio) => {
@@ -90,6 +92,18 @@ export const PolaroidCards = ({ photos = [] }) => {
 
           return (
             <div key={card.id} className="polaroid-card">
+              <img src={borderImg} alt="" className="polaroid-card-border polaroid-card-border-left" />
+              <img src={borderImg} alt="" className="polaroid-card-border polaroid-card-border-right" />
+              <div
+                className="polaroid-card-border-h-wrap polaroid-card-border-top-wrap"
+                style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+                aria-hidden="true"
+              />
+              <div
+                className="polaroid-card-border-h-wrap polaroid-card-border-bottom-wrap"
+                style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+                aria-hidden="true"
+              />
               {imageContent}
             </div>
           );

@@ -264,7 +264,7 @@ function AnswerCell({ ck, value, placeholder, activeKey, onSelect, accept }) {
       {accept && (
         <button onClick={accept} onMouseDown={(e) => e.stopPropagation()}
           style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)",
-            background: BLUE, color: "#fff", border: "none", borderRadius: 999, cursor: "pointer",
+            background: BLUE, color: "#fff", border: "none", borderRadius: 8, cursor: "pointer",
             padding: "6px 16px", fontSize: 14, fontWeight: 500, boxShadow: "0 2px 5px rgba(0,0,0,0.2)" }}>
           Add to Faqs
         </button>
@@ -330,7 +330,7 @@ const cssText = `
   .faq-count-pill { display: inline-flex; align-items: center; margin-bottom: 14px; padding: 8px 18px;
     border-radius: 10px; color: #fff; font-weight: 400; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
   .tbl-scroll::-webkit-scrollbar { width: 12px; }
-  .tbl-scroll::-webkit-scrollbar-thumb { background: #cfcfcf; border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
+  .tbl-scroll::-webkit-scrollbar-thumb { background: #cfcfcf; border-radius: 8px; border: 3px solid transparent; background-clip: padding-box; }
   .tbl-scroll::-webkit-scrollbar-track { background: transparent; }
   .cell-overlay textarea::placeholder { color: ${MUTED}; }
 

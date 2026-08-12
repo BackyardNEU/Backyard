@@ -1,6 +1,7 @@
 import express from 'express';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import nlSearchParser from '../lib/nlSearch.js';
+import { PUBLIC_CLUB_COLUMNS } from '../lib/publicColumns.js';
 
 const router = express.Router();
 
@@ -12,7 +13,9 @@ router.get('/', async (req, res) => {
 
     if (parsed && (parsed.categories.length > 0 || parsed.tags.length > 0)) {
       try {
-        let query = supabaseAdmin.from('demo_club_data').select('*');
+        // Same allowlist as GET /api/clubs — these two hand back the same shape and
+        // must not drift, since the club grid renders whichever one answered.
+        let query = supabaseAdmin.from('demo_club_data').select(PUBLIC_CLUB_COLUMNS);
         if (school) query = query.eq('school', school);
         if (parsed.categories.length > 0) query = query.in('category', parsed.categories);
 
@@ -58,6 +61,9 @@ router.get('/', async (req, res) => {
     }
   }
 
+  // Fallback path. The column list here is fixed by the search_clubs function in the
+  // database, not by this file, so the allowlist above does not constrain it — if a
+  // sensitive column is ever added to demo_club_data, that function needs auditing too.
   const { data, error } = await supabaseAdmin
     .rpc('search_clubs', {
       search_query: q,

@@ -81,7 +81,7 @@ function MemberCard({ entry, myRole, currentUserId, customRoles, onAssignCustomR
                 className="member-role-btn member-role-btn--promote"
                 onClick={() => onChangeRole(user_id, 'moderator')}
               >
-                Promote
+                Make Moderator
               </button>
             ) : (
               <>
@@ -269,14 +269,23 @@ export default function ClubMembersPanel({ clubId, myRole, currentUserId, onMemb
   const [error, setError] = useState(null);
   const [showManageRoles, setShowManageRoles] = useState(false);
 
+  const [joinRequests, setJoinRequests] = useState([]);
+  const [signedOut, setSignedOut] = useState(false);
+
   const canManage = myRole === 'moderator' || myRole === 'top_moderator';
 
+  // These two dropped `auth: false`. The roster is no longer public — it was handing
+  // every club's membership list to anonymous callers — so the token has to go with it.
   async function fetchMembers() {
     try {
-      const data = await apiFetch(`/clubs/${clubId}/members`, { auth: false });
+      const data = await apiFetch(`/clubs/${clubId}/members`);
       setMembers(data || []);
+      setSignedOut(false);
     } catch (err) {
-      setError(err?.message ?? 'Failed to load members.');
+      // A signed-out visitor is an expected state now, not a failure, so it gets its
+      // own message instead of the red error banner.
+      if (err?.status === 401) setSignedOut(true);
+      else setError(err?.message ?? 'Failed to load members.');
     } finally {
       setLoading(false);
     }
@@ -284,10 +293,32 @@ export default function ClubMembersPanel({ clubId, myRole, currentUserId, onMemb
 
   async function fetchRoles() {
     try {
-      const data = await apiFetch(`/clubs/${clubId}/roles`, { auth: false });
+      const data = await apiFetch(`/clubs/${clubId}/roles`);
       setCustomRoles(data || []);
     } catch {
       // non-fatal — panel still works without custom roles
+    }
+  }
+
+  async function fetchJoinRequests() {
+    if (!canManage) return;
+    try {
+      const data = await apiFetch(`/clubs/${clubId}/join-requests`);
+      setJoinRequests(data || []);
+    } catch {
+      // Non-fatal: an open club simply has none, and a failure here must not stop the
+      // roster itself from rendering.
+    }
+  }
+
+  async function decideRequest(userId, decision) {
+    setError(null);
+    try {
+      await apiFetch(`/clubs/${clubId}/join-requests/${userId}/${decision}`, { method: 'POST' });
+      setJoinRequests((prev) => prev.filter((r) => r.user_id !== userId));
+      if (decision === 'approve') await fetchMembers();
+    } catch (err) {
+      setError(err?.message ?? `Failed to ${decision} request.`);
     }
   }
 
@@ -296,6 +327,14 @@ export default function ClubMembersPanel({ clubId, myRole, currentUserId, onMemb
     fetchRoles();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clubId]);
+
+  // Separate from the roster fetch above. myRole often resolves a moment after mount, so
+  // keying the two together would refetch the whole member list every time the viewer's
+  // role landed — twice per club open, for a list that had not changed.
+  useEffect(() => {
+    fetchJoinRequests();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clubId, canManage]);
 
   async function handleAssignCustomRole(userId, customRoleId, currentMechanicalRole) {
     setError(null);
@@ -392,6 +431,46 @@ export default function ClubMembersPanel({ clubId, myRole, currentUserId, onMemb
       </div>
 
       {error && <p className="club-members-panel__error">{error}</p>}
+
+      {signedOut && (
+        <p className="club-members-panel__signed-out">
+          Sign in to see who&apos;s in this club.
+        </p>
+      )}
+
+      {canManage && joinRequests.length > 0 && (
+        <div className="join-requests">
+          <h3 className="join-requests__heading">
+            Pending {joinRequests.length === 1 ? 'request' : 'requests'} ({joinRequests.length})
+          </h3>
+          {joinRequests.map((request) => (
+            <div key={request.user_id} className="join-request-row">
+              <img
+                className="join-request-row__avatar"
+                src={request.avatar_url || '/raccoon_pfp.png'}
+                alt=""
+              />
+              <span className="join-request-row__name">{request.username ?? 'Unknown user'}</span>
+              <div className="join-request-row__actions">
+                <button
+                  type="button"
+                  className="join-request-btn approve"
+                  onClick={() => decideRequest(request.user_id, 'approve')}
+                >
+                  Approve
+                </button>
+                <button
+                  type="button"
+                  className="join-request-btn deny"
+                  onClick={() => decideRequest(request.user_id, 'deny')}
+                >
+                  Deny
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {loading ? (
         <SkeletonRegion label="Loading members">

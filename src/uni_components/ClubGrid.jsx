@@ -10,8 +10,10 @@ import { useClubData } from '../context/useClubData';
 import { prefetchClubPage } from '../lib/clubPageCache';
 //import paperTexture from '/src/assets/white-paper-texture.jpg';
 import posterPin from '/src/assets/poster_pin.png';
+import borderImg from '/src/assets/border.svg';
+import borderHorizontalImg from '/src/assets/border-horizontal.svg';
 import Avatar from '../components/Avatar';
-const ClubGridCard = ({ result, onExpand, hideHeart, hidePins }) => {
+const ClubGridCard = ({ result, onExpand, hideHeart, hidePins, showBorder }) => {
   const [animating, setAnimating] = useState(false);
   const [favError, setFavError] = useState(null);
   const GlobalValue = useGlobalStore((state) => state.GlobalValue);
@@ -86,6 +88,22 @@ const ClubGridCard = ({ result, onExpand, hideHeart, hidePins }) => {
 >
       {!hidePins && <img src={posterPin} alt="" className="pin pin-left" />}
       {!hidePins && <img src={posterPin} alt="" className="pin pin-right" />}
+      {showBorder && (
+        <>
+          <img src={borderImg} alt="" className="club-card-border club-card-border-left" />
+          <img src={borderImg} alt="" className="club-card-border club-card-border-right" />
+          <div
+            className="club-card-border-h-wrap club-card-border-top-wrap"
+            style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+            aria-hidden="true"
+          />
+          <div
+            className="club-card-border-h-wrap club-card-border-bottom-wrap"
+            style={{ backgroundImage: `url(${borderHorizontalImg})` }}
+            aria-hidden="true"
+          />
+        </>
+      )}
       <div className = "flex-card">
         <div className = "image-container">
         <img className = "club-img" src={result.image_url || "/raccoon_pfp.png"}/>

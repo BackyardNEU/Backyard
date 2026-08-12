@@ -1,12 +1,13 @@
 .invite-generate-btn {
-  background: #EE3124;
+  background-color: rgb(47, 115, 164);
   color: #fff;
 }
 
 .invite-copy-btn {
-  background: #2e4064;
-  color: #Ece7e5;
+  background-color: rgb(47, 115, 164);
+  color: #fff;
 }
+
 
 .invite-revoke-btn {
   background: rgb(180, 40, 40);

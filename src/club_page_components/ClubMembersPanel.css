@@ -143,9 +143,9 @@
 
 /* Owner — warm amber */
 .role-badge--top_moderator {
-  background: #f5e4b0;
-  color: #7a5000;
-  border: 1px solid #e5c96a;
+  background: #2a2a2a;
+  color: #ffffff;
+  border: 1px solid #000000;
 }
 
 /* Moderator — cool slate blue */
@@ -207,7 +207,7 @@
   font-weight: 600;
   padding: 3px 10px;
   border: none;
-  border-radius: 90px;
+  border-radius: 8px;
   cursor: pointer;
   transition: opacity 0.15s ease;
   white-space: nowrap;
@@ -216,18 +216,18 @@
 .member-role-btn:hover { opacity: 0.85; }
 
 .member-role-btn--promote {
-  background: #dce8f7;
-  color: #1a4a80;
+    background: rgb(234, 234, 230);
+  color: #444;
 }
 
 .member-role-btn--demote {
-  background: #f5e4b0;
-  color: #7a5000;
+  background: #ec958f;
+  color: #7a0000;
 }
 
 .member-role-btn--transfer {
-  background: #ebebeb;
-  color: #444;
+  background: #000000;
+  color: #ffffff;
 }
 
 /* ── Manage Roles panel ──────────────────────────────────────────────────── */
@@ -472,4 +472,85 @@
 
 .club-tab-btn--active {
   color: #1a1a1a;
+}
+
+/* ─── Signed-out roster ─── */
+/* The roster now requires a token, so a logged-out visitor gets a prompt rather than
+   the red error banner — this is an expected state, not a failure. */
+.club-members-panel__signed-out {
+  margin: 12px 0;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 16px;
+  color: #6f6862;
+  text-align: center;
+}
+
+/* ─── Pending join requests (moderators only) ─── */
+.join-requests {
+  margin-bottom: 14px;
+}
+
+.join-requests__heading {
+  margin: 0 0 8px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6f6862;
+}
+
+.join-request-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.join-request-row__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.join-request-row__name {
+  flex: 1;
+  min-width: 0;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 17px;
+  color: #1a1a1a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.join-request-row__actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.join-request-btn {
+  padding: 5px 14px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  color: #fff;
+  transition: filter 0.15s ease;
+}
+
+.join-request-btn:hover {
+  filter: brightness(1.12);
+}
+
+.join-request-btn.approve {
+  background: rgb(0, 62, 11);
+}
+
+.join-request-btn.deny {
+  background: rgb(120, 30, 30);
 }

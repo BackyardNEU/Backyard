@@ -4,4 +4,8 @@
 // (/university/Northeastern) is one edit rather than a hunt.
 export const DEFAULT_UNIVERSITY_ID = '38500bfc-e606-46a7-840d-720b11ad2e8b';
 
-export const DEFAULT_UNIVERSITY_PATH = `/university/${DEFAULT_UNIVERSITY_ID}`;
+// The readable slug, not the id. UniversityPage accepts either, but when handed a UUID
+// it resolves the club data and then rewrites the URL to the slug — so pointing every
+// internal link at the id meant the address bar visibly flipped on each entry and left a
+// redundant history entry behind. Going straight to the slug skips that hop.
+export const DEFAULT_UNIVERSITY_PATH = '/university/Northeastern';

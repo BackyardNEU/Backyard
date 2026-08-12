@@ -95,7 +95,7 @@
   font-family: 'Barlow Condensed', sans-serif;
   display: inline-block;
   padding: 5px 10px;
-  background-color: rgb(207, 87, 69);
+  background-color: #1E1A18;
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -107,20 +107,10 @@
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
 }
 
-
-
-/* Sized to match the height of the pill buttons next to it */
-.exp-action-heart {
-  height: 40px;
-  width: auto;
-  object-fit: contain;
-  cursor: pointer;
-  user-select: none;
-  transition: transform 0.12s ease;
-}
-
-.exp-action-heart.pop {
-  animation: exp-heart-pop 0.25s ease forwards;
+.exp-favorite-btn {
+  font-family: 'Barlow Condensed', sans-serif;
+  background-color: #BC4A49;
+  color: #fff;
 }
 
 .exp-save-error {
@@ -187,6 +177,11 @@
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
 }
 
+.exp-make-post-btn {
+  background-color: #4B8AB3;
+  color: #fff;
+}
+
 
 .log-btn {
   width: 170px;
@@ -229,11 +224,68 @@
 }
 
 .membership-btn.join {
-  background-color: rgb(0, 62, 11);
+  background-color: #759D57;
 }
 
 .membership-btn.leave {
   background-color: rgb(120, 30, 30);
+}
+
+/* Waiting on a moderator. Amber rather than green so it doesn't read as "you're in",
+   and it stays clickable because that click withdraws the request. */
+.membership-btn.pending {
+  background-color: rgb(122, 90, 0);
+}
+
+/* ─── Join policy toggle (club owner only) ─── */
+.join-policy-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 10px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: "Barlow condensed", sans-serif;
+  font-size: 13px;
+  color: rgb(70, 62, 55);
+}
+
+.join-policy-track {
+  position: relative;
+  flex-shrink: 0;
+  width: 34px;
+  height: 18px;
+  border-radius: 999px;
+  background: rgb(184, 178, 170);
+  transition: background 0.18s ease;
+}
+
+.join-policy-toggle.on .join-policy-track {
+  background: rgb(0, 62, 11);
+}
+
+.join-policy-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.18s ease;
+}
+
+.join-policy-toggle.on .join-policy-thumb {
+  transform: translateX(16px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .join-policy-track,
+  .join-policy-thumb {
+    transition: none;
+  }
 }
 
 .content-col-divider {
