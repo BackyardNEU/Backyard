@@ -331,6 +331,18 @@ router.put('/:clubId/page', requireAuth, checkMuted, async (req, res) => {
     throw err;
   }
 
+  // Sync club_name and image_url back to demo_club_data so the main club listing
+  // reflects edits made in the page editor.
+  const basicInfo = modules.find(m => m.type === 'basic_info')?.data;
+  if (basicInfo) {
+    const syncFields = {};
+    if (basicInfo.club_name?.trim()) syncFields.club_name = basicInfo.club_name.trim();
+    if (basicInfo.logo_url) syncFields.image_url = basicInfo.logo_url;
+    if (Object.keys(syncFields).length) {
+      await supabaseAdmin.from('demo_club_data').update(syncFields).eq('id', clubId);
+    }
+  }
+
   res.json(data);
 });
 

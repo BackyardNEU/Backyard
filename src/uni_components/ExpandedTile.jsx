@@ -197,7 +197,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const warmed = readClubPage(club.id);
 
     // Read before the state block so viewerId can seed `user` below.
-    const { favoritesCache, invalidateFavoritesCache, friendsArray, userId: viewerId } = useClubData();
+    const { favoritesCache, invalidateFavoritesCache, friendsArray, userId: viewerId, refetch: refetchClubs } = useClubData();
 
     // determines when to begin the data requesting- animationDone triggers most data requests here
     const [animationDone, setAnimationDone] = useState(true);
@@ -235,6 +235,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const [draft, setDraft] = useState(() => (warmed ? buildDraft(warmed.page, club) : []));
     // determines state of saving progress from changes
     const [isSaving, setIsSaving] = useState(false);
+    const [saveError, setSaveError] = useState(null);
     // determines if a new logo has been uploaded- requires a new signed URL upload to the supabase storage bucket
     const [pendingLogoFile, setPendingLogoFile] = useState(null);
     // favorites heart — mirrors the behavior in ClubGrid
@@ -531,6 +532,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const handleSave = async () => {
         if (!isDraftValid) return;
         setIsSaving(true);
+        setSaveError(null);
         let finalDraft = draft;
         try {
             if (pendingLogoFile) {
@@ -538,7 +540,8 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     method: 'POST',
                     body: { club_id: id, ext: pendingLogoFile.type.split('/')[1] },
                 });
-                await fetch(signedUrl, { method: 'PUT', body: pendingLogoFile });
+                const uploadRes = await fetch(signedUrl, { method: 'PUT', body: pendingLogoFile, headers: { 'Content-Type': pendingLogoFile.type } });
+                if (!uploadRes.ok) throw new Error(`Logo upload failed (${uploadRes.status})`);
 
                 const verification = await apiFetch('/storage/verify-image', {
                     method: 'POST',
@@ -548,8 +551,9 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     throw new Error(verification.error || 'Logo rejected by content policy');
                 }
 
+                const cacheBustedUrl = `${publicUrl}?t=${Date.now()}`;
                 finalDraft = draft.map(m =>
-                    m.type === 'basic_info' ? { ...m, data: { ...m.data, logo_url: publicUrl } } : m
+                    m.type === 'basic_info' ? { ...m, data: { ...m.data, logo_url: cacheBustedUrl } } : m
                 );
             }
             await apiFetch(`/clubs/${id}/page`, {
@@ -559,20 +563,24 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             setPageData(prev => ({ ...prev, modules: finalDraft }));
             setDraft(finalDraft);
 
-            // Save club interests: PUT if a category is set, DELETE if cleared
-            if (clubInterestsDraft?.category_id) {
-                await apiFetch(`/clubs/${id}/interests`, {
-                    method: 'PUT',
-                    body: {
-                        category_id: clubInterestsDraft.category_id,
-                        subcategory_ids: clubInterestsDraft.subcategory_ids || [],
-                    },
-                });
-                setClubInterestsSaved(clubInterestsDraft);
-            } else if (clubInterestsSaved?.category_id) {
-                // Category was cleared — remove the row entirely
-                await apiFetch(`/clubs/${id}/interests`, { method: 'DELETE' });
-                setClubInterestsSaved(null);
+            // Save club interests only if something changed — avoids a spurious
+            // PUT on every save when the user didn't touch the interests panel.
+            const interestsChanged = JSON.stringify(clubInterestsDraft) !== JSON.stringify(clubInterestsSaved);
+            if (interestsChanged) {
+                if (clubInterestsDraft?.category_id) {
+                    await apiFetch(`/clubs/${id}/interests`, {
+                        method: 'PUT',
+                        body: {
+                            category_id: clubInterestsDraft.category_id,
+                            subcategory_ids: clubInterestsDraft.subcategory_ids || [],
+                        },
+                    });
+                    setClubInterestsSaved(clubInterestsDraft);
+                } else if (clubInterestsSaved?.category_id) {
+                    // Category was cleared — remove the row entirely
+                    await apiFetch(`/clubs/${id}/interests`, { method: 'DELETE' });
+                    setClubInterestsSaved(null);
+                }
             }
 
             // The prefetch cache now holds the pre-edit page. Drop it so reopening this
@@ -605,8 +613,10 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
             setIsEditing(false);
             setPendingLogoFile(null);
+            refetchClubs();
         } catch (err) {
             console.error('Error saving:', err);
+            setSaveError(err?.message || 'Save failed. Please try again.');
         } finally {
             setIsSaving(false);
         }
@@ -616,6 +626,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const handleCancel = () => {
         setDraft(normalizeModules(pageData?.modules ?? []));
         setPendingLogoFile(null);
+        setSaveError(null);
         setQuestionDeletes(new Set()); // restore optimistically-removed questions
         setHideDraft({});
         setClubInterestsDraft(clubInterestsSaved);
@@ -941,9 +952,14 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     </div>
 
                     {isEditing ? (
-                        <p className="exp-header-greeting">
-                            You're in edit mode! Email explorethebackyard2025@gmail.com with any questions!
-                        </p>
+                        <>
+                            <p className="exp-header-greeting">
+                                You're in edit mode! Email explorethebackyard2025@gmail.com with any questions!
+                            </p>
+                            {saveError && (
+                                <p className="exp-save-error">{saveError}</p>
+                            )}
+                        </>
                     ) : (
                         <p className="exp-header-greeting">Hello, Club Moderator!</p>
                     )}
