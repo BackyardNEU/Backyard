@@ -269,7 +269,7 @@
   background-color: rgb(0, 62, 11);
   color: white;
   border: none;
-  border-radius: 90px;
+  border-radius: 8px;
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -324,7 +324,7 @@
   background-color: rgb(120, 30, 30);
   color: white;
   border: none;
-  border-radius: 90px;
+  border-radius: 8px;
   cursor: pointer;
   flex-shrink: 0;
 }
