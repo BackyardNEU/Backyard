@@ -74,6 +74,9 @@
    of the tall .cal-portrait-img-wrap card. Toggled via .calpg-poster-size-toggle. */
 .calendar-event--minimized {
   margin-bottom: 8px;
+  background-color: var(--dominant-color, rgb(211, 211, 211));
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .calendar-event--minimized:hover .calendar-event-min-row {
@@ -87,7 +90,7 @@
   align-items: center;
   gap: 10px;
   width: 100%;
-  background: #fff;
+  background: transparent;
   padding: 8px;
   box-sizing: border-box;
 }

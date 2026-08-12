@@ -3,6 +3,7 @@ import {
   startOfDay, addDays, format, isSameDay, parseISO,
   getDay, getDaysInMonth, isToday, isBefore,
 } from 'date-fns';
+import ColorThief from 'colorthief';
 import { apiFetch } from '../lib/api';
 import { useClubData } from '../context/useClubData';
 import { prefetchCalendar, readCalendar } from '../lib/calendarCache';
@@ -32,6 +33,11 @@ export function CalendarPage({ onClose }) {
     [allData]
   );
 
+  // Minimized event rows use the club's own image's dominant color as their
+  // background (same pastel-toning technique BasicInfoModule uses for its hero
+  // rectangle), keyed by club_id and computed once per club, not per event.
+  const [dominantColorByClubId, setDominantColorByClubId] = useState({});
+
   const todayDate = startOfDay(new Date());
 
   // Warmed by prefetchCalendar when the calendar button was hovered. Read synchronously
@@ -53,6 +59,33 @@ export function CalendarPage({ onClose }) {
       .map((r) => r.event_id)
   ));
   const [weeklyRsvps, setWeeklyRsvps] = useState(() => warmed?.rsvps ?? []); // raw { user_id, event_id } rows, so friend RSVPs can be derived alongside myRsvpSet
+
+  useEffect(() => {
+    const clubIds = [...new Set(weeklyEvents.map(e => e.club_id).filter(Boolean))];
+    const missing = clubIds.filter(id => !(id in dominantColorByClubId) && clubImageById.get(id));
+    if (missing.length === 0) return;
+
+    missing.forEach((clubId) => {
+      const img = new window.Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const [r, g, b] = new ColorThief().getColor(img);
+          const factor = (r + (255 - r) * 0.85 >= 240 &&
+                          g + (255 - g) * 0.85 >= 240 &&
+                          b + (255 - b) * 0.85 >= 240) ? 0.5 : 0.85;
+          const pastel = `rgb(${Math.round(r + (255 - r) * factor)}, ${Math.round(g + (255 - g) * factor)}, ${Math.round(b + (255 - b) * factor)})`;
+          setDominantColorByClubId(prev => ({ ...prev, [clubId]: pastel }));
+        } catch {
+          setDominantColorByClubId(prev => ({ ...prev, [clubId]: 'rgb(211, 211, 211)' }));
+        }
+      };
+      img.onerror = () => {
+        setDominantColorByClubId(prev => ({ ...prev, [clubId]: 'rgb(211, 211, 211)' }));
+      };
+      img.src = clubImageById.get(clubId);
+    });
+  }, [weeklyEvents, clubImageById, dominantColorByClubId]);
 
   // Same derivation ExpandedTile uses for a club page's "X is going" callouts —
   // cross-reference the raw rsvp rows against the current user's friends list.
@@ -374,20 +407,11 @@ export function CalendarPage({ onClose }) {
                         type="button"
                         key={event.id}
                         className={`calendar-event${isMinimized ? ' calendar-event--minimized' : ''}`}
+                        style={isMinimized ? { '--dominant-color': dominantColorByClubId[event.club_id] || 'rgb(211, 211, 211)' } : undefined}
                         onClick={() => setSelectedOverlay({ type: 'week', date: day.date })}
                       >
                         {isMinimized ? (
                           <div className="calendar-event-min-row">
-                            <img src={borderImg} alt="" className="cal-portrait-card-border cal-portrait-card-border-left" />
-                            <img src={borderImg} alt="" className="cal-portrait-card-border cal-portrait-card-border-right" />
-                            <div
-                              className="cal-portrait-card-border-h cal-portrait-card-border-h-top"
-                              style={{ backgroundImage: `url(${borderHorizontalImg})` }}
-                            />
-                            <div
-                              className="cal-portrait-card-border-h cal-portrait-card-border-h-bottom"
-                              style={{ backgroundImage: `url(${borderHorizontalImg})` }}
-                            />
                             <img
                               src={posterUrl || '/raccoon_pfp.png'}
                               alt=""
