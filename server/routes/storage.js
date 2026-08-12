@@ -31,11 +31,11 @@ if (!imageModerator) {
 // Response shape: { signedUrl, token, path, publicUrl }
 //   signedUrl — what the browser sends the PUT to
 //   publicUrl — the URL the client should save in the DB row after upload
-async function makeSignedUpload(bucket, path, res) {
+async function makeSignedUpload(bucket, path, res, options = {}) {
     const { data, error } = await supabaseAdmin
         .storage
         .from(bucket)
-        .createSignedUploadUrl(path);
+        .createSignedUploadUrl(path, options);
 
     if (error) {
         const err = new Error(error.message);
@@ -82,10 +82,20 @@ router.post('/profile-photos-upload-url', async (req, res) => {
 });
 
 router.post('/club-logo-upload-url', async (req, res) => {
-    const { clubId } = req.body;
+    const clubId = req.body.club_id ?? req.body.clubId;
+    if (!clubId) return res.status(400).json({ error: 'club_id is required' });
     const ext = (req.body?.ext || 'webp').replace(/[^a-z0-9]/gi, '').slice(0, 8) || 'webp';
-    const path = `${clubId}.${ext}`; // one logo per club, re-uploads overwrite
-    await makeSignedUpload('club_logos', path, res);
+    const path = `${clubId}.${ext}`;
+
+    // Remove any existing logo regardless of extension so stale files don't accumulate.
+    const { data: existing } = await supabaseAdmin.storage
+        .from('club_logos')
+        .list('', { search: clubId });
+    if (existing?.length) {
+        await supabaseAdmin.storage.from('club_logos').remove(existing.map(f => f.name));
+    }
+
+    await makeSignedUpload('club_logos', path, res, { upsertEnabled: true });
 });
 
 router.post('/event-poster-upload-url', async (req, res) => {
@@ -144,12 +154,13 @@ async function verifyOwnership(bucket, objectPath, userId) {
     }
     if (bucket === 'club_logos') {
         const clubId = objectPath.split('.')[0];
-        const { count } = await supabaseAdmin
-            .from('approved_club_accounts')
-            .select('id', { count: 'exact', head: true })
+        const { data } = await supabaseAdmin
+            .from('club_memberships')
+            .select('role')
             .eq('club_id', clubId)
-            .eq('user_id', userId);
-        return (count ?? 0) > 0;
+            .eq('user_id', userId)
+            .maybeSingle();
+        return ['moderator', 'top_moderator'].includes(data?.role);
     }
     return false;
 }
@@ -189,7 +200,16 @@ router.post('/verify-image', async (req, res) => {
         return res.json({ ok: true, scanned: false });
     }
 
-    const result = await imageModerator.scan(publicUrl);
+    let result;
+    try {
+        result = await imageModerator.scan(publicUrl);
+    } catch (scanErr) {
+        if (urlInfo.bucket === 'club_logos') {
+            console.warn('[moderation] scan failed for club logo, failing open:', scanErr.message);
+            return res.json({ ok: true, scanned: false });
+        }
+        throw scanErr;
+    }
 
     if (result.safe) {
         return res.json({ ok: true });

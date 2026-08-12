@@ -1,9 +1,8 @@
-import React, { useState, useRef, useLayoutEffect, useCallback } from 'react';
-import { startOfDay, addDays, format, isSameDay, parseISO } from 'date-fns';
+import React, { useState, useRef, useLayoutEffect } from 'react';
+import { format, parseISO } from 'date-fns';
 import borderImg from '../assets/border.svg';
 import borderHorizontalImg from '../assets/border-horizontal.svg';
 import { CalendarExportRow } from './CalendarExportRow';
-import { Skeleton, SkeletonRegion } from '../components/Skeleton';
 import { useClubData } from '../context/useClubData';
 import './CalendarModule.css';
 
@@ -66,33 +65,6 @@ export function CalendarModule({
     setOverlayHasMore(el.scrollHeight - el.scrollTop - el.clientHeight > 10);
   };
 
-  // ── weekly view refs ─────────────────────────────────────────────────────
-  const containerRef = useRef(null);
-
-  // ── weekly scroll ────────────────────────────────────────────────────────
-  const handleWheel = useCallback((e) => {
-    e.preventDefault();
-    if (containerRef.current) containerRef.current.scrollLeft += e.deltaX;
-  }, []);
-  const handleMouseEnter = () => containerRef.current?.addEventListener('wheel', handleWheel, { passive: false });
-  const handleMouseLeave = () => containerRef.current?.removeEventListener('wheel', handleWheel);
-
-  const today = startOfDay(new Date());
-  const weekDays = Array.from({ length: 7 }, (_, i) => {
-    const date = addDays(today, i);
-    const dayEvents = events
-      .filter((event) => isSameDay(parseISO(event.start_time), date))
-      .sort((a, b) => parseISO(a.start_time) - parseISO(b.start_time));
-    return { date, label: format(date, 'EEE'), sublabel: format(date, 'd'), isToday: i === 0, events: dayEvents };
-  });
-
-  // Everything for the club-page month view — its fetch effect, day grid, navigation,
-  // day overlay and RSVP handler — was removed with the unreachable JSX that used it.
-  // It could not run: viewMode was fixed at 'week', and the render block referenced
-  // identifiers that were never declared. CalendarPage provides the month view.
-  //
-  // The add-event form helpers went the same way; AddEventPanel owns that flow.
-  // sorting events passed in through events prop by closest to current date
   const sorted = [...events].sort((a, b) => parseISO(a.start_time) - parseISO(b.start_time));
 
   // ── render ─────────────────────────────────────────────────────────────

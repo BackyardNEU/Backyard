@@ -113,6 +113,14 @@
   color: #fff;
 }
 
+.exp-save-error {
+  color: #8a3b2f;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 14px;
+  text-transform: uppercase;
+  margin: 4px 0 0;
+}
+
 /* Shown when favoriting fails — a rate limit, or the request not going through. */
 .exp-fav-error {
   color: #8a3b2f;

@@ -42,6 +42,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   const [linksModalOpen, setLinksModalOpen] = useState(false);
   // club interests edit state (only used when editing=true)
   const [subText, setSubText] = useState(['', '']);
+  const [subQuery, setSubQuery] = useState(['', '']); // live filter text while dropdown open
   const [subDropdown, setSubDropdown] = useState(null); // 0 | 1 | null
   // Whether the text in each box should narrow the list. False until the user actually
   // types, so opening a field that already holds a saved subcategory shows every option
@@ -237,6 +238,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
       return sub?.name || '';
     });
     setSubText([names[0] || '', names[1] || '']);
+    setSubQuery(['', '']);
   }, [editing, clubInterests?.category_id, taxonomy]);
 
   const selectedCat = taxonomy.find(c => c.id === clubInterests?.category_id) || null;
@@ -262,15 +264,17 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
     const catId = e.target.value || null;
     onInterestsChange?.({ category_id: catId, subcategory_ids: [] });
     setSubText(['', '']);
+    setSubQuery(['', '']);
     setSubDropdown(null);
   }, [onInterestsChange]);
 
   const handleSubTextChange = useCallback((index, value) => {
-    setSubText(prev => prev.map((t, i) => i === index ? value : t));
+    setSubQuery(prev => prev.map((t, i) => i === index ? value : t));
     setSubDropdown(index);
     // Typing is what turns the box into a filter.
     setSubFiltering(prev => prev.map((v, i) => (i === index ? true : v)));
     if (!value.trim()) {
+      setSubText(prev => prev.map((t, i) => i === index ? '' : t));
       const newSubs = [...(clubInterests?.subcategory_ids || [])];
       newSubs[index] = undefined;
       onInterestsChange?.({ category_id: clubInterests?.category_id, subcategory_ids: newSubs.filter(Boolean) });
@@ -291,6 +295,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
       const existing = selectedCat?.subcategories?.find(s => s.id === savedId);
       return existing?.name ?? t;
     }));
+    setSubQuery(['', '']);
     setSubDropdown(null);
   }, [clubInterests, onInterestsChange, selectedCat]);
 

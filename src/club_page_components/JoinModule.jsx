@@ -23,6 +23,30 @@ const isValidUrl = (url) => {
   catch { return false; }
 };
 
+const normalizeContactLink = (v) => {
+  const s = v.trim();
+  if (!s) return '';
+  try { new URL(s); return s; } catch {}
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return `mailto:${s}`;
+  if (/^[+\d][\d\s\-().]{6,}$/.test(s)) return `tel:${s}`;
+  return s;
+};
+
+// Contact links accept web URLs, mailto:/tel: URIs, bare email addresses, and phone numbers.
+const isValidContactLink = (url) => {
+  const v = url.trim();
+  try {
+    const u = new URL(v);
+    if (u.protocol === 'http:' || u.protocol === 'https:') return true;
+    if (u.protocol === 'mailto:') return u.pathname.includes('@');
+    if (u.protocol === 'tel:') return u.pathname.trim().length > 0;
+    return false;
+  } catch { /* not a full URI — check bare email / phone below */ }
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return true;       // bare email
+  if (/^[+\d][\d\s\-().]{6,}$/.test(v)) return true;           // bare phone
+  return false;
+};
+
 function JoinModule({ data, editing, onChange, warning }) {
   const [active, setActive] = useState(0);
   const [appLinkWarning, setAppLinkWarning] = useState('');
@@ -104,7 +128,7 @@ function JoinModule({ data, editing, onChange, warning }) {
               <a
                 className="contact-link-btn duo-btn"
                 style={{ '--duo-shadow': 'rgb(30, 85, 125)' }}
-                href={contactLink}
+                href={normalizeContactLink(contactLink)}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={editing ? (e) => e.preventDefault() : undefined}
@@ -190,7 +214,7 @@ function JoinModule({ data, editing, onChange, warning }) {
               onChange={(e) => {
                 const v = e.target.value;
                 updateLink('contactLink', v);
-                setContactLinkWarning(v && !isValidUrl(v) ? 'Contact link must be a valid URL (https://...)' : '');
+                setContactLinkWarning(v && !isValidContactLink(v) ? 'Must be a web link (https://...), email (mailto:you@...), or phone (tel:+1...)' : '');
               }}
               placeholder="enter contact link"
             />

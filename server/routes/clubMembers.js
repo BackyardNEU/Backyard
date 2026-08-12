@@ -81,13 +81,7 @@ async function admitMember(userId, clubId) {
 
   if (existing) return existing.role;
 
-  // First member of a club becomes the top_moderator (owner).
-  const { count } = await supabaseAdmin
-    .from('club_memberships')
-    .select('user_id', { count: 'exact', head: true })
-    .eq('club_id', clubId);
-
-  const role = count === 0 ? 'top_moderator' : 'member';
+  const role = 'member';
 
   const { error: insertError } = await supabaseAdmin
     .from('club_memberships')
