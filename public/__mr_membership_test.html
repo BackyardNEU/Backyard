@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/src/index.css">
+<link rel="stylesheet" href="/src/club_page_components/MemberRoster.css">
+<link rel="stylesheet" href="/src/uni_components/ClubGrid.css">
+<link rel="stylesheet" href="/src/profile_components/ClubMembershipPanel.css">
+<style>body{background:#eee;padding:40px;display:flex;gap:24px;}</style>
+</head>
+<body>
+<div class="mr-detail" style="position:relative;height:200px;background:#fff;">
+  <img src="/src/assets/border-green.svg" alt="" class="mr-detail-border mr-detail-border-left" />
+  <img src="/src/assets/border-green.svg" alt="" class="mr-detail-border mr-detail-border-right" />
+  <div class="mr-detail-border-h-wrap mr-detail-border-top-wrap" style="background-image:url(/src/assets/border-horizontal-green.svg)"></div>
+  <div class="mr-detail-border-h-wrap mr-detail-border-bottom-wrap" style="background-image:url(/src/assets/border-horizontal-green.svg)"></div>
+</div>
+
+<div class="membership-card-wrapper">
+  <div class="club-card" style="height:200px;">
+    <img src="/src/assets/border.svg" alt="" class="club-card-border club-card-border-left" />
+    <img src="/src/assets/border.svg" alt="" class="club-card-border club-card-border-right" />
+    <div class="club-card-border-h-wrap club-card-border-top-wrap" style="background-image:url(/src/assets/border-horizontal.svg)"></div>
+    <div class="club-card-border-h-wrap club-card-border-bottom-wrap" style="background-image:url(/src/assets/border-horizontal.svg)"></div>
+  </div>
+</div>
+<pre id="out"></pre>
+<script>
+document.getElementById('out').textContent = 'supports -webkit-hyphens:none => ' + CSS.supports('-webkit-hyphens', 'none');
+</script>
+</body>
+</html>

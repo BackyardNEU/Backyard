@@ -128,6 +128,19 @@
   transform-origin: center;
 }
 
+/* Safari-only (matches WebKit desktop + iOS, not Chrome/Firefox): the ink-line
+   SVG border doesn't render reliably here, so swap it for a plain 1px solid
+   border in the same color instead of trying to fix the SVG rendering. */
+@supports (-webkit-hyphens: none) {
+  .login-card-border,
+  .login-card-border-h-wrap {
+    display: none;
+  }
+  .login-card {
+    border: 1px solid #37291E;
+  }
+}
+
 .login-card-border-h-wrap {
   position: absolute;
   left: -1px;

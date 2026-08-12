@@ -64,6 +64,19 @@
   max-width: 280px;
 }
 
+/* Safari-only (matches WebKit desktop + iOS, not Chrome/Firefox): the ink-line
+   SVG border doesn't render reliably here, so swap it for a plain 1px solid
+   border in the same color instead of trying to fix the SVG rendering. */
+@supports (-webkit-hyphens: none) {
+  .membership-card-wrapper .club-card-border,
+  .membership-card-wrapper .club-card-border-h-wrap {
+    display: none;
+  }
+  .membership-card-wrapper .club-card {
+    border: 1px solid #231f20;
+  }
+}
+
 .membership-empty {
   color: #888;
   font-style: italic;

@@ -522,6 +522,24 @@
   transform-origin: center;
 }
 
+/* Safari-only (matches WebKit desktop + iOS, not Chrome/Firefox): the ink-line
+   SVG border doesn't render reliably here, so swap it for a plain 1px solid
+   border in the same color instead of trying to fix the SVG rendering. */
+@supports (-webkit-hyphens: none) {
+  .cal-portrait-card-border,
+  .cal-portrait-info-border,
+  .cal-portrait-card-border-h {
+    display: none;
+  }
+  .cal-portrait-img-wrap {
+    border: 1px solid #231f20;
+  }
+  .cal-portrait-info {
+    border: 1px solid #231f20;
+    border-top: 2px dashed #1a1a1a;
+  }
+}
+
 /* Image card — sized by aspect-ratio, not a static width, so it scales with
    the overlay. Padding matches add-event-card; the image bleeds through it
    (negative inset) so the photo runs edge-to-edge to the ink border. */
@@ -602,6 +620,16 @@
 
 .calpg-card::-webkit-scrollbar {
   display: none;
+}
+
+/* Safari-only (matches WebKit desktop + iOS, not Chrome/Firefox): no border
+   at all here, use a drop shadow instead. */
+@supports (-webkit-hyphens: none) {
+  .calpg-card {
+    border: none;
+    box-shadow: 0 9px 10px rgba(41, 36, 29, 0.22),
+      6px 8px 0 rgba(41, 36, 29, 0.12);
+  }
 }
 
 .calpg-close {
