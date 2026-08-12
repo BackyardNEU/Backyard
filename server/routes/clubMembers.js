@@ -12,11 +12,17 @@ const ROLE_COLORS = [
   '#ffcc13', '#628753ff', '#a39a96', '#d3d1c9ff',
 ];
 
-// GET /:clubId/members — public
+// GET /:clubId/members — signed-in users only.
 // Returns full roster sorted top_moderator → moderator → member.
 // Two-step query: club_memberships.user_id references auth.users, not profiles,
 // so PostgREST can't resolve the profiles join automatically.
-router.get('/:clubId/members', async (req, res) => {
+//
+// This was public. Paired with the public GET /api/clubs, that let anyone walk every
+// club and pull down username + avatar for every member — the whole club-membership
+// graph of the school, no account needed. Requiring a token doesn't stop a determined
+// scraper who signs up, but it removes the anonymous bulk case and gives abuse a
+// revocable identity to attach to.
+router.get('/:clubId/members', requireAuth, async (req, res) => {
   const { clubId } = req.params;
 
   const { data: memberships, error: mError } = await supabaseAdmin
@@ -55,30 +61,25 @@ router.get('/:clubId/members', async (req, res) => {
   res.json(result);
 });
 
-// POST /:clubId/members/me — join (auth required)
-// School-match guard enforced here; RLS is defense-in-depth.
-// Dual-writes profiles.member_list for backward compat.
-router.post('/:clubId/members/me', requireAuth, async (req, res) => {
-  const { clubId } = req.params;
-  const userId = req.user.id;
-
-  const [{ data: userProfile }, { data: club }] = await Promise.all([
-    supabaseAdmin.from('profiles').select('school, member_list').eq('id', userId).single(),
-    supabaseAdmin.from('demo_club_data').select('school').eq('id', clubId).single(),
-  ]);
-
-  if (!userProfile?.school || userProfile.school !== club?.school) {
-    return res.status(403).json({ error: 'You can only join clubs at your own school.' });
-  }
-
+// Create the membership row and keep profiles.member_list in step with it.
+//
+// That array is legacy but still load-bearing — clubEvents.js and reviews.js both read
+// it — so any path that admits a member has to write both. Approving a join request goes
+// through here for exactly that reason: an approval that inserted the membership alone
+// would leave a member who cannot see their own club's events.
+async function admitMember(userId, clubId) {
+  // Idempotent on purpose. Someone can be admitted twice by two different routes —
+  // request to join, get added through an invite link while still queued, then have the
+  // original request approved. Inserting again violates the (user_id, club_id) primary
+  // key, and the caller would surface a 502 for a user who is in fact already a member.
   const { data: existing } = await supabaseAdmin
     .from('club_memberships')
-    .select('user_id')
+    .select('role')
     .eq('user_id', userId)
     .eq('club_id', clubId)
     .maybeSingle();
 
-  if (existing) return res.status(409).json({ error: 'Already a member of this club.' });
+  if (existing) return existing.role;
 
   // First member of a club becomes the top_moderator (owner).
   const { count } = await supabaseAdmin
@@ -98,8 +99,13 @@ router.post('/:clubId/members/me', requireAuth, async (req, res) => {
     throw err;
   }
 
-  // Dual-write
-  const currentList = userProfile?.member_list || [];
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('member_list')
+    .eq('id', userId)
+    .single();
+
+  const currentList = profile?.member_list || [];
   if (!currentList.includes(clubId)) {
     await supabaseAdmin
       .from('profiles')
@@ -107,7 +113,228 @@ router.post('/:clubId/members/me', requireAuth, async (req, res) => {
       .eq('id', userId);
   }
 
-  res.status(201).json({ role });
+  return role;
+}
+
+// POST /:clubId/members/me — join, or request to join (auth required)
+// School-match guard enforced here; RLS is defense-in-depth.
+// Dual-writes profiles.member_list for backward compat.
+router.post('/:clubId/members/me', requireAuth, async (req, res) => {
+  const { clubId } = req.params;
+  const userId = req.user.id;
+
+  const [{ data: userProfile }, { data: club }] = await Promise.all([
+    supabaseAdmin.from('profiles').select('school, member_list').eq('id', userId).single(),
+    supabaseAdmin.from('demo_club_data').select('school, join_policy').eq('id', clubId).single(),
+  ]);
+
+  if (!userProfile?.school || userProfile.school !== club?.school) {
+    return res.status(403).json({ error: 'You can only join clubs at your own school.' });
+  }
+
+  const { data: existing } = await supabaseAdmin
+    .from('club_memberships')
+    .select('user_id')
+    .eq('user_id', userId)
+    .eq('club_id', clubId)
+    .maybeSingle();
+
+  if (existing) return res.status(409).json({ error: 'Already a member of this club.' });
+
+  const { count: memberCount } = await supabaseAdmin
+    .from('club_memberships')
+    .select('user_id', { count: 'exact', head: true })
+    .eq('club_id', clubId);
+
+  // An empty club has nobody who could approve anything, so a request policy would make
+  // it permanently unjoinable. The first person in always joins outright and becomes the
+  // owner — they are the one who will be approving everyone after them.
+  if (club?.join_policy === 'request' && memberCount > 0) {
+    const { error: requestError } = await supabaseAdmin
+      .from('club_join_requests')
+      .insert({ user_id: userId, club_id: clubId, status: 'pending' });
+
+    if (requestError) {
+      // The partial unique index rejects a second pending row. Treat that as the
+      // already-asked case rather than a failure, so a double click is harmless.
+      if (requestError.code === '23505') {
+        return res.status(200).json({ status: 'requested' });
+      }
+      const err = new Error(requestError.message);
+      err.status = 502;
+      throw err;
+    }
+
+    return res.status(202).json({ status: 'requested' });
+  }
+
+  const role = await admitMember(userId, clubId);
+  res.status(201).json({ role, status: 'joined' });
+});
+
+// GET /:clubId/join-requests — pending requests for moderators to act on.
+router.get('/:clubId/join-requests', requireAuth, async (req, res) => {
+  const { clubId } = req.params;
+  await requireModerator(req.user.id, clubId);
+
+  const { data: requests, error } = await supabaseAdmin
+    .from('club_join_requests')
+    .select('id, user_id, created_at')
+    .eq('club_id', clubId)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    const err = new Error(error.message);
+    err.status = 502;
+    throw err;
+  }
+
+  if (!requests?.length) return res.json([]);
+
+  // Same two-step as the roster above: club_join_requests.user_id references
+  // auth.users, so PostgREST cannot resolve a profiles join on its own.
+  const { data: profiles } = await supabaseAdmin
+    .from('profiles')
+    .select('id, username, avatar_url')
+    .in('id', requests.map((r) => r.user_id));
+
+  const byId = new Map((profiles || []).map((p) => [p.id, p]));
+  res.json(requests.map((r) => ({
+    id: r.id,
+    created_at: r.created_at,
+    user_id: r.user_id,
+    username: byId.get(r.user_id)?.username ?? null,
+    avatar_url: byId.get(r.user_id)?.avatar_url ?? null,
+  })));
+});
+
+// POST /:clubId/join-requests/:userId/approve
+router.post('/:clubId/join-requests/:userId/approve', requireAuth, async (req, res) => {
+  const { clubId, userId } = req.params;
+  await requireModerator(req.user.id, clubId);
+
+  const { data: request } = await supabaseAdmin
+    .from('club_join_requests')
+    .select('id')
+    .eq('club_id', clubId)
+    .eq('user_id', userId)
+    .eq('status', 'pending')
+    .maybeSingle();
+
+  if (!request) return res.status(404).json({ error: 'No pending request.' });
+
+  // Mark decided before admitting. If the insert then fails the request is not left
+  // pending forever with a half-created membership; the caller sees the error and the
+  // user can ask again.
+  await supabaseAdmin
+    .from('club_join_requests')
+    .update({ status: 'approved', decided_at: new Date().toISOString(), decided_by: req.user.id })
+    .eq('id', request.id);
+
+  const role = await admitMember(userId, clubId);
+  res.json({ status: 'approved', role });
+});
+
+// POST /:clubId/join-requests/:userId/deny
+router.post('/:clubId/join-requests/:userId/deny', requireAuth, async (req, res) => {
+  const { clubId, userId } = req.params;
+  await requireModerator(req.user.id, clubId);
+
+  const { error } = await supabaseAdmin
+    .from('club_join_requests')
+    .update({ status: 'denied', decided_at: new Date().toISOString(), decided_by: req.user.id })
+    .eq('club_id', clubId)
+    .eq('user_id', userId)
+    .eq('status', 'pending');
+
+  if (error) {
+    const err = new Error(error.message);
+    err.status = 502;
+    throw err;
+  }
+
+  res.json({ status: 'denied' });
+});
+
+// DELETE /:clubId/join-requests/me — withdraw your own pending request.
+router.delete('/:clubId/join-requests/me', requireAuth, async (req, res) => {
+  const { clubId } = req.params;
+
+  // Deleted rather than marked, so withdrawing does not read as a rejection later and
+  // the partial unique index frees up immediately for another attempt.
+  const { error } = await supabaseAdmin
+    .from('club_join_requests')
+    .delete()
+    .eq('club_id', clubId)
+    .eq('user_id', req.user.id)
+    .eq('status', 'pending');
+
+  if (error) {
+    const err = new Error(error.message);
+    err.status = 502;
+    throw err;
+  }
+
+  res.json({ status: 'withdrawn' });
+});
+
+// PATCH /:clubId/join-policy — owner switches between open and request-to-join.
+router.patch('/:clubId/join-policy', requireAuth, async (req, res) => {
+  const { clubId } = req.params;
+  const { join_policy: joinPolicy } = req.body || {};
+
+  if (!['open', 'request'].includes(joinPolicy)) {
+    return res.status(400).json({ error: "join_policy must be 'open' or 'request'." });
+  }
+
+  // Deliberately narrower than the moderator check used elsewhere in this file: who is
+  // allowed into a club is an ownership decision, like transferring ownership itself.
+  await requireTopModerator(req.user.id, clubId);
+
+  const { error } = await supabaseAdmin
+    .from('demo_club_data')
+    .update({ join_policy: joinPolicy })
+    .eq('id', clubId);
+
+  if (error) {
+    const err = new Error(error.message);
+    err.status = 502;
+    throw err;
+  }
+
+  // Opening the doors admits everyone already waiting. Leaving them queued would be
+  // worse than either state on its own: new arrivals walk straight in while the people
+  // who asked first are still stuck behind a review step nobody is watching any more.
+  let admitted = 0;
+  let failed = 0;
+  if (joinPolicy === 'open') {
+    const { data: pending } = await supabaseAdmin
+      .from('club_join_requests')
+      .select('id, user_id')
+      .eq('club_id', clubId)
+      .eq('status', 'pending');
+
+    for (const request of pending || []) {
+      // Isolated per request. The policy row is already committed by this point, so
+      // letting one bad row throw would flip the club open and leave everyone after it
+      // stuck in a queue nobody is reviewing any more — the exact state this branch
+      // exists to prevent.
+      try {
+        await supabaseAdmin
+          .from('club_join_requests')
+          .update({ status: 'approved', decided_at: new Date().toISOString(), decided_by: req.user.id })
+          .eq('id', request.id);
+        await admitMember(request.user_id, clubId);
+        admitted += 1;
+      } catch (err) {
+        console.error('[join-policy] could not admit', request.user_id, err.message || err);
+        failed += 1;
+      }
+    }
+  }
+
+  res.json({ join_policy: joinPolicy, auto_approved: admitted, failed });
 });
 
 // DELETE /:clubId/members/me — leave (auth required)
@@ -261,8 +488,8 @@ router.patch('/:clubId/members/:userId/role', requireAuth, async (req, res) => {
 
 // ─── Custom roles ────────────────────────────────────────────────────────────
 
-// GET /:clubId/roles — public
-router.get('/:clubId/roles', async (req, res) => {
+// GET /:clubId/roles — signed-in users only, for the same reason as the roster above.
+router.get('/:clubId/roles', requireAuth, async (req, res) => {
   const { clubId } = req.params;
 
   const { data, error } = await supabaseAdmin

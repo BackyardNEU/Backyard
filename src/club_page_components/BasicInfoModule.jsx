@@ -43,6 +43,10 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   // club interests edit state (only used when editing=true)
   const [subText, setSubText] = useState(['', '']);
   const [subDropdown, setSubDropdown] = useState(null); // 0 | 1 | null
+  // Whether the text in each box should narrow the list. False until the user actually
+  // types, so opening a field that already holds a saved subcategory shows every option
+  // rather than filtering down to the one already chosen.
+  const [subFiltering, setSubFiltering] = useState([false, false]);
   const [clubRoster, setClubRoster] = useState([]);
   // Drives how many links show before "More" — 2 on narrow viewports, 5 otherwise.
   // Tracked reactively (not just read once) so resizing across the breakpoint updates it.
@@ -71,7 +75,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   useEffect(() => {
     if (!friendsModalOpen) return;
     let cancelled = false;
-    apiFetch(`/clubs/${club.id}/members`, { auth: false })
+    apiFetch(`/clubs/${club.id}/members`)
       .then((data) => { if (!cancelled) setClubRoster(data || []); })
       .catch((err) => console.error('Failed to fetch club roster:', err));
     return () => { cancelled = true; };
@@ -229,7 +233,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
     const cat = taxonomy.find(c => c.id === clubInterests.category_id);
     if (!cat) { setSubText(['', '']); return; }
     const names = (clubInterests.subcategory_ids || []).slice(0, 2).map(subId => {
-      const sub = cat.subcategories.find(s => s.id === subId);
+      const sub = (cat.subcategories || []).find(s => s.id === subId);
       return sub?.name || '';
     });
     setSubText([names[0] || '', names[1] || '']);
@@ -239,9 +243,20 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
 
   const getSuggestions = useCallback((index) => {
     if (!selectedCat) return [];
+    const subs = selectedCat.subcategories || [];
+    // Show the whole list until the user types. Previously the box was seeded with the
+    // saved subcategory's name and filtered on it, so opening the field matched exactly
+    // one option — the one already chosen — and the only way to see the others was to
+    // clear the box by hand. There was nothing on screen to suggest that.
+    if (!subFiltering[index]) return subs;
     const text = subText[index].toLowerCase().trim();
-    return selectedCat.subcategories.filter(s => s.name.toLowerCase().includes(text));
-  }, [selectedCat, subText]);
+    return subs.filter(s => s.name.toLowerCase().includes(text));
+  }, [selectedCat, subText, subFiltering]);
+
+  const openSubDropdown = useCallback((index) => {
+    setSubDropdown(index);
+    setSubFiltering(prev => prev.map((v, i) => (i === index ? false : v)));
+  }, []);
 
   const handleCategoryChange = useCallback((e) => {
     const catId = e.target.value || null;
@@ -253,6 +268,8 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   const handleSubTextChange = useCallback((index, value) => {
     setSubText(prev => prev.map((t, i) => i === index ? value : t));
     setSubDropdown(index);
+    // Typing is what turns the box into a filter.
+    setSubFiltering(prev => prev.map((v, i) => (i === index ? true : v)));
     if (!value.trim()) {
       const newSubs = [...(clubInterests?.subcategory_ids || [])];
       newSubs[index] = undefined;
@@ -344,13 +361,19 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
                         className="interests-edit-input"
                         type="text"
                         value={subText[index]}
-                        placeholder={`Search ${selectedCat.name} subcategories…`}
+                        placeholder={`Choose or search ${selectedCat.name} subcategories…`}
+                        role="combobox"
+                        aria-expanded={subDropdown === index}
+                        aria-controls={`sub-listbox-${index}`}
                         onChange={e => handleSubTextChange(index, e.target.value)}
-                        onFocus={() => setSubDropdown(index)}
+                        onFocus={() => openSubDropdown(index)}
                         onBlur={() => setTimeout(() => setSubDropdown(null), 150)}
                       />
+                      {/* Without this the field reads as a plain search box and nothing
+                          suggests there is a list behind it. */}
+                      <span className="interests-edit-caret" aria-hidden="true" />
                       {subDropdown === index && getSuggestions(index).length > 0 && (
-                        <div className="interests-edit-dropdown">
+                        <div className="interests-edit-dropdown" id={`sub-listbox-${index}`} role="listbox">
                           {getSuggestions(index).map(sub => (
                             <button
                               key={sub.id}

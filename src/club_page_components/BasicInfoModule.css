@@ -1343,3 +1343,23 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Caret for the subcategory combobox. The field accepts typing, but it is primarily a
+   picker — without an affordance it read as a search box and the list behind it went
+   unnoticed. */
+.interests-edit-caret {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  width: 0;
+  height: 0;
+  margin-top: -2px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid #888;
+  pointer-events: none;
+}
+
+.interests-edit-input {
+  padding-right: 26px;
+}
