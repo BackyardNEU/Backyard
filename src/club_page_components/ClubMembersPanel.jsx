@@ -21,7 +21,7 @@ const ROLE_COLORS = [
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function MemberCard({ entry, myRole, currentUserId, customRoles, onAssignCustomRole, onChangeRole, onTransferOwnership }) {
+function MemberCard({ entry, myRole, currentUserId, customRoles, onAssignCustomRole, onChangeRole, onTransferOwnership, onRemoveMember }) {
   const { user_id, role, profiles, club_custom_roles } = entry;
   const canManage = myRole === 'moderator' || myRole === 'top_moderator';
   const isOwner = myRole === 'top_moderator';
@@ -99,6 +99,14 @@ function MemberCard({ entry, myRole, currentUserId, customRoles, onAssignCustomR
                 </button>
               </>
             )
+          )}
+          {(role === 'member' || (role === 'moderator' && isOwner)) && (
+            <button
+              className="member-role-btn member-role-btn--remove"
+              onClick={() => onRemoveMember(user_id, profiles?.username)}
+            >
+              Remove
+            </button>
           )}
         </div>
       )}
@@ -372,6 +380,20 @@ export default function ClubMembersPanel({ clubId, myRole, currentUserId, onMemb
     }
   }
 
+  async function handleRemoveMember(userId, username) {
+    const confirmed = window.confirm(
+      `Remove ${username ?? 'this member'} from the club?`
+    );
+    if (!confirmed) return;
+    setError(null);
+    try {
+      await apiFetch(`/clubs/${clubId}/members/${userId}`, { method: 'DELETE' });
+      setMembers((prev) => prev.filter((m) => m.user_id !== userId));
+    } catch (err) {
+      setError(err?.message ?? 'Failed to remove member.');
+    }
+  }
+
   async function handleTransferOwnership(userId, username) {
     const confirmed = window.confirm(
       `Transfer ownership to ${username ?? 'this member'}? You will become a moderator.`
@@ -495,6 +517,7 @@ export default function ClubMembersPanel({ clubId, myRole, currentUserId, onMemb
               onAssignCustomRole={handleAssignCustomRole}
               onChangeRole={handleChangeRole}
               onTransferOwnership={handleTransferOwnership}
+              onRemoveMember={handleRemoveMember}
             />
           ))}
         </div>

@@ -10,6 +10,7 @@ import './ClubMembershipPanel.css';
 export const ClubMembershipPanel = ({ userId, memberList, readOnly = false }) => {
   const { allData } = useClubData();
   const [memberClubs, setMemberClubs] = useState([]);
+  const [moderatorClubs, setModeratorClubs] = useState(new Set());
   const [expandedClub, setExpandedClub] = useState(null);
 
   useEffect(() => {
@@ -29,9 +30,18 @@ export const ClubMembershipPanel = ({ userId, memberList, readOnly = false }) =>
 
     async function fetchMemberships() {
       try {
-        const { member_list } = await cachedFetch('me:membership', () => apiFetch('/me/membership'));
+        const { member_list, moderator_clubs } = await cachedFetch('me:membership', () => apiFetch('/me/membership'));
         const list = member_list || [];
+        const modSet = new Set(moderator_clubs || []);
         const clubs = allData.filter((club) => list.includes(club.id));
+        clubs.sort((a, b) => {
+          const aMod = modSet.has(a.id);
+          const bMod = modSet.has(b.id);
+          if (aMod && !bMod) return -1;
+          if (!aMod && bMod) return 1;
+          return 0;
+        });
+        setModeratorClubs(modSet);
         setMemberClubs(clubs);
       } catch (err) {
         console.error('Error fetching member_list:', err);
@@ -62,6 +72,7 @@ export const ClubMembershipPanel = ({ userId, memberList, readOnly = false }) =>
                 hideHeart
                 hidePins
                 showBorder
+                isModerator={moderatorClubs.has(club.id)}
               />
             </div>
           ))}

@@ -283,8 +283,26 @@
 .friend-avatars {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   margin-top: 8px;
   width: 100%;
+}
+
+.friend-avatars-left {
+  display: flex;
+  align-items: center;
+}
+
+.mod-badge {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: clamp(11px, 3.5cqi, 14px);
+  letter-spacing: 1px;
+  color: #fff;
+  background: #2c4630;
+  padding: 2px 7px;
+  border-radius: 2px;
+  line-height: 1.4;
+  flex-shrink: 0;
 }
 
 .friend-avatar-img {

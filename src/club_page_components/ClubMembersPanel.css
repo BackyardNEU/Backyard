@@ -230,6 +230,11 @@
   color: #ffffff;
 }
 
+.member-role-btn--remove {
+  background: #be2419;
+  color: #ffffff;
+}
+
 /* ── Manage Roles panel ──────────────────────────────────────────────────── */
 
 .manage-roles-panel {

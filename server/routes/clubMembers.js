@@ -332,7 +332,8 @@ router.patch('/:clubId/join-policy', requireAuth, async (req, res) => {
 });
 
 // DELETE /:clubId/members/me — leave (auth required)
-// top_moderator must transfer ownership first.
+// If the leaver is the top_moderator, auto-promotes the next moderator in the club.
+// If no moderators remain, the club becomes ownerless until someone is promoted.
 // Dual-writes profiles.member_list for backward compat.
 router.delete('/:clubId/members/me', requireAuth, async (req, res) => {
   const { clubId } = req.params;
@@ -353,9 +354,6 @@ router.delete('/:clubId/members/me', requireAuth, async (req, res) => {
   ]);
 
   if (!membership) return res.status(404).json({ error: 'Not a member of this club.' });
-  if (membership.role === 'top_moderator') {
-    return res.status(403).json({ error: 'Transfer ownership before leaving the club.' });
-  }
 
   const { error: deleteError } = await supabaseAdmin
     .from('club_memberships')
@@ -370,6 +368,70 @@ router.delete('/:clubId/members/me', requireAuth, async (req, res) => {
   }
 
   // Dual-write
+  const newList = (profile?.member_list || []).filter((id) => id !== clubId);
+  await supabaseAdmin.from('profiles').update({ member_list: newList }).eq('id', userId);
+
+  if (membership.role === 'top_moderator') {
+    const { data: nextMod } = await supabaseAdmin
+      .from('club_memberships')
+      .select('user_id')
+      .eq('club_id', clubId)
+      .eq('role', 'moderator')
+      .limit(1)
+      .maybeSingle();
+
+    if (nextMod) {
+      await supabaseAdmin
+        .from('club_memberships')
+        .update({ role: 'top_moderator' })
+        .eq('user_id', nextMod.user_id)
+        .eq('club_id', clubId);
+    }
+  }
+
+  res.status(204).end();
+});
+
+// DELETE /:clubId/members/:userId — remove a member (moderator+ only)
+// Moderators can only remove plain members; top_moderator can also remove moderators.
+router.delete('/:clubId/members/:userId', requireAuth, async (req, res) => {
+  const { clubId, userId } = req.params;
+
+  const callerRole = await requireModerator(req.user.id, clubId);
+
+  const { data: target } = await supabaseAdmin
+    .from('club_memberships')
+    .select('role')
+    .eq('user_id', userId)
+    .eq('club_id', clubId)
+    .maybeSingle();
+
+  if (!target) return res.status(404).json({ error: 'Member not found.' });
+  if (target.role === 'top_moderator') {
+    return res.status(403).json({ error: 'Cannot remove the club owner.' });
+  }
+  if (target.role === 'moderator' && callerRole !== 'top_moderator') {
+    return res.status(403).json({ error: 'Only the owner can remove moderators.' });
+  }
+
+  const { error: deleteError } = await supabaseAdmin
+    .from('club_memberships')
+    .delete()
+    .eq('user_id', userId)
+    .eq('club_id', clubId);
+
+  if (deleteError) {
+    const err = new Error(deleteError.message);
+    err.status = 502;
+    throw err;
+  }
+
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('member_list')
+    .eq('id', userId)
+    .single();
+
   const newList = (profile?.member_list || []).filter((id) => id !== clubId);
   await supabaseAdmin.from('profiles').update({ member_list: newList }).eq('id', userId);
 
@@ -432,6 +494,8 @@ router.post('/:clubId/members/transfer-ownership', requireAuth, async (req, res)
 
 // PATCH /:clubId/members/:userId/role — promote to moderator or demote to member
 // top_moderator only; cannot target another top_moderator or set top_moderator via this endpoint.
+// If the club has no top_moderator and the new role would be 'moderator', the member is
+// promoted to top_moderator instead to restore ownership.
 router.patch('/:clubId/members/:userId/role', requireAuth, async (req, res) => {
   const { clubId, userId } = req.params;
   const { role } = req.body;
@@ -465,9 +529,22 @@ router.patch('/:clubId/members/:userId/role', requireAuth, async (req, res) => {
     return res.status(403).json({ error: 'Cannot change the role of the top moderator.' });
   }
 
+  let effectiveRole = role;
+  if (role === 'moderator') {
+    const { data: existingOwner } = await supabaseAdmin
+      .from('club_memberships')
+      .select('user_id')
+      .eq('club_id', clubId)
+      .eq('role', 'top_moderator')
+      .limit(1)
+      .maybeSingle();
+
+    if (!existingOwner) effectiveRole = 'top_moderator';
+  }
+
   const { error: updateError } = await supabaseAdmin
     .from('club_memberships')
-    .update({ role })
+    .update({ role: effectiveRole })
     .eq('user_id', userId)
     .eq('club_id', clubId);
 
