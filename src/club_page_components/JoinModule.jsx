@@ -101,7 +101,13 @@ function JoinModule({ data, editing, onChange, warning }) {
               </button>
             ))}
           </div>
-          <div className="join-tab-content" dangerouslySetInnerHTML={{ __html: tabs[activeIndex]?.body || '' }} />
+          {/* Sanitized at render as well as on write. Rows stored before server-side
+              sanitization existed are still in the database, and a future write path
+              could forget — neither layer should be the only thing standing here. */}
+          <div
+            className="join-tab-content"
+            dangerouslySetInnerHTML={{ __html: sanitizeBioHtml(tabs[activeIndex]?.body || '') }}
+          />
         </>
       )}
 
