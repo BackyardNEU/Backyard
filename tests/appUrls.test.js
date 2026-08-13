@@ -93,10 +93,17 @@ describe('parseAppUrls — onboardUrl', () => {
         expect(onboardUrl).toBe('https://clubs.com');
     });
 
-    // Before the wizard has its own domain, onboarding links should still resolve.
-    it('falls back to publicAppUrl when unset', () => {
+    // No fallback on purpose. The main app has no /claim route and no catch-all, so
+    // borrowing its origin would mint outreach links that render a blank page.
+    it('is null when unset, rather than borrowing the app origin', () => {
         const { onboardUrl } = parseAppUrls({ PUBLIC_APP_URL: 'https://app.com' });
-        expect(onboardUrl).toBe('https://app.com');
+        expect(onboardUrl).toBeNull();
+    });
+
+    it('refuses to build a claim URL when unset', async () => {
+        const { onboardingUrl } = await import('../server/lib/appUrls.js');
+        // The module-level ONBOARD_URL is unset in the test environment.
+        expect(() => onboardingUrl('abc')).toThrow(/ONBOARD_URL/);
     });
 });
 

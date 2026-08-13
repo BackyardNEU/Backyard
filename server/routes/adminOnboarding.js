@@ -65,6 +65,18 @@ router.post('/onboarding-links', async (req, res) => {
 
   const ids = clubs.map((c) => c.id);
 
+  // Outreach targets clubs nobody runs yet. Minting for a club that already has an owner
+  // is actively harmful: the moment anyone redeems, status flips to 'claimed' and the
+  // real owner is 409'd out of their own page and details editor, while the redeemer —
+  // only a moderator — cannot submit to clear it. Recovering needs an admin unclaim.
+  const { data: owned } = await supabaseAdmin
+    .from('club_memberships')
+    .select('club_id')
+    .in('club_id', ids)
+    .eq('role', 'top_moderator');
+
+  const ownedClubs = new Set((owned ?? []).map((m) => m.club_id));
+
   const { data: liveLinks } = await supabaseAdmin
     .from('club_invite_links')
     .select('id, club_id, token_prefix, expires_at')
@@ -92,6 +104,7 @@ router.post('/onboarding-links', async (req, res) => {
 
   for (const club of clubs) {
     if (liveByClub.has(club.id)) continue;
+    if (ownedClubs.has(club.id)) continue;
     const token = mintToken();
     plaintextByClub.set(club.id, token);
     inserts.push({
@@ -132,7 +145,9 @@ router.post('/onboarding-links', async (req, res) => {
       instagram: club.instagram,
       // A link cannot be re-displayed once minted — only the hash is stored. An
       // "existing" row means: look in the earlier CSV, or re-run with rotate:true.
-      result: existing ? 'existing' : (rotate ? 'rotated' : 'created'),
+      result: ownedClubs.has(club.id)
+        ? 'skipped_has_owner'
+        : (existing ? 'existing' : (rotate ? 'rotated' : 'created')),
       token_prefix: existing ? existing.token_prefix : tokenPrefix(token),
       url: token ? onboardingUrl(token) : null,
       expires_at: existing ? existing.expires_at : expiresAt,
@@ -143,8 +158,9 @@ router.post('/onboarding-links', async (req, res) => {
   const payload = {
     generated_at: new Date().toISOString(),
     counts: {
-      created: rows.filter((r) => r.result !== 'existing').length,
+      created: rows.filter((r) => r.result === 'created' || r.result === 'rotated').length,
       existing: rows.filter((r) => r.result === 'existing').length,
+      skipped_has_owner: rows.filter((r) => r.result === 'skipped_has_owner').length,
     },
     rows,
   };

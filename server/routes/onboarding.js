@@ -2,7 +2,7 @@ import express from 'express';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { checkMuted } from '../middleware/checkMuted.js';
-import { requireModerator, requireTopModerator } from '../lib/clubPermissions.js';
+import { requireModerator } from '../lib/clubPermissions.js';
 import { validateModules } from '../../shared/clubPageValidation.js';
 import { validateClubDetails, pickClubDetails } from '../../shared/clubDetailsValidation.js';
 import { sanitizeModules } from '../../shared/sanitizeModules.js';
@@ -60,7 +60,17 @@ router.put('/:clubId/onboarding/draft', requireAuth, checkMuted, async (req, res
   await requireModerator(req.user.id, clubId);
 
   const existing = await loadRow(clubId);
-  if (existing && !EDITABLE_STATUSES.has(existing.status)) {
+
+  // No row means this club was never part of outreach. Creating one here would set its
+  // status to 'claimed' and permanently 409 that club out of its own page and details
+  // editor, with no self-service way back.
+  if (!existing) {
+    return res.status(404).json({
+      error: 'This club is not part of club setup. Edit your page from your club page instead.',
+    });
+  }
+
+  if (!EDITABLE_STATUSES.has(existing.status)) {
     return res.status(409).json({
       error: existing.status === 'approved'
         ? 'This page has been approved and can now be edited from your club page.'
@@ -111,11 +121,13 @@ router.put('/:clubId/onboarding/draft', requireAuth, checkMuted, async (req, res
     .upsert({
       club_id: clubId,
       draft: patch,
-      // A club editing after a change request goes back to 'claimed', so the review
-      // queue does not show it as still needing attention.
-      status: existing?.status === 'changes_requested' ? 'claimed' : (existing?.status ?? 'claimed'),
-      claimed_by: existing?.claimed_by ?? req.user.id,
-      claimed_at: existing?.claimed_at ?? new Date().toISOString(),
+      // 'unclaimed' → 'claimed' because someone is demonstrably working on it now, and
+      // 'changes_requested' → 'claimed' so the review queue stops showing it as needing
+      // attention until it is resubmitted. The row is guaranteed to exist by the check
+      // above, so there is no create-on-write path here.
+      status: existing.status === 'approved' ? 'approved' : 'claimed',
+      claimed_by: existing.claimed_by ?? req.user.id,
+      claimed_at: existing.claimed_at ?? new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }, { onConflict: 'club_id' })
     .select('club_id, status, draft, updated_at')
@@ -133,7 +145,10 @@ router.put('/:clubId/onboarding/draft', requireAuth, checkMuted, async (req, res
 // POST /api/clubs/:clubId/onboarding/submit — hand the page to review.
 router.post('/:clubId/onboarding/submit', requireAuth, checkMuted, async (req, res) => {
   const { clubId } = req.params;
-  await requireTopModerator(req.user.id, clubId);
+  // Moderator, not top_moderator. The default max_uses of 5 exists precisely so a
+  // president can forward the link to their e-board; requiring ownership here meant
+  // everyone but the first claimer hit a 403 on the last button in the flow.
+  await requireModerator(req.user.id, clubId);
 
   const existing = await loadRow(clubId);
   if (!existing) return res.status(404).json({ error: 'Nothing to submit yet.' });

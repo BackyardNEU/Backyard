@@ -12,10 +12,14 @@ const router = express.Router();
 // A NULL expires_at means "never expires". The previous check compared
 // new Date(null) — the 1970 epoch — so member links, whose insert never set the
 // column, all read as permanently expired.
+// Deliberately does NOT check max_uses. consume_invite_link lets a prior redeemer back
+// in for free, so an exhausted link still works for the people who already used it — and
+// the claim link is the onboarding bundle's only entry point. 410'ing here told the
+// president who claimed the club "this link isn't working" and left them no way back
+// into their own half-finished wizard. Redemption still enforces the cap for new users.
 function isUsable(link) {
   if (link.is_revoked) return false;
   if (link.expires_at && new Date(link.expires_at) <= new Date()) return false;
-  if (link.max_uses !== null && link.use_count >= link.max_uses) return false;
   return true;
 }
 
@@ -169,7 +173,16 @@ router.post('/invite/:token/redeem', requireAuth, async (req, res) => {
 
   if (!grantsEditing) {
     const { role } = await grantClubRole(req.user.id, link.club_id, 'member');
-    return res.json({ joined: true, club_id: link.club_id, role, is_editor: false });
+    // already_member is what JoinPage keys its "you're already in" screen off. Dropping
+    // it during the hashed-token rewrite left that branch dead, so a repeat redeem
+    // showed the celebratory first-join screen every time.
+    return res.json({
+      joined: true,
+      club_id: link.club_id,
+      role,
+      is_editor: false,
+      already_member: link.first_use === false,
+    });
   }
 
   // An invite must never displace a club's existing owner, so a second redeemer lands as
@@ -224,6 +237,7 @@ router.post('/invite/:token/redeem', requireAuth, async (req, res) => {
     club_id: link.club_id,
     role,
     is_editor: true,
+    already_editor: link.first_use === false,
     onboarding: link.link_type === 'onboarding',
     first_use: link.first_use,
   });

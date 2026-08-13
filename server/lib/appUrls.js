@@ -54,10 +54,12 @@ export function parseAppUrls(env) {
         'PUBLIC_APP_URL'
     );
 
-    // Before the wizard has its own domain, onboarding links still resolve on the app.
+    // Deliberately no fallback to publicAppUrl. The main app has no /claim route and no
+    // catch-all, so falling back would mint outreach links that render a blank page —
+    // the same class of failure this module exists to prevent, with a different bad URL.
     const onboardUrl = env.ONBOARD_URL
         ? normalizeSingleOrigin(env.ONBOARD_URL, 'ONBOARD_URL')
-        : publicAppUrl;
+        : null;
 
     return { allowedOrigins, publicAppUrl, onboardUrl };
 }
@@ -78,4 +80,14 @@ export const PUBLIC_APP_URL = urls.publicAppUrl;
 export const ONBOARD_URL = urls.onboardUrl;
 
 export const inviteUrl = (token) => buildInviteUrl(PUBLIC_APP_URL, token);
-export const onboardingUrl = (token) => buildOnboardingUrl(ONBOARD_URL, token);
+export const onboardingUrl = (token) => {
+    if (!ONBOARD_URL) {
+        const err = new Error(
+            'ONBOARD_URL is not set, so club onboarding links cannot be built. Refusing ' +
+            'rather than minting a batch of URLs that resolve to a blank page.'
+        );
+        err.status = 500;
+        throw err;
+    }
+    return buildOnboardingUrl(ONBOARD_URL, token);
+};

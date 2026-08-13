@@ -264,9 +264,27 @@ describe('POST /:clubId/onboarding/submit', () => {
         expect(res.status).toBe(409);
     });
 
-    // Only the club owner hands the page over for review.
-    it('rejects a plain moderator', async () => {
+    // The default max_uses of 5 exists so a president can forward the link to their
+    // e-board. Requiring ownership here meant everyone but the first claimer hit a 403
+    // on the last button in the flow.
+    it('lets a plain moderator submit', async () => {
         role = 'moderator';
+        results['club_onboarding.select'] = {
+            data: { status: 'claimed', draft: { modules: validModules } }, error: null,
+        };
+        results['club_onboarding.update'] = {
+            data: { club_id: CLUB, status: 'pending_review' }, error: null,
+        };
+
+        const res = await request(makeApp())
+            .post(`/api/clubs/${CLUB}/onboarding/submit`)
+            .set('x-test-user', USER);
+
+        expect(res.status).toBe(200);
+    });
+
+    it('still rejects someone with no club role', async () => {
+        role = 'member';
         const res = await request(makeApp())
             .post(`/api/clubs/${CLUB}/onboarding/submit`)
             .set('x-test-user', USER);

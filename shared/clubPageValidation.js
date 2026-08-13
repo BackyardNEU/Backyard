@@ -11,6 +11,7 @@
 
 export const LIMITS = {
     CLUB_NAME_MAX: 80,
+    DESCRIPTION_MAX: 2000,
     LINK_NAME_MAX: 15,
     TAB_TITLE_MAX: 60,
     TAB_BODY_MAX: 500,
@@ -40,6 +41,28 @@ export const KNOWN_MODULE_TYPES = new Set([
 const encoder = new TextEncoder();
 const utf8Bytes = (s) => encoder.encode(s).length;
 
+// A same-origin path or an absolute http(s) URL. Still blocks javascript: and data:,
+// which is the point — this value lands in demo_club_data.image_url and renders as
+// <img src>. Relative paths have to pass because ExpandedTile seeded '/raccoon_pfp.png'
+// as the default logo and clubs persisted it; rejecting those would disable Save on
+// every page created before /page/init existed, with a warning they could not clear.
+export const isSafeImageRef = (value) => {
+    if (typeof value !== 'string') return false;
+    if (value.startsWith('//')) return false; // protocol-relative — off-origin
+    if (value.startsWith('/')) return true;
+    return isValidUrl(value);
+};
+
+// Entities and tags are markup, not characters a club typed. Measuring the raw string
+// meant sanitizing '&' into '&amp;' inflated a 480-character body past the 500 cap that
+// the wizard's own counter had just called fine.
+export function visibleLength(html) {
+    return String(html ?? '')
+        .replace(/<[^>]*>/g, '')
+        .replace(/&(#[0-9]+|#[xX][0-9a-fA-F]+|[a-zA-Z][a-zA-Z0-9]*);/g, 'x')
+        .trim().length;
+}
+
 export const isValidUrl = (url) => {
     try {
         const u = new URL(url);
@@ -58,13 +81,20 @@ export function validateBasicInfo(data, { partial = false } = {}) {
     if (!partial && !data?.club_name?.trim()) return 'Club name cannot be empty.';
     if ((data?.club_name ?? '').trim().length > LIMITS.CLUB_NAME_MAX) return 'Club name must be 80 characters or fewer.';
     if (!partial && !data?.description?.trim()) return 'Description cannot be empty.';
+    // Matches DESCRIPTION_MAX in clubDetailsValidation. approve copies this into
+    // demo_club_data.club_description, where that cap applies — so without it here an
+    // over-long description submitted cleanly and then 400'd the admin on every
+    // approve attempt, with no way for the club to know.
+    if ((data?.description ?? '').trim().length > LIMITS.DESCRIPTION_MAX) {
+        return 'Description must be 2000 characters or fewer.';
+    }
     // logo_url was never checked, and PUT /page copies it into demo_club_data.image_url,
     // from which it is rendered as an <img src>. Restricting it to http(s) keeps
     // javascript: and data: URLs out of a column that is read back into markup.
     // ?. like its siblings. Without it, validateModules([{type:'basic_info'}], {partial})
     // threw a TypeError and the draft-save path 500'd — reachable from the wizard the
     // moment a module exists with no data yet.
-    if (data?.logo_url && !isValidUrl(data.logo_url)) return 'The logo address is not a valid link.';
+    if (data?.logo_url && !isSafeImageRef(data.logo_url)) return 'The logo address is not a valid link.';
     for (const l of (data?.links ?? [])) {
         if ((l.name ?? '').length > LIMITS.LINK_NAME_MAX) return 'Link names must be 15 characters or fewer.';
         if (l.url && !isValidUrl(l.url)) return 'One or more link URLs are invalid.';
@@ -87,7 +117,7 @@ export function validateJoin(data, { partial = false } = {}) {
         if (!partial && !tab.title?.trim()) return 'Each tab must have a title.';
         if ((tab.title ?? '').trim().length > LIMITS.TAB_TITLE_MAX) return 'Tab titles must be 60 characters or fewer.';
         if (!partial && !tab.body?.trim()) return 'Each tab must have body text.';
-        if ((tab.body ?? '').trim().length > LIMITS.TAB_BODY_MAX) return 'Tab body must be 500 characters or fewer.';
+        if (visibleLength(tab?.body) > LIMITS.TAB_BODY_MAX) return 'Tab body must be 500 characters or fewer.';
     }
     return null;
 }
@@ -131,11 +161,11 @@ export function validateMemberRoster(data, { partial = false } = {}) {
         if ((c ?? '').trim().length > LIMITS.CATEGORY_NAME_MAX) return 'Category names must be 25 characters or fewer.';
     }
     for (const m of members) {
-        if (!partial && !m.name?.trim()) return 'Each member must have a name.';
-        if ((m.name ?? '').trim().length > LIMITS.MEMBER_NAME_MAX) return 'Member names must be 50 characters or fewer.';
-        // Measured on text, not markup, so formatting tags do not eat the budget.
-        const bioText = (m.bio || '').replace(/<[^>]*>/g, '');
-        if (bioText.length > LIMITS.MEMBER_BIO_MAX) return 'Member bios must be 500 characters or fewer.';
+        if (!partial && !m?.name?.trim()) return 'Each member must have a name.';
+        if ((m?.name ?? '').trim().length > LIMITS.MEMBER_NAME_MAX) return 'Member names must be 50 characters or fewer.';
+        // Measured on visible text, so neither formatting tags nor entity-escaping eat
+        // into the budget the editor's counter is showing.
+        if (visibleLength(m?.bio) > LIMITS.MEMBER_BIO_MAX) return 'Member bios must be 500 characters or fewer.';
     }
     return null;
 }

@@ -99,9 +99,13 @@ router.post('/club-logo-upload-url', async (req, res) => {
     // No delete here. Issuing a signed URL is not evidence that an upload will follow,
     // so removing the current logo at this point loses it whenever the browser never
     // PUTs — moving the delete later in the same handler did not change that, since it
-    // still runs before the upload. The path is deterministic and upsert is enabled, so
-    // a same-extension replacement overwrites in place; stale files from an extension
-    // change are cleaned up in /verify-image, once bytes have actually landed.
+    // still runs before the upload.
+    //
+    // The path is deterministic and upsert is enabled, so a same-extension replacement
+    // overwrites in place. Changing extension does strand the old file: it stays in the
+    // bucket and remains publicly readable, though nothing links to it once image_url is
+    // updated. Accepted for now — losing a club's live logo to an abandoned upload is the
+    // worse failure. A sweep keyed on club id would be the real fix.
     await makeSignedUpload('club_logos', path, res, { upsertEnabled: true });
 });
 
