@@ -9,6 +9,7 @@ import { ALLOWED_ORIGINS } from './lib/appUrls.js';
 import clubsRouter from './routes/clubs.js';
 import clubDetailsRouter from './routes/clubDetails.js';
 import onboardingRouter from './routes/onboarding.js';
+import adminOnboardingRouter from './routes/adminOnboarding.js';
 import searchRouter from './routes/search.js';
 import universitiesRouter from './routes/universities.js';
 import reviewsRouter from './routes/reviews.js';
@@ -153,7 +154,12 @@ app.use('/api/storage', storageLimiter, storageRouter);
 // burned write budget. /api/invite is the surface actually worth limiting: it is where
 // someone would brute-force invite tokens.
 app.use('/api/invite', invitesLimiter);
+// Tighter than the shared /api/admin bucket: this is the only endpoint that mints
+// credentials in bulk. Registered before the router, the same ordering the
+// check-username limiter above depends on.
+app.use('/api/admin/onboarding-links', limiter(20));
 app.use('/api/admin', invitesLimiter);
+app.use('/api/admin', adminOnboardingRouter);
 app.use('/api', invitesRouter);
 // Support tickets
 app.use('/api/support', supportLimiter, supportRouter);
