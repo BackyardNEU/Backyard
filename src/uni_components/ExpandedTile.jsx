@@ -344,6 +344,9 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 apiFetch(`/clubs/${id}/page`, { auth: false }),
                 apiFetch(`/clubs/${id}/events/upcoming`), // optional auth: sends token if logged in
                 apiFetch(`/clubs/${id}/members`),
+            ];
+            // Taxonomy and club interests are not stored in the prefetch cache, so always fetch them.
+            const interestsFetches = [
                 apiFetch('/interests', { auth: false }),
                 apiFetch(`/clubs/${id}/interests`, { auth: false }),
             ];
@@ -357,12 +360,14 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             // Settled separately rather than as one concatenated array: publicFetches is
             // empty on a cache hit, and positional destructuring across both would then
             // slide the is-approved result into the reviews slot. Still one round trip.
-            const [publicSettled, authSettled] = await Promise.all([
+            const [publicSettled, interestsSettled, authSettled] = await Promise.all([
                 Promise.allSettled(publicFetches),
+                Promise.allSettled(interestsFetches),
                 Promise.allSettled(authFetches),
             ]);
 
-            const [reviewsResult, pageResult, eventsResult, membersResult, taxonomyResult, clubInterestsResult] = publicSettled;
+            const [reviewsResult, pageResult, eventsResult, membersResult] = publicSettled;
+            const [taxonomyResult, clubInterestsResult] = interestsSettled;
             const [approvedResult] = authSettled;
 
             if (reviewsResult?.status === 'fulfilled') set_reviews(reviewsResult.value);
