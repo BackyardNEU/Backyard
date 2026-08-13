@@ -6,6 +6,7 @@ import { requireModerator, requireTopModerator } from '../lib/clubPermissions.js
 import { validateModules } from '../../shared/clubPageValidation.js';
 import { validateClubDetails, pickClubDetails } from '../../shared/clubDetailsValidation.js';
 import { sanitizeModules } from '../../shared/sanitizeModules.js';
+import { checkDraftReady } from '../../shared/onboardingDraft.js';
 import textModerator from '../lib/textModerator.js';
 
 const router = express.Router();
@@ -134,7 +135,7 @@ router.post('/:clubId/onboarding/submit', requireAuth, checkMuted, async (req, r
     return res.status(409).json({ error: 'Already submitted.', status: existing.status });
   }
 
-  const problems = checkComplete(existing.draft);
+  const problems = checkDraftReady(existing.draft);
   if (problems.length) {
     return res.status(400).json({ error: problems[0], errors: problems });
   }
@@ -189,25 +190,6 @@ function collectText(modules) {
     }
   }
   return out;
-}
-
-export function checkComplete(draft) {
-  const problems = [];
-  const modules = draft?.modules;
-
-  if (!Array.isArray(modules) || modules.length === 0) {
-    problems.push('Fill in at least the basics before submitting.');
-    return problems;
-  }
-
-  const basic = modules.find((m) => m?.type === 'basic_info')?.data;
-  if (!basic?.club_name?.trim()) problems.push('Your club needs a name.');
-  if (!basic?.description?.trim()) problems.push('Your club needs a description.');
-
-  const structure = validateModules(modules);
-  if (!structure.valid) problems.push(...structure.errors.map((e) => e.message));
-
-  return problems;
 }
 
 export default router;
