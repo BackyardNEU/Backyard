@@ -4,6 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { identifyUser } from './middleware/requireAuth.js';
+import { ALLOWED_ORIGINS } from './lib/appUrls.js';
 
 import clubsRouter from './routes/clubs.js';
 import searchRouter from './routes/search.js';
@@ -42,13 +43,11 @@ const port = process.env.PORT || 3001;
 app.set('trust proxy', 1);
 
 app.use(helmet());
-const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
-  .split(',')
-  .map(o => o.trim());
-
+// Parsed in lib/appUrls.js, which also derives the single-origin link bases. Keeping
+// both in one place is what stops the allowlist from being interpolated into a URL.
 app.use(cors({
   origin(origin, cb) {
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
     cb(new Error('CORS'));
   },
   credentials: true,

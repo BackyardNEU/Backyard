@@ -2,6 +2,8 @@ import express from 'express';
 import crypto from 'crypto';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { isAdmin } from '../lib/isAdmin.js';
+import { inviteUrl } from '../lib/appUrls.js';
 
 const router = express.Router();
 
@@ -18,11 +20,6 @@ async function isApprovedFor(userId, clubId) {
     throw err;
   }
   return !!data;
-}
-
-function isAdmin(userId) {
-  const admins = (process.env.ADMIN_USER_IDS || '').split(',').filter(Boolean);
-  return admins.includes(userId);
 }
 
 // GET /api/admin/is-admin — quick check; returns 200 if admin, 403 if not
@@ -54,9 +51,8 @@ router.post('/admin/clubs/:clubId/editor-invite-link', requireAuth, async (req, 
     throw err;
   }
 
-  const origin = process.env.FRONTEND_URL || 'http://localhost:5173';
   res.status(201).json({
-    url: `${origin}/join/${token}`,
+    url: inviteUrl(token),
     token,
     expires_at: data.expires_at,
     id: data.id,
@@ -84,9 +80,8 @@ router.post('/clubs/:clubId/invite-link', requireAuth, async (req, res) => {
     throw err;
   }
 
-  const origin = process.env.FRONTEND_URL || 'http://localhost:5173';
   res.status(201).json({
-    url: `${origin}/join/${token}`,
+    url: inviteUrl(token),
     token,
     expires_at: data.expires_at,
     id: data.id,
