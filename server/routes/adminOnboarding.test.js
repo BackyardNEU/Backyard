@@ -302,7 +302,29 @@ describe('POST /onboarding/:clubId/approve', () => {
         const written = find('demo_club_data', 'update')[0].row;
         expect(written.school).toBeUndefined();
         expect(written.rating).toBeUndefined();
-        expect(written.club_description).toBe('d');
+    });
+
+    // The wizard collects the blurb as basic_info.description, but the public listing
+    // and search read demo_club_data.club_description. Without this the approved page
+    // showed the club's own words while every card still showed the scraped ones.
+    it('publishes the wizard description to the public club_description column', async () => {
+        results['club_onboarding.select'] = {
+            data: {
+                club_id: CLUB, status: 'pending_review',
+                draft: { modules: validModules, details: {} },
+            },
+            error: null,
+        };
+        results['club_page_data.upsert'] = { data: null, error: null };
+        results['club_onboarding.update'] = { data: { club_id: CLUB, status: 'approved' }, error: null };
+
+        await request(makeApp())
+            .post(`/api/admin/onboarding/${CLUB}/approve`)
+            .set('x-test-user', ADMIN);
+
+        const written = find('demo_club_data', 'update')[0].row;
+        expect(written.club_description).toBe('We play chess.');
+        expect(written.club_name).toBe('Chess');
     });
 });
 

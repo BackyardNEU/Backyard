@@ -38,12 +38,13 @@ export default function Basics({ wizard, clubId, clubName }) {
                 method: 'POST',
                 body: { bucket: 'club_logos', path, club_id: clubId },
             });
-            // setModule reads current draft state itself, so this cannot revert edits made
-            // while the upload was in flight — `set` closes over the data from render.
-            wizard.setModule('basic_info', {
-                ...(wizard.getModule('basic_info') ?? {}),
+            // Functional update: an upload takes seconds, and reading the module here
+            // would read the value captured at render, silently discarding anything typed
+            // while it was in flight. The autosave would then persist the loss.
+            wizard.setModule('basic_info', (current) => ({
+                ...current,
                 logo_url: `${publicUrl}?v=${Date.now()}`,
-            });
+            }));
         } catch (err) {
             setUploadError(err.message);
         } finally {

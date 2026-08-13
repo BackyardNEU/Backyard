@@ -16,8 +16,42 @@ const ALLOWED = new Set(['b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li', 'p', '
 // Void elements never get a closing tag and must not go on the open-tag stack.
 const VOID = new Set(['br']);
 
+const NAMED_ENTITIES = {
+    amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ',
+};
+
+// Decoding before escaping is what makes this idempotent, and idempotence is required:
+// the same string is sanitized on write, again on approve, and again at render. Escaping
+// unconditionally turned "Arts &amp; Crafts" into "&amp;amp;" and then "&amp;amp;amp;",
+// visibly corrupting text a little more on every save.
+//
+// The DOM implementation this replaced got the behaviour for free — innerHTML parsed
+// entities into text nodes, and re-escaping them round-tripped.
+function decodeEntities(s) {
+    return s.replace(/&(#[0-9]+|#[xX][0-9a-fA-F]+|[a-zA-Z][a-zA-Z0-9]*);/g, (match, body) => {
+        if (body[0] === '#') {
+            const code = body[1] === 'x' || body[1] === 'X'
+                ? parseInt(body.slice(2), 16)
+                : parseInt(body.slice(1), 10);
+            if (!Number.isFinite(code) || code <= 0 || code > 0x10ffff) return match;
+            try {
+                return String.fromCodePoint(code);
+            } catch {
+                return match;
+            }
+        }
+        const named = NAMED_ENTITIES[body.toLowerCase()];
+        return named === undefined ? match : named;
+    });
+}
+
+// Decode first, then escape. Escaping last means a decoded '<' can never reach the
+// output as markup — it becomes &lt; like any other stray angle bracket.
 function escapeText(s) {
-    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return decodeEntities(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
 }
 
 /**

@@ -32,6 +32,7 @@ const router = express.Router();
 import { DEFAULT_MODULES } from '../../shared/clubPageDefaults.js';
 import { validateModules } from '../../shared/clubPageValidation.js';
 import { sanitizeModules } from '../../shared/sanitizeModules.js';
+import { ONBOARDING_IN_PROGRESS } from './clubDetails.js';
 
 // GET /api/clubs/:clubId/page
 // Public. Returns the club_page_data row (modules preset) for this club.
@@ -241,8 +242,7 @@ router.put('/:clubId/page', requireAuth, checkMuted, async (req, res) => {
     .eq('club_id', clubId)
     .maybeSingle();
 
-  const IN_PROGRESS = ['claimed', 'pending_review', 'changes_requested'];
-  if (onboarding && IN_PROGRESS.includes(onboarding.status)) {
+  if (onboarding && ONBOARDING_IN_PROGRESS.includes(onboarding.status)) {
     return res.status(409).json({
       error: 'Your page is still being set up. Finish it at your club setup link — we publish it once it has been reviewed.',
       status: onboarding.status,

@@ -96,20 +96,13 @@ router.post('/club-logo-upload-url', async (req, res) => {
     const ext = (req.body?.ext || 'webp').replace(/[^a-z0-9]/gi, '').slice(0, 8) || 'webp';
     const path = `${clubId}.${ext}`;
 
-    // Deleting up front meant an abandoned upload left the club with no logo at all.
-    // The path is deterministic and upsert is enabled, so the same extension overwrites
-    // in place; only a CHANGED extension can strand the old file. Clean those up after
-    // the new URL is issued rather than before.
-    const { data: existing } = await supabaseAdmin.storage
-        .from('club_logos')
-        .list('', { search: clubId });
-    const stale = (existing ?? []).filter((f) => f.name !== path);
-
+    // No delete here. Issuing a signed URL is not evidence that an upload will follow,
+    // so removing the current logo at this point loses it whenever the browser never
+    // PUTs — moving the delete later in the same handler did not change that, since it
+    // still runs before the upload. The path is deterministic and upsert is enabled, so
+    // a same-extension replacement overwrites in place; stale files from an extension
+    // change are cleaned up in /verify-image, once bytes have actually landed.
     await makeSignedUpload('club_logos', path, res, { upsertEnabled: true });
-
-    if (stale.length) {
-        await supabaseAdmin.storage.from('club_logos').remove(stale.map((f) => f.name));
-    }
 });
 
 router.post('/event-poster-upload-url', async (req, res) => {

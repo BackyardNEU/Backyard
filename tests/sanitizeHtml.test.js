@@ -119,8 +119,48 @@ describe('sanitizeBioHtml — balance', () => {
         expect(sanitizeBioHtml('text</b>')).toBe('text');
     });
 
-    it('is idempotent — sanitizing twice equals sanitizing once', () => {
-        const once = sanitizeBioHtml('<div><b>x</b><script>y</script></div>');
+    // The branch sanitizes on write, again on approve, and again at render, so a
+    // non-idempotent pass corrupts text a little more every save. The original fixture
+    // here had no &, < or > in any TEXT position, so it passed while "Arts &amp; Crafts"
+    // was quietly degrading to "&amp;amp;amp;" in production.
+    it('is idempotent over text containing ampersands and brackets', () => {
+        const inputs = [
+            '<p>Arts &amp; Crafts</p>',
+            'Tryouts Tue &amp; Thu',
+            '1 &lt; 2 &amp;&amp; 3 &gt; 2',
+            '<b>Q&amp;A</b> with the e-board',
+            '&lt;script&gt;alert(1)&lt;/script&gt;',
+        ];
+        for (const input of inputs) {
+            const once = sanitizeBioHtml(input);
+            expect(sanitizeBioHtml(once), `not idempotent for: ${input}`).toBe(once);
+            expect(sanitizeBioHtml(sanitizeBioHtml(once))).toBe(once);
+        }
+    });
+
+    it('does not double-escape an existing entity', () => {
+        expect(sanitizeBioHtml('Arts &amp; Crafts')).toBe('Arts &amp; Crafts');
+        expect(sanitizeBioHtml('<p>Q&amp;A</p>')).toBe('<p>Q&amp;A</p>');
+    });
+
+    // Decoding happens before escaping, so a decoded angle bracket still cannot become
+    // markup — it comes back out escaped like any other stray bracket.
+    it('keeps decoded brackets inert', () => {
+        const out = sanitizeBioHtml('&lt;img src=x onerror=alert(1)&gt;');
+        expect(out).not.toContain('<img');
+        expect(out).toBe('&lt;img src=x onerror=alert(1)&gt;');
+    });
+
+    it('decodes numeric references without letting them through as markup', () => {
+        expect(sanitizeBioHtml('&#38;')).toBe('&amp;');
+        expect(sanitizeBioHtml('&#x3C;b&#x3E;')).toBe('&lt;b&gt;');
+    });
+
+    // An unrecognised entity is not decoded, so its '&' is a literal ampersand and gets
+    // escaped like any other. Still stable on a second pass, which is what matters.
+    it('escapes the ampersand of an unrecognised entity, and stays stable', () => {
+        const once = sanitizeBioHtml('AT&amp;T &notreal; x');
+        expect(once).toBe('AT&amp;T &amp;notreal; x');
         expect(sanitizeBioHtml(once)).toBe(once);
     });
 });

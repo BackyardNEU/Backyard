@@ -8,6 +8,11 @@ import textModerator from '../lib/textModerator.js';
 
 const router = express.Router();
 
+// Statuses meaning onboarding has actually started. 'unclaimed' is excluded because
+// minting links seeds a row for every club in a batch, including ones that already have
+// moderators and a published page.
+export const ONBOARDING_IN_PROGRESS = ['claimed', 'pending_review', 'changes_requested'];
+
 // Kept separate from PUT /clubs/:clubId/page rather than folded into it:
 //
 //  - Different table and shape. The page endpoint's contract is { modules: [...] }, an
@@ -24,6 +29,23 @@ const router = express.Router();
 router.put('/:clubId/details', requireAuth, checkMuted, async (req, res) => {
     const { clubId } = req.params;
     await requireModerator(req.user.id, clubId);
+
+    // Same gate as PUT /clubs/:clubId/page, and for the same reason: redeeming an
+    // onboarding invite grants top_moderator, so without it a claimant could publish
+    // unreviewed description/category/email/instagram straight into the public
+    // demo_club_data — the exact bypass the page gate exists to close.
+    const { data: onboarding } = await supabaseAdmin
+        .from('club_onboarding')
+        .select('status')
+        .eq('club_id', clubId)
+        .maybeSingle();
+
+    if (onboarding && ONBOARDING_IN_PROGRESS.includes(onboarding.status)) {
+        return res.status(409).json({
+            error: 'Your page is still being set up. Finish it at your club setup link — we publish it once it has been reviewed.',
+            status: onboarding.status,
+        });
+    }
 
     const patch = pickClubDetails(req.body);
     if (Object.keys(patch).length === 0) {

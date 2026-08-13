@@ -79,14 +79,21 @@ export function useWizardDraft(clubId) {
         timer.current = setTimeout(flush, AUTOSAVE_MS);
     }, [flush]);
 
-    /** Replace one module's data, creating the module if the draft has never held it. */
+    /**
+     * Replace one module's data, creating the module if the draft has never held it.
+     * `data` may be an updater function, which receives the CURRENT data — required for
+     * anything resolving asynchronously (the logo upload), where a value captured at
+     * render would overwrite whatever was typed while the request was in flight.
+     */
     const setModule = useCallback((type, data) => {
         setDraft((prev) => {
             const modules = [...(prev.modules ?? [])];
             const i = modules.findIndex((m) => m.type === type);
+            const current = i === -1 ? {} : (modules[i].data ?? {});
+            const nextData = typeof data === 'function' ? data(current) : data;
             const next = i === -1
-                ? { type, order: modules.length, isDisplayed: true, data }
-                : { ...modules[i], data };
+                ? { type, order: modules.length, isDisplayed: true, data: nextData }
+                : { ...modules[i], data: nextData };
             if (i === -1) modules.push(next); else modules[i] = next;
 
             queueSave({ modules });

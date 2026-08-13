@@ -5,10 +5,13 @@ const MAX_STATS = 4;
 // Only quantitative stats here. The qualitative kind (a 1-10 bar with a label and a max)
 // needs explaining before it makes sense, and a step that needs explaining is a step
 // people abandon. Clubs can add those later from the full page editor.
+// Every suggestion carries a unit. A quantitative stat with an empty unit1 is rejected
+// at submit, so a chip that created one handed the club a 400 naming a field the form
+// never marked as required.
 const SUGGESTIONS = [
     { label: 'Active members', unit1: 'members' },
     { label: 'Meetings a semester', unit1: 'meetings' },
-    { label: 'Founded', unit1: '' },
+    { label: 'Years running', unit1: 'years' },
 ];
 
 export default function Stats({ wizard }) {
@@ -47,7 +50,7 @@ export default function Stats({ wizard }) {
                 label="Number"
                 addLabel="+ Add a number"
                 max={MAX_STATS}
-                onAdd={() => setStats([...stats, { type: 'quantitative', label: '', value: 0, unit1: '' }])}
+                onAdd={() => setStats([...stats, { type: 'quantitative', label: '', value: 0, unit1: 'members' }])}
                 onRemove={(i) => setStats(stats.filter((_, j) => j !== i))}
             >
                 {(stat, i) => (
@@ -73,7 +76,7 @@ export default function Stats({ wizard }) {
                                     )))}
                                 />
                             </Field>
-                            <Field label="Unit" hint="Plural, e.g. members">
+                            <Field label="Unit" hint="Plural, e.g. members. Required.">
                                 <Text
                                     value={stat.unit1}
                                     onChange={(v) => setStats(stats.map((s, j) => (j === i ? { ...s, unit1: v } : s)))}
