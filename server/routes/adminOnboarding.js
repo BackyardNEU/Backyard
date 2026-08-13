@@ -3,7 +3,7 @@ import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { requireAdmin } from '../lib/isAdmin.js';
 import { mintToken, hashToken, tokenPrefix } from '../lib/inviteTokens.js';
-import { onboardingUrl } from '../lib/appUrls.js';
+import { onboardingUrl, ONBOARD_URL } from '../lib/appUrls.js';
 import { validateModules } from '../../shared/clubPageValidation.js';
 import { pickClubDetails, validateClubDetails, normalizeInstagram } from '../../shared/clubDetailsValidation.js';
 import { sanitizeModules } from '../../shared/sanitizeModules.js';
@@ -48,6 +48,17 @@ router.post('/onboarding-links', async (req, res) => {
     return res.status(400).json({ error: 'max_uses must be between 1 and 25' });
   }
 
+  // Checked BEFORE any write. onboardingUrl() throws when ONBOARD_URL is unset, and it
+  // was only called while building the response — so a misconfigured environment wrote
+  // 150 hashed tokens and then 500'd, destroying every plaintext irrecoverably. A retry
+  // then reported them all as 'existing' with url: null.
+  if (!ONBOARD_URL) {
+    return res.status(500).json({
+      error: 'ONBOARD_URL is not configured, so claim links cannot be built. ' +
+        'Set it before minting — nothing has been written.',
+    });
+  }
+
   let clubQuery = supabaseAdmin
     .from('demo_club_data')
     .select('id, club_name, school, email, instagram');
@@ -88,8 +99,13 @@ router.post('/onboarding-links', async (req, res) => {
 
   // Expired links still occupy the unique-index slot (the predicate cannot reference
   // now()), so they are revoked before re-minting even without rotate.
+  //
+  // Owned clubs are excluded here, not just from the insert loop. Revoking first and
+  // skipping later killed the live link of a president who was mid-wizard and issued
+  // nothing to replace it, while the CSV cheerfully reported a fresh expiry date.
   const now = Date.now();
   const toRevoke = (liveLinks ?? [])
+    .filter((l) => !ownedClubs.has(l.club_id))
     .filter((l) => rotate || (l.expires_at && new Date(l.expires_at).getTime() <= now))
     .map((l) => l.id);
 

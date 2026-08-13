@@ -79,7 +79,11 @@ export function useWizardDraft(clubId) {
     const queueSave = useCallback((payload) => {
         pending.current = { ...(pending.current ?? {}), ...payload };
         if (timer.current) clearTimeout(timer.current);
-        timer.current = setTimeout(flush, AUTOSAVE_MS);
+        // Same .catch() the retry path needs, and for the same reason: flush() rethrows
+        // so saveNow() can reject before a submit, which makes a bare setTimeout(flush)
+        // an unhandled rejection on every failed autosave. Failure is already visible
+        // through saveState.
+        timer.current = setTimeout(() => { flush().catch(() => {}); }, AUTOSAVE_MS);
     }, [flush]);
 
     /**

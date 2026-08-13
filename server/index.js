@@ -117,10 +117,17 @@ app.use('/api/clubs', clubPageRouter);
 app.use('/api/clubs', questionsRouter);
 app.use('/api/clubs', clubEventsRouter);
 
-// Club onboarding. Draft saves are autosaved per wizard step, so the bucket is generous;
-// both are keyed by user id, since every route here is behind requireAuth.
-app.use('/api/clubs', limiter(120), onboardingRouter);
-app.use('/api/clubs', limiter(60), clubDetailsRouter);
+// Club onboarding. Mounted on the bare '/api/clubs' prefix these limiters charged every
+// unrelated club route and every /api/clubs 404 — POST /clubs/:id/invite-link silently
+// dropped from 100 to 60 per window. Same mount-ordering trap the check-username comment
+// above describes. The routers still mount on /api/clubs; only the buckets are scoped.
+//
+// Draft saves fire once per wizard step, so that bucket is the generous one. Both key by
+// user id, since every route behind them requires auth.
+app.use(/^\/api\/clubs\/[^/]+\/onboarding/, limiter(120));
+app.use(/^\/api\/clubs\/[^/]+\/details$/, limiter(60));
+app.use('/api/clubs', onboardingRouter);
+app.use('/api/clubs', clubDetailsRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/universities', universitiesRouter);
 

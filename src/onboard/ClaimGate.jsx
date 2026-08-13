@@ -29,6 +29,15 @@ export default function ClaimGate() {
 
     useEffect(() => {
         supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
+
+        // form.jsx only calls onAuth when signUp returns a session. With email
+        // confirmation enabled it returns none — it just shows its own "check your
+        // inbox" message — so onAuth never fires and nothing else here would notice the
+        // session appearing after the user returns through /auth/callback.
+        const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+            if (session?.user) setUser(session.user);
+        });
+        return () => sub?.subscription?.unsubscribe();
     }, []);
 
     useEffect(() => {
@@ -45,7 +54,19 @@ export default function ClaimGate() {
             // row, addToMemberList updates zero rows and profiles.member_list — which
             // clubEvents.js and events.js read — never learns about the club.
             // POST /me/profile is an upsert keyed on the JWT, so this is safe to repeat.
-            await apiFetch('/me/profile', { method: 'POST', body: {} });
+            //
+            // Carry over the names Supabase stored as user metadata at signup. Sending an
+            // empty body created a bare row and silently discarded what the person had
+            // just typed — profiles.js drops empty strings, so passing them through is
+            // safe even when the metadata is absent (Google OAuth uses given/family_name).
+            const meta = (await supabase.auth.getUser()).data.user?.user_metadata ?? {};
+            await apiFetch('/me/profile', {
+                method: 'POST',
+                body: {
+                    first_name: meta.first_name || meta.given_name || '',
+                    last_name: meta.last_name || meta.family_name || '',
+                },
+            });
 
             const result = await apiFetch(`/invite/${token}/redeem`, { method: 'POST' });
             sessionStorage.removeItem('pendingClaimToken');
@@ -61,17 +82,16 @@ export default function ClaimGate() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user, invite]);
 
-    const handleAuth = async (flow) => {
-        // Unlike the main app there is no /profile-setup to bounce through — this bundle
-        // does not contain one. The wizard collects what it needs itself.
+    // Only fires when signUp or signIn returned a session — i.e. email confirmation is
+    // off, or this was a sign-in. When confirmation is ON, form.jsx shows its own
+    // check-your-inbox message and never calls this; the onAuthStateChange subscription
+    // above is what picks the user up when they return through /auth/callback.
+    //
+    // Unlike the main app there is no /profile-setup bounce here — the wizard collects
+    // what it needs itself.
+    const handleAuth = async () => {
         const { data } = await supabase.auth.getUser();
-        if (data.user) {
-            setUser(data.user);
-            return;
-        }
-        // No session yet means email confirmation is on; Form shows the check-your-inbox
-        // message and /auth/callback will bring them back here.
-        if (flow === 'signup') setMode('confirm');
+        if (data.user) setUser(data.user);
     };
 
     if (inviteError) {
@@ -128,21 +148,10 @@ export default function ClaimGate() {
         );
     }
 
-    if (mode === 'confirm') {
-        return (
-            <Page clubName={invite.club_name}>
-                <div className="ob-card ob-card--narrow ob-centered">
-                    <p className="ob-eyebrow">Almost there</p>
-                    <h1 className="ob-h1">Check your email</h1>
-                    <p className="ob-lede" style={{ margin: '0 auto' }}>
-                        We sent a confirmation link. Open it and you&apos;ll come straight back
-                        here to finish {invite.club_name}&apos;s page.
-                    </p>
-                </div>
-            </Page>
-        );
-    }
-
+    // The "check your email" screen that used to live here was unreachable: it was gated
+    // on a mode only handleAuth could set, and handleAuth never runs when confirmation is
+    // enabled. Form renders its own inline message in that case, which is the one people
+    // actually see, so the duplicate is gone rather than left as dead code.
     return (
         <Page clubName={invite.club_name}>
             <div className="ob-card ob-card--narrow" style={{ padding: 'clamp(24px, 4vw, 40px)' }}>

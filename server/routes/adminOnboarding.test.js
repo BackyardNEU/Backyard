@@ -42,6 +42,9 @@ vi.mock('../middleware/requireAuth.js', () => ({
 }));
 
 vi.mock('../lib/appUrls.js', () => ({
+    // ONBOARD_URL is now read before any write, so minting refuses when it is unset
+    // rather than writing tokens and then failing to build their URLs.
+    ONBOARD_URL: 'https://clubs.example.com',
     onboardingUrl: (t) => `https://clubs.example.com/claim/${t}`,
     inviteUrl: (t) => `https://example.com/join/${t}`,
 }));

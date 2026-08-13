@@ -7,9 +7,14 @@ const MAX_TABS = 4;
 export default function Joining({ wizard }) {
     const data = wizard.getModule('join') ?? {};
     const details = wizard.draft.details ?? {};
-    const tabs = data.tabs ?? [{ title: 'How to join', body: '' }];
 
-    const set = (patch) => wizard.setModule('join', { ...data, tabs, ...patch });
+    // Shown, not stored. Folding the placeholder into every save persisted a tab with an
+    // empty body, which hard-blocks submit — so a club that only filled in the
+    // application link could not send their page and had no idea why.
+    const savedTabs = data.tabs ?? [];
+    const tabs = savedTabs.length ? savedTabs : [{ title: 'How to join', body: '' }];
+
+    const set = (patch) => wizard.setModule('join', { ...data, ...patch });
     const setTabs = (next) => wizard.setModule('join', { ...data, tabs: next });
 
     return (

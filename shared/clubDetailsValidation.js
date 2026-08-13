@@ -34,9 +34,15 @@ export function pickClubDetails(body) {
     for (const key of Object.keys(body)) {
         if (!CLUB_DETAILS_WRITABLE.has(key)) continue;
         const value = body[key];
-        // Empty strings are dropped rather than written, so a partially-filled wizard
-        // step cannot blank a column that already has content.
-        if (typeof value === 'string' && value.trim() === '') continue;
+        // An explicitly-sent empty string means "clear this", stored as NULL. Dropping it
+        // meant a club could never remove an email or Instagram handle they had already
+        // saved: the wizard showed it gone in the local draft while approve went on
+        // publishing the stale value. Absent keys are still left untouched, so a partial
+        // save cannot blank a column it never mentioned.
+        if (value === null || (typeof value === 'string' && value.trim() === '')) {
+            out[key] = null;
+            continue;
+        }
         out[key] = typeof value === 'string' ? value.trim() : value;
     }
     return out;

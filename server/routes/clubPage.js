@@ -80,6 +80,22 @@ router.post('/:clubId/page/init', requireAuth, async (req, res) => {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
+  // Third door into club_page_data, and it needed the same gate as PUT /page and
+  // PUT /details: a claimant blocked from those could otherwise publish the placeholder
+  // default page to the public table just by calling this.
+  const { data: initOnboarding } = await supabaseAdmin
+    .from('club_onboarding')
+    .select('status')
+    .eq('club_id', clubId)
+    .maybeSingle();
+
+  if (initOnboarding && ONBOARDING_IN_PROGRESS.includes(initOnboarding.status)) {
+    return res.status(409).json({
+      error: 'Your page is still being set up. Finish it at your club setup link — we publish it once it has been reviewed.',
+      status: initOnboarding.status,
+    });
+  }
+
   // Check for existing data
   const { data: existing, error: existingError } = await supabaseAdmin
     .from('club_page_data')

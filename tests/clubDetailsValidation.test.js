@@ -35,9 +35,19 @@ describe('pickClubDetails', () => {
             .toEqual({ club_description: 'd' });
     });
 
-    it('drops empty strings rather than blanking a column', () => {
+    // An explicitly-sent empty string means "clear this". Dropping it meant a club could
+    // never remove an email or Instagram handle they had already saved — the wizard
+    // showed it gone locally while approve kept publishing the stale value.
+    it('treats an explicit empty string as a request to clear the field', () => {
         expect(pickClubDetails({ club_description: '   ', category: 'Sports' }))
-            .toEqual({ category: 'Sports' });
+            .toEqual({ club_description: null, category: 'Sports' });
+        expect(pickClubDetails({ email: null })).toEqual({ email: null });
+    });
+
+    // Absent keys are still untouched, so a partial save cannot blank a column it never
+    // mentioned.
+    it('leaves out fields the caller did not mention', () => {
+        expect(pickClubDetails({ category: 'Sports' })).toEqual({ category: 'Sports' });
     });
 
     it('returns an empty object for a body with nothing writable', () => {
