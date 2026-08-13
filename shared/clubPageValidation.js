@@ -49,6 +49,10 @@ export function validateBasicInfo(data) {
     if (!data?.club_name?.trim()) return 'Club name cannot be empty.';
     if (data.club_name.trim().length > LIMITS.CLUB_NAME_MAX) return 'Club name must be 80 characters or fewer.';
     if (!data?.description?.trim()) return 'Description cannot be empty.';
+    // logo_url was never checked, and PUT /page copies it into demo_club_data.image_url,
+    // from which it is rendered as an <img src>. Restricting it to http(s) keeps
+    // javascript: and data: URLs out of a column that is read back into markup.
+    if (data.logo_url && !isValidUrl(data.logo_url)) return 'The logo address is not a valid link.';
     for (const l of (data?.links ?? [])) {
         if ((l.name ?? '').length > LIMITS.LINK_NAME_MAX) return 'Link names must be 15 characters or fewer.';
         if (l.url && !isValidUrl(l.url)) return 'One or more link URLs are invalid.';

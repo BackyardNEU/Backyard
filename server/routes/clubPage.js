@@ -226,6 +226,26 @@ router.put('/:clubId/page', requireAuth, checkMuted, async (req, res) => {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
+  // Redeeming an onboarding invite grants top_moderator — which is exactly the role this
+  // endpoint checks. Without this gate a club sent through outreach could skip the wizard
+  // and PUT straight to their public page, publishing unreviewed content and defeating
+  // the entire point of staging drafts in club_onboarding.
+  //
+  // Only clubs actually in the outreach pipeline have a row here, so clubs that never
+  // went through it are unaffected.
+  const { data: onboarding } = await supabaseAdmin
+    .from('club_onboarding')
+    .select('status')
+    .eq('club_id', clubId)
+    .maybeSingle();
+
+  if (onboarding && onboarding.status !== 'approved') {
+    return res.status(409).json({
+      error: 'Your page is still being set up. Finish it at your club setup link — we publish it once it has been reviewed.',
+      status: onboarding.status,
+    });
+  }
+
   const { data, error } = await supabaseAdmin
     .from('club_page_data')
     .upsert(
