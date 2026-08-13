@@ -253,7 +253,6 @@ export const UniversityPage = () => {
             <UniSearchBar
               setResults={setResults}
               university={university.uni_name}
-              calendarActive={showCalendar}
               cardSize={cardSize}
               onCardSizeChange={setCardSize}
             />
