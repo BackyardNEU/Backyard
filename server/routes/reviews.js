@@ -3,6 +3,7 @@ import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { checkMuted } from '../middleware/checkMuted.js';
 import textModerator from '../lib/textModerator.js';
+import { NotificationService } from '../notifications/service.js';
 
 const router = express.Router();
 
@@ -119,6 +120,40 @@ router.post('/', checkMuted, async (req, res) => {
     }
 
     res.status(201).json(data);
+
+    // Notify club moderators (fire-and-forget)
+    (async () => {
+        try {
+            const [{ data: club }, { data: moderators }] = await Promise.all([
+                supabaseAdmin.from('demo_club_data').select('club_name, image_url').eq('id', patch.club_id).single(),
+                supabaseAdmin
+                    .from('club_memberships')
+                    .select('user_id')
+                    .eq('club_id', patch.club_id)
+                    .in('role', ['moderator', 'top_moderator'])
+                    .neq('user_id', req.user.id),
+            ]);
+
+            if (!moderators?.length) return;
+
+            await Promise.allSettled(
+                moderators.map((m) =>
+                    NotificationService.dispatch({
+                        type: 'new_review',
+                        recipientId: m.user_id,
+                        actorId: req.user.id,
+                        entity: { kind: 'review', id: data.id },
+                        payload: {
+                            clubName: club?.club_name ?? null,
+                            imageUrl: club?.image_url ?? null,
+                        },
+                    })
+                )
+            );
+        } catch (err) {
+            console.error('[reviews] notification fan-out failed:', err.message);
+        }
+    })();
 });
 
 export default router;

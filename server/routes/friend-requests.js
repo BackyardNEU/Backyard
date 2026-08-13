@@ -7,6 +7,23 @@ import { isBlockedBetween } from '../lib/blocks.js';
 const router = express.Router();
 router.use(requireAuth);
 
+// Pending requests the current user sent (recipient IDs), for seeding UI state
+router.get('/sent-pending', async (req, res) => {
+  const { data, error } = await supabaseAdmin
+    .from('friend_requests')
+    .select('recipient_id')
+    .eq('sender_id', req.user.id)
+    .eq('status', 'pending');
+
+  if (error) {
+    const err = new Error(error.message);
+    err.status = 502;
+    throw err;
+  }
+
+  res.json((data || []).map((r) => r.recipient_id));
+});
+
 // Send a friend request
 router.post('/', async (req, res) => {
   const { recipientId } = req.body || {};

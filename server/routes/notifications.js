@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
     .order('created_at', { ascending: false })
     .limit(50);
 
-  if (error) {
+if (error) {
     const err = new Error(error.message);
     err.status = 502;
     throw err;
