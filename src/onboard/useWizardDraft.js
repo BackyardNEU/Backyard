@@ -67,7 +67,10 @@ export function useWizardDraft(clubId) {
             // Re-arm so a transient failure retries instead of stranding the draft.
             if (alive.current && pending.current) {
                 if (timer.current) clearTimeout(timer.current);
-                timer.current = setTimeout(flush, AUTOSAVE_MS * 4);
+                // flush() rethrows so saveNow() can reject before a submit. A bare
+                // setTimeout(flush) would therefore raise an unhandled rejection on
+                // every retry; the failure is already surfaced through saveState.
+                timer.current = setTimeout(() => { flush().catch(() => {}); }, AUTOSAVE_MS * 4);
             }
             throw err;
         }

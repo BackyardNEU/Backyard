@@ -94,7 +94,13 @@ export function sanitizeBioHtml(html) {
             continue;
         }
 
-        const match = /^<\s*(\/?)\s*([a-zA-Z][a-zA-Z0-9]*)/.exec(rest);
+        // No whitespace anywhere before the tag name. Browsers treat "< div" as literal
+        // text, and accepting it as a tag turned "a < b always" into "a <b></b>",
+        // silently deleting the rest of the sentence on every write.
+        //
+        // Both \s* have to go: dropping only the one after '<' left the one after the
+        // optional '/', which occupies the same position for an opening tag.
+        const match = /^<(\/?)([a-zA-Z][a-zA-Z0-9]*)/.exec(rest);
 
         // A '<' that does not begin a tag is literal text (e.g. "1 < 2").
         if (!match) {

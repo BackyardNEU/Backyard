@@ -260,6 +260,12 @@ router.post('/onboarding/:clubId/approve', async (req, res) => {
   const modules = row.draft?.modules;
   const details = pickClubDetails(row.draft?.details ?? {});
 
+  // Folded in BEFORE validateClubDetails, not after. Assigning it later meant the
+  // wizard's description skipped DESCRIPTION_MAX entirely, since basic_info carries no
+  // length cap of its own — so an approved page could publish an unbounded blurb.
+  const draftBasic = modules?.find?.((m) => m?.type === 'basic_info')?.data;
+  if (draftBasic?.description?.trim()) details.club_description = draftBasic.description.trim();
+
   // Re-validated here rather than trusted from the draft: a rule may have tightened
   // between save and approval, and this is the last gate before the content is public.
   const structure = validateModules(modules);
@@ -290,13 +296,11 @@ router.post('/onboarding/:clubId/approve', async (req, res) => {
   // Same allowlist the details endpoint uses, so approve is not a mass-assignment
   // bypass around it.
   if (details.instagram) details.instagram = normalizeInstagram(details.instagram);
-  // The wizard collects the blurb as basic_info.description, but the public listing and
-  // search read demo_club_data.club_description. Without this the approved page showed
-  // the club's own words while every card and search result still showed the scraped ones.
+  // club_description was already folded in and validated above; name and logo mirror
+  // what PUT /page syncs, so the public listing matches the approved page.
   const basic = safeModules.find((m) => m.type === 'basic_info')?.data;
   if (basic?.club_name?.trim()) details.club_name = basic.club_name.trim();
   if (basic?.logo_url) details.image_url = basic.logo_url;
-  if (basic?.description?.trim()) details.club_description = basic.description.trim();
 
   if (Object.keys(details).length) {
     // Not ignored: swallowing this would mark a page approved while its name, logo and

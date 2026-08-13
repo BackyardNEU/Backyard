@@ -22,7 +22,7 @@ export default function Basics({ wizard, clubId, clubName }) {
         setUploadError(null);
         try {
             const ext = (file.name.split('.').pop() || 'png').toLowerCase();
-            const { signedUrl, token, path } = await apiFetch('/storage/club-logo-upload-url', {
+            const { signedUrl, token, publicUrl } = await apiFetch('/storage/club-logo-upload-url', {
                 method: 'POST',
                 body: { club_id: clubId, ext },
             });
@@ -34,10 +34,16 @@ export default function Basics({ wizard, clubId, clubName }) {
             });
             if (!put.ok) throw new Error('Upload failed. Try a different image.');
 
-            const { publicUrl } = await apiFetch('/storage/verify-image', {
+            // Contract is { publicUrl } in, { ok, error } out — the same call
+            // ExpandedTile.jsx makes. Sending bucket/path instead produced a 400 on
+            // every upload, and the response carries no publicUrl to read back.
+            const verification = await apiFetch('/storage/verify-image', {
                 method: 'POST',
-                body: { bucket: 'club_logos', path, club_id: clubId },
+                body: { publicUrl },
             });
+            if (!verification.ok) {
+                throw new Error(verification.error || 'That image was rejected. Try another one.');
+            }
             // Functional update: an upload takes seconds, and reading the module here
             // would read the value captured at render, silently discarding anything typed
             // while it was in flight. The autosave would then persist the loss.

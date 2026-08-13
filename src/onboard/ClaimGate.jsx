@@ -40,6 +40,13 @@ export default function ClaimGate() {
     const redeem = async () => {
         setClaim('working');
         try {
+            // The main app creates the profiles row via AuthListener and the
+            // /profile-setup bounce, neither of which exists in this bundle. Without a
+            // row, addToMemberList updates zero rows and profiles.member_list — which
+            // clubEvents.js and events.js read — never learns about the club.
+            // POST /me/profile is an upsert keyed on the JWT, so this is safe to repeat.
+            await apiFetch('/me/profile', { method: 'POST', body: {} });
+
             const result = await apiFetch(`/invite/${token}/redeem`, { method: 'POST' });
             sessionStorage.removeItem('pendingClaimToken');
             setClaim(result);

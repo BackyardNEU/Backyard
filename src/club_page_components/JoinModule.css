@@ -50,7 +50,11 @@
 
 .join-tab-content {
   width: 90%;
-  
+  /* Bodies are typed in a plain textarea, so a blank line between "Meetings" and
+     "Where" is meaningful even though the field renders as HTML. Without this every
+     line break a club types collapses on the public page. */
+  white-space: pre-wrap;
+
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 1.5rem;
   line-height: 1.55;

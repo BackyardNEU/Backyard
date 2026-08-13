@@ -61,7 +61,10 @@ export function validateBasicInfo(data, { partial = false } = {}) {
     // logo_url was never checked, and PUT /page copies it into demo_club_data.image_url,
     // from which it is rendered as an <img src>. Restricting it to http(s) keeps
     // javascript: and data: URLs out of a column that is read back into markup.
-    if (data.logo_url && !isValidUrl(data.logo_url)) return 'The logo address is not a valid link.';
+    // ?. like its siblings. Without it, validateModules([{type:'basic_info'}], {partial})
+    // threw a TypeError and the draft-save path 500'd — reachable from the wizard the
+    // moment a module exists with no data yet.
+    if (data?.logo_url && !isValidUrl(data.logo_url)) return 'The logo address is not a valid link.';
     for (const l of (data?.links ?? [])) {
         if ((l.name ?? '').length > LIMITS.LINK_NAME_MAX) return 'Link names must be 15 characters or fewer.';
         if (l.url && !isValidUrl(l.url)) return 'One or more link URLs are invalid.';

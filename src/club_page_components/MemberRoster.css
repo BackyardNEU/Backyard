@@ -252,6 +252,9 @@
 }
 
 .mr-d-bio {
+  /* Bios come from a plain textarea in the onboarding wizard, so newlines carry
+     meaning even though the field renders as HTML. */
+  white-space: pre-wrap;
   margin-top: 16px;
   text-align: left;
   font-family: 'Barlow Condensed', sans-serif;

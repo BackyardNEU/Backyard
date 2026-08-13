@@ -88,6 +88,13 @@ describe('sanitizeBioHtml — XSS payloads', () => {
         expect(sanitizeBioHtml('1 < 2 && 3 > 2')).toBe('1 &lt; 2 &amp;&amp; 3 &gt; 2');
     });
 
+    // A '<' followed by a space is literal text, not a tag. Treating it as one consumed
+    // to the next '>' (or to the end of the string) and deleted everything after it.
+    it('does not swallow text after a "<" followed by a space', () => {
+        expect(sanitizeBioHtml('a < b always')).toBe('a &lt; b always');
+        expect(sanitizeBioHtml('under < 20 people show up')).toBe('under &lt; 20 people show up');
+    });
+
     it('drops comments, including conditional-comment tricks', () => {
         expect(sanitizeBioHtml('a<!-- <script>alert(1)</script> -->b')).toBe('ab');
     });

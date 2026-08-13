@@ -172,9 +172,42 @@ router.post('/invite/:token/redeem', requireAuth, async (req, res) => {
     return res.json({ joined: true, club_id: link.club_id, role, is_editor: false });
   }
 
-  // An invite must never displace a club's existing owner, so a second redeemer lands
-  // as moderator rather than taking top_moderator away from whoever holds it.
-  const targetRole = (await hasTopModerator(link.club_id)) ? 'moderator' : 'top_moderator';
+  // An invite must never displace a club's existing owner, so a second redeemer lands as
+  // moderator rather than taking top_moderator away from whoever holds it.
+  let targetRole;
+
+  if (link.link_type === 'onboarding') {
+    // The claim UPDATE is already conditional on status='unclaimed', so the database
+    // picks exactly one winner among concurrent redeems. Deciding the role from its
+    // result — rather than from a separate hasTopModerator() read — closes the window
+    // where two people opening a forwarded link at once both became owner.
+    const { data: claimed, error: claimError } = await supabaseAdmin
+      .from('club_onboarding')
+      .update({
+        status: 'claimed',
+        claimed_by: req.user.id,
+        claimed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('club_id', link.club_id)
+      .eq('status', 'unclaimed')
+      .select('club_id');
+
+    if (claimError) {
+      const err = new Error(claimError.message);
+      err.status = 502;
+      throw err;
+    }
+
+    // Won the claim → owner. Someone else already had it → editor alongside them.
+    // A club with no onboarding row at all falls back to the ownership check.
+    targetRole = (claimed?.length ?? 0) > 0
+      ? 'top_moderator'
+      : ((await hasTopModerator(link.club_id)) ? 'moderator' : 'top_moderator');
+  } else {
+    targetRole = (await hasTopModerator(link.club_id)) ? 'moderator' : 'top_moderator';
+  }
+
   const { role } = await grantClubRole(req.user.id, link.club_id, targetRole);
 
   const { error: approvalError } = await supabaseAdmin
@@ -184,20 +217,6 @@ router.post('/invite/:token/redeem', requireAuth, async (req, res) => {
     const err = new Error(approvalError.message);
     err.status = 502;
     throw err;
-  }
-
-  if (link.link_type === 'onboarding') {
-    // Conditional on status so a race cannot re-claim a club someone already claimed.
-    await supabaseAdmin
-      .from('club_onboarding')
-      .update({
-        status: 'claimed',
-        claimed_by: req.user.id,
-        claimed_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('club_id', link.club_id)
-      .eq('status', 'unclaimed');
   }
 
   res.json({
