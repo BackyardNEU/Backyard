@@ -120,13 +120,19 @@ router.post('/:clubId/members/me', requireAuth, async (req, res) => {
     return res.status(202).json({ status: 'requested' });
   }
 
-  // The comment above says the first person in becomes the owner, but admitMember
-  // hardcoded 'member', so they did not — leaving a request-only club with zero members
-  // permanently unjoinable, since nobody had the role needed to approve anyone.
+  // Scoped narrowly on purpose. The deadlock the comment above describes only exists for
+  // request-policy clubs: with zero members there is nobody holding the role needed to
+  // approve anyone, so the club can never be joined. Open clubs have no such problem.
+  //
+  // Granting ownership to the first joiner of ANY empty club would mean any student could
+  // claim every scraped, zero-member club on the platform — and scraped rows default to
+  // join_policy 'open' — so the condition has to match the justification exactly.
+  const firstIntoLockedClub = memberCount === 0 && club?.join_policy === 'request';
+
   const { role } = await grantClubRole(
     userId,
     clubId,
-    memberCount === 0 ? 'top_moderator' : 'member'
+    firstIntoLockedClub ? 'top_moderator' : 'member'
   );
   res.status(201).json({ role, status: 'joined' });
 });

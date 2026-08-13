@@ -76,15 +76,21 @@ router.put('/:clubId/onboarding/draft', requireAuth, checkMuted, async (req, res
   const patch = { ...(existing?.draft ?? {}) };
 
   if (modules !== undefined) {
-    const structure = validateModules(modules);
+    // Sanitize first, then validate what will actually be stored. Validating the raw
+    // input and storing the sanitized version lets a field pass a length check and then
+    // land empty — e.g. a body of only "<script>x</script>".
+    const safeModules = sanitizeModules(modules);
+    // partial: an autosave fires mid-typing, so unfilled fields are not errors here.
+    // Completeness is checked once, on submit.
+    const structure = validateModules(safeModules, { partial: true });
     if (!structure.valid) {
       return res.status(400).json({ error: structure.errors[0].message, errors: structure.errors });
     }
-    const textCheck = textModerator.checkFields(collectText(modules));
+    const textCheck = textModerator.checkFields(collectText(safeModules));
     if (!textCheck.clean) {
       return res.status(400).json({ error: textCheck.message, field: textCheck.field });
     }
-    patch.modules = sanitizeModules(modules);
+    patch.modules = safeModules;
   }
 
   if (details !== undefined) {

@@ -38,8 +38,12 @@ export default function Basics({ wizard, clubId, clubName }) {
                 method: 'POST',
                 body: { bucket: 'club_logos', path, club_id: clubId },
             });
-            // Cache-bust: the storage path is deterministic, so a replaced logo keeps its URL.
-            set({ logo_url: `${publicUrl}?v=${Date.now()}` });
+            // setModule reads current draft state itself, so this cannot revert edits made
+            // while the upload was in flight — `set` closes over the data from render.
+            wizard.setModule('basic_info', {
+                ...(wizard.getModule('basic_info') ?? {}),
+                logo_url: `${publicUrl}?v=${Date.now()}`,
+            });
         } catch (err) {
             setUploadError(err.message);
         } finally {

@@ -26,6 +26,7 @@ function makeBuilder(table) {
         eq: (k, v) => { state.filters.push([k, v]); return builder; },
         in: (k, v) => { state.filters.push([k, v]); return builder; },
         order: () => builder,
+        limit: resolve,
         single: resolve,
         maybeSingle: resolve,
         then: (onOk, onErr) => resolve().then(onOk, onErr),
@@ -136,13 +137,23 @@ describe('ROLE_RANK', () => {
 
 describe('hasTopModerator', () => {
     it('is true when the club already has an owner', async () => {
-        results['club_memberships.select'] = { data: { user_id: 'someone' }, error: null };
+        results['club_memberships.select'] = { data: [{ user_id: 'someone' }], error: null };
         await expect(hasTopModerator(CLUB)).resolves.toBe(true);
     });
 
     it('is false for a club with no owner', async () => {
-        results['club_memberships.select'] = { data: null, error: null };
+        results['club_memberships.select'] = { data: [], error: null };
         await expect(hasTopModerator(CLUB)).resolves.toBe(false);
+    });
+
+    // maybeSingle() errored on more than one row and the error was discarded, so two
+    // owners read as none — inverting the very check that stops an invite from
+    // displacing an existing owner.
+    it('is true when a club somehow has two owners', async () => {
+        results['club_memberships.select'] = {
+            data: [{ user_id: 'a' }, { user_id: 'b' }], error: null,
+        };
+        await expect(hasTopModerator(CLUB)).resolves.toBe(true);
     });
 });
 

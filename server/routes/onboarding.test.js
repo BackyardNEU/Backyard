@@ -129,13 +129,38 @@ describe('PUT /:clubId/onboarding/draft', () => {
         expect(calls.find((c) => c.op === 'upsert').row.status).toBe('claimed');
     });
 
-    it('rejects modules that fail structural validation', async () => {
+    // Half-typed input is the normal case for an autosave, so empty required fields must
+    // NOT be rejected here. Completeness is enforced once, at submit.
+    it('accepts a half-filled step', async () => {
         results['club_onboarding.select'] = { data: { status: 'claimed', draft: {} }, error: null };
+        results['club_onboarding.upsert'] = { data: { club_id: CLUB }, error: null };
 
         const res = await request(makeApp())
             .put(`/api/clubs/${CLUB}/onboarding/draft`)
             .set('x-test-user', USER)
             .send({ modules: [{ type: 'basic_info', data: { club_name: '', description: '' } }] });
+
+        expect(res.status).toBe(200);
+    });
+
+    it('still rejects input that breaks a limit', async () => {
+        results['club_onboarding.select'] = { data: { status: 'claimed', draft: {} }, error: null };
+
+        const res = await request(makeApp())
+            .put(`/api/clubs/${CLUB}/onboarding/draft`)
+            .set('x-test-user', USER)
+            .send({ modules: [{ type: 'basic_info', data: { club_name: 'x'.repeat(200) } }] });
+
+        expect(res.status).toBe(400);
+    });
+
+    it('still rejects an unknown module type', async () => {
+        results['club_onboarding.select'] = { data: { status: 'claimed', draft: {} }, error: null };
+
+        const res = await request(makeApp())
+            .put(`/api/clubs/${CLUB}/onboarding/draft`)
+            .set('x-test-user', USER)
+            .send({ modules: [{ type: 'evil_module', data: {} }] });
 
         expect(res.status).toBe(400);
     });

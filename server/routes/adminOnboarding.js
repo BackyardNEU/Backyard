@@ -295,7 +295,15 @@ router.post('/onboarding/:clubId/approve', async (req, res) => {
   if (basic?.logo_url) details.image_url = basic.logo_url;
 
   if (Object.keys(details).length) {
-    await supabaseAdmin.from('demo_club_data').update(details).eq('id', clubId);
+    // Not ignored: swallowing this would mark a page approved while its name, logo and
+    // description silently stayed as the scraped originals.
+    const { error: detailsError } = await supabaseAdmin
+      .from('demo_club_data').update(details).eq('id', clubId);
+    if (detailsError) {
+      const err = new Error(detailsError.message);
+      err.status = 502;
+      throw err;
+    }
   }
 
   const { data, error } = await supabaseAdmin
@@ -384,6 +392,19 @@ router.post('/onboarding/:clubId/unclaim', async (req, res) => {
       .delete()
       .eq('user_id', row.claimed_by)
       .eq('club_id', clubId);
+
+    // club_memberships is the modern table, but clubEvents.js and reviews.js still read
+    // profiles.member_list. Dropping only the membership would leave the wrong person
+    // able to see a private club's events.
+    const { data: profile } = await supabaseAdmin
+      .from('profiles').select('member_list').eq('id', row.claimed_by).single();
+    const list = profile?.member_list ?? [];
+    if (list.includes(clubId)) {
+      await supabaseAdmin
+        .from('profiles')
+        .update({ member_list: list.filter((c) => c !== clubId) })
+        .eq('id', row.claimed_by);
+    }
   }
 
   const { data, error } = await supabaseAdmin

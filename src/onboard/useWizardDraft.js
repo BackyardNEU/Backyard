@@ -55,13 +55,21 @@ export function useWizardDraft(clubId) {
     const flush = useCallback(async () => {
         if (!pending.current || !clubId) return;
         const payload = pending.current;
-        pending.current = null;
         setSaveState('saving');
         try {
             await apiFetch(`/clubs/${clubId}/onboarding/draft`, { method: 'PUT', body: payload });
+            // Cleared only on success. Clearing up front meant a dropped connection
+            // silently discarded whatever the club had just typed.
+            if (pending.current === payload) pending.current = null;
             if (alive.current) { setSaveState('saved'); setError(null); }
         } catch (err) {
             if (alive.current) { setSaveState('error'); setError(err.message); }
+            // Re-arm so a transient failure retries instead of stranding the draft.
+            if (alive.current && pending.current) {
+                if (timer.current) clearTimeout(timer.current);
+                timer.current = setTimeout(flush, AUTOSAVE_MS * 4);
+            }
+            throw err;
         }
     }, [clubId]);
 
@@ -101,13 +109,20 @@ export function useWizardDraft(clubId) {
 
     // Called before navigating between steps so a save is never left in the debounce
     // window when someone closes the tab.
+    // Rejects on failure. Callers that must not proceed on a stale draft — submitting,
+    // above all — need to know, rather than reading a resolved promise as success.
     const saveNow = useCallback(async () => {
         if (timer.current) clearTimeout(timer.current);
         await flush();
     }, [flush]);
 
+    // Moving between steps should not block on a save; the retry handles it.
+    const saveNowQuietly = useCallback(async () => {
+        try { await saveNow(); } catch { /* surfaced through saveState */ }
+    }, [saveNow]);
+
     return {
         draft, getModule, setModule, setDetails,
-        status, reviewNote, loading, saveState, error, saveNow, setStatus,
+        status, reviewNote, loading, saveState, error, saveNow, saveNowQuietly, setStatus,
     };
 }

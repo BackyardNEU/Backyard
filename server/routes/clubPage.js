@@ -231,15 +231,18 @@ router.put('/:clubId/page', requireAuth, checkMuted, async (req, res) => {
   // and PUT straight to their public page, publishing unreviewed content and defeating
   // the entire point of staging drafts in club_onboarding.
   //
-  // Only clubs actually in the outreach pipeline have a row here, so clubs that never
-  // went through it are unaffected.
+  // Scoped to clubs that have actually STARTED onboarding. Minting links seeds an
+  // 'unclaimed' row for every club in a batch — up to 500 at a time — including clubs
+  // that already have real moderators and a published page. Gating on "row exists"
+  // would have locked all of them out of their own page editor permanently.
   const { data: onboarding } = await supabaseAdmin
     .from('club_onboarding')
     .select('status')
     .eq('club_id', clubId)
     .maybeSingle();
 
-  if (onboarding && onboarding.status !== 'approved') {
+  const IN_PROGRESS = ['claimed', 'pending_review', 'changes_requested'];
+  if (onboarding && IN_PROGRESS.includes(onboarding.status)) {
     return res.status(409).json({
       error: 'Your page is still being set up. Finish it at your club setup link — we publish it once it has been reviewed.',
       status: onboarding.status,

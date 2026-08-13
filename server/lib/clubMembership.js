@@ -77,12 +77,31 @@ export async function grantClubRole(userId, clubId, role) {
         .from('club_memberships')
         .insert({ user_id: userId, club_id: clubId, role });
 
-    // 23505 = unique_violation. Two redeems racing each other must not surface a 502
-    // to someone who is, in fact, now a member.
-    if (insertError && insertError.code !== '23505') {
-        const err = new Error(insertError.message);
-        err.status = 502;
-        throw err;
+    // 23505 = unique_violation: a concurrent call inserted first. Surfacing a 502 to
+    // someone who is now a member would be wrong, but so would claiming we wrote a role
+    // we did not — re-read and report what actually landed.
+    //
+    // Re-read directly rather than recursing into grantClubRole: if the row still is not
+    // visible (or a stub returns the same error), recursion never terminates.
+    if (insertError) {
+        if (insertError.code !== '23505') {
+            const err = new Error(insertError.message);
+            err.status = 502;
+            throw err;
+        }
+
+        await addToMemberList(userId, clubId);
+
+        const { data: raced } = await supabaseAdmin
+            .from('club_memberships')
+            .select('role')
+            .eq('user_id', userId)
+            .eq('club_id', clubId)
+            .maybeSingle();
+
+        // Fall back to the requested role only when the row genuinely cannot be read —
+        // the insert did report a duplicate, so a membership exists either way.
+        return { role: raced?.role ?? role, changed: false };
     }
 
     await addToMemberList(userId, clubId);
@@ -94,14 +113,24 @@ export async function grantClubRole(userId, clubId, role) {
  * top_moderator or moderator — an invite must never displace an existing owner.
  */
 export async function hasTopModerator(clubId) {
-    const { data } = await supabaseAdmin
+    // limit(1) rather than maybeSingle(): maybeSingle errors when more than one row
+    // matches, and the error was being discarded — so a club with TWO owners read as
+    // having none, which is exactly backwards for a check whose job is to stop an
+    // invite from displacing an existing owner.
+    const { data, error } = await supabaseAdmin
         .from('club_memberships')
         .select('user_id')
         .eq('club_id', clubId)
         .eq('role', 'top_moderator')
-        .maybeSingle();
+        .limit(1);
 
-    return !!data;
+    if (error) {
+        const err = new Error(error.message);
+        err.status = 502;
+        throw err;
+    }
+
+    return (data?.length ?? 0) > 0;
 }
 
 /**

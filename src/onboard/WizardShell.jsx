@@ -42,7 +42,7 @@ export default function WizardShell({ clubId, clubName, clubLogo }) {
     const { Component } = step;
 
     const go = async (next) => {
-        await wizard.saveNow();
+        await wizard.saveNowQuietly();
         setIndex(next);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -51,6 +51,9 @@ export default function WizardShell({ clubId, clubName, clubLogo }) {
         setSubmitting(true);
         setSubmitError(null);
         try {
+            // Must not swallow this: submitting on a draft whose last save failed would
+            // send the reviewer a version the club never saw, and the wizard locks
+            // read-only afterwards so they could not fix it.
             await wizard.saveNow();
             await apiFetch(`/clubs/${clubId}/onboarding/submit`, { method: 'POST' });
             wizard.setStatus('pending_review');

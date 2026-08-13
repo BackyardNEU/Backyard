@@ -36,6 +36,10 @@ export const KNOWN_MODULE_TYPES = new Set([
     'faqs', 'stats', 'member_roster', 'calendar', 'comments',
 ]);
 
+// Available in every browser and in Node 11+, so one implementation serves both sides.
+const encoder = new TextEncoder();
+const utf8Bytes = (s) => encoder.encode(s).length;
+
 export const isValidUrl = (url) => {
     try {
         const u = new URL(url);
@@ -45,10 +49,15 @@ export const isValidUrl = (url) => {
     }
 };
 
-export function validateBasicInfo(data) {
-    if (!data?.club_name?.trim()) return 'Club name cannot be empty.';
-    if (data.club_name.trim().length > LIMITS.CLUB_NAME_MAX) return 'Club name must be 80 characters or fewer.';
-    if (!data?.description?.trim()) return 'Description cannot be empty.';
+// Every validator takes { partial }. A draft autosave fires while someone is still
+// typing, so "you have not filled this in yet" is not an error there — only "what you
+// typed is not allowed" is. Completeness is enforced once, at submit, by
+// shared/onboardingDraft.js. Without this split the wizard 400s on the first keystroke
+// of every step.
+export function validateBasicInfo(data, { partial = false } = {}) {
+    if (!partial && !data?.club_name?.trim()) return 'Club name cannot be empty.';
+    if ((data?.club_name ?? '').trim().length > LIMITS.CLUB_NAME_MAX) return 'Club name must be 80 characters or fewer.';
+    if (!partial && !data?.description?.trim()) return 'Description cannot be empty.';
     // logo_url was never checked, and PUT /page copies it into demo_club_data.image_url,
     // from which it is rendered as an <img src>. Restricting it to http(s) keeps
     // javascript: and data: URLs out of a column that is read back into markup.
@@ -68,28 +77,28 @@ export function validateLinks(basicInfoData) {
     return null;
 }
 
-export function validateJoin(data) {
+export function validateJoin(data, { partial = false } = {}) {
     const tabs = data?.tabs ?? [];
     if (tabs.length > LIMITS.MAX_TABS) return 'Too many tabs.';
     for (const tab of tabs) {
-        if (!tab.title?.trim()) return 'Each tab must have a title.';
-        if (tab.title.trim().length > LIMITS.TAB_TITLE_MAX) return 'Tab titles must be 60 characters or fewer.';
-        if (!tab.body?.trim()) return 'Each tab must have body text.';
-        if (tab.body.trim().length > LIMITS.TAB_BODY_MAX) return 'Tab body must be 500 characters or fewer.';
+        if (!partial && !tab.title?.trim()) return 'Each tab must have a title.';
+        if ((tab.title ?? '').trim().length > LIMITS.TAB_TITLE_MAX) return 'Tab titles must be 60 characters or fewer.';
+        if (!partial && !tab.body?.trim()) return 'Each tab must have body text.';
+        if ((tab.body ?? '').trim().length > LIMITS.TAB_BODY_MAX) return 'Tab body must be 500 characters or fewer.';
     }
     return null;
 }
 
-export function validateStats(data) {
+export function validateStats(data, { partial = false } = {}) {
     const stats = data?.stats ?? [];
     for (const s of stats) {
         if (s.value < 0) return 'Stat values cannot be negative.';
         if (s.value % 1 !== 0) return 'Stat value must be a whole number.';
         if (s.type === 'quantitative') {
-            if (!s.unit1?.trim()) return 'Each quantitative stat must have a unit.';
+            if (!partial && !s.unit1?.trim()) return 'Each quantitative stat must have a unit.';
         }
         if (s.type === 'qualitative') {
-            if (!s.label?.trim()) return 'Each qualitative stat must have a name.';
+            if (!partial && !s.label?.trim()) return 'Each qualitative stat must have a name.';
             const max = s.max ?? 10;
             if (max < 1) return 'Max must be at least 1.';
             if (s.value > max) return 'A stat value exceeds its max.';
@@ -99,28 +108,28 @@ export function validateStats(data) {
     return null;
 }
 
-export function validateFaq(data) {
+export function validateFaq(data, { partial = false } = {}) {
     const faqs = data?.faqs ?? [];
     if (faqs.length > LIMITS.MAX_FAQS) return 'Too many FAQs.';
     for (const f of faqs) {
-        if (!f.q?.trim()) return 'Each FAQ must have a question.';
-        if (f.q.trim().length > LIMITS.FAQ_Q_MAX) return 'FAQ questions must be 200 characters or fewer.';
+        if (!partial && !f.q?.trim()) return 'Each FAQ must have a question.';
+        if ((f.q ?? '').trim().length > LIMITS.FAQ_Q_MAX) return 'FAQ questions must be 200 characters or fewer.';
         if (f.a && f.a.length > LIMITS.FAQ_A_MAX) return 'FAQ answers must be 500 characters or fewer.';
     }
     return null;
 }
 
-export function validateMemberRoster(data) {
+export function validateMemberRoster(data, { partial = false } = {}) {
     const categories = data?.categories ?? [];
     const members = data?.members ?? [];
     if (members.length > LIMITS.MAX_MEMBERS) return 'Too many members.';
     for (const c of categories) {
-        if (!c?.trim()) return 'Category names cannot be empty.';
-        if (c.trim().length > LIMITS.CATEGORY_NAME_MAX) return 'Category names must be 25 characters or fewer.';
+        if (!partial && !c?.trim()) return 'Category names cannot be empty.';
+        if ((c ?? '').trim().length > LIMITS.CATEGORY_NAME_MAX) return 'Category names must be 25 characters or fewer.';
     }
     for (const m of members) {
-        if (!m.name?.trim()) return 'Each member must have a name.';
-        if (m.name.trim().length > LIMITS.MEMBER_NAME_MAX) return 'Member names must be 50 characters or fewer.';
+        if (!partial && !m.name?.trim()) return 'Each member must have a name.';
+        if ((m.name ?? '').trim().length > LIMITS.MEMBER_NAME_MAX) return 'Member names must be 50 characters or fewer.';
         // Measured on text, not markup, so formatting tags do not eat the budget.
         const bioText = (m.bio || '').replace(/<[^>]*>/g, '');
         if (bioText.length > LIMITS.MEMBER_BIO_MAX) return 'Member bios must be 500 characters or fewer.';
@@ -177,7 +186,7 @@ export function getModuleWarnings(draft) {
  * @param {unknown} modules
  * @returns {{ valid: boolean, errors: Array<{ module: string, message: string }> }}
  */
-export function validateModules(modules) {
+export function validateModules(modules, { partial = false } = {}) {
     const errors = [];
 
     if (!Array.isArray(modules)) {
@@ -195,7 +204,11 @@ export function validateModules(modules) {
         return { valid: false, errors: [{ module: '_root', message: 'modules could not be serialized.' }] };
     }
     // Byte length, not character count — multi-byte content still counts against the cap.
-    if (Buffer.byteLength(serialized, 'utf8') > LIMITS.MAX_SERIALIZED_BYTES) {
+    // TextEncoder rather than Buffer.byteLength: this module is imported by the wizard's
+    // Review step, and Buffer does not exist in the browser. It ended up in the shipped
+    // bundle, where it would have thrown on the final screen and stopped every club from
+    // submitting.
+    if (utf8Bytes(serialized) > LIMITS.MAX_SERIALIZED_BYTES) {
         errors.push({ module: '_root', message: 'Page content is too large.' });
     }
 
@@ -209,7 +222,7 @@ export function validateModules(modules) {
         }
         const message = type === 'links'
             ? validateLinks(basicInfo?.data)
-            : VALIDATORS[type]?.(m.data) ?? null;
+            : VALIDATORS[type]?.(m.data, { partial }) ?? null;
         if (message) errors.push({ module: type, message });
     }
 

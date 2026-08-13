@@ -28,6 +28,11 @@ CREATE TABLE IF NOT EXISTS club_invite_links (
   created_at   timestamptz NOT NULL DEFAULT now()
 );
 
+-- Nothing writes plaintext token any more. If the dashboard table declared it NOT NULL,
+-- every insert would fail the moment this migration lands, so the constraint has to go
+-- before 013 drops the column entirely.
+ALTER TABLE club_invite_links ALTER COLUMN token DROP NOT NULL;
+
 ALTER TABLE club_invite_links ADD COLUMN IF NOT EXISTS token_hash   text;
 ALTER TABLE club_invite_links ADD COLUMN IF NOT EXISTS token_prefix text;
 ALTER TABLE club_invite_links ADD COLUMN IF NOT EXISTS created_at   timestamptz NOT NULL DEFAULT now();
