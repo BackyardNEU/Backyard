@@ -7,6 +7,8 @@ import { identifyUser } from './middleware/requireAuth.js';
 import { ALLOWED_ORIGINS } from './lib/appUrls.js';
 
 import clubsRouter from './routes/clubs.js';
+import clubDetailsRouter from './routes/clubDetails.js';
+import onboardingRouter from './routes/onboarding.js';
 import searchRouter from './routes/search.js';
 import universitiesRouter from './routes/universities.js';
 import reviewsRouter from './routes/reviews.js';
@@ -113,6 +115,11 @@ app.use('/api/clubs', clubsRouter);
 app.use('/api/clubs', clubPageRouter);
 app.use('/api/clubs', questionsRouter);
 app.use('/api/clubs', clubEventsRouter);
+
+// Club onboarding. Draft saves are autosaved per wizard step, so the bucket is generous;
+// both are keyed by user id, since every route here is behind requireAuth.
+app.use('/api/clubs', limiter(120), onboardingRouter);
+app.use('/api/clubs', limiter(60), clubDetailsRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/universities', universitiesRouter);
 
