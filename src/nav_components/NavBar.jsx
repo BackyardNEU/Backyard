@@ -14,11 +14,13 @@ import clubsInactiveIcon from '../assets/Nav_bar_clubs_inactive.png';
 // Global, persistent nav bar: calendar/clubs view switches for UniversityPage,
 // plus the login/profile entry point (shares LoginMorph's layoutId="login" so
 // the icon-to-card morph animation still plays from this button).
-export function NavBar({ loginOpen, setLoginOpen }) {
+export function NavBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const GlobalValue = useGlobalStore((state) => state.GlobalValue);
   const calendarViewActive = useGlobalStore((state) => state.calendarViewActive);
+  const loginOpen = useGlobalStore((state) => state.loginOpen);
+  const setLoginOpen = useGlobalStore((state) => state.setLoginOpen);
   const [avatarUrl, setAvatarUrl] = useState(null);
 
   useEffect(() => {

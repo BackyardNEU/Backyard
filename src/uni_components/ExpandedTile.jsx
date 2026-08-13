@@ -250,6 +250,8 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const [clubEvents, setClubEvents] = useState(() => warmed?.events ?? []);
     const [clubMyRsvpSet, setClubMyRsvpSet] = useState(new Set());
     const [clubFriendRsvpMap, setClubFriendRsvpMap] = useState(new Map());
+    const [clubAttendeeMap, setClubAttendeeMap] = useState(new Map());
+    const [userProfile, setUserProfile] = useState(null);
     // club members (for comments module authorized/unauthorized tabs)
     const [clubMembers, setClubMembers] = useState(() => warmed?.members ?? []);
     // pending hide/show changes for comments — keyed by reviewId, only committed on Save
@@ -259,7 +261,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const [clubInterestsSaved, setClubInterestsSaved] = useState(null);
     const [clubInterestsDraft, setClubInterestsDraft] = useState(null);
 
-    const isMember = myRole !== null;
+    const isMember = myRole != null; // excludes both null and undefined
     const isApproved = myRole === 'moderator' || myRole === 'top_moderator';
     // Deliberately narrower than isApproved: changing who can get in is an ownership
     // decision, so a plain moderator does not get the toggle.
@@ -279,7 +281,9 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const id = club.id;
 
     const GlobalValue = useGlobalStore((state) => state.GlobalValue);
+    const setLoginOpen = useGlobalStore((state) => state.setLoginOpen);
     const liked = favoritesCache?.has(club.id) ?? false;
+    const [showJoinPrompt, setShowJoinPrompt] = useState(false);
 
     const handleHeartClick = async (e) => {
         e.stopPropagation();
@@ -324,6 +328,14 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     }, [handleClose]);
 
     const handleClick = () => {
+        if (!GlobalValue) {
+            setLoginOpen(true);
+            return;
+        }
+        if (!isMember) {
+            setShowJoinPrompt(true);
+            return;
+        }
         setIsOpen(!isOpen);
         setIsClicked(true);
         setTimeout(() => setIsClicked(false), 350);
@@ -333,8 +345,11 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
         if (!animationDone) return;
 
         async function fetchAll() {
-            const { data: { user: authUser } } = await supabase.auth.getUser();
-            setUser(authUser ?? null);
+            let authUser = null;
+            try {
+            const { data: { user: au } } = await supabase.auth.getUser();
+            authUser = au ?? null;
+            setUser(authUser);
 
             // Already rendered from the prefetch cache, so the five public requests would
             // be re-fetching what is on screen. Only the auth-dependent calls are left,
@@ -355,6 +370,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             const roleKnown = warmed && warmed.role !== undefined;
             const authFetches = authUser && !roleKnown ? [
                 apiFetch(`/clubs/${id}/is-approved`),
+                apiFetch('/me/profile'),
             ] : [];
 
             // Settled separately rather than as one concatenated array: publicFetches is
@@ -397,13 +413,19 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                         const friendIdSet = new Set((friendsArray || []).map((f) => f.id));
                         const friendProfileMap = new Map((friendsArray || []).map((f) => [f.id, f]));
                         const newFriendRsvpMap = new Map();
+                        const newAttendeeMap = new Map();
                         for (const rsvp of rsvpData) {
                             if (friendIdSet.has(rsvp.user_id)) {
                                 if (!newFriendRsvpMap.has(rsvp.event_id)) newFriendRsvpMap.set(rsvp.event_id, []);
                                 newFriendRsvpMap.get(rsvp.event_id).push(friendProfileMap.get(rsvp.user_id));
                             }
+                            if (!newAttendeeMap.has(rsvp.event_id)) newAttendeeMap.set(rsvp.event_id, { count: 0, attendees: [] });
+                            const entry = newAttendeeMap.get(rsvp.event_id);
+                            entry.count++;
+                            entry.attendees.push({ user_id: rsvp.user_id, username: rsvp.username, avatar_url: rsvp.avatar_url });
                         }
                         setClubFriendRsvpMap(newFriendRsvpMap);
+                        setClubAttendeeMap(newAttendeeMap);
                     } catch (err) {
                         console.error('Failed to fetch club RSVPs:', err);
                     }
@@ -503,9 +525,29 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             if (isCurrentlyGoing) {
                 await apiFetch(`/clubs/${id}/events/${eventId}/rsvp`, { method: 'DELETE' });
                 setClubMyRsvpSet((prev) => { const next = new Set(prev); next.delete(eventId); return next; });
+                setClubAttendeeMap((prev) => {
+                    const next = new Map(prev);
+                    const entry = next.get(eventId);
+                    if (entry) {
+                        next.set(eventId, {
+                            count: Math.max(0, entry.count - 1),
+                            attendees: entry.attendees.filter((a) => a.user_id !== user.id),
+                        });
+                    }
+                    return next;
+                });
             } else {
                 await apiFetch(`/clubs/${id}/events/${eventId}/rsvp`, { method: 'POST' });
                 setClubMyRsvpSet((prev) => new Set([...prev, eventId]));
+                setClubAttendeeMap((prev) => {
+                    const next = new Map(prev);
+                    const entry = next.get(eventId) ?? { count: 0, attendees: [] };
+                    next.set(eventId, {
+                        count: entry.count + 1,
+                        attendees: [...entry.attendees, { user_id: user.id, username: userProfile?.username ?? null, avatar_url: userProfile?.avatar_url ?? null }],
+                    });
+                    return next;
+                });
             }
         } catch (err) {
             console.error('RSVP failed:', err);
@@ -694,6 +736,18 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     // Action row rendered inside the basic_info module (between the banner and the About text)
     const actionRow = (
         <div className="exp-action-row">
+            {showJoinPrompt && !isMember && (
+                <div className="exp-join-prompt">
+                    Join this club to share your experience.
+                    <button
+                        className="exp-join-prompt-dismiss"
+                        aria-label="Dismiss"
+                        onClick={() => setShowJoinPrompt(false)}
+                    >
+                        ✕
+                    </button>
+                </div>
+            )}
             <div className="exp-action-row-inner">
                 {user && (
                     <div className="duo-btn-wrap">
@@ -1041,6 +1095,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                         events={clubEvents}
                         myRsvpSet={clubMyRsvpSet}
                         friendRsvpMap={clubFriendRsvpMap}
+                        attendeeMap={clubAttendeeMap}
                         onRsvp={handleClubRsvp}
                         userId={user?.id ?? null}
                     />
@@ -1059,6 +1114,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     onDeleteEvent={handleDeleteEvent}
                     myRsvpSet={clubMyRsvpSet}
                     friendRsvpMap={clubFriendRsvpMap}
+                    attendeeMap={clubAttendeeMap}
                     onRsvp={handleClubRsvp}
                     userId={user?.id ?? null}
                 />

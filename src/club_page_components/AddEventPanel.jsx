@@ -10,6 +10,7 @@ import EventPosterCropModal from './EventPosterCropModal';
 import PortraitTitle from '../uni_components/PortraitTitle';
 import '../uni_components/EventInfoRow.css';
 import './AddEventPanel.css';
+import './CalendarModule.css';
 
 const EMPTY_FORM = { eventName: '', start: '', end: '', where: '', description: '', membersOnly: false };
 
@@ -48,11 +49,13 @@ export default function AddEventPanel({
   onDeleteEvent,
   myRsvpSet = new Set(),
   friendRsvpMap = new Map(),
+  attendeeMap = new Map(),
   onRsvp,
   userId,
 }) {
   const imageInputRef = useRef(null);
 
+  const [attendeeModal, setAttendeeModal] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editingEventId, setEditingEventId] = useState(null);
   const [formData, setFormData] = useState(EMPTY_FORM);
@@ -512,14 +515,27 @@ export default function AddEventPanel({
                             : `${friends[0].username} and ${friends.length - 1} ${friends.length - 1 === 1 ? 'other' : 'others'} you know are going`}
                         </p>
                       )}
-                      {userId && (
-                        <button
-                          className={`rsvp-button${isGoing ? ' rsvp-going' : ''}`}
-                          onClick={() => onRsvp?.(event.id, isGoing)}
-                        >
-                          {isGoing ? 'Going ✓' : "I'm going!"}
-                        </button>
-                      )}
+                      <div className="cal-event-footer">
+                        {(() => {
+                          const evEntry = attendeeMap.get(event.id) ?? { count: 0, attendees: [] };
+                          return (
+                            <button
+                              className="cal-attendee-btn"
+                              onClick={() => setAttendeeModal({ event, ...evEntry })}
+                            >
+                              {evEntry.count} going
+                            </button>
+                          );
+                        })()}
+                        {userId && (
+                          <button
+                            className={`rsvp-button${isGoing ? ' rsvp-going' : ''}`}
+                            onClick={() => onRsvp?.(event.id, isGoing)}
+                          >
+                            {isGoing ? 'Going ✓' : "I'm going!"}
+                          </button>
+                        )}
+                      </div>
                       <div className="add-event-card-toggle-row">
                         <button
                           type="button"
@@ -558,6 +574,33 @@ export default function AddEventPanel({
           onCancel={() => setShowCropModal(false)}
           onConfirm={handleCropConfirm}
         />
+      )}
+
+      {attendeeModal && (
+        <div className="cal-attendee-backdrop" onClick={() => setAttendeeModal(null)}>
+          <div className="cal-attendee-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="cal-attendee-modal-header">
+              <span className="cal-attendee-modal-title">Who's going</span>
+              <button
+                className="cal-attendee-modal-close"
+                onClick={() => setAttendeeModal(null)}
+                aria-label="Close"
+              >✕</button>
+            </div>
+            {attendeeModal.attendees.length === 0 ? (
+              <p className="cal-attendee-empty">No one has RSVPd yet. Be the first!</p>
+            ) : (
+              <ul className="cal-attendee-list">
+                {attendeeModal.attendees.map((a, i) => (
+                  <li key={a.user_id ?? i} className="cal-attendee-item">
+                    <img className="cal-attendee-avatar" src={a.avatar_url || '/raccoon_pfp.png'} alt="" />
+                    <span className="cal-attendee-name">{a.username || '...'}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

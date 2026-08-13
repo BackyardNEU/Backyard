@@ -18,9 +18,11 @@ import AdminPage from './admin_components/AdminPage';
 import { ClubDataProvider } from './context/ClubDataProvider'
 import { SupportModal } from './support_components/SupportModal'
 import { DEFAULT_UNIVERSITY_PATH } from './lib/university'
+import { useGlobalStore } from './lib/store'
 
 function App() {
-  const [loginOpen, setLoginOpen] = useState(false);
+  const loginOpen = useGlobalStore((s) => s.loginOpen);
+  const setLoginOpen = useGlobalStore((s) => s.setLoginOpen);
   const [supportOpen, setSupportOpen] = useState(false);
   const location = useLocation();
 
@@ -36,7 +38,7 @@ function App() {
       <div className="App">
           <AuthListener />
           <LoginMorph open={loginOpen} setOpen={setLoginOpen} />
-          <NavBar loginOpen={loginOpen} setLoginOpen={setLoginOpen} />
+          <NavBar />
           <SupportModal open={supportOpen} setOpen={setSupportOpen} />
 
         <Routes>

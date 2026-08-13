@@ -15,11 +15,15 @@ export const useGlobalStore = create((set) => ({
   // component) to light up the calendar/clubs icon, since that view lives in
   // UniversityPage's own local state and isn't otherwise reachable from outside it.
   calendarViewActive: false,
+  // Login modal open state — in Zustand so deep components (e.g. ExpandedTile)
+  // can open it without prop drilling.
+  loginOpen: false,
 
   setGlobalValue: (newValue) => set({ GlobalValue: newValue }),
   setLastPath: (path) => set({ lastPath: path }),
   setUnreadCount: (count) => set({ unreadCount: count }),
   setCalendarViewActive: (value) => set({ calendarViewActive: value }),
+  setLoginOpen: (value) => set({ loginOpen: value }),
 }));
 
 /*

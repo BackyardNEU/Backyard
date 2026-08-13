@@ -378,3 +378,28 @@
   }
 }
 
+.exp-join-prompt {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 8px 12px;
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #5d4037;
+  box-sizing: border-box;
+}
+
+.exp-join-prompt-dismiss {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: #9e9e9e;
+  padding: 0 2px;
+  line-height: 1;
+}
+

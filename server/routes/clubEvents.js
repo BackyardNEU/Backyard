@@ -230,7 +230,24 @@ router.get('/:clubId/events/rsvps', requireAuth, async (req, res) => {
   }
 
   const blockedIds = await getBlockedIds(req.user.id);
-  res.json(filterBlocked(data, blockedIds, (r) => r.user_id));
+  const filtered = filterBlocked(data, blockedIds, (r) => r.user_id);
+
+  const userIds = [...new Set(filtered.map((r) => r.user_id))];
+  let profileMap = {};
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabaseAdmin
+      .from('profiles')
+      .select('id, username, avatar_url')
+      .in('id', userIds);
+    profileMap = Object.fromEntries((profiles || []).map((p) => [p.id, p]));
+  }
+
+  res.json(filtered.map((r) => ({
+    user_id: r.user_id,
+    event_id: r.event_id,
+    username: profileMap[r.user_id]?.username ?? null,
+    avatar_url: profileMap[r.user_id]?.avatar_url ?? null,
+  })));
 });
 
 // POST /api/clubs/:clubId/events/:eventId/rsvp — auth required

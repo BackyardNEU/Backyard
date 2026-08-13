@@ -31,10 +31,12 @@ export function CalendarModule({
   events = [],
   myRsvpSet = new Set(),
   friendRsvpMap = new Map(),
+  attendeeMap = new Map(),
   onRsvp,
   userId,
 }) {
   const [overlayEvent, setOverlayEvent] = useState(null);
+  const [attendeeModal, setAttendeeModal] = useState(null);
   const [overlayHasMore, setOverlayHasMore] = useState(false);
 
   // Which format "Add to calendar" uses, set in Settings. Read from the shared profile
@@ -83,6 +85,8 @@ export function CalendarModule({
             const friends = friendRsvpMap.get(event.id);
             const isGoing = myRsvpSet.has(event.id);
 
+            const attendeeEntry = attendeeMap.get(event.id) ?? { count: 0, attendees: [] };
+
             return (
               <div
                 key={event.id}
@@ -120,18 +124,64 @@ export function CalendarModule({
                         : `${friends[0].username} and ${friends.length - 1} ${friends.length - 1 === 1 ? 'other' : 'others'} you know are going`}
                     </p>
                   )}
-                  {userId && (
+                  <div className="cal-event-footer">
                     <button
-                      className={`rsvp-button${isGoing ? ' rsvp-going' : ''}`}
-                      onClick={(e) => { e.stopPropagation(); onRsvp?.(event.id, isGoing); }}
+                      className="cal-attendee-btn"
+                      onClick={(e) => { e.stopPropagation(); setAttendeeModal({ event, ...attendeeEntry }); }}
                     >
-                      {isGoing ? 'Going ✓' : "I'm going!"}
+                      {attendeeEntry.count} going
                     </button>
-                  )}
+                    {userId && (
+                      <button
+                        className={`rsvp-button${isGoing ? ' rsvp-going' : ''}`}
+                        onClick={(e) => { e.stopPropagation(); onRsvp?.(event.id, isGoing); }}
+                      >
+                        {isGoing ? 'Going ✓' : "I'm going!"}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Attendee count modal */}
+      {attendeeModal && (
+        <div
+          className="cal-attendee-backdrop"
+          onClick={() => setAttendeeModal(null)}
+        >
+          <div
+            className="cal-attendee-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="cal-attendee-modal-header">
+              <span className="cal-attendee-modal-title">Who's going</span>
+              <button
+                className="cal-attendee-modal-close"
+                onClick={() => setAttendeeModal(null)}
+                aria-label="Close"
+              >✕</button>
+            </div>
+            {attendeeModal.attendees.length === 0 ? (
+              <p className="cal-attendee-empty">No one has RSVPd yet. Be the first!</p>
+            ) : (
+              <ul className="cal-attendee-list">
+                {attendeeModal.attendees.map((a, i) => (
+                  <li key={a.user_id ?? i} className="cal-attendee-item">
+                    <img
+                      className="cal-attendee-avatar"
+                      src={a.avatar_url || '/raccoon_pfp.png'}
+                      alt=""
+                    />
+                    <span className="cal-attendee-name">{a.username || '...'}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       )}
 

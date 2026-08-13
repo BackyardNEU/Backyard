@@ -96,6 +96,22 @@ router.post('/', checkMuted, async (req, res) => {
         return res.status(400).json({ error: 'club_id required' });
     }
 
+    // Only club members may post reviews.
+    const { data: membership, error: membershipError } = await supabaseAdmin
+        .from('club_memberships')
+        .select('id')
+        .eq('club_id', patch.club_id)
+        .eq('user_id', req.user.id)
+        .maybeSingle();
+    if (membershipError) {
+        const err = new Error(membershipError.message);
+        err.status = 502;
+        throw err;
+    }
+    if (!membership) {
+        return res.status(403).json({ error: 'You must be a member of this club to post a review.' });
+    }
+
     const textCheck = textModerator.checkFields({
         review_text: patch.review_text,
         review_title: patch.review_title,

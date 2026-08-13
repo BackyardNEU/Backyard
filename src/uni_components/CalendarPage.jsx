@@ -345,9 +345,9 @@ export function CalendarPage({ onClose }) {
     return [...Array(offset).fill(null), ...Array.from({ length: totalDays }, (_, i) => i + 1)];
   }
 
-  function getDayClass(dayNum) {
-    const date = new Date(displayYear, displayMonth - 1, dayNum);
-    const hasEvents = monthlyEventsByDay.has(dayNum);
+  function getDayClass(year, month, dayNum, eventsByDay) {
+    const date = new Date(year, month - 1, dayNum);
+    const hasEvents = eventsByDay.has(dayNum);
     if (isBefore(date, todayDate)) return 'cal-day-past';
     if (isToday(date)) return hasEvents ? 'cal-day-today-events' : 'cal-day-today';
     return hasEvents ? 'cal-day-has-events' : 'cal-day-normal';

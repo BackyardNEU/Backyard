@@ -427,7 +427,6 @@ export function CommentCard({ review, userVote, onVote, onToggleHide, editing, c
 /* ── ReviewList (main export) ── */
 
 export default function ReviewList({ reviews, editing, members, hideDraft = {}, onToggleHide }) {
-    const [activeTab, setActiveTab] = useState(0); // 0 = Members, 1 = Others
     const [userVotes, setUserVotes] = useState({});
     const [reviewScores, setReviewScores] = useState({});
     const { userId } = useClubData();
@@ -485,9 +484,7 @@ export default function ReviewList({ reviews, editing, members, hideDraft = {}, 
     const visible = editing ? enriched : enriched.filter(r => !r._pendingHidden);
 
     const memberIds = useMemo(() => new Set((members || []).map(m => m.user_id)), [members]);
-    const authorizedReviews = visible.filter(r => memberIds.has(r.user_id));
-    const unauthorizedReviews = visible.filter(r => !memberIds.has(r.user_id));
-    const activeReviews = activeTab === 0 ? authorizedReviews : unauthorizedReviews;
+    const memberReviews = visible.filter(r => memberIds.has(r.user_id));
 
     return (
         <div className="review-item">
@@ -498,23 +495,9 @@ export default function ReviewList({ reviews, editing, members, hideDraft = {}, 
                 </p>
             )}
 
-            <div className="comment-tabs" role="tablist">
-                {['Members', 'Others'].map((label, i) => (
-                    <button
-                        key={label}
-                        role="tab"
-                        aria-selected={activeTab === i}
-                        className={`mr-cat-tab ${activeTab === i ? 'active' : ''}`}
-                        onClick={() => setActiveTab(i)}
-                    >
-                        {label}
-                    </button>
-                ))}
-            </div>
-
-            {activeReviews.length > 0 ? (
+            {memberReviews.length > 0 ? (
                 <div className="rl-comments-row">
-                    {activeReviews.map(review => (
+                    {memberReviews.map(review => (
                         <CommentCard
                             key={review.id}
                             review={review}
