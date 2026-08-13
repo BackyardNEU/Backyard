@@ -3,6 +3,7 @@ import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { checkMuted } from '../middleware/checkMuted.js';
 import { ImageModerator } from '../lib/imageModerator.js';
+import { requireModerator } from '../lib/clubPermissions.js';
 
 const router = express.Router();
 
@@ -84,18 +85,31 @@ router.post('/profile-photos-upload-url', async (req, res) => {
 router.post('/club-logo-upload-url', async (req, res) => {
     const clubId = req.body.club_id ?? req.body.clubId;
     if (!clubId) return res.status(400).json({ error: 'club_id is required' });
+
+    // This endpoint used to check only that club_id was PRESENT. Because the storage
+    // path is deterministic (`${clubId}.${ext}`) and upsert is enabled, any authenticated
+    // user could mint an upload URL for any club and overwrite its logo. The role check
+    // existed but only in verifyOwnership, which runs on the separate /verify-image call
+    // a client can simply skip.
+    await requireModerator(req.user.id, clubId);
+
     const ext = (req.body?.ext || 'webp').replace(/[^a-z0-9]/gi, '').slice(0, 8) || 'webp';
     const path = `${clubId}.${ext}`;
 
-    // Remove any existing logo regardless of extension so stale files don't accumulate.
+    // Deleting up front meant an abandoned upload left the club with no logo at all.
+    // The path is deterministic and upsert is enabled, so the same extension overwrites
+    // in place; only a CHANGED extension can strand the old file. Clean those up after
+    // the new URL is issued rather than before.
     const { data: existing } = await supabaseAdmin.storage
         .from('club_logos')
         .list('', { search: clubId });
-    if (existing?.length) {
-        await supabaseAdmin.storage.from('club_logos').remove(existing.map(f => f.name));
-    }
+    const stale = (existing ?? []).filter((f) => f.name !== path);
 
     await makeSignedUpload('club_logos', path, res, { upsertEnabled: true });
+
+    if (stale.length) {
+        await supabaseAdmin.storage.from('club_logos').remove(stale.map((f) => f.name));
+    }
 });
 
 router.post('/event-poster-upload-url', async (req, res) => {

@@ -30,6 +30,8 @@ const router = express.Router();
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { DEFAULT_MODULES } from '../../shared/clubPageDefaults.js';
+import { validateModules } from '../../shared/clubPageValidation.js';
+import { sanitizeModules } from '../../shared/sanitizeModules.js';
 
 // GET /api/clubs/:clubId/page
 // Public. Returns the club_page_data row (modules preset) for this club.
@@ -185,11 +187,26 @@ router.put('/:clubId/page', requireAuth, checkMuted, async (req, res) => {
     return res.status(400).json({ error: 'modules must be an array' });
   }
 
+  // Structural validation used to be client-only (ExpandedTile.jsx), so calling this
+  // endpoint directly bypassed every length cap, URL check and count limit.
+  const structure = validateModules(modules);
+  if (!structure.valid) {
+    return res.status(400).json({
+      error: structure.errors[0].message,
+      field: structure.errors[0].module,
+      errors: structure.errors,
+    });
+  }
+
   const moduleTexts = extractModuleText(modules);
   const textCheck = textModerator.checkFields(moduleTexts);
   if (!textCheck.clean) {
     return res.status(400).json({ error: textCheck.message, field: textCheck.field });
   }
+
+  // Strip anything but formatting tags from the two rich-text fields before storing.
+  // Client-side sanitizing is UX; this is the layer curl cannot skip.
+  const safeModules = sanitizeModules(modules);
 
   // Verify moderator or top_moderator role.
   const { data: membership, error: approvalError } = await supabaseAdmin
@@ -212,7 +229,7 @@ router.put('/:clubId/page', requireAuth, checkMuted, async (req, res) => {
   const { data, error } = await supabaseAdmin
     .from('club_page_data')
     .upsert(
-      { club_id: clubId, modules, updated_at: new Date().toISOString() },
+      { club_id: clubId, modules: safeModules, updated_at: new Date().toISOString() },
       { onConflict: 'club_id' }
     )
     .select()
@@ -226,7 +243,7 @@ router.put('/:clubId/page', requireAuth, checkMuted, async (req, res) => {
 
   // Sync club_name and image_url back to demo_club_data so the main club listing
   // reflects edits made in the page editor.
-  const basicInfo = modules.find(m => m.type === 'basic_info')?.data;
+  const basicInfo = safeModules.find(m => m.type === 'basic_info')?.data;
   if (basicInfo) {
     const syncFields = {};
     if (basicInfo.club_name?.trim()) syncFields.club_name = basicInfo.club_name.trim();
