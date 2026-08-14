@@ -141,9 +141,10 @@ export default function Select({ value, onChange, options, placeholder = 'Choose
                             role="option"
                             aria-selected={o.value === value}
                             className={`ob-dd-option${i === active ? ' is-active' : ''}`}
-                            // mousedown, not click: the document listener that closes the
-                            // list also fires on mousedown, and would beat a click here.
-                            onMouseDown={(e) => { e.preventDefault(); choose(i); }}
+                            // The list renders inside rootRef, and the outside-click
+                            // handler ignores anything it contains, so a plain click is
+                            // safe here and does not need intercepting.
+                            onClick={() => choose(i)}
                             onMouseEnter={() => setActive(i)}
                         >
                             {o.label}
