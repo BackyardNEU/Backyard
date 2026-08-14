@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabase'
 import { apiFetch } from '../lib/api'
 import { useGlobalStore } from '../lib/store'
 import './ProfilePage.css'
-import imageCompression from 'browser-image-compression'
 import { ClubMembershipPanel } from './ClubMembershipPanel'
 import { FriendDiscoveryList } from './FriendDiscoveryList'
 import { PolaroidCards } from './PolaroidCards'
@@ -29,25 +28,9 @@ export const ProfilePage = () => {
   // copies of the same request.
   const { profile, setProfile, loading } = useClubData()
   useDocumentTitle('Backyard | Profile')
-  // These two were written as `const setStatus = useState('idle')`, which binds the whole
-  // [value, setter] tuple to the name — so calling setStatus('compressing') called an
-  // array and threw, killing avatar upload from this page before it started. Neither
-  // value is rendered, so the value half stays discarded.
-  const [, setStatus] = useState('idle')
-  const [preview, setPreview]   = useState(null)
-  const [, setImageUrl] = useState(null)
-  //const inputRef = useRef(null)
-
-  const BUCKET = 'profile_images'
-  const TABLE  = 'profiles'
-  const URL_COL = 'avatar_url'
-
-  const COMPRESSION_OPTIONS = {
-    maxSizeMB: 0.2,
-    maxWidthOrHeight: 400,
-    useWebWorker: true,
-    fileType: 'image/webp',
-  }
+  const [preview, setPreview] = useState(null)
+  const [avatarError, setAvatarError] = useState('')
+  const [avatarUploading, setAvatarUploading] = useState(false)
 
   useEffect(() => {
     async function loadUser() {
@@ -88,53 +71,69 @@ export const ProfilePage = () => {
 
   async function handleAvatarUpload(event) {
     const file = event.target.files[0];
-    if (!file) return; //eventually add error checker to see if file is an image and not too big
-    else {
-      setPreview(URL.createObjectURL(file))
-      //compresses the image
-      try {
-        setStatus('compressing')
-        const compressed = await imageCompression(file, COMPRESSION_OPTIONS)
+    if (!file) return;
 
-        setStatus('uploading')
+    const validity = await new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const ratio = img.naturalWidth / img.naturalHeight;
+        resolve(ratio >= 0.25 && ratio <= 4.0 ? 'ok' : 'proportions');
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve('load'); };
+      img.src = url;
+    });
 
-        // Two-step signed upload: backend picks the path (always `<userId>.webp` for
-        // avatars, so re-uploads overwrite the previous file) and returns a signed PUT
-        // URL plus the public URL we'll save in the profile row.
-        const { signedUrl, publicUrl } = await apiFetch('/storage/profile-upload-url', {
-          method: 'POST',
-        });
-
-        const putRes = await fetch(signedUrl, {
-          method: 'PUT',
-          body: compressed,
-          headers: { 'Content-Type': 'image/webp' },
-        });
-        if (!putRes.ok) throw new Error(`Upload failed (${putRes.status})`);
-
-        const verification = await apiFetch('/storage/verify-image', {
-          method: 'POST',
-          body: { publicUrl },
-        });
-        if (!verification.ok) {
-          throw new Error(verification.error || 'Avatar rejected by content policy');
-        }
-
-        await apiFetch('/me/profile', {
-          method: 'PUT',
-          body: { [URL_COL]: publicUrl },
-        });
-
-        setProfile({ [URL_COL]: publicUrl })
-        setImageUrl(publicUrl)
-        setStatus('success')
+    if (validity === 'load') {
+      setAvatarError('Image upload unsuccessful. Please try a different file.');
+      return;
     }
-    catch (error) {
-      console.error('Error uploading avatar:', error);
-      setStatus('error');
+    if (validity === 'proportions') {
+      setAvatarError('Image has unusual proportions. Please use an aspect ratio between 1:4 and 4:1.');
+      return;
+    }
+
+    setAvatarError('');
+    setPreview(URL.createObjectURL(file));
+    setAvatarUploading(true);
+
+    try {
+      const ext = (file.type.split('/')[1] || 'jpg').replace(/[^a-z0-9]/gi, '');
+      const { signedUrl, publicUrl } = await apiFetch('/storage/profile-upload-url', {
+        method: 'POST',
+        body: { ext },
+      });
+
+      const putRes = await fetch(signedUrl, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type },
+      });
+      if (!putRes.ok) throw new Error(`Upload failed (${putRes.status})`);
+
+      const verification = await apiFetch('/storage/verify-image', {
+        method: 'POST',
+        body: { publicUrl, skipScan: true },
+      });
+      if (!verification.ok) throw new Error(verification.error || 'Image rejected');
+
+      const cacheBustedUrl = `${publicUrl}?t=${Date.now()}`;
+
+      await apiFetch('/me/profile', {
+        method: 'PUT',
+        body: { avatar_url: cacheBustedUrl },
+      });
+
+      setProfile({ avatar_url: cacheBustedUrl });
+    } catch (err) {
+      console.error('Error uploading avatar:', err);
+      setAvatarError(err.message || 'Upload failed. Please try again.');
+      setPreview(null);
+    } finally {
+      setAvatarUploading(false);
     }
   }
-}
 
   const profileDescription = profile?.biography ?? ''
 
@@ -166,21 +165,21 @@ export const ProfilePage = () => {
         {interestsOpen && <InterestsModal onClose={() => setInterestsOpen(false)} />}
         <div className='spacer' />
         <div className='profile-header'>
-          <label htmlFor="avatar-upload" className="profile-photo-btn">
-            {/* Had no fallback at all: with no avatar_url the src was undefined, React
-                dropped the attribute, and the browser rendered a broken image — which
-                collapsed to almost nothing and dragged the whole header out of place.
-                Avatar shows initials instead. */}
-            <Avatar
-              url={preview || profile?.avatar_url}
-              firstName={profile?.first_name}
-              lastName={profile?.last_name}
-              username={profile?.username}
-              className="profile-image"
-              alt="Your profile photo"
-            />
-          </label>
-          <input type="file" accept="image/*" id="avatar-upload" hidden onChange={handleAvatarUpload} />
+          <div className="avatar-upload-wrap">
+            <label htmlFor="avatar-upload" className="profile-photo-btn">
+              <Avatar
+                url={preview || profile?.avatar_url}
+                firstName={profile?.first_name}
+                lastName={profile?.last_name}
+                username={profile?.username}
+                className="profile-image"
+                alt="Your profile photo"
+              />
+            </label>
+            <input type="file" accept="image/*" id="avatar-upload" hidden onChange={handleAvatarUpload} disabled={avatarUploading} />
+            {avatarUploading && <p className="avatar-status">Saving…</p>}
+            {avatarError && <p className="avatar-error">{avatarError}</p>}
+          </div>
           <div className="profile-copy">
             <h1 className='ProfileName'>Hello, {profile?.username}</h1>
             <p className="user-description">{profileDescription}</p>

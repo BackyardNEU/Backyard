@@ -57,12 +57,26 @@ async function makeSignedUpload(bucket, path, res, options = {}) {
     });
 }
 
-// Profile avatars: deterministic filename per user (matches existing pattern
-// in ProfilePage.jsx), so re-uploads overwrite. The user can only ever
-// generate URLs for their own avatar — the server picks the path.
+// Profile avatars: deterministic filename per user so re-uploads overwrite.
+// Extension is preserved from the original file (same pattern as club logos).
+// We delete any existing avatar first because Supabase's upsertEnabled on
+// createSignedUploadUrl can still throw "resource already exists" in practice.
 router.post('/profile-upload-url', async (req, res) => {
-    const path = `${req.user.id}.webp`;
-    await makeSignedUpload('profile_images', path, res, { upsertEnabled: true });
+    const ext = (req.body?.ext || 'jpg').replace(/[^a-z0-9]/gi, '').slice(0, 8) || 'jpg';
+    const newPath = `${req.user.id}.${ext}`;
+
+    // Purge all existing avatar files for this user regardless of extension.
+    const { data: listed } = await supabaseAdmin.storage
+        .from('profile_images')
+        .list('', { search: req.user.id });
+    const toRemove = (listed || [])
+        .filter(f => f.name.startsWith(`${req.user.id}.`))
+        .map(f => f.name);
+    if (toRemove.length) {
+        await supabaseAdmin.storage.from('profile_images').remove(toRemove);
+    }
+
+    await makeSignedUpload('profile_images', newPath, res, { upsertEnabled: true });
 });
 
 // Review images: many per user, so we randomize. Namespace under the user's
@@ -205,9 +219,13 @@ router.post('/verify-image', async (req, res) => {
         return res.status(400).json({ ok: false, error: 'File is not a valid image' });
     }
 
+    // Caller can opt out of the Cloud Vision scan (e.g. profile avatars where the
+    // content-type check alone is sufficient and the API key may not be configured).
+    const skipScan = req.body?.skipScan === true;
+
     // Fails open rather than blocking uploads outright, but flags the response so the
     // gap is visible rather than looking identical to a passing scan.
-    if (!imageModerator) {
+    if (!imageModerator || skipScan) {
         return res.json({ ok: true, scanned: false });
     }
 
