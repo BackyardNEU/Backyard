@@ -83,11 +83,17 @@ router.post('/:clubId/page/init', requireAuth, async (req, res) => {
   // Third door into club_page_data, and it needed the same gate as PUT /page and
   // PUT /details: a claimant blocked from those could otherwise publish the placeholder
   // default page to the public table just by calling this.
-  const { data: initOnboarding } = await supabaseAdmin
+  const { data: initOnboarding, error: initOnboardingError } = await supabaseAdmin
     .from('club_onboarding')
     .select('status')
     .eq('club_id', clubId)
     .maybeSingle();
+
+  if (initOnboardingError) {
+    const err = new Error(initOnboardingError.message);
+    err.status = 502;
+    throw err;
+  }
 
   if (initOnboarding && ONBOARDING_IN_PROGRESS.includes(initOnboarding.status)) {
     return res.status(409).json({
@@ -194,9 +200,9 @@ function extractModuleText(modules) {
 }
 
 // PUT /api/clubs/:clubId/page
-// Authenticated. Approved club account only.
+// Authenticated. Moderators only.
 // Upserts the modules array for this club's page.
-router.put('/:clubId/page', requireAuth, checkMuted, async (req, res) => {
+router.put('/:clubId/page', writeLimiter, requireAuth, checkMuted, async (req, res) => {
   const { clubId } = req.params;
   const { modules } = req.body;
 
@@ -204,28 +210,9 @@ router.put('/:clubId/page', requireAuth, checkMuted, async (req, res) => {
     return res.status(400).json({ error: 'modules must be an array' });
   }
 
-  // Structural validation used to be client-only (ExpandedTile.jsx), so calling this
-  // endpoint directly bypassed every length cap, URL check and count limit.
-  const structure = validateModules(modules);
-  if (!structure.valid) {
-    return res.status(400).json({
-      error: structure.errors[0].message,
-      field: structure.errors[0].module,
-      errors: structure.errors,
-    });
-  }
-
-  const moduleTexts = extractModuleText(modules);
-  const textCheck = textModerator.checkFields(moduleTexts);
-  if (!textCheck.clean) {
-    return res.status(400).json({ error: textCheck.message, field: textCheck.field });
-  }
-
-  // Strip anything but formatting tags from the two rich-text fields before storing.
-  // Client-side sanitizing is UX; this is the layer curl cannot skip.
-  const safeModules = sanitizeModules(modules);
-
-  // Verify moderator or top_moderator role.
+  // Auth before validation and moderation: any authenticated user can call this endpoint
+  // with an arbitrary clubId. Running the full validation + text moderation pass first
+  // lets a non-member burn compute (and metered Cloud Vision quota) before hitting 403.
   const { data: membership, error: approvalError } = await supabaseAdmin
     .from('club_memberships')
     .select('role')
@@ -252,11 +239,17 @@ router.put('/:clubId/page', requireAuth, checkMuted, async (req, res) => {
   // 'unclaimed' row for every club in a batch — up to 500 at a time — including clubs
   // that already have real moderators and a published page. Gating on "row exists"
   // would have locked all of them out of their own page editor permanently.
-  const { data: onboarding } = await supabaseAdmin
+  const { data: onboarding, error: onboardingError } = await supabaseAdmin
     .from('club_onboarding')
     .select('status')
     .eq('club_id', clubId)
     .maybeSingle();
+
+  if (onboardingError) {
+    const err = new Error(onboardingError.message);
+    err.status = 502;
+    throw err;
+  }
 
   if (onboarding && ONBOARDING_IN_PROGRESS.includes(onboarding.status)) {
     return res.status(409).json({
@@ -264,6 +257,27 @@ router.put('/:clubId/page', requireAuth, checkMuted, async (req, res) => {
       status: onboarding.status,
     });
   }
+
+  // Structural validation used to be client-only (ExpandedTile.jsx), so calling this
+  // endpoint directly bypassed every length cap, URL check and count limit.
+  const structure = validateModules(modules);
+  if (!structure.valid) {
+    return res.status(400).json({
+      error: structure.errors[0].message,
+      field: structure.errors[0].module,
+      errors: structure.errors,
+    });
+  }
+
+  const moduleTexts = extractModuleText(modules);
+  const textCheck = textModerator.checkFields(moduleTexts);
+  if (!textCheck.clean) {
+    return res.status(400).json({ error: textCheck.message, field: textCheck.field });
+  }
+
+  // Strip anything but formatting tags from the two rich-text fields before storing.
+  // Client-side sanitizing is UX; this is the layer curl cannot skip.
+  const safeModules = sanitizeModules(modules);
 
   const { data, error } = await supabaseAdmin
     .from('club_page_data')
