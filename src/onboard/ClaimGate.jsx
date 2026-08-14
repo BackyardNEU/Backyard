@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { apiFetch } from '../lib/api';
 import Form from '../login_components/form';
 import WizardShell from './WizardShell.jsx';
+import wordmark from '../assets/BackyardOnBoardHeader.png';
 
 /**
  * Everything before the wizard: resolve the token, show the club it belongs to, get the
@@ -220,7 +221,9 @@ function Page({ children, clubName }) {
     return (
         <div className="ob-page">
             <header className="ob-brand">
-                <h1 className="ob-wordmark">Backyard</h1>
+                <h1 className="ob-wordmark">
+                    <img src={wordmark} alt="Backyard" />
+                </h1>
                 {clubName && <span className="ob-club-tag">{clubName}</span>}
             </header>
             {children}

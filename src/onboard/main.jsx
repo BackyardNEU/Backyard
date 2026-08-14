@@ -29,7 +29,7 @@ import('./OnboardApp.jsx')
         root.render(
             <div className="ob-page">
                 <header className="ob-brand">
-                    <h1 className="ob-wordmark">Backyard</h1>
+                    <h1 className="ob-wordmark ob-wordmark--text">Backyard</h1>
                 </header>
                 <div className="ob-card ob-card--narrow ob-centered">
                     <h2 className="ob-h1">We couldn&apos;t load the page</h2>

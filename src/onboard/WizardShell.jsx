@@ -7,6 +7,7 @@ import Faqs from './steps/Faqs.jsx';
 import People from './steps/People.jsx';
 import Stats from './steps/Stats.jsx';
 import Review from './steps/Review.jsx';
+import wordmark from '../assets/BackyardOnBoardHeader.png';
 
 const STEPS = [
     { key: 'basics', name: 'Basics', Component: Basics },
@@ -159,7 +160,9 @@ function Page({ children, clubName, clubLogo }) {
     return (
         <div className="ob-page">
             <header className="ob-brand">
-                <h1 className="ob-wordmark">Backyard</h1>
+                <h1 className="ob-wordmark">
+                    <img src={wordmark} alt="Backyard" />
+                </h1>
                 <span className="ob-club-tag">
                     {clubLogo && (
                         <img

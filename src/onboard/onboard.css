@@ -62,23 +62,47 @@ body::before {
   padding: clamp(16px, 4vw, 48px) clamp(12px, 3vw, 32px) 64px;
 }
 
+/* Full-bleed rather than sharing the card's 980px column, so the logo sits in the
+ * page's actual top-left corner instead of floating in from it. The club name stays
+ * pinned to the opposite corner. */
 .ob-brand {
-  width: 100%;
-  max-width: 980px;
+  position: absolute;
+  top: clamp(16px, 3vw, 32px);
+  left: clamp(16px, 3vw, 36px);
+  right: clamp(16px, 3vw, 36px);
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: clamp(14px, 2vw, 24px);
 }
 
+/* The header is out of flow now, so the card needs room to clear it. */
+.ob-page { padding-top: clamp(78px, 11vw, 132px); }
+
 .ob-wordmark {
+  margin: 0;
+  line-height: 0;
+}
+
+.ob-wordmark img {
+  display: block;
+  height: clamp(26px, 3.4vw, 40px);
+  width: auto;
+}
+
+/* Fallback for the text version, kept so the header still reads if the image is ever
+   missing rather than collapsing to nothing. */
+.ob-wordmark--text {
   font-family: var(--font-display);
   font-size: clamp(22px, 2.6vw, 30px);
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  margin: 0;
+  line-height: 1.1;
+}
+
+@media (max-width: 560px) {
+  .ob-club-tag { display: none; }
 }
 
 .ob-club-tag {
