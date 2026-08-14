@@ -78,16 +78,31 @@ export default function Basics({ wizard, clubId, clubName }) {
                 label="Club Logo"
                 hint="Square images look best. PNG, JPG or WebP, up to about 5 MB."
             >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
                     {data.logo_url
                         ? <img className="ob-logo-preview" src={data.logo_url} alt="Your club logo" />
                         : <div className="ob-logo-preview" aria-hidden="true" />}
-                    <input
-                        type="file"
-                        accept="image/png,image/jpeg,image/webp"
-                        onChange={(e) => uploadLogo(e.target.files?.[0])}
-                        disabled={uploading}
-                    />
+                    <div>
+                        <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp"
+                            onChange={(e) => uploadLogo(e.target.files?.[0])}
+                            disabled={uploading}
+                        />
+                        {data.logo_url && (
+                            <div>
+                                <button
+                                    type="button"
+                                    className="ob-remove-image"
+                                    onClick={() => wizard.setModule('basic_info', (current) => ({
+                                        ...current, logo_url: '',
+                                    }))}
+                                >
+                                    Remove this image
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </FieldGroup>
             {uploading && <p className="ob-hint">Uploading…</p>}

@@ -523,6 +523,97 @@ body::before {
 /* Form-level messages inherit the app's own colours; keep them on-palette here. */
 .ob-auth .form-error { color: var(--crimson); }
 
+
+/* ── Category and subcategory picker ──────────────────────────────────── */
+
+/* Native selects render differently on every platform and none of them match the paper
+   look, so the arrow is drawn here and the browser's is removed. */
+.ob-select-wrap { position: relative; }
+
+.ob-select-wrap::after {
+  content: '';
+  position: absolute;
+  right: 14px; top: 50%;
+  width: 8px; height: 8px;
+  border-right: 2px solid var(--ink-soft);
+  border-bottom: 2px solid var(--ink-soft);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+
+.ob-select {
+  appearance: none;
+  padding-right: 38px;
+  cursor: pointer;
+}
+
+.ob-select:disabled { color: var(--ink-soft); cursor: default; }
+
+.ob-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.ob-chips--picked { margin-bottom: 2px; }
+
+.ob-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+/* Suggestions are buttons, and look like buttons, so it is obvious they can be tapped
+   rather than being decorative labels. */
+.ob-chip--suggest {
+  border: 1.5px dashed var(--rule);
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.ob-chip--suggest:hover { border-style: solid; border-color: var(--crimson); color: var(--crimson); }
+.ob-chip--suggest:focus-visible { outline: 3px solid var(--crimson-lift); outline-offset: 2px; }
+
+/* Chosen ones are solid, so the difference between picked and available is legible at a
+   glance and not just from position. */
+.ob-chip--picked {
+  border: 1.5px solid var(--crimson);
+  background: rgba(197, 59, 63, 0.1);
+  color: var(--crimson);
+  font-weight: 600;
+}
+
+.ob-chip-x {
+  border: none;
+  background: none;
+  padding: 0;
+  color: inherit;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ob-chip-x:hover { opacity: 0.65; }
+
+.ob-sub-entry { display: flex; gap: 8px; align-items: stretch; margin-top: 8px; }
+.ob-sub-entry .ob-input { flex: 1; min-width: 0; }
+.ob-sub-add { flex: none; white-space: nowrap; }
+.ob-sub-add:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Sits under the logo preview. */
+.ob-remove-image {
+  border: none;
+  background: none;
+  padding: 0;
+  margin-top: 6px;
+  color: var(--crimson);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 /* ── The signature: a filing stamp ────────────────────────────────────── */
 /* Submitting is the one moment worth marking. Everything else on the page stays
    quiet so this lands. */
