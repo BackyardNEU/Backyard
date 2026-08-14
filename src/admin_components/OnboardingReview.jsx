@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '../lib/api';
 import DraftPreview from './DraftPreview';
 import ClubLinkTable from './ClubLinkTable';
+import { normalizeUrl } from '../../shared/clubPageValidation.js';
 
 /**
  * Review queue for club pages submitted through the onboarding wizard.
@@ -294,6 +295,65 @@ export default function OnboardingReview() {
                                         onChange={(e) => editModule('basic_info', { description: e.target.value })}
                                     />
                                 ) : <p style={s.pre}>{basic.description || '(empty)'}</p>}
+
+                                <div style={{ ...s.key, marginTop: 12 }}>Links</div>
+                                {edit ? (
+                                    <>
+                                        {(editBasic.links ?? []).map((l, i) => (
+                                            <div key={i} style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+                                                <input
+                                                    style={{ ...s.editIn, flex: '0 0 130px' }}
+                                                    value={l.name ?? ''}
+                                                    placeholder="Label"
+                                                    onChange={(e) => editModule('basic_info', {
+                                                        links: editBasic.links.map((x, j) => j === i ? { ...x, name: e.target.value } : x),
+                                                    })}
+                                                />
+                                                <input
+                                                    style={s.editIn}
+                                                    value={l.url ?? ''}
+                                                    placeholder="instagram.com/theirclub"
+                                                    onChange={(e) => editModule('basic_info', {
+                                                        links: editBasic.links.map((x, j) => j === i ? { ...x, url: e.target.value } : x),
+                                                    })}
+                                                    // Same tidy-on-blur the wizard does, so a
+                                                    // reviewer typing a bare domain does not hit
+                                                    // the validation error the club just hit.
+                                                    onBlur={(e) => {
+                                                        const tidy = normalizeUrl(e.target.value);
+                                                        if (tidy && tidy !== l.url) {
+                                                            editModule('basic_info', {
+                                                                links: editBasic.links.map((x, j) => j === i ? { ...x, url: tidy } : x),
+                                                            });
+                                                        }
+                                                    }}
+                                                />
+                                                <button
+                                                    style={s.btn}
+                                                    onClick={() => editModule('basic_info', {
+                                                        links: editBasic.links.filter((_, j) => j !== i),
+                                                    })}
+                                                >
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        ))}
+                                        <button
+                                            style={s.btn}
+                                            onClick={() => editModule('basic_info', {
+                                                links: [...(editBasic.links ?? []), { name: '', url: '' }],
+                                            })}
+                                        >
+                                            + Add link
+                                        </button>
+                                    </>
+                                ) : (
+                                    <p style={s.pre}>
+                                        {(basic.links ?? []).length
+                                            ? (basic.links ?? []).map((l) => `${l.name || '(no label)'}: ${l.url}`).join('\n')
+                                            : '(none)'}
+                                    </p>
+                                )}
 
                                 <div style={{ ...s.key, marginTop: 12 }}>Joining</div>
                                 {edit ? (
