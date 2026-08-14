@@ -68,6 +68,7 @@ export function NavBar({ loginOpen, setLoginOpen }) {
   // announce a selection the user cannot see.
   const calendarCurrent = isOnUniPage && calendarViewActive;
   const clubsCurrent = isOnUniPage && !calendarViewActive;
+  const profileCurrent = location.pathname === '/profile' || location.pathname === '/settings';
 
   return (
     <nav className="nav-bar">
@@ -92,7 +93,7 @@ export function NavBar({ loginOpen, setLoginOpen }) {
       <motion.button
         layoutId="login"
         type="button"
-        className="nav-bar-btn nav-bar-profile-btn"
+        className={`nav-bar-btn nav-bar-profile-btn${profileCurrent ? '' : ' inactive'}`}
         aria-label={GlobalValue ? 'Profile' : 'Login'}
         onClick={handleProfileClick}
       >
