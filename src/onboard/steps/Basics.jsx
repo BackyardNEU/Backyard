@@ -1,62 +1,18 @@
-import { useState } from 'react';
-import { apiFetch } from '../../lib/api';
 import { Field, FieldGroup, Text, Area, Repeater, LIMITS } from './fields.jsx';
 import CategoryPicker from './CategoryPicker.jsx';
+import ImageUpload from './ImageUpload.jsx';
 
 const MAX_LINKS = 5;
 
 export default function Basics({ wizard, clubId, clubName }) {
     const data = wizard.getModule('basic_info') ?? {};
     const links = data.links ?? [];
-    const [uploading, setUploading] = useState(false);
-    const [uploadError, setUploadError] = useState(null);
 
     // The scraped club name is a starting point, not an answer — plenty of directory
     // entries are stale or abbreviated.
     const set = (patch) => wizard.setModule('basic_info', { ...data, club_name: data.club_name ?? clubName, ...patch });
     const setLinks = (next) => set({ links: next });
 
-    const uploadLogo = async (file) => {
-        if (!file) return;
-        setUploading(true);
-        setUploadError(null);
-        try {
-            const ext = (file.name.split('.').pop() || 'png').toLowerCase();
-            const { signedUrl, token, publicUrl } = await apiFetch('/storage/club-logo-upload-url', {
-                method: 'POST',
-                body: { club_id: clubId, ext },
-            });
-
-            const put = await fetch(signedUrl, {
-                method: 'PUT',
-                headers: { authorization: `Bearer ${token}`, 'content-type': file.type },
-                body: file,
-            });
-            if (!put.ok) throw new Error('Upload failed. Try a different image.');
-
-            // Contract is { publicUrl } in, { ok, error } out — the same call
-            // ExpandedTile.jsx makes. Sending bucket/path instead produced a 400 on
-            // every upload, and the response carries no publicUrl to read back.
-            const verification = await apiFetch('/storage/verify-image', {
-                method: 'POST',
-                body: { publicUrl },
-            });
-            if (!verification.ok) {
-                throw new Error(verification.error || 'That image was rejected. Try another one.');
-            }
-            // Functional update: an upload takes seconds, and reading the module here
-            // would read the value captured at render, silently discarding anything typed
-            // while it was in flight. The autosave would then persist the loss.
-            wizard.setModule('basic_info', (current) => ({
-                ...current,
-                logo_url: `${publicUrl}?v=${Date.now()}`,
-            }));
-        } catch (err) {
-            setUploadError(err.message);
-        } finally {
-            setUploading(false);
-        }
-    };
 
     return (
         <>
@@ -74,24 +30,14 @@ export default function Basics({ wizard, clubId, clubName }) {
                 />
             </Field>
 
-            <FieldGroup
+            <ImageUpload
                 label="Club Logo"
                 hint="Square images look best. PNG, JPG or WebP, up to about 5 MB."
-            >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                    {data.logo_url
-                        ? <img className="ob-logo-preview" src={data.logo_url} alt="Your club logo" />
-                        : <div className="ob-logo-preview" aria-hidden="true" />}
-                    <input
-                        type="file"
-                        accept="image/png,image/jpeg,image/webp"
-                        onChange={(e) => uploadLogo(e.target.files?.[0])}
-                        disabled={uploading}
-                    />
-                </div>
-            </FieldGroup>
-            {uploading && <p className="ob-hint">Uploading…</p>}
-            {uploadError && <div className="ob-error">{uploadError}</div>}
+                value={data.logo_url}
+                endpoint="/storage/club-logo-upload-url"
+                body={{ club_id: clubId }}
+                onChange={(url) => set({ logo_url: url })}
+            />
 
             <Field
                 label="What your club does"

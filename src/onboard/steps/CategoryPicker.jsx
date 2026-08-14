@@ -1,22 +1,25 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { apiFetch } from '../../lib/api';
 import { Field, FieldGroup } from './fields.jsx';
+import Select from './Select.jsx';
 import { INTEREST_LIMITS } from '../../../shared/clubInterestsValidation.js';
 
 /**
  * Category plus two subcategories, matching what club_interests stores.
  *
- * The subcategory inputs are native comboboxes: an <input> bound to a <datalist>. Typing
- * filters our list, and anything not on it is simply kept as typed. That is exactly the
- * "pick one of ours or write your own" behaviour, with keyboard support and screen
- * reader semantics already handled, and none of the custom dropdown code the club page
- * editor needed.
+ * This used to be an <input> bound to a <datalist>. Technically that accepted free text,
+ * but it renders as a dropdown, and a dropdown tells people the answer has to come from
+ * the list. Nothing on screen said otherwise, so nobody would ever discover they could
+ * type their own.
+ *
+ * Suggestions are now visible buttons and typing is its own labelled input. Both routes
+ * are on screen at once, so neither has to be discovered.
  */
 export default function CategoryPicker({ wizard }) {
     const interests = wizard.draft.interests ?? {};
     const [taxonomy, setTaxonomy] = useState(null);
     const [loadError, setLoadError] = useState(null);
-    const listId = useId();
+    const [typed, setTyped] = useState('');
 
     useEffect(() => {
         let cancelled = false;
@@ -26,75 +29,127 @@ export default function CategoryPicker({ wizard }) {
         return () => { cancelled = true; };
     }, []);
 
-    const selected = taxonomy?.find((c) => c.id === interests.category_id);
-    const options = selected?.subcategories ?? [];
-    const subs = interests.subcategories ?? [];
+    const selectedCategory = taxonomy?.find((c) => c.id === interests.category_id);
+    const subs = (interests.subcategories ?? []).filter((s) => (s?.name ?? '').trim());
+    const full = subs.length >= INTEREST_LIMITS.REQUIRED_SUBCATEGORIES;
+
+    const chosen = new Set(subs.map((s) => s.name.trim().toLowerCase()));
+    const suggestions = (selectedCategory?.subcategories ?? [])
+        .filter((o) => !chosen.has(o.name.toLowerCase()));
 
     const setInterests = (patch) => wizard.setInterests({ ...interests, ...patch });
 
-    const setSub = (index, name) => {
-        const next = [...subs];
-        // Keep the id when the typed text still matches the row it came from, so an
-        // untouched pick stays a reference instead of becoming a duplicate by name.
-        const match = options.find((o) => o.name.toLowerCase() === name.trim().toLowerCase());
-        next[index] = match ? { id: match.id, name: match.name } : { name };
-        setInterests({ subcategories: next });
+    const add = (sub) => {
+        const name = (sub?.name ?? '').trim();
+        if (!name || full || chosen.has(name.toLowerCase())) return;
+        setInterests({ subcategories: [...subs, sub.id ? { id: sub.id, name } : { name }] });
+        setTyped('');
     };
+
+    const remove = (index) =>
+        setInterests({ subcategories: subs.filter((_, i) => i !== index) });
 
     return (
         <>
-            <Field
-                label="Category"
-                hint="The closest fit. This is how students filter clubs."
-            >
-                <select
-                    className="ob-select"
+            <Field label="Category" hint="The closest fit. This is how students filter clubs.">
+                <Select
                     value={interests.category_id ?? ''}
-                    onChange={(e) => {
-                        // Subcategories belong to a category, so changing it invalidates
-                        // whatever was picked underneath.
-                        setInterests({ category_id: e.target.value || undefined, subcategories: [] });
-                    }}
+                    placeholder={taxonomy ? 'Choose a category' : 'Loading…'}
                     disabled={!taxonomy}
-                >
-                    <option value="">{taxonomy ? 'Choose a category' : 'Loading…'}</option>
-                    {(taxonomy ?? []).map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                </select>
+                    options={(taxonomy ?? []).map((c) => ({ value: c.id, label: c.name }))}
+                    onChange={(next) => {
+                        // Subcategories belong to a category, so changing it makes
+                        // whatever was picked underneath invalid.
+                        setInterests({ category_id: next || undefined, subcategories: [] });
+                        setTyped('');
+                    }}
+                />
             </Field>
 
             {loadError && (
-                <div className="ob-error">
-                    Could not load the category list. Refresh and try again.
-                </div>
+                <div className="ob-error">Could not load the category list. Refresh and try again.</div>
             )}
 
             <FieldGroup
                 label="Two subcategories"
-                hint="Pick from the list, or type your own if nothing fits."
+                hint="Tap two of ours, or write your own. Both work the same."
             >
-                <datalist id={listId}>
-                    {options.map((o) => <option key={o.id} value={o.name} />)}
-                </datalist>
-
-                <div style={{ display: 'grid', gap: 10 }}>
-                    {Array.from({ length: INTEREST_LIMITS.REQUIRED_SUBCATEGORIES }, (_, i) => (
-                        <input
-                            key={i}
-                            className="ob-input"
-                            list={listId}
-                            value={subs[i]?.name ?? ''}
-                            onChange={(e) => setSub(i, e.target.value)}
-                            placeholder={i === 0 ? 'Start typing, or pick from the list' : 'And one more'}
-                            disabled={!interests.category_id}
-                            aria-label={`Subcategory ${i + 1}`}
-                        />
-                    ))}
-                </div>
-
-                {!interests.category_id && (
+                {!interests.category_id ? (
                     <span className="ob-hint">Choose a category first.</span>
+                ) : (
+                    <>
+                        {subs.length > 0 && (
+                            <div className="ob-chips ob-chips--picked">
+                                {subs.map((s, i) => (
+                                    <span className="ob-chip ob-chip--picked" key={`${s.name}-${i}`}>
+                                        {s.name}
+                                        <button
+                                            type="button"
+                                            className="ob-chip-x"
+                                            onClick={() => remove(i)}
+                                            aria-label={`Remove ${s.name}`}
+                                        >
+                                            ×
+                                        </button>
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+
+                        <p className="ob-hint" style={{ margin: '4px 0 0' }}>
+                            {full
+                                ? 'That is both. Remove one to swap it.'
+                                : `Pick ${INTEREST_LIMITS.REQUIRED_SUBCATEGORIES - subs.length} more.`}
+                        </p>
+
+                        <div className="ob-sub-entry">
+                            <input
+                                className="ob-input"
+                                autoComplete="off"
+                                value={typed}
+                                onChange={(e) => setTyped(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        // Otherwise Enter submits the form and the club
+                                        // loses what they were halfway through typing.
+                                        e.preventDefault();
+                                        add({ name: typed });
+                                    }
+                                }}
+                                placeholder="Write your own, like Blitz nights"
+                                disabled={full}
+                                aria-label="Write your own subcategory"
+                            />
+                            <button
+                                type="button"
+                                className="ob-ghost ob-sub-add"
+                                onClick={() => add({ name: typed })}
+                                disabled={full || !typed.trim()}
+                            >
+                                Add
+                            </button>
+                        </div>
+
+                        {suggestions.length > 0 && !full && (
+                            <>
+                                <p className="ob-hint" style={{ margin: '14px 0 6px' }}>
+                                    Or tap one of ours:
+                                </p>
+                                <div className="ob-chips">
+                                    {suggestions.map((o) => (
+                                        <button
+                                            key={o.id}
+                                            type="button"
+                                            className="ob-chip ob-chip--suggest"
+                                            onClick={() => add(o)}
+                                        >
+                                            {o.name}
+                                        </button>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+                    </>
                 )}
             </FieldGroup>
         </>

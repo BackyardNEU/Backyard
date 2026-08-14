@@ -1,4 +1,5 @@
 import { FieldGroup, Field, Text, Area, Repeater } from './fields.jsx';
+import ImageUpload from './ImageUpload.jsx';
 import { EVENT_LIMITS } from '../../../shared/clubEventsValidation.js';
 
 // Optional, and said so plainly. Most clubs will not have their semester planned when
@@ -46,6 +47,7 @@ export default function Events({ wizard }) {
                                 <input
                                     type="datetime-local"
                                     className="ob-input"
+                                    autoComplete="off"
                                     value={ev.start_time ?? ''}
                                     onChange={(e) => update(i, { start_time: e.target.value })}
                                 />
@@ -54,6 +56,7 @@ export default function Events({ wizard }) {
                                 <input
                                     type="datetime-local"
                                     className="ob-input"
+                                    autoComplete="off"
                                     value={ev.end_time ?? ''}
                                     // Default the end to an hour after the start the first
                                     // time a start is picked, since almost nobody wants to
@@ -79,6 +82,15 @@ export default function Events({ wizard }) {
                                 placeholder="Come meet the e-board, we will have snacks and a few boards set up."
                             />
                         </Field>
+
+                        <ImageUpload
+                            label="Event Poster"
+                            hint="Optional. A flyer or graphic students will recognise. Wide images look best."
+                            shape="wide"
+                            value={ev.image_url}
+                            endpoint="/storage/event-poster-upload-url"
+                            onChange={(url) => update(i, { image_url: url })}
+                        />
 
                         <FieldGroup label="Who can see it">
                             <label className="ob-check">
@@ -112,6 +124,7 @@ function blankEvent() {
         description: '',
         start_time: toLocalInput(start),
         end_time: toLocalInput(end),
+        image_url: '',
         is_members_only: false,
     };
 }

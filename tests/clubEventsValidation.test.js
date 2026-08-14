@@ -88,6 +88,32 @@ describe('validateEvents', () => {
     });
 });
 
+describe('event poster', () => {
+    it('accepts an uploaded poster URL', () => {
+        expect(validateEvents([{ ...ok(), image_url: 'https://x.supabase.co/a.png' }]).valid).toBe(true);
+    });
+
+    it('accepts no poster at all, since it is optional', () => {
+        expect(validateEvents([{ ...ok(), image_url: '' }]).valid).toBe(true);
+    });
+
+    // The column is rendered as an <img src>, so the same rule the club logo follows.
+    it('rejects a javascript: poster address', () => {
+        const r = validateEvents([{ ...ok(), image_url: 'javascript:alert(1)' }]);
+        expect(r.valid).toBe(false);
+        expect(r.errors[0].message).toMatch(/poster/i);
+    });
+
+    it('maps the poster onto the column club_events actually uses', () => {
+        const row = toEventRow({ ...ok(), image_url: 'https://x/a.png' }, 'c', 'n');
+        expect(row.event_image_url).toBe('https://x/a.png');
+    });
+
+    it('omits the column when there is no poster', () => {
+        expect(toEventRow({ ...ok(), image_url: '' }, 'c', 'n').event_image_url).toBeUndefined();
+    });
+});
+
 describe('toEventRow', () => {
     it('maps to the column names club_events actually uses', () => {
         const row = toEventRow(ok(), 'club-1', 'Chess Club');
