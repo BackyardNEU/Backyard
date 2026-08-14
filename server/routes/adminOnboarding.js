@@ -7,6 +7,7 @@ import { onboardingUrl, ONBOARD_URL } from '../lib/appUrls.js';
 import { validateModules } from '../../shared/clubPageValidation.js';
 import { pickClubDetails, validateClubDetails, normalizeInstagram } from '../../shared/clubDetailsValidation.js';
 import { sanitizeModules } from '../../shared/sanitizeModules.js';
+import { validateEvents, toEventRow } from '../../shared/clubEventsValidation.js';
 import textModerator from '../lib/textModerator.js';
 
 const router = express.Router();
@@ -308,6 +309,12 @@ router.post('/onboarding/:clubId/approve', async (req, res) => {
   if (!structure.valid) {
     return res.status(400).json({ error: 'Draft failed validation', errors: structure.errors });
   }
+  const draftEvents = row.draft?.events ?? [];
+  const eventCheck = validateEvents(draftEvents);
+  if (!eventCheck.valid) {
+    return res.status(400).json({ error: 'Draft failed validation', errors: eventCheck.errors });
+  }
+
   const detailCheck = validateClubDetails(details);
   if (!detailCheck.valid) {
     return res.status(400).json({ error: 'Draft failed validation', errors: detailCheck.errors });
@@ -345,6 +352,24 @@ router.post('/onboarding/:clubId/approve', async (req, res) => {
       .from('demo_club_data').update(details).eq('id', clubId);
     if (detailsError) {
       const err = new Error(detailsError.message);
+      err.status = 502;
+      throw err;
+    }
+  }
+
+  // Events become real rows only now. Creating them when the club typed them would put
+  // them on the public calendar before anyone had reviewed the page.
+  if (draftEvents.length) {
+    const clubName = details.club_name
+      || (await supabaseAdmin.from('demo_club_data').select('club_name').eq('id', clubId).maybeSingle()).data?.club_name
+      || '';
+
+    const { error: eventsError } = await supabaseAdmin
+      .from('club_events')
+      .insert(draftEvents.map((ev) => toEventRow(ev, clubId, clubName)));
+
+    if (eventsError) {
+      const err = new Error(eventsError.message);
       err.status = 502;
       throw err;
     }

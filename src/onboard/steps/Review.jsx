@@ -9,6 +9,7 @@ export default function Review({ wizard }) {
     const faqs = wizard.getModule('faqs')?.faqs ?? [];
     const people = wizard.getModule('member_roster')?.members ?? [];
     const stats = wizard.getModule('stats')?.stats ?? [];
+    const events = wizard.draft.events ?? [];
     const details = wizard.draft.details ?? {};
 
     const problems = checkDraftReady(wizard.draft);
@@ -24,15 +25,15 @@ export default function Review({ wizard }) {
         { key: 'Questions', value: countLabel(faqs, 'question'), required: false },
         { key: 'People', value: countLabel(people, 'person', 'people'), required: false },
         { key: 'Numbers', value: countLabel(stats, 'number'), required: false },
+        { key: 'Events', value: countLabel(events, 'event'), required: false },
     ];
 
     return (
         <>
-            <p className="ob-eyebrow">Step 6 of 6</p>
             <h2 className="ob-h1">Ready to send</h2>
             <p className="ob-lede">
                 Here&apos;s what you&apos;ve filled in. Go back to any step to change
-                something — nothing is final until you send it.
+                anything. Nothing is final until you send it.
             </p>
 
             {problems.length > 0 && (

@@ -17,8 +17,7 @@ export default function Faqs({ wizard }) {
 
     return (
         <>
-            <p className="ob-eyebrow">Step 3 of 6</p>
-            <h2 className="ob-h1">Questions students ask</h2>
+            <h2 className="ob-h1">Frequently Asked Questions</h2>
             <p className="ob-lede">
                 Three or four is plenty. Answer what you get asked at every club fair.
             </p>

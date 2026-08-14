@@ -17,12 +17,10 @@ export default function People({ wizard }) {
 
     return (
         <>
-            <p className="ob-eyebrow">Step 4 of 6</p>
             <h2 className="ob-h1">Who runs the club</h2>
             <p className="ob-lede">
-                Your e-board, or however many you want to name. Students join clubs
-                because of people — this is the step that makes a page feel real.
-                You can skip it and add people later.
+                Your e-board, or however many people you want to list. You can skip this
+                and add people later.
             </p>
 
             <Repeater

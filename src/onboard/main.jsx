@@ -34,8 +34,8 @@ import('./OnboardApp.jsx')
                 <div className="ob-card ob-card--narrow ob-centered">
                     <h2 className="ob-h1">We couldn&apos;t load the page</h2>
                     <p className="ob-lede" style={{ margin: '0 auto 18px' }}>
-                        Something went wrong on our end, not yours. Try refreshing — if it
-                        keeps happening, email{' '}
+                        Something went wrong on our end, not yours. Try refreshing. If it keeps
+                        happening, email{' '}
                         <a href="mailto:hello@explorethebackyard.com">
                             hello@explorethebackyard.com
                         </a>{' '}

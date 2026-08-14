@@ -6,6 +6,7 @@ import Joining from './steps/Joining.jsx';
 import Faqs from './steps/Faqs.jsx';
 import People from './steps/People.jsx';
 import Stats from './steps/Stats.jsx';
+import Events from './steps/Events.jsx';
 import Review from './steps/Review.jsx';
 import wordmark from '../assets/BackyardOnBoardHeader.png';
 
@@ -15,6 +16,7 @@ const STEPS = [
     { key: 'faqs', name: 'Questions', Component: Faqs },
     { key: 'people', name: 'People', Component: People },
     { key: 'stats', name: 'Numbers', Component: Stats },
+    { key: 'events', name: 'Events', Component: Events },
     { key: 'review', name: 'Review', Component: Review },
 ];
 
@@ -91,7 +93,7 @@ export default function WizardShell({ clubId, clubName, clubLogo }) {
                         <p className="ob-saved" role="status">
                             {wizard.saveState === 'saving' && 'Saving…'}
                             {wizard.saveState === 'saved' && 'Saved. You can close this and come back.'}
-                            {wizard.saveState === 'error' && 'Couldn’t save — check your connection.'}
+                            {wizard.saveState === 'error' && 'Couldn’t save. Check your connection.'}
                         </p>
                     </nav>
 
@@ -106,6 +108,9 @@ export default function WizardShell({ clubId, clubName, clubLogo }) {
                         {wizard.error && <div className="ob-error">{wizard.error}</div>}
                         {submitError && <div className="ob-error">{submitError}</div>}
 
+                        <p className="ob-eyebrow">
+                            Step {index + 1} of {STEPS.length}
+                        </p>
                         <Component wizard={wizard} clubId={clubId} clubName={clubName} />
 
                         <div className="ob-actions">
@@ -144,7 +149,7 @@ function Submitted({ clubName, status }) {
             <div className="ob-card ob-centered">
                 <div className="ob-stamp">{approved ? 'Published' : 'Received'}</div>
                 <h1 className="ob-h1" style={{ marginTop: 24 }}>
-                    {approved ? `${clubName} is live` : 'Thanks — we have your page'}
+                    {approved ? `${clubName} is live` : 'Thanks, we have your page'}
                 </h1>
                 <p className="ob-lede" style={{ margin: '0 auto' }}>
                     {approved

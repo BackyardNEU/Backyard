@@ -22,11 +22,10 @@ export default function Stats({ wizard }) {
 
     return (
         <>
-            <p className="ob-eyebrow">Step 5 of 6</p>
             <h2 className="ob-h1">Numbers worth showing</h2>
             <p className="ob-lede">
-                A couple of figures that give students a sense of scale. Optional — skip
-                it if nothing here fits.
+                A couple of numbers that show how big the club is. Skip this if nothing
+                here fits.
             </p>
 
             {stats.length === 0 && (
