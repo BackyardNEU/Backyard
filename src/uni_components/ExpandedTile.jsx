@@ -25,120 +25,11 @@ import { Skeleton, SkeletonText } from '../components/Skeleton';
 import InviteLinkButton from '../club_page_components/InviteLinkButton';
 import dividerLineImg from '/src/assets/border-horizontal-gray.svg';
 
-// --- Validation helpers ---
-const isValidUrl = (url) => {
-  try { const u = new URL(url); return u.protocol === 'http:' || u.protocol === 'https:'; }
-  catch { return false; }
-};
+// Validation moved to shared/clubPageValidation.js so the server enforces the same
+// rules. It previously lived only here, which meant PUT /clubs/:clubId/page accepted
+// anything that survived the profanity check.
+import { getModuleWarnings } from '../../shared/clubPageValidation.js';
 
-function validateBasicInfo(data) {
-    if (!data?.club_name?.trim()) return 'Club name cannot be empty.';
-    if (data.club_name.trim().length > 80) return 'Club name must be 80 characters or fewer.';
-    if (!data?.description?.trim()) return 'Description cannot be empty.';
-    for (const l of (data?.links ?? [])) {
-        if (l.name.length > 15) return 'Link names must be 15 characters or fewer.';
-        if (l.url && !isValidUrl(l.url)) return 'One or more link URLs are invalid.';
-    }
-    return null;
-}
-
-function validateLinks(basicInfoData) {
-    for (const l of (basicInfoData?.links ?? [])) {
-        if (l.name.length > 15) return 'Link names must be 15 characters or fewer.';
-        if (l.url && !isValidUrl(l.url)) return 'One or more link URLs are invalid.';
-    }
-    return null;
-}
-
-function validateJoin(data) {
-    const tabs = data?.tabs ?? [];
-    for (const tab of tabs) {
-        if (!tab.title?.trim()) return 'Each tab must have a title.';
-        if (tab.title.trim().length > 60) return 'Tab titles must be 60 characters or fewer.';
-        if (!tab.body?.trim()) return 'Each tab must have body text.';
-        if (tab.body.trim().length > 500) return 'Tab body must be 500 characters or fewer.';
-    }
-    return null;
-}
-
-function validateStats(data) {
-    const stats = data?.stats ?? [];
-    for (const s of stats) {
-        if (s.value < 0) return 'Stat values cannot be negative.';
-        if (s.value % 1 !== 0) return 'Stat value must be a whole number.';
-        if (s.type === 'quantitative') {
-            if (!s.unit1?.trim()) return 'Each quantitative stat must have a unit.';
-        }
-        if (s.type === 'qualitative') {
-            if (!s.label?.trim()) return 'Each qualitative stat must have a name.';
-            const max = s.max ?? 10;
-            if (max < 1) return 'Max must be at least 1.';
-            if (s.value > max) return 'A stat value exceeds its max.';
-            if (max % 1 !== 0) return 'Max must be a whole number.';
-        }
-    }
-    return null;
-}
-
-function validateFaq(data) {
-    const faqs = data?.faqs ?? [];
-    for (const f of faqs) {
-        if (!f.q?.trim()) return 'Each FAQ must have a question.';
-        if (f.q.trim().length > 200) return 'FAQ questions must be 200 characters or fewer.';
-        if (f.a && f.a.length > 500) return 'FAQ answers must be 500 characters or fewer.';
-    }
-    return null;
-}
-
-function validateMemberRoster(data) {
-    const categories = data?.categories ?? [];
-    const members = data?.members ?? [];
-    for (const c of categories) {
-        if (!c?.trim()) return 'Category names cannot be empty.';
-        if (c.trim().length > 25) return 'Category names must be 25 characters or fewer.';
-    }
-    for (const m of members) {
-        if (!m.name?.trim()) return 'Each member must have a name.';
-        if (m.name.trim().length > 50) return 'Member names must be 50 characters or fewer.';
-        const bioText = (m.bio || '').replace(/<[^>]*>/g, '');
-        if (bioText.length > 500) return 'Member bios must be 500 characters or fewer.';
-    }
-    return null;
-}
-
-function validateComments() { return null; }
-
-function validateClubMedia(data) {
-    const posters = data?.posters ?? [];
-    const validWidths = new Set(['50', '70', '100']);
-    for (const p of posters) {
-        if (p.poster_text && p.poster_text.length > 100) return 'Poster titles must be 100 characters or fewer.';
-        for (const block of (p.content ?? [])) {
-            if (block.type === 'title' && block.value && block.value.length > 100) return 'Content headings must be 100 characters or fewer.';
-            if (block.type === 'text' && block.value && block.value.length > 500) return 'Content text must be 500 characters or fewer.';
-            if (block.type === 'uploaded_video' && block.width && !validWidths.has(String(block.width))) {
-                return 'Video width must be 50%, 70%, or 100%.';
-            }
-        }
-    }
-    return null;
-}
-
-function getModuleWarnings(draft) {
-    const w = {};
-    const basicInfo = draft.find((m) => m.type === 'basic_info');
-    for (const m of draft) {
-        if (m.type === 'basic_info') w.basic_info = validateBasicInfo(m.data);
-        if (m.type === 'links') w.links = validateLinks(basicInfo?.data);
-        if (m.type === 'join') w.join = validateJoin(m.data);
-        if (m.type === 'stats') w.stats = validateStats(m.data);
-        if (m.type === 'faqs') w.faqs = validateFaq(m.data);
-        if (m.type === 'member_roster') w.member_roster = validateMemberRoster(m.data);
-        if (m.type === 'club_media') w.club_media = validateClubMedia(m.data);
-        if (m.type === 'comments') w.comments = validateComments(m.data);
-    }
-    return w;
-}
 
 function normalizeModules(modules) {
     const normalized = (modules ?? []).map((m, i) => ({
@@ -773,6 +664,11 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     taxonomy={taxonomy}
                     clubInterests={clubInterestsDraft}
                     onInterestsChange={setClubInterestsDraft}
+                    onSubcategoryCreated={(newSub) => setTaxonomy(prev => prev.map(cat =>
+                      cat.id === newSub.category_id
+                        ? { ...cat, subcategories: [...cat.subcategories, newSub].sort((a, b) => a.name.localeCompare(b.name)) }
+                        : cat
+                    ))}
                     currentUserId={user?.id ?? null}
                 />
             );

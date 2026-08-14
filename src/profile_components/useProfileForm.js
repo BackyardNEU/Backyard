@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import imageCompression from 'browser-image-compression';
 import { apiFetch } from '../lib/api';
 import { useClubData } from '../context/useClubData';
 import textModerator from '../lib/textModerator';
@@ -17,13 +16,6 @@ import textModerator from '../lib/textModerator';
 
 export const MAX_PHOTOS = 10;
 const AVATAR_COLUMN = 'avatar_url';
-
-const COMPRESSION_OPTIONS = {
-    maxSizeMB: 0.2,
-    maxWidthOrHeight: 400,
-    useWebWorker: true,
-    fileType: 'image/webp',
-};
 
 export function useProfileForm() {
     // Prefer the shared copy. It falls back to fetching because onboarding can run before
@@ -234,16 +226,16 @@ export function useProfileForm() {
     };
 
     const uploadAvatar = async () => {
-        const compressed = await imageCompression(avatarFile, COMPRESSION_OPTIONS);
-
+        const ext = (avatarFile.type.split('/')[1] || 'jpg').replace(/[^a-z0-9]/gi, '');
         const { signedUrl, publicUrl } = await apiFetch('/storage/profile-upload-url', {
             method: 'POST',
+            body: { ext },
         });
 
         const putRes = await fetch(signedUrl, {
             method: 'PUT',
-            body: compressed,
-            headers: { 'Content-Type': 'image/webp' },
+            body: avatarFile,
+            headers: { 'Content-Type': avatarFile.type },
         });
         if (!putRes.ok) throw new Error(`Upload failed (${putRes.status})`);
 

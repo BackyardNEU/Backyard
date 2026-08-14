@@ -29,114 +29,10 @@ const router = express.Router();
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Default modules template — written to a club the first time they open edit mode.
-// All content is generic placeholder text meant to guide what to fill in.
-// basic_info gets the club's real name/logo/description substituted in before writing.
-const DEFAULT_MODULES = [
-  {
-    type: 'basic_info',
-    order: 0,
-    isDisplayed: true,
-    data: {
-      logo_url: '',
-      club_name: 'Your Club Name',
-      description: 'Tell people what your club is about. What do you do, who is it for, and what makes it worth joining?',
-      links: [],
-    },
-  },
-  {
-    type: 'links',
-    order: 1,
-    isDisplayed: true,
-    // No independent data of its own — reads/writes basic_info.data.links.
-    // This entry only exists so Links gets its own accordion slot (title, help text, visibility checkbox).
-    data: {},
-  },
-  {
-    type: 'club_media',
-    order: 2,
-    isDisplayed: true,
-    data: {
-      posters: [
-        {
-          order: 0,
-          content: [
-            { type: 'title', value: 'Example Event' },
-            { type: 'text', value: 'Add a short description of this event or moment.' },
-          ],
-          blob_aspect: '3 / 4',
-          poster_text: 'Example Poster',
-          poster_color: '#f8fafc',
-          blob_image_url: '',
-          poster_text_color: '#2b3440',
-        },
-      ],
-    },
-  },
-  {
-    type: 'join',
-    order: 3,
-    isDisplayed: true,
-    data: {
-      tabs: [
-        { title: 'How to Join', body: 'Describe your rush, application, or tryout process here.' },
-        { title: 'What We Look For', body: 'Share what qualities, skills, or experience you value in new members.' },
-        { title: 'Tips', body: 'Any advice for people considering applying? What helps someone stand out?' },
-      ],
-      contactLink: '',
-      applicationLink: '',
-    },
-  },
-  {
-    type: 'faqs',
-    order: 4,
-    isDisplayed: true,
-    data: {
-      faqs: [
-        { q: 'Do first-years usually get in?', a: 'Answer here.' },
-        { q: "What's the time commitment?", a: 'Answer here.' },
-        { q: 'Do I need prior experience?', a: 'Answer here.' },
-      ],
-    },
-  },
-  {
-    type: 'stats',
-    order: 5,
-    isDisplayed: true,
-    data: {
-      stats: [
-        { type: 'quantitative', label: 'Time commitment', unit1: 'hrs', unit2: 'week', value: 5 },
-        { type: 'quantitative', label: 'Members', unit1: 'people', unit2: '', value: 30 },
-        { max: 10, type: 'qualitative', label: 'Competitiveness', value: 6 },
-        { max: 10, type: 'qualitative', label: 'Social vibe', value: 8 },
-      ],
-    },
-  },
-  {
-    type: 'member_roster',
-    order: 6,
-    isDisplayed: true,
-    data: {
-      members: [
-        { name: 'Member Name', bio: '<p>Add a short bio here.</p>', photo: '', user_id: null, category: 'Leadership' },
-        { name: 'Member Name', bio: '', photo: '', user_id: null, category: 'General' },
-      ],
-      categories: ['Leadership', 'General'],
-    },
-  },
-  {
-    type: 'calendar',
-    order: 7,
-    isDisplayed: true,
-    data: {},
-  },
-  {
-    type: 'comments',
-    order: 8,
-    isDisplayed: true,
-    data: {},
-  },
-];
+import { DEFAULT_MODULES } from '../../shared/clubPageDefaults.js';
+import { validateModules } from '../../shared/clubPageValidation.js';
+import { sanitizeModules } from '../../shared/sanitizeModules.js';
+import { ONBOARDING_IN_PROGRESS } from './clubDetails.js';
 
 // GET /api/clubs/:clubId/page
 // Public. Returns the club_page_data row (modules preset) for this club.
@@ -182,6 +78,28 @@ router.post('/:clubId/page/init', requireAuth, async (req, res) => {
   }
   if (!membership || !['top_moderator', 'moderator'].includes(membership.role)) {
     return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  // Third door into club_page_data, and it needed the same gate as PUT /page and
+  // PUT /details: a claimant blocked from those could otherwise publish the placeholder
+  // default page to the public table just by calling this.
+  const { data: initOnboarding, error: initOnboardingError } = await supabaseAdmin
+    .from('club_onboarding')
+    .select('status')
+    .eq('club_id', clubId)
+    .maybeSingle();
+
+  if (initOnboardingError) {
+    const err = new Error(initOnboardingError.message);
+    err.status = 502;
+    throw err;
+  }
+
+  if (initOnboarding && ONBOARDING_IN_PROGRESS.includes(initOnboarding.status)) {
+    return res.status(409).json({
+      error: 'Your page is still being set up. Finish it at your club setup link — we publish it once it has been reviewed.',
+      status: initOnboarding.status,
+    });
   }
 
   // Check for existing data
@@ -282,9 +200,9 @@ function extractModuleText(modules) {
 }
 
 // PUT /api/clubs/:clubId/page
-// Authenticated. Approved club account only.
+// Authenticated. Moderators only.
 // Upserts the modules array for this club's page.
-router.put('/:clubId/page', requireAuth, checkMuted, async (req, res) => {
+router.put('/:clubId/page', writeLimiter, requireAuth, checkMuted, async (req, res) => {
   const { clubId } = req.params;
   const { modules } = req.body;
 
@@ -292,13 +210,9 @@ router.put('/:clubId/page', requireAuth, checkMuted, async (req, res) => {
     return res.status(400).json({ error: 'modules must be an array' });
   }
 
-  const moduleTexts = extractModuleText(modules);
-  const textCheck = textModerator.checkFields(moduleTexts);
-  if (!textCheck.clean) {
-    return res.status(400).json({ error: textCheck.message, field: textCheck.field });
-  }
-
-  // Verify moderator or top_moderator role.
+  // Auth before validation and moderation: any authenticated user can call this endpoint
+  // with an arbitrary clubId. Running the full validation + text moderation pass first
+  // lets a non-member burn compute (and metered Cloud Vision quota) before hitting 403.
   const { data: membership, error: approvalError } = await supabaseAdmin
     .from('club_memberships')
     .select('role')
@@ -316,10 +230,59 @@ router.put('/:clubId/page', requireAuth, checkMuted, async (req, res) => {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
+  // Redeeming an onboarding invite grants top_moderator — which is exactly the role this
+  // endpoint checks. Without this gate a club sent through outreach could skip the wizard
+  // and PUT straight to their public page, publishing unreviewed content and defeating
+  // the entire point of staging drafts in club_onboarding.
+  //
+  // Scoped to clubs that have actually STARTED onboarding. Minting links seeds an
+  // 'unclaimed' row for every club in a batch — up to 500 at a time — including clubs
+  // that already have real moderators and a published page. Gating on "row exists"
+  // would have locked all of them out of their own page editor permanently.
+  const { data: onboarding, error: onboardingError } = await supabaseAdmin
+    .from('club_onboarding')
+    .select('status')
+    .eq('club_id', clubId)
+    .maybeSingle();
+
+  if (onboardingError) {
+    const err = new Error(onboardingError.message);
+    err.status = 502;
+    throw err;
+  }
+
+  if (onboarding && ONBOARDING_IN_PROGRESS.includes(onboarding.status)) {
+    return res.status(409).json({
+      error: 'Your page is still being set up. Finish it at your club setup link — we publish it once it has been reviewed.',
+      status: onboarding.status,
+    });
+  }
+
+  // Structural validation used to be client-only (ExpandedTile.jsx), so calling this
+  // endpoint directly bypassed every length cap, URL check and count limit.
+  const structure = validateModules(modules);
+  if (!structure.valid) {
+    return res.status(400).json({
+      error: structure.errors[0].message,
+      field: structure.errors[0].module,
+      errors: structure.errors,
+    });
+  }
+
+  const moduleTexts = extractModuleText(modules);
+  const textCheck = textModerator.checkFields(moduleTexts);
+  if (!textCheck.clean) {
+    return res.status(400).json({ error: textCheck.message, field: textCheck.field });
+  }
+
+  // Strip anything but formatting tags from the two rich-text fields before storing.
+  // Client-side sanitizing is UX; this is the layer curl cannot skip.
+  const safeModules = sanitizeModules(modules);
+
   const { data, error } = await supabaseAdmin
     .from('club_page_data')
     .upsert(
-      { club_id: clubId, modules, updated_at: new Date().toISOString() },
+      { club_id: clubId, modules: safeModules, updated_at: new Date().toISOString() },
       { onConflict: 'club_id' }
     )
     .select()
@@ -333,7 +296,7 @@ router.put('/:clubId/page', requireAuth, checkMuted, async (req, res) => {
 
   // Sync club_name and image_url back to demo_club_data so the main club listing
   // reflects edits made in the page editor.
-  const basicInfo = modules.find(m => m.type === 'basic_info')?.data;
+  const basicInfo = safeModules.find(m => m.type === 'basic_info')?.data;
   if (basicInfo) {
     const syncFields = {};
     if (basicInfo.club_name?.trim()) syncFields.club_name = basicInfo.club_name.trim();
@@ -410,27 +373,26 @@ router.get('/:clubId/interests', async (req, res) => {
 });
 
 // PUT /api/clubs/:clubId/interests
-// Approved club accounts only. Upserts the club's category + subcategories.
+// Moderators only. Upserts the club's category + subcategories.
 // Body: { category_id: uuid, subcategory_ids: uuid[] }  (max 2 subcategories)
 router.put('/:clubId/interests', writeLimiter, requireAuth, async (req, res) => {
   const { clubId } = req.params;
   const { category_id, subcategory_ids } = req.body || {};
 
-  // Verify the requesting user is an approved account for this club
-  const { data: approved, error: approvedError } = await supabaseAdmin
-    .from('approved_club_accounts')
-    .select('user_id')
+  const { data: membership, error: membershipError } = await supabaseAdmin
+    .from('club_memberships')
+    .select('role')
     .eq('user_id', req.user.id)
     .eq('club_id', clubId)
     .maybeSingle();
 
-  if (approvedError) {
-    const err = new Error(approvedError.message);
+  if (membershipError) {
+    const err = new Error(membershipError.message);
     err.status = 502;
     throw err;
   }
-  if (!approved) {
-    return res.status(403).json({ error: 'Not authorized for this club' });
+  if (!membership || !['top_moderator', 'moderator'].includes(membership.role)) {
+    return res.status(403).json({ error: 'Forbidden' });
   }
 
   if (!category_id) {
@@ -481,24 +443,24 @@ router.put('/:clubId/interests', writeLimiter, requireAuth, async (req, res) => 
 });
 
 // DELETE /api/clubs/:clubId/interests
-// Approved club accounts only. Removes the club's category assignment entirely.
+// Moderators only. Removes the club's category assignment entirely.
 router.delete('/:clubId/interests', writeLimiter, requireAuth, async (req, res) => {
   const { clubId } = req.params;
 
-  const { data: approved, error: approvedError } = await supabaseAdmin
-    .from('approved_club_accounts')
-    .select('user_id')
+  const { data: membership, error: membershipError } = await supabaseAdmin
+    .from('club_memberships')
+    .select('role')
     .eq('user_id', req.user.id)
     .eq('club_id', clubId)
     .maybeSingle();
 
-  if (approvedError) {
-    const err = new Error(approvedError.message);
+  if (membershipError) {
+    const err = new Error(membershipError.message);
     err.status = 502;
     throw err;
   }
-  if (!approved) {
-    return res.status(403).json({ error: 'Not authorized for this club' });
+  if (!membership || !['top_moderator', 'moderator'].includes(membership.role)) {
+    return res.status(403).json({ error: 'Forbidden' });
   }
 
   const { error } = await supabaseAdmin

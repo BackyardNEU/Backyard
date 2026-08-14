@@ -4,8 +4,12 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { identifyUser } from './middleware/requireAuth.js';
+import { ALLOWED_ORIGINS } from './lib/appUrls.js';
 
 import clubsRouter from './routes/clubs.js';
+import clubDetailsRouter from './routes/clubDetails.js';
+import onboardingRouter from './routes/onboarding.js';
+import adminOnboardingRouter from './routes/adminOnboarding.js';
 import searchRouter from './routes/search.js';
 import universitiesRouter from './routes/universities.js';
 import reviewsRouter from './routes/reviews.js';
@@ -42,13 +46,11 @@ const port = process.env.PORT || 3001;
 app.set('trust proxy', 1);
 
 app.use(helmet());
-const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
-  .split(',')
-  .map(o => o.trim());
-
+// Parsed in lib/appUrls.js, which also derives the single-origin link bases. Keeping
+// both in one place is what stops the allowlist from being interpolated into a URL.
 app.use(cors({
   origin(origin, cb) {
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
     cb(new Error('CORS'));
   },
   credentials: true,
@@ -114,6 +116,18 @@ app.use('/api/clubs', clubsRouter);
 app.use('/api/clubs', clubPageRouter);
 app.use('/api/clubs', questionsRouter);
 app.use('/api/clubs', clubEventsRouter);
+
+// Club onboarding. Mounted on the bare '/api/clubs' prefix these limiters charged every
+// unrelated club route and every /api/clubs 404 — POST /clubs/:id/invite-link silently
+// dropped from 100 to 60 per window. Same mount-ordering trap the check-username comment
+// above describes. The routers still mount on /api/clubs; only the buckets are scoped.
+//
+// Draft saves fire once per wizard step, so that bucket is the generous one. Both key by
+// user id, since every route behind them requires auth.
+app.use(/^\/api\/clubs\/[^/]+\/onboarding/, limiter(120));
+app.use(/^\/api\/clubs\/[^/]+\/details$/, limiter(60));
+app.use('/api/clubs', onboardingRouter);
+app.use('/api/clubs', clubDetailsRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/universities', universitiesRouter);
 
@@ -147,7 +161,12 @@ app.use('/api/storage', storageLimiter, storageRouter);
 // burned write budget. /api/invite is the surface actually worth limiting: it is where
 // someone would brute-force invite tokens.
 app.use('/api/invite', invitesLimiter);
+// Tighter than the shared /api/admin bucket: this is the only endpoint that mints
+// credentials in bulk. Registered before the router, the same ordering the
+// check-username limiter above depends on.
+app.use('/api/admin/onboarding-links', limiter(20));
 app.use('/api/admin', invitesLimiter);
+app.use('/api/admin', adminOnboardingRouter);
 app.use('/api', invitesRouter);
 // Support tickets
 app.use('/api/support', supportLimiter, supportRouter);

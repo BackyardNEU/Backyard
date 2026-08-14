@@ -1,8 +1,7 @@
 ﻿import React, {useState, useEffect} from 'react'
 import { apiFetch } from '../lib/api'
 import { useClubData } from '../context/useClubData'
-import { prefetchCalendar } from '../lib/calendarCache'
-import {FaSearch, FaCalendarAlt, FaTh, FaThLarge, FaSquare} from 'react-icons/fa'
+import {FaSearch, FaTh, FaThLarge, FaSquare} from 'react-icons/fa'
 import './UniSearchBar.css'
 
 const CATEGORIES = [
@@ -37,7 +36,6 @@ const CARD_SIZE_OPTIONS = [
 export const UniSearchBar = ({
   setResults,
   university,
-  calendarActive = false,
   cardSize = 'medium',
   onCardSizeChange,
 }) => {
@@ -62,13 +60,6 @@ export const UniSearchBar = ({
                     "Show me clubs for foodies"
                   ];
   
-
-  const handleCalendarClick = () => {
-    setActiveCategory(null);
-    window.dispatchEvent(
-      new CustomEvent("backyard-category-select", { detail: { category: "calendar" } })
-    );
-  };
 
   const handleCategorySelect = (category) => {
     setActiveCategory(prev => prev === category ? null : category);
@@ -239,20 +230,6 @@ useEffect(() => {
             </button>
           ))}
         </div>
-
-        {/* Warmed on intent for the same reason club cards are: the panel used to fade in
-            showing "Loading events…" and swap to content once three requests returned. */}
-        <button
-          className={`uni-calendar-btn${calendarActive ? ' active' : ''}`}
-          type="button"
-          onClick={handleCalendarClick}
-          onMouseEnter={prefetchCalendar}
-          onFocus={prefetchCalendar}
-          onPointerDown={prefetchCalendar}
-          aria-label="View events calendar"
-        >
-          <FaCalendarAlt />
-        </button>
     </div>
   )
 }

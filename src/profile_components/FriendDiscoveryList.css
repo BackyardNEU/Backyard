@@ -7,7 +7,7 @@
 .friends-scroll {
   display: flex;
   flex-direction: row;
-  gap: 14px;
+  gap: 24px;
   overflow-x: auto;
   overflow-y: hidden;
   padding-bottom: 8px;
@@ -89,7 +89,7 @@
 }
 
 @media (min-width: 1024px) {
-  .friend-card, .friend-avatar {
+  .friend-card, .friend-avatar, .find-friends-card {
     width: 150px;
   }
   .friend-avatar {
@@ -100,31 +100,43 @@
 /* ── Find More Friends card/button ── */
 .find-friends-card {
   flex: 0 0 auto;
-  width: 105px;
-  height: 118px;
+  width: 130px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 6px;
-  padding: 14px 10px;
+  padding: 14px 0;
   background: transparent;
-  border: 1.5px dashed #bbb;
-  border-radius: 8px;
+  border: none;
   cursor: pointer;
   color: #666;
   font-family: "Barlow", sans-serif;
   font-size: 0.8rem;
-  transition: border-color 0.15s ease, color 0.15s ease;
+  transition: color 0.15s ease, transform 0.15s ease;
 }
 
 .find-friends-card:hover {
-  border-color: #888;
   color: #333;
+  transform: translateY(-1px);
+}
+
+/* Inherits width/height/border-radius/max-width from .friend-avatar */
+.find-friends-circle {
+  background: transparent;
+  border: 1.5px dashed #bbb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s ease;
+  object-fit: unset;
+}
+
+.find-friends-card:hover .find-friends-circle {
+  border-color: #888;
 }
 
 .find-friends-plus {
-  font-size: 1.4rem;
+  font-size: 1.8rem;
   line-height: 1;
   color: inherit;
 }

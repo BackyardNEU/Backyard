@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:onboard": "vite --config vite.onboard.config.js",
     "build": "vite build",
+    "build:onboard": "vite build --config vite.onboard.config.js",
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "node server/index.js",

@@ -26,37 +26,7 @@
     fill: #000000;
 }
 
-.uni-calendar-btn {
-  height: 2rem;
-  min-width: 2rem;
-  padding: 0 0.5rem;
-  border-radius: 8px;
-  border: 1px solid rgb(202, 200, 200);
-  color: #666;
-  background: #e5e5e5;
-  font-size: 1rem;
-  line-height: 1;
-  cursor: pointer;
-  flex-shrink: 0;
-  margin-left: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.3s ease, color 0.3s ease;
-}
-
-.uni-calendar-btn:hover {
-  background: #d0d0d0;
-}
-
-.uni-calendar-btn.active {
-  background: rgb(44, 33, 18);
-  color: white;
-  border-color: rgb(44, 33, 18);
-}
-
-/* Card density control. Segmented rather than three separate pills so it reads as one
-   control, matching the height and palette of the calendar button beside it. */
+/* Card density control. Segmented so it reads as one control. */
 .uni-size-toggle {
   display: flex;
   align-items: center;

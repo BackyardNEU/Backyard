@@ -143,6 +143,23 @@ describe('POST /api/clubs/:clubId/members/me', () => {
     expect(find('club_join_requests', 'insert')).toHaveLength(0);
   });
 
+  // The deadlock only exists for request-policy clubs. Granting ownership to the first
+  // joiner of any empty club would let any student claim every scraped zero-member club
+  // on the platform — and scraped rows default to join_policy 'open'.
+  it('does not hand ownership to the first joiner of an empty OPEN club', async () => {
+    results['demo_club_data.select'] = {
+      data: { school: 'Northeastern', join_policy: 'open' }, error: null,
+    };
+    memberCount = 0;
+
+    const res = await request(makeApp())
+      .post(`/api/clubs/${CLUB}/members/me`)
+      .set('x-test-user', USER);
+
+    expect(res.status).toBe(201);
+    expect(res.body.role).toBe('member');
+  });
+
   it('treats a duplicate request as already-asked rather than an error', async () => {
     results['demo_club_data.select'] = {
       data: { school: 'Northeastern', join_policy: 'request' }, error: null,
@@ -185,6 +202,7 @@ describe('approving a request', () => {
       .set('x-test-user', OWNER);
 
     expect(res.status).toBe(200);
+    expect(res.body.role).toBe('member');
     expect(find('club_memberships', 'insert')).toHaveLength(1);
     expect(find('profiles', 'update')).toHaveLength(1);
     expect(find('club_join_requests', 'update')[0].row.status).toBe('approved');

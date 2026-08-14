@@ -254,7 +254,7 @@
 
 @media (max-width: 500px) {
   .UniPage {
-    --uni-content-width: 84%;
+    --uni-content-width: 90%;
   }
 
   .uni-layout {
@@ -279,7 +279,7 @@
   }
 
   .uni-search-row {
-    padding: 0 0.75rem;
+    padding: 0 0rem;
   }
 
   .uni-calendar-inline {

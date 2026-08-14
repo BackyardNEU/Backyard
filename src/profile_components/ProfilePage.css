@@ -26,10 +26,35 @@
   padding: 16px 0 12px;
 }
 
+.avatar-upload-wrap {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
 .profile-photo-btn {
   position: relative;
   cursor: pointer;
-  flex-shrink: 0;
+}
+
+.avatar-status {
+  font-family: Barlow, sans-serif;
+  font-size: 0.72rem;
+  color: #555;
+  text-align: center;
+  max-width: 150px;
+  margin: 0;
+}
+
+.avatar-error {
+  font-family: Barlow, sans-serif;
+  font-size: 0.72rem;
+  color: #c0392b;
+  text-align: center;
+  max-width: 150px;
+  margin: 0;
 }
 
 .profile-photo-btn::after {
@@ -39,7 +64,7 @@
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.5);
   color: #fff;
-  font-family: "Barlow", sans-serif;
+  font-family: Barlow, sans-serif;
   font-size: 0.7rem;
   font-weight: 500;
   letter-spacing: 0.03em;
@@ -96,7 +121,7 @@
 .user-description {
   margin: 0;
   max-width: 40ch;
-  font-family: "Barlow", sans-serif;
+  font-family: Barlow, sans-serif;
   color: #5c5c5c;
   line-height: 1.35;
 }
