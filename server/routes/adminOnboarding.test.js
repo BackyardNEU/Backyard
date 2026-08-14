@@ -215,6 +215,95 @@ describe('toCsv', () => {
     });
 });
 
+
+describe('PUT /onboarding/:clubId/draft', () => {
+    // The club-facing endpoint 409s once a page is pending_review, which is exactly when
+    // a reviewer wants to fix a typo instead of sending the whole page back over it.
+    it('edits a draft that is awaiting review', async () => {
+        results['club_onboarding.select'] = {
+            data: { club_id: CLUB, status: 'pending_review', draft: { modules: validModules } }, error: null,
+        };
+        results['club_onboarding.update'] = { data: { club_id: CLUB, status: 'pending_review' }, error: null };
+
+        const fixed = [{ ...validModules[0], data: { ...validModules[0].data, club_name: 'Chess Society' } }];
+        const res = await request(makeApp())
+            .put(`/api/admin/onboarding/${CLUB}/draft`)
+            .set('x-test-user', ADMIN)
+            .send({ modules: fixed });
+
+        expect(res.status).toBe(200);
+        expect(find('club_onboarding', 'update')[0].row.draft.modules[0].data.club_name)
+            .toBe('Chess Society');
+    });
+
+    // Editing is not approving. A page being fixed still needs a decision.
+    it('leaves the status alone', async () => {
+        results['club_onboarding.select'] = {
+            data: { club_id: CLUB, status: 'pending_review', draft: { modules: validModules } }, error: null,
+        };
+        results['club_onboarding.update'] = { data: { club_id: CLUB }, error: null };
+
+        await request(makeApp())
+            .put(`/api/admin/onboarding/${CLUB}/draft`)
+            .set('x-test-user', ADMIN)
+            .send({ modules: validModules });
+
+        expect(find('club_onboarding', 'update')[0].row.status).toBeUndefined();
+    });
+
+    it('holds an admin edit to the same rules as the club', async () => {
+        results['club_onboarding.select'] = {
+            data: { club_id: CLUB, status: 'pending_review', draft: {} }, error: null,
+        };
+
+        const res = await request(makeApp())
+            .put(`/api/admin/onboarding/${CLUB}/draft`)
+            .set('x-test-user', ADMIN)
+            .send({ modules: [{ type: 'basic_info', data: { club_name: '', description: '' } }] });
+
+        expect(res.status).toBe(400);
+    });
+
+    it('sanitizes what an admin types too', async () => {
+        results['club_onboarding.select'] = {
+            data: { club_id: CLUB, status: 'pending_review', draft: {} }, error: null,
+        };
+        results['club_onboarding.update'] = { data: { club_id: CLUB }, error: null };
+
+        await request(makeApp())
+            .put(`/api/admin/onboarding/${CLUB}/draft`)
+            .set('x-test-user', ADMIN)
+            .send({
+                modules: [
+                    ...validModules,
+                    { type: 'join', data: { tabs: [{ title: 'How', body: '<img src=x onerror=alert(1)>hi' }] } },
+                ],
+            });
+
+        expect(JSON.stringify(find('club_onboarding', 'update')[0].row)).not.toContain('onerror');
+    });
+
+    it('404s for a club that never went through onboarding', async () => {
+        results['club_onboarding.select'] = { data: null, error: null };
+
+        const res = await request(makeApp())
+            .put(`/api/admin/onboarding/${CLUB}/draft`)
+            .set('x-test-user', ADMIN)
+            .send({ modules: validModules });
+
+        expect(res.status).toBe(404);
+    });
+
+    it('rejects a non-admin', async () => {
+        const res = await request(makeApp())
+            .put(`/api/admin/onboarding/${CLUB}/draft`)
+            .set('x-test-user', 'nobody')
+            .send({ modules: validModules });
+
+        expect(res.status).toBe(403);
+    });
+});
+
 describe('POST /onboarding/:clubId/approve', () => {
     it('publishes the draft and marks it approved', async () => {
         results['club_onboarding.select'] = {

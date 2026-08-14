@@ -62,6 +62,16 @@ const s = {
     },
     mini: { width: 54, padding: '3px 5px', fontFamily: 'monospace' },
     err: { color: 'red', fontSize: 12 },
+
+    // Derived from data already on screen rather than a new endpoint, so it cannot
+    // disagree with the table underneath it.
+    stats: { display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 },
+    stat: {
+        flex: '1 1 130px', padding: '10px 14px', borderRadius: 8,
+        border: '1px solid #e3ddd2', background: '#faf8f4',
+    },
+    statN: { fontSize: 26, fontWeight: 700, lineHeight: 1.1 },
+    statL: { fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#666', marginTop: 2 },
 };
 
 function loadStored() {
@@ -158,8 +168,30 @@ export default function ClubLinkTable({ onReview }) {
         return acc;
     }, {});
 
+    // A club_onboarding row only exists once a link has been minted for it, so the size
+    // of that map is how many clubs have been contacted.
+    const sent = Object.keys(statuses).length;
+    const started = (counts.claimed ?? 0) + (counts.changes_requested ?? 0);
+
+    const tiles = [
+        { n: clubs.length, label: 'Clubs available', color: '#29241d' },
+        { n: sent, label: 'Links sent', color: '#2e788b' },
+        { n: started, label: 'In progress', color: '#b8860b' },
+        { n: counts.pending_review ?? 0, label: 'Awaiting review', color: '#c53b3f' },
+        { n: counts.approved ?? 0, label: 'Published', color: '#2f8f57' },
+    ];
+
     return (
         <div style={s.wrap}>
+            <div style={s.stats}>
+                {tiles.map((tile) => (
+                    <div key={tile.label} style={s.stat}>
+                        <div style={{ ...s.statN, color: tile.color }}>{tile.n}</div>
+                        <div style={s.statL}>{tile.label}</div>
+                    </div>
+                ))}
+            </div>
+
             <div style={s.controls}>
                 <input
                     style={s.search}
@@ -177,8 +209,7 @@ export default function ClubLinkTable({ onReview }) {
                 </select>
                 <button style={s.btn} onClick={loadStatuses}>Refresh</button>
                 <span style={s.count}>
-                    {rows.length} shown · {Object.keys(links).length} link(s) saved ·{' '}
-                    {counts.pending_review ?? 0} awaiting review
+                    {rows.length} shown · {Object.keys(links).length} link(s) saved on this device
                 </span>
             </div>
 

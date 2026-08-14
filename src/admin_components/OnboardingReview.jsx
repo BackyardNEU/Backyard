@@ -49,6 +49,9 @@ const s = {
     // Only this scrolls, so the actions stay reachable however long the page runs.
     body: { flex: 1, overflowY: 'auto', background: '#fff' },
     fields: { padding: 20, maxWidth: 760, fontFamily: 'monospace' },
+    editIn: { width: '100%', padding: '6px 8px', fontFamily: 'monospace', fontSize: 13 },
+    editArea: { width: '100%', padding: '6px 8px', fontFamily: 'monospace', fontSize: 13, minHeight: 70 },
+    editing: { background: '#fffdf3', border: '1px solid #e8dfae', borderRadius: 6, padding: 14 },
     spacer: { flex: 1 },
 };
 
@@ -59,6 +62,10 @@ export default function OnboardingReview() {
     const [error, setError] = useState(null);
     const [message, setMessage] = useState(null);
     const [view, setView] = useState('preview');
+    // Draft being edited in place. Null until the reviewer starts, so opening a
+    // submission never risks writing anything.
+    const [edit, setEdit] = useState(null);
+    const [saving, setSaving] = useState(false);
     const [sheetOpen, setSheetOpen] = useState(false);
 
     const open = useCallback(async (id) => {
@@ -70,7 +77,36 @@ export default function OnboardingReview() {
         }
     }, []);
 
-    const close = useCallback(() => { setRecord(null); setNote(''); }, []);
+    const close = useCallback(() => { setRecord(null); setNote(''); setEdit(null); }, []);
+
+    // Editing works on a copy. Nothing reaches the server until Save, so abandoning an
+    // edit leaves what the club submitted untouched.
+    const startEdit = () => setEdit(structuredClone(record.draft ?? {}));
+
+    const editModule = (type, patch) => setEdit((d) => {
+        const modules = [...(d.modules ?? [])];
+        const i = modules.findIndex((m) => m.type === type);
+        if (i === -1) return d;
+        modules[i] = { ...modules[i], data: { ...modules[i].data, ...patch } };
+        return { ...d, modules };
+    });
+
+    const saveEdit = async () => {
+        setSaving(true); setError(null); setMessage(null);
+        try {
+            const updated = await apiFetch(`/admin/onboarding/${record.club_id}/draft`, {
+                method: 'PUT',
+                body: { modules: edit.modules, details: edit.details, events: edit.events, interests: edit.interests },
+            });
+            setRecord((r) => ({ ...r, draft: updated.draft }));
+            setEdit(null);
+            setMessage('Saved.');
+        } catch (e) {
+            setError(e.body?.errors ? `${e.message}: ${JSON.stringify(e.body.errors)}` : e.message);
+        } finally {
+            setSaving(false);
+        }
+    };
 
     // Escape closes, and the page behind must not scroll while the overlay is up.
     useEffect(() => {
@@ -114,6 +150,11 @@ export default function OnboardingReview() {
     const people = byType('member_roster').members ?? [];
     const events = draft.events ?? [];
     const reviewable = record?.status === 'pending_review';
+
+    const editByType = (type) => (edit?.modules ?? []).find((m) => m.type === type)?.data ?? {};
+    const editBasic = editByType('basic_info');
+    const editJoin = editByType('join');
+    const editFaqs = editByType('faqs').faqs ?? [];
 
     return (
         <div>
@@ -161,6 +202,19 @@ export default function OnboardingReview() {
                         >
                             Fields
                         </button>
+
+                        {edit ? (
+                            <>
+                                <button style={s.btn} disabled={saving} onClick={saveEdit}>
+                                    {saving ? 'Saving…' : 'Save changes'}
+                                </button>
+                                <button style={s.btn} disabled={saving} onClick={() => setEdit(null)}>
+                                    Discard
+                                </button>
+                            </>
+                        ) : (
+                            <button style={s.btn} onClick={startEdit}>Edit</button>
+                        )}
 
                         <span style={s.spacer} />
 
@@ -215,14 +269,87 @@ export default function OnboardingReview() {
                                 )}
                             </>
                         ) : (
-                            <div style={s.fields}>
+                            <div style={edit ? { ...s.fields, ...s.editing } : s.fields}>
+                                {edit && (
+                                    <p style={{ ...s.muted, marginTop: 0 }}>
+                                        Editing the club&apos;s submission. Nothing is saved until you
+                                        press Save changes.
+                                    </p>
+                                )}
+
                                 <div style={s.key}>Name</div>
-                                <p style={s.pre}>{basic.club_name || '(empty)'}</p>
+                                {edit ? (
+                                    <input
+                                        style={s.editIn}
+                                        value={editBasic.club_name ?? ''}
+                                        onChange={(e) => editModule('basic_info', { club_name: e.target.value })}
+                                    />
+                                ) : <p style={s.pre}>{basic.club_name || '(empty)'}</p>}
 
-                                <div style={s.key}>Description</div>
-                                <p style={s.pre}>{basic.description || '(empty)'}</p>
+                                <div style={{ ...s.key, marginTop: 12 }}>Description</div>
+                                {edit ? (
+                                    <textarea
+                                        style={s.editArea}
+                                        value={editBasic.description ?? ''}
+                                        onChange={(e) => editModule('basic_info', { description: e.target.value })}
+                                    />
+                                ) : <p style={s.pre}>{basic.description || '(empty)'}</p>}
 
-                                <div style={s.key}>Logo</div>
+                                <div style={{ ...s.key, marginTop: 12 }}>Joining</div>
+                                {edit ? (
+                                    (editJoin.tabs ?? []).map((tab, i) => (
+                                        <div key={i} style={{ marginBottom: 10 }}>
+                                            <input
+                                                style={s.editIn}
+                                                value={tab.title ?? ''}
+                                                placeholder="Heading"
+                                                onChange={(e) => editModule('join', {
+                                                    tabs: editJoin.tabs.map((x, j) => j === i ? { ...x, title: e.target.value } : x),
+                                                })}
+                                            />
+                                            <textarea
+                                                style={s.editArea}
+                                                value={tab.body ?? ''}
+                                                placeholder="Details"
+                                                onChange={(e) => editModule('join', {
+                                                    tabs: editJoin.tabs.map((x, j) => j === i ? { ...x, body: e.target.value } : x),
+                                                })}
+                                            />
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p style={s.pre}>
+                                        {(join.tabs ?? []).map((x) => `${x.title}: ${x.body}`).join('\n') || '(none)'}
+                                    </p>
+                                )}
+
+                                <div style={{ ...s.key, marginTop: 12 }}>FAQs</div>
+                                {edit ? (
+                                    (editFaqs).map((f, i) => (
+                                        <div key={i} style={{ marginBottom: 10 }}>
+                                            <input
+                                                style={s.editIn}
+                                                value={f.q ?? ''}
+                                                placeholder="Question"
+                                                onChange={(e) => editModule('faqs', {
+                                                    faqs: editFaqs.map((x, j) => j === i ? { ...x, q: e.target.value } : x),
+                                                })}
+                                            />
+                                            <textarea
+                                                style={s.editArea}
+                                                value={f.a ?? ''}
+                                                placeholder="Answer"
+                                                onChange={(e) => editModule('faqs', {
+                                                    faqs: editFaqs.map((x, j) => j === i ? { ...x, a: e.target.value } : x),
+                                                })}
+                                            />
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p style={s.pre}>{faqs.map((f) => `${f.q} / ${f.a}`).join('\n') || '(none)'}</p>
+                                )}
+
+                                <div style={{ ...s.key, marginTop: 12 }}>Logo</div>
                                 <p style={s.pre}>
                                     {basic.logo_url
                                         ? <img src={basic.logo_url} alt="" style={{ height: 64, borderRadius: 6 }} />
