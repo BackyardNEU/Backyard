@@ -235,10 +235,12 @@ export const ProfilePage = () => {
         {user && (
           <>
             <div className="profile-section">
-               <div className="profile-section">
-              <h2 className="divider-header">Your Photos</h2>
-              <PolaroidCards photos={profile?.photos || []} />
-            </div>
+              {profile?.photos?.length > 0 && (
+                <div className="profile-section">
+                  <h2 className="divider-header">Your Photos</h2>
+                  <PolaroidCards photos={profile.photos} />
+                </div>
+              )}
               <h2 className="divider-header">Clubs You've Joined</h2>
               <ClubMembershipPanel userId={user.id} />
             </div>
