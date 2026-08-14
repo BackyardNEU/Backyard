@@ -341,7 +341,7 @@ export default function OnboardingReview() {
                                         <button
                                             style={s.btn}
                                             onClick={() => editModule('basic_info', {
-                                                links: [...(editBasic.links ?? []), { name: '', url: '' }],
+                                                links: [...(editBasic.links ?? []), { name: '', url: '', enabled: true }],
                                             })}
                                         >
                                             + Add link

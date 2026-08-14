@@ -66,7 +66,7 @@ export default function Basics({ wizard, clubId, clubName }) {
                 label="Link"
                 addLabel="+ Add a link"
                 max={MAX_LINKS}
-                onAdd={() => setLinks([...links, { name: '', url: '' }])}
+                onAdd={() => setLinks([...links, { name: '', url: '', enabled: true }])}
                 onRemove={(i) => setLinks(links.filter((_, j) => j !== i))}
             >
                 {(link, i) => (

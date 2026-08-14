@@ -44,8 +44,8 @@ describe('normalizeUrl', () => {
     });
 
     it('rejects other schemes that are not web links', () => {
-        expect(normalizeUrl('mailto:a@b.com')).toBeNull();
         expect(normalizeUrl('ftp://example.com')).toBeNull();
+        expect(normalizeUrl('file:///etc/passwd')).toBeNull();
     });
 
     // Without a dot in the host, "chess club" would become https://chess%20club and pass.
@@ -53,6 +53,31 @@ describe('normalizeUrl', () => {
         expect(normalizeUrl('chess club')).toBeNull();
         expect(normalizeUrl('our instagram')).toBeNull();
         expect(normalizeUrl('@neuchess')).toBeNull();
+    });
+
+    // Assuming https turned this into https://chess@northeastern.edu, which parses, keeps
+    // the address as userinfo, and sends anyone clicking it to northeastern.edu.
+    it('turns an email into a mailto rather than mangling it', () => {
+        expect(normalizeUrl('chess@northeastern.edu')).toBe('mailto:chess@northeastern.edu');
+        expect(normalizeUrl('nbSA@gmail.com')).toBe('mailto:nbSA@gmail.com');
+    });
+
+    it('leaves an explicit mailto alone', () => {
+        expect(normalizeUrl('mailto:chess@northeastern.edu')).toBe('mailto:chess@northeastern.edu');
+    });
+
+    // The oldest link-spoofing trick there is: reads as our domain, resolves to evil.com.
+    it('rejects credentials in the authority', () => {
+        expect(normalizeUrl('https://explorethebackyard.com@evil.com')).toBeNull();
+        expect(normalizeUrl('https://user:pass@evil.com')).toBeNull();
+    });
+
+    // Without a scheme the same string is a valid email address, so it becomes a mailto.
+    // That is not the spoofing case: a mailto opens a mail client, it does not navigate
+    // anywhere, so nobody is fooled into visiting evil.com by clicking it.
+    it('treats the scheme-less form as the email it also is', () => {
+        expect(normalizeUrl('explorethebackyard.com@evil.com'))
+            .toBe('mailto:explorethebackyard.com@evil.com');
     });
 });
 

@@ -4,6 +4,7 @@ import StatsModule from '../club_page_components/StatsModule';
 import FaqModule from '../club_page_components/FaqModule';
 import MemberRosterModule from '../club_page_components/MemberRosterModule';
 import ClubMediaModule from '../club_page_components/ClubMediaModule';
+import { sanitizeModules } from '../../shared/sanitizeModules.js';
 
 /**
  * Renders a submitted draft with the real club page components.
@@ -23,7 +24,11 @@ import ClubMediaModule from '../club_page_components/ClubMediaModule';
  */
 export default function DraftPreview({ record }) {
     const draft = record?.draft ?? {};
-    const modules = [...(draft.modules ?? [])]
+    // Run through the same pass approve does, so this shows what will actually be
+    // published rather than the raw draft. It also backfills link defaults for anything
+    // submitted before those were being set, which is why old drafts preview correctly
+    // without needing a save first.
+    const modules = [...sanitizeModules(draft.modules ?? [])]
         .filter((m) => m?.isDisplayed !== false)
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 

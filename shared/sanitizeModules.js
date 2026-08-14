@@ -29,9 +29,16 @@ export function sanitizeModules(modules) {
                     ...m.data,
                     links: m.data.links.map((l) => {
                         const normalized = normalizeUrl(l?.url);
-                        // null means it could not be a URL at all; leave it for the
+                        // BasicInfoModule renders `links.filter(l => l.enabled && l.url)`,
+                        // so a link without the flag never appears at all. The wizard did
+                        // not set it, which meant every link a club added was dropped from
+                        // their own page with nothing to indicate why. Absent means
+                        // enabled; an explicit false is a deliberate hide from the club
+                        // page editor and is preserved.
+                        const enabled = l?.enabled ?? true;
+                        // null means it could not be a URL at all; leave the value for the
                         // validator to reject rather than silently discarding it.
-                        return normalized ? { ...l, url: normalized } : l;
+                        return { ...l, enabled, ...(normalized ? { url: normalized } : {}) };
                     }),
                 },
             };

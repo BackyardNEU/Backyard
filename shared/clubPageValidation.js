@@ -89,16 +89,33 @@ const HAS_SCHEME = /^[a-zA-Z][a-zA-Z0-9+.-]*:/;
  * then checked, so javascript: and data: are still rejected rather than being wrapped
  * into something that looks safe.
  */
+const LOOKS_LIKE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function normalizeUrl(value) {
     const raw = String(value ?? '').trim();
     if (!raw) return '';
 
+    // An address in a link field means "write to us", so it becomes a mailto rather than
+    // being mangled. Assuming https turned "chess@northeastern.edu" into
+    // "https://chess@northeastern.edu", which parses, keeps the address as userinfo, and
+    // sends anyone clicking it to northeastern.edu.
+    if (!HAS_SCHEME.test(raw) && LOOKS_LIKE_EMAIL.test(raw)) return `mailto:${raw}`;
+
     try {
         const u = new URL(HAS_SCHEME.test(raw) ? raw : `https://${raw}`);
+
+        if (u.protocol === 'mailto:') return u.toString();
         if (u.protocol !== 'http:' && u.protocol !== 'https:') return null;
+
+        // Reject credentials in the authority. "https://explorethebackyard.com@evil.com"
+        // reads as our domain to anyone glancing at it and resolves to evil.com, which is
+        // the oldest link-spoofing trick there is and has no legitimate use here.
+        if (u.username || u.password) return null;
+
         // A hostname with no dot is a typo or a bare word, not a site. Without this,
         // "chess club" becomes https://chess%20club and passes.
         if (!u.hostname.includes('.')) return null;
+
         return u.toString();
     } catch {
         return null;
