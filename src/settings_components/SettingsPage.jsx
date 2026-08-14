@@ -12,6 +12,14 @@ import '../profile_components/ProfilePage.css'
 import '../profile_components/ProfileSetupPage.css'
 import './SettingsPage.css'
 
+const TABS = [
+    { label: 'Profile', Component: ProfileSettings },
+    { label: 'Calendar', Component: CalendarSettings },
+    { label: 'Notifications', Component: NotificationSettings },
+    { label: 'Blocked Users', Component: BlockedUsersSettings },
+    { label: 'Account', Component: AccountSettings },
+]
+
 // Settings. Each section owns its own fetch and save state so one failing section does
 // not take the page down with it.
 //
@@ -19,6 +27,7 @@ import './SettingsPage.css'
 export const SettingsPage = () => {
     const navigate = useNavigate()
     const [status, setStatus] = useState('loading')
+    const [activeTab, setActiveTab] = useState(0)
     useDocumentTitle('Backyard | Settings')
 
     // Auth guard modelled on FriendProfile: a cancelled flag so a resolved promise cannot
@@ -53,27 +62,29 @@ export const SettingsPage = () => {
                             <Skeleton width="180px" height="2.2rem" />
                         </div>
                     </div>
-                    <hr className="profile-divider" />
-                    {[0, 1, 2].map((i) => (
-                        <div key={i} className="settings-section">
-                            <Skeleton width="160px" height="1.2rem" />
-                            <div className="settings-form">
-                                <Skeleton height="2.4rem" radius={4} />
-                                <Skeleton width="70%" height="2.4rem" radius={4} />
-                            </div>
-                        </div>
-                    ))}
+                    <div className="settings-divider" />
+                    <div className="settings-tabs">
+                        {TABS.map(({ label }) => (
+                            <Skeleton key={label} width={`${label.length}ch`} height="1.3rem" />
+                        ))}
+                    </div>
+                    <div className="settings-form">
+                        <Skeleton height="2.4rem" radius={4} />
+                        <Skeleton width="70%" height="2.4rem" radius={4} />
+                    </div>
                 </SkeletonRegion>
             </div>
         )
     }
+
+    const ActiveComponent = TABS[activeTab].Component
 
     return (
         <div className="settings-overlay">
             <div className="ProfilePage settings-page">
                 <div className="profile-header">
                     <div className="profile-copy">
-                        <h1 className="ProfileName">Settings</h1>
+                        <h1 className="settings-heading">Settings</h1>
                     </div>
                     <button
                         className="profile-close-btn"
@@ -83,13 +94,26 @@ export const SettingsPage = () => {
                         ×
                     </button>
                 </div>
-                <hr className="profile-divider" />
+                <div className="settings-divider" />
 
-                <ProfileSettings />
-                <CalendarSettings />
-                <NotificationSettings />
-                <BlockedUsersSettings />
-                <AccountSettings />
+                <div className="settings-tabs" role="tablist">
+                    {TABS.map(({ label }, i) => (
+                        <button
+                            key={label}
+                            type="button"
+                            role="tab"
+                            aria-selected={activeTab === i}
+                            className={`settings-tab${activeTab === i ? ' settings-tab--active' : ''}`}
+                            onClick={() => setActiveTab(i)}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="settings-content">
+                    <ActiveComponent />
+                </div>
             </div>
         </div>
     )
