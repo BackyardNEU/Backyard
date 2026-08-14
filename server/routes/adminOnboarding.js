@@ -9,6 +9,7 @@ import { pickClubDetails, validateClubDetails, normalizeInstagram } from '../../
 import { sanitizeModules } from '../../shared/sanitizeModules.js';
 import { validateEvents, toEventRow } from '../../shared/clubEventsValidation.js';
 import { validateInterests } from '../../shared/clubInterestsValidation.js';
+import { validateModules as validateDraftModules } from '../../shared/clubPageValidation.js';
 import textModerator from '../lib/textModerator.js';
 
 const router = express.Router();
@@ -272,6 +273,90 @@ router.get('/onboarding/:clubId', async (req, res) => {
     throw err;
   }
   if (!data) return res.status(404).json({ error: 'No onboarding record for this club' });
+  res.json(data);
+});
+
+
+// PUT /api/admin/onboarding/:clubId/draft — edit a submission during review.
+//
+// The club-facing draft endpoint cannot serve this: it requires a moderator role on that
+// specific club, which an admin reviewing 150 clubs does not have, and it deliberately
+// 409s once a page is pending_review, which is exactly when a reviewer wants to fix a
+// typo rather than send the whole page back over it.
+//
+// Sending a page back costs a round trip measured in days. For a misspelled club name it
+// is the wrong tool, and the club is the one who pays for it.
+router.put('/onboarding/:clubId/draft', async (req, res) => {
+  const { clubId } = req.params;
+  const { modules, details, events, interests } = req.body ?? {};
+
+  const { data: row, error: rowError } = await supabaseAdmin
+    .from('club_onboarding')
+    .select('club_id, draft, status')
+    .eq('club_id', clubId)
+    .maybeSingle();
+
+  if (rowError) {
+    const err = new Error(rowError.message);
+    err.status = 502;
+    throw err;
+  }
+  if (!row) return res.status(404).json({ error: 'No onboarding record for this club' });
+
+  const patch = { ...(row.draft ?? {}) };
+
+  // Validated exactly as the club's own saves are. An admin edit is still user-authored
+  // text heading for a public page, and approve re-checks all of it anyway, so accepting
+  // something looser here would only move the failure later.
+  if (modules !== undefined) {
+    const safe = sanitizeModules(modules);
+    const structure = validateDraftModules(safe);
+    if (!structure.valid) {
+      return res.status(400).json({ error: structure.errors[0].message, errors: structure.errors });
+    }
+    patch.modules = safe;
+  }
+
+  if (details !== undefined) {
+    const picked = pickClubDetails(details);
+    const check = validateClubDetails(picked);
+    if (!check.valid) {
+      return res.status(400).json({ error: check.errors[0].message, errors: check.errors });
+    }
+    patch.details = { ...(row.draft?.details ?? {}), ...picked };
+  }
+
+  if (events !== undefined) {
+    const check = validateEvents(events);
+    if (!check.valid) {
+      return res.status(400).json({ error: check.errors[0].message, errors: check.errors });
+    }
+    patch.events = events;
+  }
+
+  if (interests !== undefined) {
+    const check = validateInterests(interests);
+    if (!check.valid) {
+      return res.status(400).json({ error: check.errors[0], errors: check.errors });
+    }
+    patch.interests = interests;
+  }
+
+  // Status is untouched: editing is not approving, and a page being fixed is still a page
+  // awaiting a decision.
+  const { data, error } = await supabaseAdmin
+    .from('club_onboarding')
+    .update({ draft: patch, updated_at: new Date().toISOString() })
+    .eq('club_id', clubId)
+    .select('club_id, status, draft')
+    .single();
+
+  if (error) {
+    const err = new Error(error.message);
+    err.status = 502;
+    throw err;
+  }
+
   res.json(data);
 });
 

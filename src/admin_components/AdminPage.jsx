@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { apiFetch } from '../lib/api';
+import OnboardingReview from './OnboardingReview';
 
 const s = {
-  page:    { padding: 24, fontFamily: 'monospace', maxWidth: 620 },
+  page:    { padding: 24, fontFamily: 'monospace', maxWidth: 760 },
+  hr:      { margin: '32px 0', border: 0, borderTop: '1px solid #ddd' },
   section: { marginTop: 24 },
   field:   { display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 },
   input:   { padding: '4px 6px', fontFamily: 'monospace', width: 300 },
@@ -101,6 +103,10 @@ export default function AdminPage() {
           <button style={s.btn} onClick={copy}>{copied ? 'Copied!' : 'Copy Link'}</button>
         </div>
       )}
+
+      <hr style={s.hr} />
+
+      <OnboardingReview />
     </div>
   );
 }

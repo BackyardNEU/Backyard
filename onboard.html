@@ -4,10 +4,34 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#e2c9b0" />
-    <!-- Club setup links are pasted into DMs and email. No indexing, no previews of a
-         page that requires a token to be useful. -->
+    <!-- Club setup links are pasted into DMs and email. No indexing, no search results
+         for a page that needs a token to be useful. -->
     <meta name="robots" content="noindex, nofollow" />
+
     <title>Set up your club — Backyard</title>
+
+    <!-- Unfurl card for Instagram, iMessage, Slack and the rest. Without these a pasted
+         link shows as a bare URL, which reads like spam when it arrives from someone the
+         club has never heard from.
+
+         These are static: crawlers do not run JavaScript, so the club's own name cannot
+         appear here without rendering the page on the server first. See the note in the
+         PR about making this per-club. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Backyard" />
+    <meta property="og:title" content="Set up your club on Backyard" />
+    <meta
+      property="og:description"
+      content="Claim your club's page and tell students what you do. Takes about ten minutes, and you can come back to it any time."
+    />
+    <meta property="og:image" content="/og-image.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Set up your club on Backyard" />
+    <meta
+      name="twitter:description"
+      content="Claim your club's page and tell students what you do."
+    />
+    <meta name="twitter:image" content="/og-image.png" />
   </head>
   <body>
     <div id="root"></div>
