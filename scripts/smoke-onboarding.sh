@@ -78,12 +78,17 @@ echo
 echo "4. Onboarding admin routes are live"
 pending=$(curl -sS -o /dev/null -w '%{http_code}' "$API/api/admin/onboarding/pending" \
   -H "Authorization: Bearer $JWT")
-if [ "$pending" = "200" ]; then
-  pass "review queue responds"
-else
-  fail "review queue returned $pending"
-  info "404 here usually means the backend has not redeployed with this branch."
-fi
+case "$pending" in
+  200) pass "review queue responds" ;;
+  401|403)
+    # The route answered and demanded auth, which is the thing being checked here.
+    # Whether this token is any good is check 2's job, not this one's.
+    pass "route is mounted (returned $pending — auth issue, see check 2)" ;;
+  404)
+    fail "404 — the backend has not redeployed with this branch yet" ;;
+  *)
+    fail "review queue returned $pending" ;;
+esac
 
 # ── 5. Mint a link, only if a club was named ────────────────────────────────
 if [ -n "$CLUB_ID" ]; then
