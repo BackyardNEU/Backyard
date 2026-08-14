@@ -83,6 +83,9 @@ export default function CategoryPicker({ wizard }) {
                         <input
                             key={i}
                             className="ob-input"
+                            // Same reason as fields.jsx: without this the browser fills a
+                            // club subcategory box with a saved personal detail.
+                            autoComplete="off"
                             list={listId}
                             value={subs[i]?.name ?? ''}
                             onChange={(e) => setSub(i, e.target.value)}

@@ -46,6 +46,7 @@ export default function Events({ wizard }) {
                                 <input
                                     type="datetime-local"
                                     className="ob-input"
+                                    autoComplete="off"
                                     value={ev.start_time ?? ''}
                                     onChange={(e) => update(i, { start_time: e.target.value })}
                                 />
@@ -54,6 +55,7 @@ export default function Events({ wizard }) {
                                 <input
                                     type="datetime-local"
                                     className="ob-input"
+                                    autoComplete="off"
                                     value={ev.end_time ?? ''}
                                     // Default the end to an hour after the start the first
                                     // time a start is picked, since almost nobody wants to

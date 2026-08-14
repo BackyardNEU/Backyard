@@ -38,10 +38,20 @@ export function FieldGroup({ label, hint, children }) {
     );
 }
 
+// autoComplete="off" on every wizard field. These ask about a club, not a person, but
+// the browser only sees a text box near a label saying "Name" or "Email" and fills in
+// whatever it has saved for the person typing. That silently overwrites the club name we
+// prefilled from the invite, and the club has no reason to suspect the value is wrong.
+//
+// The signup form is deliberately untouched: autofilling an email and password there is
+// the browser doing its job.
 export function Text({ value, onChange, ...rest }) {
     return (
         <input
             className="ob-input"
+            autoComplete="off"
+            data-1p-ignore
+            data-lpignore="true"
             value={value ?? ''}
             onChange={(e) => onChange(e.target.value)}
             {...rest}
@@ -53,6 +63,7 @@ export function Area({ value, onChange, rows = 4, ...rest }) {
     return (
         <textarea
             className="ob-textarea"
+            autoComplete="off"
             rows={rows}
             value={value ?? ''}
             onChange={(e) => onChange(e.target.value)}
