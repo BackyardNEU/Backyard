@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '../lib/api';
+import { searchClubs } from '../lib/clubSearch';
 
 /**
  * The outreach worksheet: every club, its claim link, and where it has got to.
@@ -116,9 +117,9 @@ export default function ClubLinkTable({ onReview }) {
     }, [loadStatuses]);
 
     const rows = useMemo(() => {
-        const q = query.trim().toLowerCase();
-        return (clubs ?? []).filter((c) => {
-            if (q && !c.club_name.toLowerCase().includes(q)) return false;
+        // Search first so its ranking survives; filtering only removes.
+        const matched = searchClubs(clubs ?? [], query);
+        return matched.filter((c) => {
             if (filter === 'all') return true;
             if (filter === 'nolink') return !links[c.id];
             return (statuses[c.id] ?? 'unclaimed') === filter;
@@ -197,7 +198,7 @@ export default function ClubLinkTable({ onReview }) {
                     style={s.search}
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search clubs"
+                    placeholder="Search: name, initials, part of it"
                 />
                 <select style={s.select} value={filter} onChange={(e) => setFilter(e.target.value)}>
                     <option value="all">All clubs</option>
