@@ -356,6 +356,57 @@ body::before {
 
 .ob-add:hover { border-color: var(--crimson); color: var(--crimson); }
 
+/* ── Google sign-in ───────────────────────────────────────────────────── */
+/* Built here rather than reused from LoginMorph: that button's styles live in
+ * LoginMorph.css, and importing it would pull the whole auth-modal stylesheet into a
+ * bundle that has no modal. Same offset-pill language as the other buttons, but on
+ * white — Google's branding requires a light surface behind the mark. */
+
+.ob-oauth {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 18px;
+  border: 1.5px solid var(--rule);
+  border-radius: 999px;
+  background: #fff;
+  color: #3c4043;
+  font-family: var(--font-display);
+  font-size: 17px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #cfc8bd;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.2s;
+}
+
+.ob-oauth:hover { background: #faf8f4; }
+.ob-oauth:active { transform: translateY(4px); box-shadow: 0 0 0 #cfc8bd; }
+.ob-oauth:focus-visible { outline: 3px solid var(--crimson-lift); outline-offset: 2px; }
+
+/* Hairlines that stop either side of the word, rather than a full rule with a label
+   sitting on top of it. */
+.ob-or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  text-transform: lowercase;
+}
+
+.ob-or::before,
+.ob-or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rule), transparent);
+}
+
 /* ── Borrowed login form ──────────────────────────────────────────────── */
 /* form.css sizes every field with `width: min(70vh, 88vw)` — viewport units tuned for
  * the main app's full-screen login modal. On a tall display that resolves to well over
