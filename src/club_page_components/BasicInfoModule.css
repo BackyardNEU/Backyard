@@ -1363,3 +1363,15 @@
 .interests-edit-input {
   padding-right: 26px;
 }
+
+/* "+ Add" option at the bottom of the subcategory dropdown */
+.interests-edit-add-option {
+  color: #2e4064;
+  font-weight: 600;
+  border-top: 1px solid #e8e8e8;
+  background: #f0f5fb;
+}
+
+.interests-edit-add-option:hover {
+  background: #ddeaf8;
+}

@@ -62,7 +62,7 @@ async function makeSignedUpload(bucket, path, res, options = {}) {
 // generate URLs for their own avatar — the server picks the path.
 router.post('/profile-upload-url', async (req, res) => {
     const path = `${req.user.id}.webp`;
-    await makeSignedUpload('profile_images', path, res);
+    await makeSignedUpload('profile_images', path, res, { upsertEnabled: true });
 });
 
 // Review images: many per user, so we randomize. Namespace under the user's
@@ -215,11 +215,11 @@ router.post('/verify-image', async (req, res) => {
     try {
         result = await imageModerator.scan(publicUrl);
     } catch (scanErr) {
-        if (urlInfo.bucket === 'club_logos') {
-            console.warn('[moderation] scan failed for club logo, failing open:', scanErr.message);
-            return res.json({ ok: true, scanned: false });
-        }
-        throw scanErr;
+        // API-level failures (billing disabled, quota exceeded, network error) are not
+        // content violations — don't block the upload. Log loudly so it's visible in
+        // production, but let the image through rather than breaking every upload.
+        console.warn(`[moderation] scan failed (${urlInfo.bucket}), failing open:`, scanErr.message);
+        return res.json({ ok: true, scanned: false });
     }
 
     if (result.safe) {

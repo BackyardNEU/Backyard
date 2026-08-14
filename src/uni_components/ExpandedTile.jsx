@@ -664,6 +664,11 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     taxonomy={taxonomy}
                     clubInterests={clubInterestsDraft}
                     onInterestsChange={setClubInterestsDraft}
+                    onSubcategoryCreated={(newSub) => setTaxonomy(prev => prev.map(cat =>
+                      cat.id === newSub.category_id
+                        ? { ...cat, subcategories: [...cat.subcategories, newSub].sort((a, b) => a.name.localeCompare(b.name)) }
+                        : cat
+                    ))}
                     currentUserId={user?.id ?? null}
                 />
             );

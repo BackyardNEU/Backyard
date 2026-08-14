@@ -29,7 +29,7 @@ import Avatar from '../components/Avatar';
  * @param {'full'|'hero'|'about'} props.part - which slice to render; hero is fixed above the accordion
  * @param {boolean} props.linksDisplayed - whether the Links module's visibility checkbox is on; hides the action-bar link buttons entirely when false
  */
-function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange, actions, warning, part = 'full', linksDisplayed = true, taxonomy = [], clubInterests = null, onInterestsChange, currentUserId = null }) {
+function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange, actions, warning, part = 'full', linksDisplayed = true, taxonomy = [], clubInterests = null, onInterestsChange, onSubcategoryCreated, currentUserId = null }) {
   const [dominantColor, setDominantColor] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
   const [descOpen, setDescOpen] = useState(false);
@@ -42,12 +42,11 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   const [linksModalOpen, setLinksModalOpen] = useState(false);
   // club interests edit state (only used when editing=true)
   const [subText, setSubText] = useState(['', '']);
-  const [subQuery, setSubQuery] = useState(['', '']); // live filter text while dropdown open
   const [subDropdown, setSubDropdown] = useState(null); // 0 | 1 | null
-  // Whether the text in each box should narrow the list. False until the user actually
-  // types, so opening a field that already holds a saved subcategory shows every option
-  // rather than filtering down to the one already chosen.
+  // Whether the user has typed since opening the dropdown. False until typing starts,
+  // so opening a field that already holds a saved subcategory shows every option first.
   const [subFiltering, setSubFiltering] = useState([false, false]);
+  const [subCreating, setSubCreating] = useState([false, false]);
   const [clubRoster, setClubRoster] = useState([]);
   // Drives how many links show before "More" — 2 on narrow viewports, 5 otherwise.
   // Tracked reactively (not just read once) so resizing across the breakpoint updates it.
@@ -238,21 +237,25 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
       return sub?.name || '';
     });
     setSubText([names[0] || '', names[1] || '']);
-    setSubQuery(['', '']);
+    setSubFiltering([false, false]);
   }, [editing, clubInterests?.category_id, taxonomy]);
 
   const selectedCat = taxonomy.find(c => c.id === clubInterests?.category_id) || null;
 
   const getSuggestions = useCallback((index) => {
-    if (!selectedCat) return [];
+    if (!selectedCat) return { matches: [], showAdd: false };
     const subs = selectedCat.subcategories || [];
-    // Show the whole list until the user types. Previously the box was seeded with the
-    // saved subcategory's name and filtered on it, so opening the field matched exactly
-    // one option — the one already chosen — and the only way to see the others was to
-    // clear the box by hand. There was nothing on screen to suggest that.
-    if (!subFiltering[index]) return subs;
-    const text = subText[index].toLowerCase().trim();
-    return subs.filter(s => s.name.toLowerCase().includes(text));
+    const text = subText[index].trim();
+    // Show the full list until the user starts typing. Once they type,
+    // filter to names that contain the typed text.
+    const matches = (subFiltering[index] && text)
+      ? subs.filter(s => s.name.toLowerCase().includes(text.toLowerCase()))
+      : subs;
+    // Show "+ Add" when there's enough text and no exact match already exists.
+    const exactMatch = text.length >= 2 &&
+      subs.some(s => s.name.toLowerCase() === text.toLowerCase());
+    const showAdd = text.length >= 2 && !exactMatch;
+    return { matches, showAdd };
   }, [selectedCat, subText, subFiltering]);
 
   const openSubDropdown = useCallback((index) => {
@@ -264,17 +267,17 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
     const catId = e.target.value || null;
     onInterestsChange?.({ category_id: catId, subcategory_ids: [] });
     setSubText(['', '']);
-    setSubQuery(['', '']);
+    setSubFiltering([false, false]);
     setSubDropdown(null);
   }, [onInterestsChange]);
 
   const handleSubTextChange = useCallback((index, value) => {
-    setSubQuery(prev => prev.map((t, i) => i === index ? value : t));
+    // Update the displayed text immediately (this was the bug: subText wasn't updated on typing)
+    setSubText(prev => prev.map((t, i) => (i === index ? value : t)));
     setSubDropdown(index);
-    // Typing is what turns the box into a filter.
     setSubFiltering(prev => prev.map((v, i) => (i === index ? true : v)));
+    // Clearing the text removes that slot's selection
     if (!value.trim()) {
-      setSubText(prev => prev.map((t, i) => i === index ? '' : t));
       const newSubs = [...(clubInterests?.subcategory_ids || [])];
       newSubs[index] = undefined;
       onInterestsChange?.({ category_id: clubInterests?.category_id, subcategory_ids: newSubs.filter(Boolean) });
@@ -287,7 +290,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
     // Deduplicate: same sub selected in both slots is not meaningful
     const deduped = newSubs.filter((id, i, arr) => id && arr.indexOf(id) === i);
     onInterestsChange?.({ category_id: clubInterests?.category_id, subcategory_ids: deduped });
-    // Sync both text inputs to match the deduped IDs — clears a slot if its ID was removed
+    // Sync both text inputs to match the deduped IDs
     setSubText(prev => prev.map((t, i) => {
       const savedId = deduped[i];
       if (!savedId) return '';
@@ -295,9 +298,27 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
       const existing = selectedCat?.subcategories?.find(s => s.id === savedId);
       return existing?.name ?? t;
     }));
-    setSubQuery(['', '']);
+    setSubFiltering([false, false]);
     setSubDropdown(null);
   }, [clubInterests, onInterestsChange, selectedCat]);
+
+  const handleSubAdd = useCallback(async (index) => {
+    const name = subText[index].trim();
+    if (!name || !clubInterests?.category_id) return;
+    setSubCreating(prev => prev.map((v, i) => (i === index ? true : v)));
+    try {
+      const newSub = await apiFetch('/interests/subcategories', {
+        method: 'POST',
+        body: { category_id: clubInterests.category_id, name },
+      });
+      onSubcategoryCreated?.(newSub);
+      handleSubSelect(index, newSub);
+    } catch (err) {
+      console.error('Failed to create subcategory:', err);
+    } finally {
+      setSubCreating(prev => prev.map((v, i) => (i === index ? false : v)));
+    }
+  }, [subText, clubInterests?.category_id, onSubcategoryCreated, handleSubSelect]);
 
   return (
     <>
@@ -357,7 +378,10 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
                 </select>
               </label>
 
-              {selectedCat && [0, 1].map(index => (
+              {selectedCat && [0, 1].map(index => {
+                const { matches, showAdd } = getSuggestions(index);
+                const hasDropdown = subDropdown === index && (matches.length > 0 || showAdd);
+                return (
                 <div key={index} className="interests-edit-sub-wrap">
                   <label className="interests-edit-label">
                     Subcategory {index + 1}
@@ -366,20 +390,19 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
                         className="interests-edit-input"
                         type="text"
                         value={subText[index]}
-                        placeholder={`Choose or search ${selectedCat.name} subcategories…`}
+                        placeholder={`Search or add a ${selectedCat.name} subcategory…`}
                         role="combobox"
-                        aria-expanded={subDropdown === index}
+                        aria-expanded={hasDropdown}
                         aria-controls={`sub-listbox-${index}`}
+                        disabled={subCreating[index]}
                         onChange={e => handleSubTextChange(index, e.target.value)}
                         onFocus={() => openSubDropdown(index)}
                         onBlur={() => setTimeout(() => setSubDropdown(null), 150)}
                       />
-                      {/* Without this the field reads as a plain search box and nothing
-                          suggests there is a list behind it. */}
                       <span className="interests-edit-caret" aria-hidden="true" />
-                      {subDropdown === index && getSuggestions(index).length > 0 && (
+                      {hasDropdown && (
                         <div className="interests-edit-dropdown" id={`sub-listbox-${index}`} role="listbox">
-                          {getSuggestions(index).map(sub => (
+                          {matches.map(sub => (
                             <button
                               key={sub.id}
                               type="button"
@@ -389,12 +412,22 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
                               {sub.name}
                             </button>
                           ))}
+                          {showAdd && (
+                            <button
+                              type="button"
+                              className="interests-edit-suggestion interests-edit-add-option"
+                              onMouseDown={() => handleSubAdd(index)}
+                            >
+                              + Add &ldquo;{subText[index].trim()}&rdquo;
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
                   </label>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
