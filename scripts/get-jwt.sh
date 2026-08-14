@@ -3,6 +3,17 @@
 #
 #   export JWT=$(./scripts/get-jwt.sh)
 #
+# PASSWORD ACCOUNTS ONLY. If you signed up with Google there is no password to give,
+# and this will fail with "Invalid login credentials". Use the browser instead:
+#
+#   1. Open the app in Chrome, signed in
+#   2. Cmd+Option+J for the console
+#   3. If it refuses to paste, type:  allow pasting  then Enter
+#   4. Paste:
+#        copy(JSON.parse(Object.entries(localStorage)
+#          .find(([k]) => k.startsWith('sb-') && k.endsWith('-auth-token'))[1]).access_token)
+#   5. The token is on your clipboard — export JWT="<paste>" in your terminal
+#
 # The alternative is digging the token out of browser local storage, which is fiddly
 # and easy to get wrong. This asks for the password with `read -s`, so it is never
 # echoed and never lands in shell history — unlike pasting the same curl inline.
@@ -53,7 +64,11 @@ except Exception:
 if "access_token" in data:
     print(data["access_token"])
 else:
-    sys.exit("Login failed: " + str(data.get("error_description") or data.get("msg") or data))
+    reason = data.get("error_description") or data.get("msg") or str(data)
+    if "credentials" in reason.lower():
+        reason += ("\n\nIf you signed in with Google there is no password on this account. "
+                   "See the browser instructions at the top of this script.")
+    sys.exit("Login failed: " + reason)
 ')
 
 printf '%s\n' "$TOKEN"
