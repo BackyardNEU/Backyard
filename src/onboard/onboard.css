@@ -366,6 +366,18 @@ body::before {
  * from BorderedInput are kept exactly as they are — they are the most characterful thing
  * on the page and the reason this reads as Backyard rather than a generic form. */
 
+/* The actual cause of the overflow, and why `width: 100%` alone did nothing.
+ *
+ * form.css makes the form `display: grid` with no explicit columns, so the single
+ * column is auto-sized — and an auto column grows to its widest child's min-content
+ * rather than being capped by the container. One child measured 551px, so the column
+ * became 551px inside a 438px form, and every `width: 100%` child then resolved
+ * against the COLUMN, faithfully rendering 113px too wide.
+ *
+ * minmax(0, 1fr) is the fix: the 0 minimum lets the column shrink below its content,
+ * which is what stops a grid item from forcing its parent open. */
+.ob-auth form { grid-template-columns: minmax(0, 1fr); }
+
 .ob-auth { container-type: inline-size; }
 
 .ob-auth .bordered-input-wrap,
