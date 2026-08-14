@@ -1,4 +1,5 @@
 import { Field, FieldGroup, Text, Area, Repeater, LIMITS } from './fields.jsx';
+import { normalizeUrl } from '../../../shared/clubPageValidation.js';
 import CategoryPicker from './CategoryPicker.jsx';
 import ImageUpload from './ImageUpload.jsx';
 
@@ -77,12 +78,22 @@ export default function Basics({ wizard, clubId, clubName }) {
                                 placeholder="Instagram"
                             />
                         </Field>
-                        <Field label="Address">
+                        <Field label="Address" hint="Paste it however you have it. We'll tidy it up.">
                             <Text
-                                type="url"
+                                // Deliberately not type="url": the browser applies the same
+                                // rule that caused this, marking "instagram.com/ourclub"
+                                // invalid because it has no scheme.
                                 value={link.url}
                                 onChange={(v) => setLinks(links.map((l, j) => (j === i ? { ...l, url: v } : l)))}
-                                placeholder="https://instagram.com/yourclub"
+                                // Fill in the scheme once they move on, so they see the
+                                // finished link rather than being told theirs is wrong.
+                                onBlur={(e) => {
+                                    const tidy = normalizeUrl(e.target.value);
+                                    if (tidy && tidy !== link.url) {
+                                        setLinks(links.map((l, j) => (j === i ? { ...l, url: tidy } : l)));
+                                    }
+                                }}
+                                placeholder="instagram.com/yourclub"
                             />
                         </Field>
                     </>
