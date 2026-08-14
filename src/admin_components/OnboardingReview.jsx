@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '../lib/api';
 import DraftPreview from './DraftPreview';
+import ClubLinkTable from './ClubLinkTable';
 
 /**
  * Review queue for club pages submitted through the onboarding wizard.
@@ -15,11 +16,6 @@ import DraftPreview from './DraftPreview';
  */
 const s = {
     row: { display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' },
-    list: { margin: '10px 0', padding: 0, listStyle: 'none' },
-    item: {
-        display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center',
-        padding: '8px 10px', border: '1px solid #ddd', borderRadius: 4, marginBottom: 6,
-    },
     key: { color: '#555', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.06em' },
     pre: { whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: '2px 0 12px', fontSize: 13 },
     btn: { padding: '6px 14px', fontFamily: 'monospace', cursor: 'pointer' },
@@ -46,22 +42,12 @@ const s = {
 };
 
 export default function OnboardingReview() {
-    const [pending, setPending] = useState(null);
     const [record, setRecord] = useState(null);
-    const [lookupId, setLookupId] = useState('');
     const [note, setNote] = useState('');
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState(null);
     const [message, setMessage] = useState(null);
     const [view, setView] = useState('preview');
-
-    const loadPending = useCallback(() => {
-        apiFetch('/admin/onboarding/pending')
-            .then((d) => setPending(d.rows ?? []))
-            .catch((e) => setError(e.message));
-    }, []);
-
-    useEffect(loadPending, [loadPending]);
 
     const open = useCallback(async (id) => {
         setError(null); setMessage(null); setRecord(null); setView('preview');
@@ -93,7 +79,6 @@ export default function OnboardingReview() {
         try {
             await apiFetch(`/admin/onboarding/${id}/${path}`, { method: 'POST', body });
             setMessage(done);
-            loadPending();
             close();
         } catch (e) {
             // The endpoints return the specific validation failures, which is what lets a
@@ -117,39 +102,7 @@ export default function OnboardingReview() {
         <div>
             <h2>Club onboarding</h2>
 
-            <div style={s.row}>
-                <strong>Awaiting review</strong>
-                <button style={s.btn} onClick={loadPending}>Refresh</button>
-            </div>
-
-            {pending === null && <p style={s.muted}>Loading…</p>}
-            {pending?.length === 0 && <p style={s.muted}>Nothing waiting.</p>}
-
-            <ul style={s.list}>
-                {(pending ?? []).map((r) => (
-                    <li key={r.club_id} style={s.item}>
-                        <span>
-                            <strong>{r.club_name ?? r.club_id}</strong>{' '}
-                            <span style={s.muted}>
-                                submitted {r.submitted_at ? new Date(r.submitted_at).toLocaleString() : 'unknown'}
-                            </span>
-                        </span>
-                        <button style={s.btn} onClick={() => open(r.club_id)}>Review</button>
-                    </li>
-                ))}
-            </ul>
-
-            <div style={{ ...s.row, marginTop: 16 }}>
-                <label htmlFor="ob-club-id">Or open any club by id</label>
-                <input
-                    id="ob-club-id"
-                    style={s.input}
-                    value={lookupId}
-                    onChange={(e) => setLookupId(e.target.value.trim())}
-                    placeholder="club uuid"
-                />
-                <button style={s.btn} onClick={() => open(lookupId)} disabled={!lookupId}>Open</button>
-            </div>
+            <ClubLinkTable onReview={open} />
 
             {error && <p style={s.err}>{error}</p>}
             {message && <p style={s.ok}>{message}</p>}
