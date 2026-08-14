@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { apiFetch } from '../../lib/api';
 import { Field, FieldGroup, Text, Area, Repeater, LIMITS } from './fields.jsx';
+import CategoryPicker from './CategoryPicker.jsx';
 
 const MAX_LINKS = 5;
 
 export default function Basics({ wizard, clubId, clubName }) {
     const data = wizard.getModule('basic_info') ?? {};
-    const details = wizard.draft.details ?? {};
     const links = data.links ?? [];
     const [uploading, setUploading] = useState(false);
     const [uploadError, setUploadError] = useState(null);
@@ -107,13 +107,7 @@ export default function Basics({ wizard, clubId, clubName }) {
                 />
             </Field>
 
-            <Field label="Category" hint="One or two words. Think about how a student would search for you.">
-                <Text
-                    value={details.category}
-                    onChange={(v) => wizard.setDetails({ category: v })}
-                    placeholder="Games"
-                />
-            </Field>
+            <CategoryPicker wizard={wizard} />
 
             <h3 className="ob-label" style={{ marginTop: 26, display: 'block' }}>Links</h3>
             <p className="ob-hint" style={{ marginBottom: 12 }}>

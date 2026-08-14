@@ -11,7 +11,7 @@ const AUTOSAVE_MS = 1200;
  * per-step so a half-finished step survives a closed tab too.
  */
 export function useWizardDraft(clubId) {
-    const [draft, setDraft] = useState({ modules: [], details: {}, events: [] });
+    const [draft, setDraft] = useState({ modules: [], details: {}, events: [], interests: {} });
     const [status, setStatus] = useState('unclaimed');
     const [reviewNote, setReviewNote] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -39,6 +39,7 @@ export function useWizardDraft(clubId) {
                     modules: row?.draft?.modules ?? [],
                     details: row?.draft?.details ?? {},
                     events: row?.draft?.events ?? [],
+                    interests: row?.draft?.interests ?? {},
                 });
                 setStatus(row?.status ?? 'unclaimed');
                 setReviewNote(row?.review_note ?? null);
@@ -118,6 +119,13 @@ export function useWizardDraft(clubId) {
         });
     }, [queueSave]);
 
+    const setInterests = useCallback((next) => {
+        setDraft((prev) => {
+            queueSave({ interests: next });
+            return { ...prev, interests: next };
+        });
+    }, [queueSave]);
+
     const setDetails = useCallback((patch) => {
         setDraft((prev) => {
             const details = { ...(prev.details ?? {}), ...patch };
@@ -146,7 +154,7 @@ export function useWizardDraft(clubId) {
     }, [saveNow]);
 
     return {
-        draft, getModule, setModule, setDetails, setEvents,
+        draft, getModule, setModule, setDetails, setEvents, setInterests,
         status, reviewNote, loading, saveState, error, saveNow, saveNowQuietly, setStatus,
     };
 }

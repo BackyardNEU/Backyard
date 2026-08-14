@@ -72,6 +72,8 @@ const validModules = [{
     data: { club_name: 'Chess', description: 'We play chess.', links: [] },
 }];
 
+const validInterests = { category_id: 'cat-1', subcategories: [{ id: 'sub-1', name: 'Chess' }, { id: 'sub-2', name: 'Strategy' }] };
+
 beforeEach(() => {
     calls.length = 0;
     results = {};
@@ -212,7 +214,7 @@ describe('PUT /:clubId/onboarding/draft', () => {
 describe('POST /:clubId/onboarding/submit', () => {
     it('moves a complete draft to pending_review', async () => {
         results['club_onboarding.select'] = {
-            data: { status: 'claimed', draft: { modules: validModules } }, error: null,
+            data: { status: 'claimed', draft: { modules: validModules, interests: validInterests } }, error: null,
         };
         results['club_onboarding.update'] = {
             data: { club_id: CLUB, status: 'pending_review' }, error: null,
@@ -254,7 +256,7 @@ describe('POST /:clubId/onboarding/submit', () => {
 
     it('is not double-submittable', async () => {
         results['club_onboarding.select'] = {
-            data: { status: 'pending_review', draft: { modules: validModules } }, error: null,
+            data: { status: 'pending_review', draft: { modules: validModules, interests: validInterests } }, error: null,
         };
 
         const res = await request(makeApp())
@@ -270,7 +272,7 @@ describe('POST /:clubId/onboarding/submit', () => {
     it('lets a plain moderator submit', async () => {
         role = 'moderator';
         results['club_onboarding.select'] = {
-            data: { status: 'claimed', draft: { modules: validModules } }, error: null,
+            data: { status: 'claimed', draft: { modules: validModules, interests: validInterests } }, error: null,
         };
         results['club_onboarding.update'] = {
             data: { club_id: CLUB, status: 'pending_review' }, error: null,

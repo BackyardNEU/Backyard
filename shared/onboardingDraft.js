@@ -1,5 +1,6 @@
 import { validateModules } from './clubPageValidation.js';
 import { validateEvents } from './clubEventsValidation.js';
+import { validateInterests } from './clubInterestsValidation.js';
 
 // Shared so the Review step and POST /onboarding/submit cannot disagree. Telling someone
 // their page is ready and then rejecting the submit is the worst possible last screen.
@@ -23,6 +24,11 @@ export function checkDraftReady(draft) {
     const structure = validateModules(modules);
     for (const e of structure.errors) {
         if (!problems.includes(e.message)) problems.push(e.message);
+    }
+
+    const interestCheck = validateInterests(draft?.interests);
+    for (const message of interestCheck.errors) {
+        if (!problems.includes(message)) problems.push(message);
     }
 
     // Events are optional, so an empty list is fine. A half-filled one is not: it would

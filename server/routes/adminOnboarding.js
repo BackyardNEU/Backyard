@@ -8,6 +8,7 @@ import { validateModules } from '../../shared/clubPageValidation.js';
 import { pickClubDetails, validateClubDetails, normalizeInstagram } from '../../shared/clubDetailsValidation.js';
 import { sanitizeModules } from '../../shared/sanitizeModules.js';
 import { validateEvents, toEventRow } from '../../shared/clubEventsValidation.js';
+import { validateInterests } from '../../shared/clubInterestsValidation.js';
 import textModerator from '../lib/textModerator.js';
 
 const router = express.Router();
@@ -309,6 +310,12 @@ router.post('/onboarding/:clubId/approve', async (req, res) => {
   if (!structure.valid) {
     return res.status(400).json({ error: 'Draft failed validation', errors: structure.errors });
   }
+  const draftInterests = row.draft?.interests ?? {};
+  const interestCheck = validateInterests(draftInterests);
+  if (!interestCheck.valid) {
+    return res.status(400).json({ error: 'Draft failed validation', errors: interestCheck.errors });
+  }
+
   const draftEvents = row.draft?.events ?? [];
   const eventCheck = validateEvents(draftEvents);
   if (!eventCheck.valid) {
@@ -344,6 +351,66 @@ router.post('/onboarding/:clubId/approve', async (req, res) => {
   const basic = safeModules.find((m) => m.type === 'basic_info')?.data;
   if (basic?.club_name?.trim()) details.club_name = basic.club_name.trim();
   if (basic?.logo_url) details.image_url = basic.logo_url;
+
+  // Subcategories the club typed become taxonomy rows only now, so nothing invented
+  // during onboarding joins the shared list before someone has read it. Names already
+  // present under this category are reused rather than duplicated, case-insensitively,
+  // matching how POST /interests/subcategories behaves.
+  if (draftInterests.category_id) {
+    const subIds = [];
+
+    for (const sub of draftInterests.subcategories ?? []) {
+      if (sub?.id) { subIds.push(sub.id); continue; }
+
+      const name = (sub?.name ?? '').trim();
+      if (!name) continue;
+
+      const { data: existing } = await supabaseAdmin
+        .from('interest_subcategories')
+        .select('id')
+        .eq('category_id', draftInterests.category_id)
+        .ilike('name', name)
+        .maybeSingle();
+
+      if (existing) { subIds.push(existing.id); continue; }
+
+      const { data: created, error: createError } = await supabaseAdmin
+        .from('interest_subcategories')
+        .insert({ category_id: draftInterests.category_id, name })
+        .select('id')
+        .single();
+
+      if (createError) {
+        const err = new Error(createError.message);
+        err.status = 502;
+        throw err;
+      }
+      subIds.push(created.id);
+    }
+
+    const { error: interestsError } = await supabaseAdmin
+      .from('club_interests')
+      .upsert(
+        { club_id: clubId, category_id: draftInterests.category_id, subcategory_ids: subIds },
+        { onConflict: 'club_id' }
+      );
+
+    if (interestsError) {
+      const err = new Error(interestsError.message);
+      err.status = 502;
+      throw err;
+    }
+
+    // demo_club_data.category is what search.js filters on, so keep it in step with the
+    // taxonomy rather than leaving it on whatever the scraper guessed.
+    const { data: cat } = await supabaseAdmin
+      .from('interest_categories')
+      .select('name')
+      .eq('id', draftInterests.category_id)
+      .maybeSingle();
+
+    if (cat?.name) details.category = cat.name;
+  }
 
   if (Object.keys(details).length) {
     // Not ignored: swallowing this would mark a page approved while its name, logo and
