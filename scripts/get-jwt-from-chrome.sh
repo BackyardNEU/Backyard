@@ -56,10 +56,15 @@ def payload(tok):
 now = time.time()
 best, best_exp = None, 0
 expired = 0
+non_user = 0
 
 for tok in (line.strip() for line in sys.stdin if line.strip()):
     data = payload(tok)
     if not data or data.get("aud") != "authenticated":
+        # Almost always the publishable anon key, which is a JWT too and sits in the
+        # same files. Counting these separately matters: "expired session" and "never
+        # signed in on this profile" need completely different fixes.
+        non_user += 1
         continue
     exp = data.get("exp", 0)
     if exp <= now:
@@ -72,9 +77,17 @@ if best:
     mins = int((best_exp - now) / 60)
     print(f"Found a token valid for another {mins} min.", file=sys.stderr)
     print(best)
+elif expired:
+    print(f"Found {expired} expired session token(s) and nothing current.", file=sys.stderr)
+    print("Reload the app in Chrome to refresh the session, then re-run.", file=sys.stderr)
+    sys.exit(1)
 else:
-    print(f"Only expired tokens on disk ({expired} of them).", file=sys.stderr)
-    print("Open the app in Chrome, make sure you are signed in, reload once, then re-run.",
+    print("No signed-in session on this Chrome profile.", file=sys.stderr)
+    print(f"(Saw {non_user} non-session token(s), which is the public anon key, not a login.)",
           file=sys.stderr)
+    print("", file=sys.stderr)
+    print("Incognito windows do not count: they never write to this profile. Open", file=sys.stderr)
+    print("https://clubs.explorethebackyard.com in a NORMAL Chrome window, sign in,", file=sys.stderr)
+    print("then re-run. Set CHROME_PROFILE to pick a different profile.", file=sys.stderr)
     sys.exit(1)
 '
