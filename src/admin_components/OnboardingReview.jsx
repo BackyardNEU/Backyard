@@ -30,6 +30,17 @@ const s = {
         position: 'fixed', inset: 0, zIndex: 4000,
         background: '#fff', display: 'flex', flexDirection: 'column',
     },
+    // Sits above the worksheet, since review opens from inside it and the worksheet has
+    // to stay put underneath rather than closing.
+    overlayTop: { zIndex: 4100 },
+    sheetBody: {
+        flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column',
+        padding: '12px 16px 16px',
+    },
+    openBtn: {
+        padding: '10px 18px', fontFamily: 'monospace', fontSize: 14, cursor: 'pointer',
+        border: '1px solid #999', borderRadius: 6, background: '#f4f1ea',
+    },
     bar: {
         flex: 'none', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
         padding: '10px 16px', borderBottom: '1px solid #ddd', background: '#fafafa',
@@ -48,6 +59,7 @@ export default function OnboardingReview() {
     const [error, setError] = useState(null);
     const [message, setMessage] = useState(null);
     const [view, setView] = useState('preview');
+    const [sheetOpen, setSheetOpen] = useState(false);
 
     const open = useCallback(async (id) => {
         setError(null); setMessage(null); setRecord(null); setView('preview');
@@ -62,8 +74,13 @@ export default function OnboardingReview() {
 
     // Escape closes, and the page behind must not scroll while the overlay is up.
     useEffect(() => {
-        if (!record) return;
-        const onKey = (e) => { if (e.key === 'Escape') close(); };
+        if (!record && !sheetOpen) return;
+        // Closes whichever layer is on top, so Escape from a review returns to the
+        // worksheet rather than dismissing both.
+        const onKey = (e) => {
+            if (e.key !== 'Escape') return;
+            if (record) close(); else setSheetOpen(false);
+        };
         const previous = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
         window.addEventListener('keydown', onKey);
@@ -71,7 +88,7 @@ export default function OnboardingReview() {
             document.body.style.overflow = previous;
             window.removeEventListener('keydown', onKey);
         };
-    }, [record, close]);
+    }, [record, sheetOpen, close]);
 
     const act = async (path, body, done) => {
         setBusy(true); setError(null); setMessage(null);
@@ -102,13 +119,31 @@ export default function OnboardingReview() {
         <div>
             <h2>Club onboarding</h2>
 
-            <ClubLinkTable onReview={open} />
+            <p style={s.muted}>
+                Every club, its claim link, and where it has got to.
+            </p>
+            <button style={s.openBtn} onClick={() => setSheetOpen(true)}>
+                Open club worksheet
+            </button>
 
             {error && <p style={s.err}>{error}</p>}
             {message && <p style={s.ok}>{message}</p>}
 
+            {sheetOpen && (
+                <div style={s.overlay} role="dialog" aria-modal="true" aria-label="Club worksheet">
+                    <div style={s.bar}>
+                        <button style={s.btn} onClick={() => setSheetOpen(false)}>← Back</button>
+                        <strong>Club worksheet</strong>
+                        <span style={s.muted}>Generate links, track progress, review submissions</span>
+                    </div>
+                    <div style={s.sheetBody}>
+                        <ClubLinkTable onReview={open} />
+                    </div>
+                </div>
+            )}
+
             {record && (
-                <div style={s.overlay} role="dialog" aria-modal="true" aria-label="Club page preview">
+                <div style={{ ...s.overlay, ...s.overlayTop }} role="dialog" aria-modal="true" aria-label="Club page preview">
                     <div style={s.bar}>
                         <button style={s.btn} onClick={close}>← Back</button>
                         <strong>{basic.club_name || record.demo_club_data?.club_name || record.club_id}</strong>

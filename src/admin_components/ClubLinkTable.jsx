@@ -29,13 +29,15 @@ const STATUS_COLOR = {
 };
 
 const s = {
-    wrap: { marginTop: 8 },
+    // Fills the container it is dropped into, so the overlay decides the height and
+    // as many rows as the screen allows are visible at once.
+    wrap: { marginTop: 8, display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 },
     controls: { display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginBottom: 12 },
     search: { padding: '6px 9px', fontFamily: 'monospace', width: 240 },
     select: { padding: '6px 9px', fontFamily: 'monospace' },
     count: { color: '#555', fontSize: 13 },
 
-    scroll: { maxHeight: '62vh', overflow: 'auto', border: '1px solid #ddd', borderRadius: 6 },
+    scroll: { flex: 1, minHeight: 0, overflow: 'auto', border: '1px solid #ddd', borderRadius: 6 },
     table: { borderCollapse: 'separate', borderSpacing: 0, width: '100%', fontSize: 13 },
     // Sticky so the columns stay identified through a list of 150.
     th: {
