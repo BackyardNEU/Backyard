@@ -202,6 +202,7 @@ describe('approving a request', () => {
       .set('x-test-user', OWNER);
 
     expect(res.status).toBe(200);
+    expect(res.body.role).toBe('member');
     expect(find('club_memberships', 'insert')).toHaveLength(1);
     expect(find('profiles', 'update')).toHaveLength(1);
     expect(find('club_join_requests', 'update')[0].row.status).toBe('approved');

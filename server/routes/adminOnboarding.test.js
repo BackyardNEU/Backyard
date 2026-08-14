@@ -54,7 +54,7 @@ process.env.ADMIN_USER_IDS = ADMIN;
 
 const { default: adminRouter, toCsv } = await import('./adminOnboarding.js');
 
-const CLUB = 'club-1';
+const CLUB = '00000000-0000-0000-0000-000000000001';
 
 function makeApp() {
     const app = express();
@@ -381,5 +381,67 @@ describe('POST /onboarding/:clubId/unclaim', () => {
         expect(find('club_invite_links', 'update')[0].row).toEqual({ is_revoked: true });
         expect(find('club_memberships', 'delete')).toHaveLength(1);
         expect(find('approved_club_accounts', 'delete')).toHaveLength(1);
+    });
+
+    it('returns 404 when there is no onboarding record', async () => {
+        const res = await request(makeApp())
+            .post(`/api/admin/onboarding/${CLUB}/unclaim`)
+            .set('x-test-user', ADMIN);
+        expect(res.status).toBe(404);
+    });
+
+    it('surfaces a 502 and stops further writes when the link revoke fails', async () => {
+        results['club_onboarding.select'] = {
+            data: { club_id: CLUB, claimed_by: 'wrong-person', status: 'claimed' }, error: null,
+        };
+        results['club_invite_links.update'] = { data: null, error: { message: 'DB error' } };
+
+        const res = await request(makeApp())
+            .post(`/api/admin/onboarding/${CLUB}/unclaim`)
+            .set('x-test-user', ADMIN);
+
+        expect(res.status).toBe(502);
+        expect(find('club_memberships', 'delete')).toHaveLength(0);
+        expect(find('club_onboarding', 'update')).toHaveLength(0);
+    });
+});
+
+describe('ONBOARD_URL not configured', () => {
+    it('refuses before any write when ONBOARD_URL is unset', async () => {
+        vi.resetModules();
+        vi.doMock('../supabaseAdmin.js', () => ({
+            supabaseAdmin: { from: (table) => makeBuilder(table) },
+        }));
+        vi.doMock('../middleware/requireAuth.js', () => ({
+            requireAuth: (req, _res, next) => { req.user = { id: req.headers['x-test-user'] }; next(); },
+            identifyUser: (req, _res, next) => { req.user = { id: req.headers['x-test-user'] }; next(); },
+        }));
+        vi.doMock('../lib/appUrls.js', () => ({
+            ONBOARD_URL: '',
+            onboardingUrl: () => { throw new Error('should not be reached'); },
+            inviteUrl: (t) => `https://example.com/join/${t}`,
+        }));
+        const { default: freshRouter } = await import('./adminOnboarding.js');
+
+        const app = express();
+        app.use(express.json());
+        app.use('/api/admin', freshRouter);
+        app.use((err, _req, res, _next) => res.status(err.status || 500).json({ error: err.message }));
+
+        results['demo_club_data.select'] = {
+            data: [{ id: CLUB, club_name: 'Chess', school: 'Northeastern', email: 'c@n.edu', instagram: 'neuchess' }],
+            error: null,
+        };
+        results['club_invite_links.select'] = { data: [], error: null };
+        calls.length = 0;
+
+        const res = await request(app)
+            .post('/api/admin/onboarding-links')
+            .set('x-test-user', ADMIN)
+            .send({ club_ids: [CLUB] });
+
+        expect(res.status).toBe(500);
+        expect(res.body.error).toMatch(/ONBOARD_URL/);
+        expect(calls.filter((c) => c.op !== 'select')).toHaveLength(0);
     });
 });

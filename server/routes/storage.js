@@ -76,7 +76,7 @@ router.post('/profile-upload-url', async (req, res) => {
         await supabaseAdmin.storage.from('profile_images').remove(toRemove);
     }
 
-    await makeSignedUpload('profile_images', newPath, res, { upsertEnabled: true });
+    await makeSignedUpload('profile_images', newPath, res, { upsert: true });
 });
 
 // Review images: many per user, so we randomize. Namespace under the user's
@@ -120,7 +120,7 @@ router.post('/club-logo-upload-url', async (req, res) => {
     // bucket and remains publicly readable, though nothing links to it once image_url is
     // updated. Accepted for now — losing a club's live logo to an abandoned upload is the
     // worse failure. A sweep keyed on club id would be the real fix.
-    await makeSignedUpload('club_logos', path, res, { upsertEnabled: true });
+    await makeSignedUpload('club_logos', path, res, { upsert: true });
 });
 
 router.post('/event-poster-upload-url', async (req, res) => {

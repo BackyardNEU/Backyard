@@ -32,8 +32,11 @@ Vite proxies `/api` requests to `localhost:3001`, so the frontend never needs to
 ## Architecture
 
 ### Stack
+
 - **Frontend**: React 19 + React Router v7 + Vite 7 + Tailwind CSS 4 + Framer Motion
+
 - **Backend**: Express 5 + Supabase (PostgreSQL) + JWT auth + pg-boss (notification queue)
+
 - **State**: Zustand (client store) + React Context (ClubDataProvider)
 
 ### Data Flow

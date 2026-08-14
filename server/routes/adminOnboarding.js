@@ -41,6 +41,9 @@ router.post('/onboarding-links', async (req, res) => {
   if (Array.isArray(clubIds) && clubIds.length > MAX_BATCH) {
     return res.status(400).json({ error: `At most ${MAX_BATCH} clubs per request` });
   }
+  if (Array.isArray(clubIds) && !clubIds.every((id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))) {
+    return res.status(400).json({ error: 'club_ids must be valid UUIDs' });
+  }
   if (!Number.isInteger(daysValid) || daysValid < 1 || daysValid > 90) {
     return res.status(400).json({ error: 'days_valid must be between 1 and 90' });
   }
@@ -111,7 +114,8 @@ router.post('/onboarding-links', async (req, res) => {
 
   if (toRevoke.length) {
     await supabaseAdmin.from('club_invite_links').update({ is_revoked: true }).in('id', toRevoke);
-    for (const l of liveLinks ?? []) if (toRevoke.includes(l.id)) liveByClub.delete(l.club_id);
+    const toRevokeSet = new Set(toRevoke);
+    for (const l of liveLinks ?? []) if (toRevokeSet.has(l.id)) liveByClub.delete(l.club_id);
   }
 
   const expiresAt = new Date(now + daysValid * 86_400_000).toISOString();
@@ -356,14 +360,16 @@ router.post('/onboarding/:clubId/approve', async (req, res) => {
       updated_at: new Date().toISOString(),
     })
     .eq('club_id', clubId)
+    .eq('status', 'pending_review')
     .select('club_id, status, reviewed_at')
-    .single();
+    .maybeSingle();
 
   if (error) {
     const err = new Error(error.message);
     err.status = 502;
     throw err;
   }
+  if (!data) return res.status(409).json({ error: 'That club is no longer awaiting review' });
 
   res.json(data);
 });
@@ -414,24 +420,40 @@ router.post('/onboarding/:clubId/unclaim', async (req, res) => {
 
   if (!row) return res.status(404).json({ error: 'No onboarding record for this club' });
 
-  await supabaseAdmin
+  const { error: revokeError } = await supabaseAdmin
     .from('club_invite_links')
     .update({ is_revoked: true })
     .eq('club_id', clubId)
     .eq('link_type', 'onboarding')
     .eq('is_revoked', false);
+  if (revokeError) {
+    const err = new Error(revokeError.message);
+    err.status = 502;
+    throw err;
+  }
 
   if (row.claimed_by) {
-    await supabaseAdmin
+    const { error: membershipError } = await supabaseAdmin
       .from('club_memberships')
       .delete()
       .eq('user_id', row.claimed_by)
       .eq('club_id', clubId);
-    await supabaseAdmin
+    if (membershipError) {
+      const err = new Error(membershipError.message);
+      err.status = 502;
+      throw err;
+    }
+
+    const { error: accountError } = await supabaseAdmin
       .from('approved_club_accounts')
       .delete()
       .eq('user_id', row.claimed_by)
       .eq('club_id', clubId);
+    if (accountError) {
+      const err = new Error(accountError.message);
+      err.status = 502;
+      throw err;
+    }
 
     // club_memberships is the modern table, but clubEvents.js and reviews.js still read
     // profiles.member_list. Dropping only the membership would leave the wrong person
@@ -440,10 +462,15 @@ router.post('/onboarding/:clubId/unclaim', async (req, res) => {
       .from('profiles').select('member_list').eq('id', row.claimed_by).single();
     const list = profile?.member_list ?? [];
     if (list.includes(clubId)) {
-      await supabaseAdmin
+      const { error: profileError } = await supabaseAdmin
         .from('profiles')
         .update({ member_list: list.filter((c) => c !== clubId) })
         .eq('id', row.claimed_by);
+      if (profileError) {
+        const err = new Error(profileError.message);
+        err.status = 502;
+        throw err;
+      }
     }
   }
 

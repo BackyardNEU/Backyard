@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS club_invite_links (
   link_type    text        NOT NULL DEFAULT 'member',
   max_uses     integer,
   use_count    integer     NOT NULL DEFAULT 0,
-  expires_at   timestamptz NOT NULL DEFAULT (now() + interval '7 days'),
+  expires_at   timestamptz          DEFAULT (now() + interval '7 days'),
   is_revoked   boolean     NOT NULL DEFAULT false,
   created_at   timestamptz NOT NULL DEFAULT now()
 );
@@ -51,6 +51,11 @@ ALTER TABLE club_invite_links
 UPDATE club_invite_links
    SET expires_at = COALESCE(created_at, now()) + interval '7 days'
  WHERE expires_at IS NULL;
+
+-- Drop NOT NULL so NULL can mean "never expires", matching the consume_invite_link
+-- function's behaviour. Fresh DBs get this via the CREATE TABLE above; existing DBs
+-- need the explicit ALTER since the dashboard may have added NOT NULL independently.
+ALTER TABLE club_invite_links ALTER COLUMN expires_at DROP NOT NULL;
 
 -- Backfill hashes so links already handed out keep working across the cutover.
 UPDATE club_invite_links
@@ -165,6 +170,7 @@ LANGUAGE plpgsql
 -- SECURITY INVOKER: the API calls this as service_role, which already bypasses RLS.
 -- DEFINER would add nothing and would turn a stray GRANT into privilege escalation.
 SECURITY INVOKER
+SET search_path = public
 AS $$
 DECLARE
   v_link club_invite_links%ROWTYPE;

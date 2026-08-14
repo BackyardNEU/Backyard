@@ -69,6 +69,10 @@ export const ProfilePage = () => {
     return () => window.removeEventListener('popstate', handleBack);
   }, [lastPath, navigate]);
 
+  useEffect(() => {
+    return () => { if (preview) URL.revokeObjectURL(preview); };
+  }, [preview]);
+
   async function handleAvatarUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
