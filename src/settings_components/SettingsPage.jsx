@@ -46,47 +46,51 @@ export const SettingsPage = () => {
 
     if (status === 'loading') {
         return (
-            <SkeletonRegion className="ProfilePage settings-page" label="Loading settings">
-                <div className="profile-header">
-                    <div className="profile-copy">
-                        <Skeleton width="180px" height="2.2rem" />
-                    </div>
-                </div>
-                <hr className="profile-divider" />
-                {[0, 1, 2].map((i) => (
-                    <div key={i} className="settings-section">
-                        <Skeleton width="160px" height="1.2rem" />
-                        <div className="settings-form">
-                            <Skeleton height="2.4rem" radius={4} />
-                            <Skeleton width="70%" height="2.4rem" radius={4} />
+            <div className="settings-overlay">
+                <SkeletonRegion className="ProfilePage settings-page" label="Loading settings">
+                    <div className="profile-header">
+                        <div className="profile-copy">
+                            <Skeleton width="180px" height="2.2rem" />
                         </div>
                     </div>
-                ))}
-            </SkeletonRegion>
+                    <hr className="profile-divider" />
+                    {[0, 1, 2].map((i) => (
+                        <div key={i} className="settings-section">
+                            <Skeleton width="160px" height="1.2rem" />
+                            <div className="settings-form">
+                                <Skeleton height="2.4rem" radius={4} />
+                                <Skeleton width="70%" height="2.4rem" radius={4} />
+                            </div>
+                        </div>
+                    ))}
+                </SkeletonRegion>
+            </div>
         )
     }
 
     return (
-        <div className="ProfilePage settings-page">
-            <div className="profile-header">
-                <div className="profile-copy">
-                    <h1 className="ProfileName">Settings</h1>
+        <div className="settings-overlay">
+            <div className="ProfilePage settings-page">
+                <div className="profile-header">
+                    <div className="profile-copy">
+                        <h1 className="ProfileName">Settings</h1>
+                    </div>
+                    <button
+                        className="profile-close-btn"
+                        onClick={handleClose}
+                        aria-label="Close settings"
+                    >
+                        ×
+                    </button>
                 </div>
-                <button
-                    className="profile-close-btn"
-                    onClick={handleClose}
-                    aria-label="Close settings"
-                >
-                    ×
-                </button>
-            </div>
-            <hr className="profile-divider" />
+                <hr className="profile-divider" />
 
-            <ProfileSettings />
-            <CalendarSettings />
-            <NotificationSettings />
-            <BlockedUsersSettings />
-            <AccountSettings />
+                <ProfileSettings />
+                <CalendarSettings />
+                <NotificationSettings />
+                <BlockedUsersSettings />
+                <AccountSettings />
+            </div>
         </div>
     )
 }

@@ -4,6 +4,14 @@
    Reuses the existing .ProfilePage shell and the setup-* field classes, so restyling
    those fields in one place covers onboarding and settings together. */
 
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: #f9f9f9;
+  overflow-y: auto;
+}
+
 .settings-page {
   padding-bottom: 96px;
 }
