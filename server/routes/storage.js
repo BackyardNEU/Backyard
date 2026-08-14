@@ -25,6 +25,21 @@ if (!imageModerator) {
     );
 }
 
+// The client picks the file extension, and stripping it to alphanumerics still lets
+// through "svg" — a format that can carry <script> and event handlers. Nothing renders
+// a club logo as anything but an <img>, where browsers refuse to run embedded script,
+// but an SVG sitting in a public bucket is one <object> or direct link away from being
+// a stored XSS. Allowlist the raster formats /verify-image will accept anyway, so a
+// rejected type never reaches storage in the first place.
+//
+// Mirrors SAFE_IMAGE_TYPES below; anything outside it falls back to the caller default.
+const SAFE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'webp', 'gif', 'avif']);
+
+function imageExt(raw, fallback) {
+    const cleaned = String(raw ?? '').replace(/[^a-z0-9]/gi, '').slice(0, 8).toLowerCase();
+    return SAFE_EXTENSIONS.has(cleaned) ? cleaned : fallback;
+}
+
 // Pattern: backend mints a short-lived signed upload URL, browser PUTs the
 // file bytes directly to Supabase Storage. We never proxy megabytes through
 // Express, but the service-role key stays on the server.
@@ -62,7 +77,7 @@ async function makeSignedUpload(bucket, path, res, options = {}) {
 // We delete any existing avatar first because Supabase's upsertEnabled on
 // createSignedUploadUrl can still throw "resource already exists" in practice.
 router.post('/profile-upload-url', async (req, res) => {
-    const ext = (req.body?.ext || 'jpg').replace(/[^a-z0-9]/gi, '').slice(0, 8) || 'jpg';
+    const ext = imageExt(req.body?.ext, 'jpg');
     const newPath = `${req.user.id}.${ext}`;
 
     // Purge all existing avatar files for this user regardless of extension.
@@ -83,14 +98,14 @@ router.post('/profile-upload-url', async (req, res) => {
 // id so it's obvious who uploaded what and so storage policies can scope
 // listing if you ever add them.
 router.post('/review-upload-url', async (req, res) => {
-    const ext = (req.body?.ext || 'webp').replace(/[^a-z0-9]/gi, '').slice(0, 8) || 'webp';
+    const ext = imageExt(req.body?.ext, 'webp');
     const rand = Math.random().toString(36).slice(2) + Date.now().toString(36);
     const path = `${req.user.id}/${rand}.${ext}`;
     await makeSignedUpload('review_images', path, res);
 });
 
 router.post('/profile-photos-upload-url', async (req, res) => {
-    const ext = (req.body?.ext || 'webp').replace(/[^a-z0-9]/gi, '').slice(0, 8) || 'webp';
+    const ext = imageExt(req.body?.ext, 'webp');
     const rand = Math.random().toString(36).slice(2) + Date.now().toString(36);
     const path = `${req.user.id}/${rand}.${ext}`;
     await makeSignedUpload('profile_photos', path, res);
@@ -107,7 +122,7 @@ router.post('/club-logo-upload-url', async (req, res) => {
     // a client can simply skip.
     await requireModerator(req.user.id, clubId);
 
-    const ext = (req.body?.ext || 'webp').replace(/[^a-z0-9]/gi, '').slice(0, 8) || 'webp';
+    const ext = imageExt(req.body?.ext, 'webp');
     const path = `${clubId}.${ext}`;
 
     // No delete here. Issuing a signed URL is not evidence that an upload will follow,
@@ -124,7 +139,7 @@ router.post('/club-logo-upload-url', async (req, res) => {
 });
 
 router.post('/event-poster-upload-url', async (req, res) => {
-    const ext = (req.body?.ext || 'jpg').replace(/[^a-z0-9]/gi, '').slice(0, 8) || 'jpg';
+    const ext = imageExt(req.body?.ext, 'jpg');
     const rand = Math.random().toString(36).slice(2) + Date.now().toString(36);
     const path = `${req.user.id}/${rand}.${ext}`;
     await makeSignedUpload('event_posters', path, res);

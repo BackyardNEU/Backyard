@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { apiFetch } from '../../lib/api';
-import { Field, Text, Area, Repeater, LIMITS } from './fields.jsx';
+import { Field, FieldGroup, Text, Area, Repeater, LIMITS } from './fields.jsx';
 
 const MAX_LINKS = 5;
 
@@ -75,9 +75,9 @@ export default function Basics({ wizard, clubId, clubName }) {
                 />
             </Field>
 
-            <Field
+            <FieldGroup
                 label="Logo"
-                hint="Square images look best. PNG or JPG, up to about 5 MB."
+                hint="Square images look best. PNG, JPG or WebP, up to about 5 MB."
             >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     {data.logo_url
@@ -90,7 +90,7 @@ export default function Basics({ wizard, clubId, clubName }) {
                         disabled={uploading}
                     />
                 </div>
-            </Field>
+            </FieldGroup>
             {uploading && <p className="ob-hint">Uploading…</p>}
             {uploadError && <div className="ob-error">{uploadError}</div>}
 
