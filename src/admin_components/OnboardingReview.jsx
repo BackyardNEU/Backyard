@@ -5,12 +5,13 @@ import DraftPreview from './DraftPreview';
 /**
  * Review queue for club pages submitted through the onboarding wizard.
  *
- * Approving used to mean running curl with a hand-extracted JWT, which is fine for the
- * person who wrote the endpoints and a wall for everyone else. Outreach is Connor and
- * Milo's job, so the thing they do dozens of times cannot require a terminal.
+ * Approving used to mean running curl with a hand-extracted JWT, which is fine for
+ * whoever wrote the endpoints and a wall for everyone else. Outreach is not their job,
+ * and the thing they will do dozens of times cannot require a terminal.
  *
- * Deliberately plain, matching the rest of this page. It is internal tooling, and the
- * scarce thing is being able to read a submission quickly, not styling.
+ * Reviewing opens the page full screen, the way a student sees it. A preview in a side
+ * panel answers "did the fields save"; this has to answer "is this good enough to
+ * publish", and that is a judgement about the whole page at the size it will be read.
  */
 const s = {
     row: { display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' },
@@ -19,7 +20,6 @@ const s = {
         display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center',
         padding: '8px 10px', border: '1px solid #ddd', borderRadius: 4, marginBottom: 6,
     },
-    panel: { marginTop: 14, padding: 12, border: '1px solid #ccc', borderRadius: 4, background: '#fafafa' },
     key: { color: '#555', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.06em' },
     pre: { whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: '2px 0 12px', fontSize: 13 },
     btn: { padding: '6px 14px', fontFamily: 'monospace', cursor: 'pointer' },
@@ -27,24 +27,32 @@ const s = {
     err: { color: 'red', marginTop: 8 },
     ok: { color: 'green', marginTop: 8 },
     muted: { color: '#555', fontSize: 13 },
-    // The club page components bring their own layout, so this is a plain container with
-    // room around it rather than anything that could fight them.
-    preview: {
-        background: '#fff', border: '1px solid #ddd', borderRadius: 6,
-        padding: 16, marginBottom: 16, overflowX: 'auto',
+
+    // Above the nav bar, which sits high on the main app. A reviewer should be looking at
+    // the club page and nothing else.
+    overlay: {
+        position: 'fixed', inset: 0, zIndex: 4000,
+        background: '#fff', display: 'flex', flexDirection: 'column',
     },
+    bar: {
+        flex: 'none', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
+        padding: '10px 16px', borderBottom: '1px solid #ddd', background: '#fafafa',
+        fontFamily: 'monospace',
+    },
+    // Only this scrolls, so the actions stay reachable however long the page runs.
+    body: { flex: 1, overflowY: 'auto', background: '#fff' },
+    fields: { padding: 20, maxWidth: 760, fontFamily: 'monospace' },
+    spacer: { flex: 1 },
 };
 
 export default function OnboardingReview() {
     const [pending, setPending] = useState(null);
-    const [clubId, setClubId] = useState('');
     const [record, setRecord] = useState(null);
+    const [lookupId, setLookupId] = useState('');
     const [note, setNote] = useState('');
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState(null);
     const [message, setMessage] = useState(null);
-    // Preview first: approving is a judgement about how the page looks, and the field
-    // list is the fallback for when something needs reading exactly as typed.
     const [view, setView] = useState('preview');
 
     const loadPending = useCallback(() => {
@@ -55,25 +63,41 @@ export default function OnboardingReview() {
 
     useEffect(loadPending, [loadPending]);
 
-    const open = async (id) => {
-        setError(null); setMessage(null); setRecord(null); setClubId(id);
+    const open = useCallback(async (id) => {
+        setError(null); setMessage(null); setRecord(null); setView('preview');
         try {
             setRecord(await apiFetch(`/admin/onboarding/${id}`));
         } catch (e) {
             setError(e.message);
         }
-    };
+    }, []);
+
+    const close = useCallback(() => { setRecord(null); setNote(''); }, []);
+
+    // Escape closes, and the page behind must not scroll while the overlay is up.
+    useEffect(() => {
+        if (!record) return;
+        const onKey = (e) => { if (e.key === 'Escape') close(); };
+        const previous = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        window.addEventListener('keydown', onKey);
+        return () => {
+            document.body.style.overflow = previous;
+            window.removeEventListener('keydown', onKey);
+        };
+    }, [record, close]);
 
     const act = async (path, body, done) => {
         setBusy(true); setError(null); setMessage(null);
+        const id = record.club_id;
         try {
-            await apiFetch(`/admin/onboarding/${clubId}/${path}`, { method: 'POST', body });
+            await apiFetch(`/admin/onboarding/${id}/${path}`, { method: 'POST', body });
             setMessage(done);
             loadPending();
-            if (clubId) open(clubId);
+            close();
         } catch (e) {
-            // The endpoints return the specific validation failures, which is the whole
-            // reason a reviewer can act on a rejection instead of guessing.
+            // The endpoints return the specific validation failures, which is what lets a
+            // reviewer tell the club what to fix instead of guessing.
             setError(e.body?.errors ? `${e.message}: ${JSON.stringify(e.body.errors)}` : e.message);
         } finally {
             setBusy(false);
@@ -81,11 +105,13 @@ export default function OnboardingReview() {
     };
 
     const draft = record?.draft ?? {};
-    const basic = (draft.modules ?? []).find((m) => m.type === 'basic_info')?.data ?? {};
-    const join = (draft.modules ?? []).find((m) => m.type === 'join')?.data ?? {};
-    const faqs = (draft.modules ?? []).find((m) => m.type === 'faqs')?.data?.faqs ?? [];
-    const people = (draft.modules ?? []).find((m) => m.type === 'member_roster')?.data?.members ?? [];
+    const byType = (type) => (draft.modules ?? []).find((m) => m.type === type)?.data ?? {};
+    const basic = byType('basic_info');
+    const join = byType('join');
+    const faqs = byType('faqs').faqs ?? [];
+    const people = byType('member_roster').members ?? [];
     const events = draft.events ?? [];
+    const reviewable = record?.status === 'pending_review';
 
     return (
         <div>
@@ -118,111 +144,38 @@ export default function OnboardingReview() {
                 <input
                     id="ob-club-id"
                     style={s.input}
-                    value={clubId}
-                    onChange={(e) => setClubId(e.target.value.trim())}
+                    value={lookupId}
+                    onChange={(e) => setLookupId(e.target.value.trim())}
                     placeholder="club uuid"
                 />
-                <button style={s.btn} onClick={() => open(clubId)} disabled={!clubId}>Open</button>
+                <button style={s.btn} onClick={() => open(lookupId)} disabled={!lookupId}>Open</button>
             </div>
 
             {error && <p style={s.err}>{error}</p>}
             {message && <p style={s.ok}>{message}</p>}
 
             {record && (
-                <div style={s.panel}>
-                    <div style={{ ...s.row, marginBottom: 12 }}>
+                <div style={s.overlay} role="dialog" aria-modal="true" aria-label="Club page preview">
+                    <div style={s.bar}>
+                        <button style={s.btn} onClick={close}>← Back</button>
+                        <strong>{basic.club_name || record.demo_club_data?.club_name || record.club_id}</strong>
+                        <span style={s.muted}>{record.status}</span>
+
                         <button
                             style={{ ...s.btn, fontWeight: view === 'preview' ? 700 : 400 }}
                             onClick={() => setView('preview')}
                         >
-                            Preview
+                            Page
                         </button>
                         <button
                             style={{ ...s.btn, fontWeight: view === 'fields' ? 700 : 400 }}
                             onClick={() => setView('fields')}
                         >
-                            Field list
+                            Fields
                         </button>
-                        <span style={s.muted}>
-                            {record.status}
-                            {record.submitted_at && ` · submitted ${new Date(record.submitted_at).toLocaleString()}`}
-                        </span>
-                    </div>
 
-                    {view === 'preview' && (
-                        <div style={s.preview}>
-                            <DraftPreview record={record} />
-                        </div>
-                    )}
+                        <span style={s.spacer} />
 
-                    {view === 'fields' && (<>
-                    <div style={s.key}>Status</div>
-                    <p style={s.pre}>
-                        {record.status}
-                        {record.submitted_at && ` · submitted ${new Date(record.submitted_at).toLocaleString()}`}
-                    </p>
-
-                    <div style={s.key}>Name</div>
-                    <p style={s.pre}>{basic.club_name || '(empty)'}</p>
-
-                    <div style={s.key}>Description</div>
-                    <p style={s.pre}>{basic.description || '(empty)'}</p>
-
-                    <div style={s.key}>Logo</div>
-                    <p style={s.pre}>
-                        {basic.logo_url
-                            ? <img src={basic.logo_url} alt="" style={{ height: 64, borderRadius: 6 }} />
-                            : '(none)'}
-                    </p>
-
-                    <div style={s.key}>Category and subcategories</div>
-                    <p style={s.pre}>
-                        {draft.interests?.category_id
-                            ? `${draft.interests.category_id} · ${(draft.interests.subcategories ?? []).map((x) => x.name).join(', ') || '(none)'}`
-                            : '(not set)'}
-                    </p>
-
-                    <div style={s.key}>Details</div>
-                    <p style={s.pre}>{JSON.stringify(draft.details ?? {}, null, 1)}</p>
-
-                    <div style={s.key}>Joining ({(join.tabs ?? []).length} section(s))</div>
-                    <p style={s.pre}>
-                        {(join.tabs ?? []).map((t) => `${t.title}: ${t.body}`).join('\n') || '(none)'}
-                    </p>
-
-                    <div style={s.key}>FAQs ({faqs.length})</div>
-                    <p style={s.pre}>{faqs.map((f) => `${f.q} — ${f.a}`).join('\n') || '(none)'}</p>
-
-                    <div style={s.key}>People ({people.length})</div>
-                    <p style={s.pre}>
-                        {people.map((m) => `${m.name}${m.category ? ` (${m.category})` : ''}`).join('\n') || '(none)'}
-                    </p>
-
-                    <div style={s.key}>Events ({events.length})</div>
-                    <p style={s.pre}>
-                        {events.map((e) => `${e.event_name} · ${e.start_time} · ${e.where || 'no location'}`).join('\n') || '(none)'}
-                    </p>
-                    </>)}
-
-                    {/* Events never appear in the preview, since the rows do not exist
-                        until approval, so they are listed here in either view. */}
-                    {view === 'preview' && events.length > 0 && (
-                        <div style={{ marginTop: 14 }}>
-                            <div style={s.key}>Events to be created ({events.length})</div>
-                            <p style={s.pre}>
-                                {events.map((e) => `${e.event_name} · ${e.start_time} · ${e.where || 'no location'}`).join('\n')}
-                            </p>
-                        </div>
-                    )}
-
-                    <div style={s.row}>
-                        <button
-                            style={s.btn}
-                            disabled={busy || record.status !== 'pending_review'}
-                            onClick={() => act('approve', {}, 'Approved and published.')}
-                        >
-                            Approve
-                        </button>
                         <input
                             style={s.input}
                             value={note}
@@ -231,10 +184,17 @@ export default function OnboardingReview() {
                         />
                         <button
                             style={s.btn}
-                            disabled={busy || !note.trim() || record.status !== 'pending_review'}
+                            disabled={busy || !note.trim() || !reviewable}
                             onClick={() => act('request-changes', { note: note.trim() }, 'Sent back to the club.')}
                         >
                             Request changes
+                        </button>
+                        <button
+                            style={s.btn}
+                            disabled={busy || !reviewable}
+                            onClick={() => act('approve', {}, 'Approved and published.')}
+                        >
+                            Approve
                         </button>
                         <button
                             style={s.btn}
@@ -245,12 +205,72 @@ export default function OnboardingReview() {
                         </button>
                     </div>
 
-                    {record.status !== 'pending_review' && (
-                        <p style={s.muted}>
-                            Approve and request-changes only apply to a page awaiting review.
+                    {!reviewable && (
+                        <p style={{ ...s.muted, margin: 0, padding: '6px 16px', background: '#fff8e1' }}>
+                            Approve and request changes only apply to a page awaiting review.
                             This one is {record.status}.
                         </p>
                     )}
+                    {error && <p style={{ ...s.err, margin: 0, padding: '6px 16px' }}>{error}</p>}
+
+                    <div style={s.body}>
+                        {view === 'preview' ? (
+                            <>
+                                <DraftPreview record={record} />
+                                {events.length > 0 && (
+                                    <div style={s.fields}>
+                                        <div style={s.key}>Events to be created ({events.length})</div>
+                                        <p style={s.pre}>
+                                            {events.map((e) => `${e.event_name} · ${e.start_time} · ${e.where || 'no location'}`).join('\n')}
+                                        </p>
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <div style={s.fields}>
+                                <div style={s.key}>Name</div>
+                                <p style={s.pre}>{basic.club_name || '(empty)'}</p>
+
+                                <div style={s.key}>Description</div>
+                                <p style={s.pre}>{basic.description || '(empty)'}</p>
+
+                                <div style={s.key}>Logo</div>
+                                <p style={s.pre}>
+                                    {basic.logo_url
+                                        ? <img src={basic.logo_url} alt="" style={{ height: 64, borderRadius: 6 }} />
+                                        : '(none)'}
+                                </p>
+
+                                <div style={s.key}>Category and subcategories</div>
+                                <p style={s.pre}>
+                                    {draft.interests?.category_id
+                                        ? `${draft.interests.category_id} · ${(draft.interests.subcategories ?? []).map((x) => x.name).join(', ') || '(none)'}`
+                                        : '(not set)'}
+                                </p>
+
+                                <div style={s.key}>Details</div>
+                                <p style={s.pre}>{JSON.stringify(draft.details ?? {}, null, 1)}</p>
+
+                                <div style={s.key}>Joining ({(join.tabs ?? []).length} section(s))</div>
+                                <p style={s.pre}>
+                                    {(join.tabs ?? []).map((t) => `${t.title}: ${t.body}`).join('\n') || '(none)'}
+                                </p>
+
+                                <div style={s.key}>FAQs ({faqs.length})</div>
+                                <p style={s.pre}>{faqs.map((f) => `${f.q} / ${f.a}`).join('\n') || '(none)'}</p>
+
+                                <div style={s.key}>People ({people.length})</div>
+                                <p style={s.pre}>
+                                    {people.map((m) => `${m.name}${m.category ? ` (${m.category})` : ''}`).join('\n') || '(none)'}
+                                </p>
+
+                                <div style={s.key}>Events ({events.length})</div>
+                                <p style={s.pre}>
+                                    {events.map((e) => `${e.event_name} · ${e.start_time} · ${e.where || 'no location'}`).join('\n') || '(none)'}
+                                </p>
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
         </div>
