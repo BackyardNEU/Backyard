@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '../lib/api';
+import DraftPreview from './DraftPreview';
 
 /**
  * Review queue for club pages submitted through the onboarding wizard.
@@ -26,6 +27,12 @@ const s = {
     err: { color: 'red', marginTop: 8 },
     ok: { color: 'green', marginTop: 8 },
     muted: { color: '#555', fontSize: 13 },
+    // The club page components bring their own layout, so this is a plain container with
+    // room around it rather than anything that could fight them.
+    preview: {
+        background: '#fff', border: '1px solid #ddd', borderRadius: 6,
+        padding: 16, marginBottom: 16, overflowX: 'auto',
+    },
 };
 
 export default function OnboardingReview() {
@@ -36,6 +43,9 @@ export default function OnboardingReview() {
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState(null);
     const [message, setMessage] = useState(null);
+    // Preview first: approving is a judgement about how the page looks, and the field
+    // list is the fallback for when something needs reading exactly as typed.
+    const [view, setView] = useState('preview');
 
     const loadPending = useCallback(() => {
         apiFetch('/admin/onboarding/pending')
@@ -120,6 +130,32 @@ export default function OnboardingReview() {
 
             {record && (
                 <div style={s.panel}>
+                    <div style={{ ...s.row, marginBottom: 12 }}>
+                        <button
+                            style={{ ...s.btn, fontWeight: view === 'preview' ? 700 : 400 }}
+                            onClick={() => setView('preview')}
+                        >
+                            Preview
+                        </button>
+                        <button
+                            style={{ ...s.btn, fontWeight: view === 'fields' ? 700 : 400 }}
+                            onClick={() => setView('fields')}
+                        >
+                            Field list
+                        </button>
+                        <span style={s.muted}>
+                            {record.status}
+                            {record.submitted_at && ` · submitted ${new Date(record.submitted_at).toLocaleString()}`}
+                        </span>
+                    </div>
+
+                    {view === 'preview' && (
+                        <div style={s.preview}>
+                            <DraftPreview record={record} />
+                        </div>
+                    )}
+
+                    {view === 'fields' && (<>
                     <div style={s.key}>Status</div>
                     <p style={s.pre}>
                         {record.status}
@@ -166,6 +202,18 @@ export default function OnboardingReview() {
                     <p style={s.pre}>
                         {events.map((e) => `${e.event_name} · ${e.start_time} · ${e.where || 'no location'}`).join('\n') || '(none)'}
                     </p>
+                    </>)}
+
+                    {/* Events never appear in the preview, since the rows do not exist
+                        until approval, so they are listed here in either view. */}
+                    {view === 'preview' && events.length > 0 && (
+                        <div style={{ marginTop: 14 }}>
+                            <div style={s.key}>Events to be created ({events.length})</div>
+                            <p style={s.pre}>
+                                {events.map((e) => `${e.event_name} · ${e.start_time} · ${e.where || 'no location'}`).join('\n')}
+                            </p>
+                        </div>
+                    )}
 
                     <div style={s.row}>
                         <button
