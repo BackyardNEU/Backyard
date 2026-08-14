@@ -219,9 +219,15 @@ router.post('/verify-image', async (req, res) => {
         return res.status(400).json({ ok: false, error: 'File is not a valid image' });
     }
 
-    // Caller can opt out of the Cloud Vision scan (e.g. profile avatars where the
-    // content-type check alone is sufficient and the API key may not be configured).
-    const skipScan = req.body?.skipScan === true;
+    // Decided from the bucket, never from the request body. This used to read
+    // `req.body?.skipScan === true`, which meant any authenticated caller could disable
+    // Cloud Vision for ANY bucket — club logos, review images, club media — by adding one
+    // field to the JSON. That is the whole moderation system behind a client-supplied
+    // boolean, and the onboarding wizard is about to hand logo upload to 150 strangers.
+    //
+    // Avatars are the one case the flag legitimately existed for: they are only visible
+    // on the uploader's own profile, and the content-type check still applies.
+    const skipScan = urlInfo.bucket === 'profile_images';
 
     // Fails open rather than blocking uploads outright, but flags the response so the
     // gap is visible rather than looking identical to a passing scan.

@@ -116,9 +116,12 @@ export const ProfilePage = () => {
       });
       if (!putRes.ok) throw new Error(`Upload failed (${putRes.status})`);
 
+      // skipScan removed: the server now decides from the bucket, because a client-set
+      // flag let any caller disable moderation for any bucket. Avatars still skip the
+      // scan — that decision just isn't the browser's to make.
       const verification = await apiFetch('/storage/verify-image', {
         method: 'POST',
-        body: { publicUrl, skipScan: true },
+        body: { publicUrl },
       });
       if (!verification.ok) throw new Error(verification.error || 'Image rejected');
 

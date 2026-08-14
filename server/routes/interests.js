@@ -2,6 +2,7 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import textModerator from '../lib/textModerator.js';
 
 const router = express.Router();
 
@@ -62,6 +63,28 @@ router.post('/subcategories', writeLimiter, requireAuth, async (req, res) => {
   }
   if (trimmedName.length > 50) {
     return res.status(400).json({ error: 'Subcategory name must be 50 characters or fewer' });
+  }
+
+  // This writes into a taxonomy that GET /api/interests serves publicly and unauthenticated,
+  // and nothing moderated it. Every other user-authored string in the app runs through
+  // textModerator; a global, permanent, world-readable label should not be the exception.
+  const textCheck = textModerator.checkFields({ name: trimmedName });
+  if (!textCheck.clean) {
+    return res.status(400).json({ error: textCheck.message, field: 'name' });
+  }
+
+  // Only club moderators may extend the taxonomy. That matches where this is actually
+  // called from — the club page editor in BasicInfoModule — but the endpoint itself only
+  // checked for a logged-in user, so anyone with a token could add entries directly.
+  const { data: moderatorOf } = await supabaseAdmin
+    .from('club_memberships')
+    .select('club_id')
+    .eq('user_id', req.user.id)
+    .in('role', ['moderator', 'top_moderator'])
+    .limit(1);
+
+  if (!moderatorOf?.length) {
+    return res.status(403).json({ error: 'Only club moderators can add interests' });
   }
 
   // Validate the category exists
