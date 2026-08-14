@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { useGlobalStore } from '../lib/store'
 import { ProfileSettings } from './ProfileSettings'
 import { CalendarSettings } from './CalendarSettings'
 import { NotificationSettings } from './NotificationSettings'
@@ -19,7 +18,6 @@ import './SettingsPage.css'
 // Visual design is intentionally minimal here — structure and behaviour only.
 export const SettingsPage = () => {
     const navigate = useNavigate()
-    const lastPath = useGlobalStore((state) => state.lastPath)
     const [status, setStatus] = useState('loading')
     useDocumentTitle('Backyard | Settings')
 
@@ -43,8 +41,7 @@ export const SettingsPage = () => {
     }, [navigate])
 
     const handleClose = () => {
-        const target = lastPath && lastPath !== window.location.pathname ? lastPath : '/profile'
-        navigate(target)
+        navigate('/profile')
     }
 
     if (status === 'loading') {
