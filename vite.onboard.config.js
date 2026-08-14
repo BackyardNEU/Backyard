@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 import { existsSync, renameSync } from 'fs';
@@ -55,24 +55,40 @@ function emitAsIndexHtml(outDir) {
 //
 // Deliberately no Tailwind plugin: this surface is a handful of screens with its own
 // stylesheet, and pulling in the app's utility layer would cost more than it saves.
-export default defineConfig({
-    plugins: [react(), serveOnboardEntry(), emitAsIndexHtml('dist-onboard')],
-    build: {
-        outDir: 'dist-onboard',
-        sourcemap: false,
-        rollupOptions: {
-            input: resolve(process.cwd(), 'onboard.html'),
-        },
-    },
-    server: {
-        host: '127.0.0.1',
-        port: 5174,
-        open: '/onboard.html',
-        proxy: {
-            '/api': {
-                target: 'http://localhost:3001',
-                changeOrigin: true,
+export default defineConfig(({ command }) => {
+    const env = loadEnv('development', process.cwd(), '');
+    // Railway when VITE_API_URL is set, otherwise a local backend.
+    const apiTarget = env.VITE_API_URL?.replace(/\/$/, '') || 'http://localhost:3001';
+
+    return {
+        plugins: [react(), serveOnboardEntry(), emitAsIndexHtml('dist-onboard')],
+
+        // In dev only, blank out VITE_API_URL so api.js falls back to a relative '/api'
+        // and the request goes through the proxy below — same-origin, so no CORS.
+        //
+        // Without this, api.js calls Railway directly from 127.0.0.1 and every request
+        // is blocked, because FRONTEND_URL cannot list a port that changes per machine.
+        // That made this surface impossible to develop against real data. Production is
+        // untouched: the build keeps whatever VITE_API_URL the host provides.
+        define: command === 'serve' ? { 'import.meta.env.VITE_API_URL': '""' } : {},
+
+        build: {
+            outDir: 'dist-onboard',
+            sourcemap: false,
+            rollupOptions: {
+                input: resolve(process.cwd(), 'onboard.html'),
             },
         },
-    },
+        server: {
+            host: '127.0.0.1',
+            port: 5174,
+            open: '/onboard.html',
+            proxy: {
+                '/api': {
+                    target: apiTarget,
+                    changeOrigin: true,
+                },
+            },
+        },
+    };
 });
