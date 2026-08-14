@@ -1,4 +1,5 @@
 import { Field, Text, Area, Repeater, LIMITS } from './fields.jsx';
+import { normalizeUrl } from '../../../shared/clubPageValidation.js';
 
 const MAX_TABS = 4;
 
@@ -58,10 +59,16 @@ export default function Joining({ wizard }) {
                 hint="Optional. A form, a sign-up sheet, or a tryout page."
                 >
                 <Text
-                    type="url"
+                    // Not type="url", for the same reason as the links in step 1: the
+                    // browser rejects anything without a scheme, which is how most people
+                    // write an address down.
                     value={data.applicationLink}
                     onChange={(v) => set({ applicationLink: v })}
-                    placeholder="https://forms.gle/…"
+                    onBlur={(e) => {
+                        const tidy = normalizeUrl(e.target.value);
+                        if (tidy && tidy !== data.applicationLink) set({ applicationLink: tidy });
+                    }}
+                    placeholder="forms.gle/…"
                 />
             </Field>
 

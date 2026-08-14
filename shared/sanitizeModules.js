@@ -1,4 +1,5 @@
 import { sanitizeBioHtml } from './sanitizeHtml.js';
+import { normalizeUrl } from './clubPageValidation.js';
 
 // Two fields in the modules blob hold rich text that gets rendered with
 // dangerouslySetInnerHTML: join tab bodies (JoinModule.jsx) and member bios
@@ -18,11 +19,38 @@ export function sanitizeModules(modules) {
     if (!Array.isArray(modules)) return modules;
 
     return modules.map((m) => {
-        if (m?.type === 'join' && Array.isArray(m.data?.tabs)) {
+        // Links are stored with the scheme the club left off, so what lands in the row is
+        // something an href can use. Without this "instagram.com/ourclub" would be saved
+        // verbatim and resolve as a path on our own domain when clicked.
+        if (m?.type === 'basic_info' && Array.isArray(m.data?.links)) {
             return {
                 ...m,
                 data: {
                     ...m.data,
+                    links: m.data.links.map((l) => {
+                        const normalized = normalizeUrl(l?.url);
+                        // BasicInfoModule renders `links.filter(l => l.enabled && l.url)`,
+                        // so a link without the flag never appears at all. The wizard did
+                        // not set it, which meant every link a club added was dropped from
+                        // their own page with nothing to indicate why. Absent means
+                        // enabled; an explicit false is a deliberate hide from the club
+                        // page editor and is preserved.
+                        const enabled = l?.enabled ?? true;
+                        // null means it could not be a URL at all; leave the value for the
+                        // validator to reject rather than silently discarding it.
+                        return { ...l, enabled, ...(normalized ? { url: normalized } : {}) };
+                    }),
+                },
+            };
+        }
+
+        if (m?.type === 'join' && Array.isArray(m.data?.tabs)) {
+            const applicationLink = normalizeUrl(m.data.applicationLink);
+            return {
+                ...m,
+                data: {
+                    ...m.data,
+                    ...(applicationLink ? { applicationLink } : {}),
                     tabs: m.data.tabs.map((t) => ({ ...t, body: sanitizeBioHtml(t?.body) })),
                 },
             };

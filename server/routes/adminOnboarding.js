@@ -11,6 +11,7 @@ import { validateEvents, toEventRow } from '../../shared/clubEventsValidation.js
 import { validateInterests } from '../../shared/clubInterestsValidation.js';
 import { validateModules as validateDraftModules } from '../../shared/clubPageValidation.js';
 import textModerator from '../lib/textModerator.js';
+import { sendChangesRequestedEmail } from '../lib/emails/sendChangesRequested.js';
 
 const router = express.Router();
 
@@ -579,6 +580,13 @@ router.post('/onboarding/:clubId/request-changes', async (req, res) => {
   }
   if (!data) return res.status(409).json({ error: 'That club is not awaiting review' });
   res.json(data);
+
+  // After responding. A club that cannot be emailed is still a club whose page was sent
+  // back, and the reviewer should not see that action fail over a mail provider.
+  //
+  // Without this the note only appeared if the club happened to reopen their setup link,
+  // which nobody does unprompted. Asking for changes silently was the same as not asking.
+  sendChangesRequestedEmail({ clubId: req.params.clubId, note });
 });
 
 // POST /api/admin/onboarding/:clubId/unclaim — the escape hatch.

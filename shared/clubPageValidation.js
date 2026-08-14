@@ -63,6 +63,8 @@ export function visibleLength(html) {
         .trim().length;
 }
 
+// Strict: the value has to carry its own scheme. Used for image sources, where a bare
+// "example.com/a.png" would be read as a relative path and quietly 404.
 export const isValidUrl = (url) => {
     try {
         const u = new URL(url);
@@ -71,6 +73,57 @@ export const isValidUrl = (url) => {
         return false;
     }
 };
+
+// Anything with a scheme already, e.g. "https:", "javascript:", "mailto:".
+const HAS_SCHEME = /^[a-zA-Z][a-zA-Z0-9+.-]*:/;
+
+/**
+ * What a club types, turned into a URL, or null if it cannot be one.
+ *
+ * new URL() throws without a scheme, so validating raw input rejected
+ * "instagram.com/neuchess", "www.instagram.com" and every other form anyone actually
+ * types. Only a pasted, fully-qualified address passed, which is not how people write
+ * their own Instagram down. Clubs read that as "the site says my link is wrong".
+ *
+ * A missing scheme is assumed to be https. A scheme that IS present is left alone and
+ * then checked, so javascript: and data: are still rejected rather than being wrapped
+ * into something that looks safe.
+ */
+const LOOKS_LIKE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export function normalizeUrl(value) {
+    const raw = String(value ?? '').trim();
+    if (!raw) return '';
+
+    // An address in a link field means "write to us", so it becomes a mailto rather than
+    // being mangled. Assuming https turned "chess@northeastern.edu" into
+    // "https://chess@northeastern.edu", which parses, keeps the address as userinfo, and
+    // sends anyone clicking it to northeastern.edu.
+    if (!HAS_SCHEME.test(raw) && LOOKS_LIKE_EMAIL.test(raw)) return `mailto:${raw}`;
+
+    try {
+        const u = new URL(HAS_SCHEME.test(raw) ? raw : `https://${raw}`);
+
+        if (u.protocol === 'mailto:') return u.toString();
+        if (u.protocol !== 'http:' && u.protocol !== 'https:') return null;
+
+        // Reject credentials in the authority. "https://explorethebackyard.com@evil.com"
+        // reads as our domain to anyone glancing at it and resolves to evil.com, which is
+        // the oldest link-spoofing trick there is and has no legitimate use here.
+        if (u.username || u.password) return null;
+
+        // A hostname with no dot is a typo or a bare word, not a site. Without this,
+        // "chess club" becomes https://chess%20club and passes.
+        if (!u.hostname.includes('.')) return null;
+
+        return u.toString();
+    } catch {
+        return null;
+    }
+}
+
+/** For links a person typed, where the scheme is optional. */
+export const isValidLinkUrl = (value) => normalizeUrl(value) !== null;
 
 // Every validator takes { partial }. A draft autosave fires while someone is still
 // typing, so "you have not filled this in yet" is not an error there — only "what you
@@ -97,7 +150,8 @@ export function validateBasicInfo(data, { partial = false } = {}) {
     if (data?.logo_url && !isSafeImageRef(data.logo_url)) return 'The logo address is not a valid link.';
     for (const l of (data?.links ?? [])) {
         if ((l.name ?? '').length > LIMITS.LINK_NAME_MAX) return 'Link names must be 15 characters or fewer.';
-        if (l.url && !isValidUrl(l.url)) return 'One or more link URLs are invalid.';
+        // Lenient on the scheme: a club writing "instagram.com/ourclub" means a link.
+        if (l.url && !isValidLinkUrl(l.url)) return 'One or more link URLs are invalid.';
     }
     return null;
 }
@@ -105,7 +159,8 @@ export function validateBasicInfo(data, { partial = false } = {}) {
 export function validateLinks(basicInfoData) {
     for (const l of (basicInfoData?.links ?? [])) {
         if ((l.name ?? '').length > LIMITS.LINK_NAME_MAX) return 'Link names must be 15 characters or fewer.';
-        if (l.url && !isValidUrl(l.url)) return 'One or more link URLs are invalid.';
+        // Lenient on the scheme: a club writing "instagram.com/ourclub" means a link.
+        if (l.url && !isValidLinkUrl(l.url)) return 'One or more link URLs are invalid.';
     }
     return null;
 }

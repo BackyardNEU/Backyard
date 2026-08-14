@@ -10,6 +10,7 @@ import { checkDraftReady } from '../../shared/onboardingDraft.js';
 import { validateEvents } from '../../shared/clubEventsValidation.js';
 import { validateInterests } from '../../shared/clubInterestsValidation.js';
 import textModerator from '../lib/textModerator.js';
+import { sendClubSubmissionEmail } from '../lib/emails/sendClubSubmission.js';
 
 const router = express.Router();
 
@@ -211,6 +212,17 @@ router.post('/:clubId/onboarding/submit', requireAuth, checkMuted, async (req, r
   }
 
   res.json(data);
+
+  // After responding, and never able to fail the submission. A club that filled in their
+  // page should not see an error because our mail provider had a bad minute, and the
+  // page is already safely submitted by this point.
+  const basic = (existing.draft?.modules ?? [])
+    .find((m) => m?.type === 'basic_info')?.data ?? {};
+  sendClubSubmissionEmail({
+    to: req.user.email,
+    clubName: basic.club_name,
+    userId: req.user.id,
+  });
 });
 
 // Only the fields a human actually wrote — module scaffolding is placeholder text and
