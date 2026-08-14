@@ -356,6 +356,71 @@ body::before {
 
 .ob-add:hover { border-color: var(--crimson); color: var(--crimson); }
 
+/* ── Borrowed login form ──────────────────────────────────────────────── */
+/* form.css sizes every field with `width: min(70vh, 88vw)` — viewport units tuned for
+ * the main app's full-screen login modal. On a tall display that resolves to well over
+ * 1200px, so inside this card the inputs, the name row and the submit row all ran off
+ * the right edge.
+ *
+ * Scoped under .ob-auth so the main app's login is untouched. The hand-drawn ink borders
+ * from BorderedInput are kept exactly as they are — they are the most characterful thing
+ * on the page and the reason this reads as Backyard rather than a generic form. */
+
+.ob-auth { container-type: inline-size; }
+
+.ob-auth .bordered-input-wrap,
+.ob-auth .submit-row,
+.ob-auth .name-row,
+.ob-auth .username-field,
+.ob-auth .reset-submit-wrap,
+.ob-auth form button:not(.toggle-auth-btn):not(.need-help-btn):not(.auth-submit-btn) {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.ob-auth .name-row .bordered-input-wrap { width: auto; min-width: 0; }
+
+/* The row holds the submit button and a sign-in link. Side by side they need more room
+ * than this card has, and the link was the half that got clipped. Stack them. */
+.ob-auth .submit-row {
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: flex-start;
+}
+
+.ob-auth .submit-row .toggle-auth-btn,
+.ob-auth .submit-row .need-help-btn {
+  flex: 1 1 100%;
+  text-align: center;
+  white-space: normal;
+}
+
+.ob-auth .auth-submit-wrap { flex: 1 1 100%; }
+
+/* form.css paints the submit teal. Everything else on this surface is crimson, and the
+ * primary action is the last place to be inconsistent about it. */
+.ob-auth .auth-submit-btn,
+.ob-auth .auth-submit-btn.duo-btn {
+  background: var(--crimson-lift);
+  box-shadow: 0 4px 0 var(--crimson);
+  border-radius: 999px;
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+}
+
+.ob-auth .auth-submit-btn:hover:not(:disabled) { background: #ad3236; }
+
+.ob-auth .toggle-auth-btn,
+.ob-auth .need-help-btn {
+  color: var(--crimson);
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+
+/* Form-level messages inherit the app's own colours; keep them on-palette here. */
+.ob-auth .form-error { color: var(--crimson); }
+
 /* ── The signature: a filing stamp ────────────────────────────────────── */
 /* Submitting is the one moment worth marking. Everything else on the page stays
    quiet so this lands. */

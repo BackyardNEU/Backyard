@@ -165,6 +165,10 @@ export default function ClaimGate() {
                     about ten minutes, and you can stop and come back to this link any time.
                 </p>
 
+                {/* .ob-auth scopes the layout overrides in onboard.css. form.css sizes
+                    its fields in viewport units for a full-screen modal, which overflows
+                    this card by several hundred pixels on a tall display. */}
+                <div className="ob-auth">
                 <Form
                     isSignUp={mode === 'signup'}
                     onAuth={handleAuth}
@@ -175,11 +179,12 @@ export default function ClaimGate() {
                             onClick={() => setMode(mode === 'signup' ? 'login' : 'signup')}
                         >
                             {mode === 'signup'
-                                ? 'Already have a Backyard account? Sign in'
+                                ? 'Already have an account? Sign in'
                                 : 'Need an account? Sign up'}
                         </button>
                     }
                 />
+                </div>
             </div>
         </Page>
     );
