@@ -526,28 +526,94 @@ body::before {
 
 /* ── Category and subcategory picker ──────────────────────────────────── */
 
-/* Native selects render differently on every platform and none of them match the paper
-   look, so the arrow is drawn here and the browser's is removed. */
-.ob-select-wrap { position: relative; }
+/* A native <select> can be styled down to its closed state and no further: the open list
+   is drawn by the operating system, in system fonts and system colours, which on a page
+   built to look like paper is the one element that reads as borrowed. Select.jsx renders
+   the list itself so it can be styled here. */
 
-.ob-select-wrap::after {
-  content: '';
-  position: absolute;
-  right: 14px; top: 50%;
-  width: 8px; height: 8px;
-  border-right: 2px solid var(--ink-soft);
-  border-bottom: 2px solid var(--ink-soft);
-  transform: translateY(-70%) rotate(45deg);
-  pointer-events: none;
-}
+.ob-dd { position: relative; }
 
-.ob-select {
-  appearance: none;
-  padding-right: 38px;
+.ob-dd-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 13px;
+  border: 1.5px solid var(--rule);
+  border-radius: 10px;
+  background: #fffdf9;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
   cursor: pointer;
 }
 
-.ob-select:disabled { color: var(--ink-soft); cursor: default; }
+.ob-dd-button:hover:not(:disabled) { border-color: var(--ink-soft); }
+.ob-dd-button.is-open { border-color: var(--crimson); }
+.ob-dd-button:focus-visible { outline: 3px solid var(--crimson-lift); outline-offset: 2px; }
+.ob-dd-button:disabled { color: var(--ink-soft); cursor: default; }
+
+.ob-dd-placeholder { color: var(--ink-soft); }
+
+.ob-dd-caret {
+  flex: none;
+  width: 8px; height: 8px;
+  border-right: 2px solid var(--ink-soft);
+  border-bottom: 2px solid var(--ink-soft);
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 0.15s ease;
+}
+
+.ob-dd-button.is-open .ob-dd-caret { transform: translateY(2px) rotate(-135deg); }
+
+.ob-dd-list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  left: 0; right: 0;
+  max-height: 264px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--paper);
+  border: 1.5px solid var(--rule);
+  border-radius: 12px;
+  box-shadow: 0 14px 30px rgba(41, 36, 29, 0.18);
+}
+
+.ob-dd-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Hover and keyboard focus share one highlight, so arrowing and pointing look the same. */
+.ob-dd-option.is-active { background: rgba(122, 37, 40, 0.1); color: var(--crimson); }
+.ob-dd-option[aria-selected='true'] { font-weight: 600; }
+.ob-dd-tick { color: var(--crimson); }
+
+/* ── Image upload ─────────────────────────────────────────────────────── */
+
+.ob-upload { display: flex; align-items: flex-start; gap: 16px; }
+.ob-upload-controls { display: grid; gap: 6px; min-width: 0; }
+
+.ob-preview {
+  flex: none;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid var(--rule);
+  background: var(--paper-edge);
+}
+
+.ob-preview--square { width: 84px; height: 84px; }
+/* Posters are landscape on the calendar, so preview them at the shape they will appear. */
+.ob-preview--wide { width: 132px; height: 84px; }
 
 .ob-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .ob-chips--picked { margin-bottom: 2px; }

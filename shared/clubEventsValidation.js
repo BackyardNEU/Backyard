@@ -8,6 +8,8 @@
 // club types is public before review, and an event row would be visible on the calendar
 // the moment it existed.
 
+import { isSafeImageRef } from './clubPageValidation.js';
+
 export const EVENT_LIMITS = {
     NAME_MAX: 80,
     WHERE_MAX: 120,
@@ -47,6 +49,11 @@ export function validateEvents(events, { partial = false } = {}) {
         if (description.length > EVENT_LIMITS.DESCRIPTION_MAX) {
             add('Event description must be 200 characters or fewer.');
         }
+
+        // Same rule the page logo follows: a same-origin path or an http(s) URL, which
+        // keeps javascript: and data: out of a column that is rendered as an <img src>.
+        const image = (ev?.image_url ?? '').trim();
+        if (image && !isSafeImageRef(image)) add('That poster address is not a valid link.');
 
         const hasStart = !!ev?.start_time;
         const hasEnd = !!ev?.end_time;
@@ -89,7 +96,11 @@ export function toEventRow(ev, clubId, clubName) {
     };
     const name = (ev?.event_name ?? '').trim();
     const where = (ev?.where ?? '').trim();
+    const image = (ev?.image_url ?? '').trim();
     if (name) row.event_name = name;
     if (where) row.where = where;
+    // club_events calls the column event_image_url; POST /api/events maps imageUrl onto
+    // it the same way.
+    if (image) row.event_image_url = image;
     return row;
 }

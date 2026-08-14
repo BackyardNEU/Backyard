@@ -1,4 +1,5 @@
 import { FieldGroup, Field, Text, Area, Repeater } from './fields.jsx';
+import ImageUpload from './ImageUpload.jsx';
 import { EVENT_LIMITS } from '../../../shared/clubEventsValidation.js';
 
 // Optional, and said so plainly. Most clubs will not have their semester planned when
@@ -82,6 +83,15 @@ export default function Events({ wizard }) {
                             />
                         </Field>
 
+                        <ImageUpload
+                            label="Event Poster"
+                            hint="Optional. A flyer or graphic students will recognise. Wide images look best."
+                            shape="wide"
+                            value={ev.image_url}
+                            endpoint="/storage/event-poster-upload-url"
+                            onChange={(url) => update(i, { image_url: url })}
+                        />
+
                         <FieldGroup label="Who can see it">
                             <label className="ob-check">
                                 <input
@@ -114,6 +124,7 @@ function blankEvent() {
         description: '',
         start_time: toLocalInput(start),
         end_time: toLocalInput(end),
+        image_url: '',
         is_members_only: false,
     };
 }

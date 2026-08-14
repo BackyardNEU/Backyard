@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '../../lib/api';
 import { Field, FieldGroup } from './fields.jsx';
+import Select from './Select.jsx';
 import { INTEREST_LIMITS } from '../../../shared/clubInterestsValidation.js';
 
 /**
@@ -51,24 +52,18 @@ export default function CategoryPicker({ wizard }) {
     return (
         <>
             <Field label="Category" hint="The closest fit. This is how students filter clubs.">
-                <div className="ob-select-wrap">
-                    <select
-                        className="ob-select"
-                        value={interests.category_id ?? ''}
-                        onChange={(e) => {
-                            // Subcategories belong to a category, so changing it makes
-                            // whatever was picked underneath invalid.
-                            setInterests({ category_id: e.target.value || undefined, subcategories: [] });
-                            setTyped('');
-                        }}
-                        disabled={!taxonomy}
-                    >
-                        <option value="">{taxonomy ? 'Choose a category' : 'Loading…'}</option>
-                        {(taxonomy ?? []).map((c) => (
-                            <option key={c.id} value={c.id}>{c.name}</option>
-                        ))}
-                    </select>
-                </div>
+                <Select
+                    value={interests.category_id ?? ''}
+                    placeholder={taxonomy ? 'Choose a category' : 'Loading…'}
+                    disabled={!taxonomy}
+                    options={(taxonomy ?? []).map((c) => ({ value: c.id, label: c.name }))}
+                    onChange={(next) => {
+                        // Subcategories belong to a category, so changing it makes
+                        // whatever was picked underneath invalid.
+                        setInterests({ category_id: next || undefined, subcategories: [] });
+                        setTyped('');
+                    }}
+                />
             </Field>
 
             {loadError && (
