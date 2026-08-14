@@ -7,6 +7,8 @@ import { validateModules } from '../../shared/clubPageValidation.js';
 import { validateClubDetails, pickClubDetails } from '../../shared/clubDetailsValidation.js';
 import { sanitizeModules } from '../../shared/sanitizeModules.js';
 import { checkDraftReady } from '../../shared/onboardingDraft.js';
+import { validateEvents } from '../../shared/clubEventsValidation.js';
+import { validateInterests } from '../../shared/clubInterestsValidation.js';
 import textModerator from '../lib/textModerator.js';
 
 const router = express.Router();
@@ -79,7 +81,7 @@ router.put('/:clubId/onboarding/draft', requireAuth, checkMuted, async (req, res
     });
   }
 
-  const { modules, details } = req.body ?? {};
+  const { modules, details, events, interests } = req.body ?? {};
 
   // Saves are partial by design — the wizard sends one step at a time — so each half is
   // validated only when present. The hard completeness check happens on submit.
@@ -114,6 +116,36 @@ router.put('/:clubId/onboarding/draft', requireAuth, checkMuted, async (req, res
       return res.status(400).json({ error: textCheck.message, field: textCheck.field });
     }
     patch.details = { ...(existing?.draft?.details ?? {}), ...picked };
+  }
+
+  if (events !== undefined) {
+    // partial for the same reason modules are: an autosave fires while a club is still
+    // picking a date, and "you have not filled this in yet" is not an error yet.
+    const check = validateEvents(events, { partial: true });
+    if (!check.valid) {
+      return res.status(400).json({ error: check.errors[0].message, errors: check.errors });
+    }
+    const textCheck = textModerator.checkFields(collectEventText(events));
+    if (!textCheck.clean) {
+      return res.status(400).json({ error: textCheck.message, field: textCheck.field });
+    }
+    patch.events = events;
+  }
+
+  if (interests !== undefined) {
+    const check = validateInterests(interests, { partial: true });
+    if (!check.valid) {
+      return res.status(400).json({ error: check.errors[0], errors: check.errors });
+    }
+    // Typed subcategory names are club-authored text that will join a shared, publicly
+    // readable taxonomy, so they are moderated here as well as at approval.
+    const names = {};
+    (interests.subcategories ?? []).forEach((s, i) => { names[`subcategory.${i}`] = s?.name ?? ''; });
+    const textCheck = textModerator.checkFields(names);
+    if (!textCheck.clean) {
+      return res.status(400).json({ error: textCheck.message, field: textCheck.field });
+    }
+    patch.interests = interests;
   }
 
   const { data, error } = await supabaseAdmin
@@ -209,6 +241,18 @@ function collectText(modules) {
         out[`member.${i}.${j}.bio`] = mem?.bio ?? '';
       }
     }
+  }
+  return out;
+}
+
+// Event names, locations and descriptions are user-written and end up on a public
+// calendar, so they go through the same moderation as page text.
+function collectEventText(events) {
+  const out = {};
+  for (const [i, ev] of (events ?? []).entries()) {
+    out[`event.${i}.name`] = ev?.event_name ?? '';
+    out[`event.${i}.where`] = ev?.where ?? '';
+    out[`event.${i}.description`] = ev?.description ?? '';
   }
   return out;
 }

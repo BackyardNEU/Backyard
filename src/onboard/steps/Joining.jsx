@@ -19,11 +19,10 @@ export default function Joining({ wizard }) {
 
     return (
         <>
-            <p className="ob-eyebrow">Step 2 of 6</p>
             <h2 className="ob-h1">Joining</h2>
             <p className="ob-lede">
-                When you meet, whether there&apos;s an application, and who to talk to. If a
-                student reads one section, it&apos;s this one.
+                When you meet, whether there&apos;s an application, and who to talk to. This is
+                the section students read first.
             </p>
 
             <Repeater
@@ -47,7 +46,7 @@ export default function Joining({ wizard }) {
                             <Area
                                 value={tab.body}
                                 onChange={(v) => setTabs(tabs.map((t, j) => (j === i ? { ...t, body: v } : t)))}
-                                placeholder="Thursdays at 7pm in Curry Student Center 333. Drop in whenever — no experience needed, and we have boards."
+                                placeholder="Thursdays at 7pm in Curry Student Center 333. Drop in whenever. No experience needed, and we have boards."
                             />
                         </Field>
                     </>
@@ -78,7 +77,7 @@ export default function Joining({ wizard }) {
                 />
             </Field>
 
-            <Field label="Instagram" hint="Just the handle — @yourclub or a full link both work.">
+            <Field label="Instagram" hint="Just the handle. @yourclub or a full link both work.">
                 <Text
                     value={details.instagram}
                     onChange={(v) => wizard.setDetails({ instagram: v })}

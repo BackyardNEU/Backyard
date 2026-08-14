@@ -20,6 +20,24 @@ export function Field({ label, hint, children, value, max }) {
     );
 }
 
+/**
+ * Same look as Field, but a <div> rather than a <label>.
+ *
+ * A file input nested inside its own <label> receives the click twice — once directly,
+ * once forwarded by the label — and browsers respond by never showing the picker at all.
+ * The logo field looked completely dead because of it. Anything containing a file input,
+ * or more than one control, belongs here instead.
+ */
+export function FieldGroup({ label, hint, children }) {
+    return (
+        <div className="ob-field">
+            <span className="ob-label">{label}</span>
+            {hint && <span className="ob-hint">{hint}</span>}
+            {children}
+        </div>
+    );
+}
+
 export function Text({ value, onChange, ...rest }) {
     return (
         <input

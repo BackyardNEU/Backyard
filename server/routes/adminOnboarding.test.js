@@ -23,6 +23,7 @@ function makeBuilder(table) {
         delete: () => { state.op = 'delete'; return builder; },
         eq: (k, v) => { state.filters.push([k, v]); return builder; },
         in: (k, v) => { state.filters.push([k, v]); return builder; },
+        ilike: (k, v) => { state.filters.push([k, v]); return builder; },
         limit: () => builder,
         order: () => builder,
         single: resolve,
@@ -70,6 +71,8 @@ const validModules = [{
     type: 'basic_info', order: 0, isDisplayed: true,
     data: { club_name: 'Chess', description: 'We play chess.', links: [] },
 }];
+
+const validInterests = { category_id: 'cat-1', subcategories: [{ id: 'sub-1', name: 'Chess' }, { id: 'sub-2', name: 'Strategy' }] };
 
 beforeEach(() => {
     calls.length = 0;
@@ -215,7 +218,7 @@ describe('toCsv', () => {
 describe('POST /onboarding/:clubId/approve', () => {
     it('publishes the draft and marks it approved', async () => {
         results['club_onboarding.select'] = {
-            data: { club_id: CLUB, status: 'pending_review', draft: { modules: validModules, details: { club_description: 'd' } } },
+            data: { club_id: CLUB, status: 'pending_review', draft: { modules: validModules, details: { club_description: 'd' }, interests: validInterests } },
             error: null,
         };
         results['club_page_data.upsert'] = { data: null, error: null };
@@ -229,10 +232,84 @@ describe('POST /onboarding/:clubId/approve', () => {
         expect(find('club_page_data', 'upsert')).toHaveLength(1);
     });
 
+    // Subcategories the club typed only join the shared taxonomy at approval, so nothing
+    // invented during onboarding is public before someone has read it.
+    it('creates a typed subcategory and links the club to it', async () => {
+        results['club_onboarding.select'] = {
+            data: {
+                club_id: CLUB, status: 'pending_review',
+                draft: {
+                    modules: validModules,
+                    interests: {
+                        category_id: 'cat-1',
+                        subcategories: [{ id: 'sub-1', name: 'Chess' }, { name: 'Blitz nights' }],
+                    },
+                },
+            },
+            error: null,
+        };
+        results['club_page_data.upsert'] = { data: null, error: null };
+        results['interest_subcategories.select'] = { data: null, error: null }; // not already there
+        results['interest_subcategories.insert'] = { data: { id: 'sub-new' }, error: null };
+        results['club_interests.upsert'] = { data: null, error: null };
+        results['club_onboarding.update'] = { data: { club_id: CLUB, status: 'approved' }, error: null };
+
+        const res = await request(makeApp())
+            .post(`/api/admin/onboarding/${CLUB}/approve`)
+            .set('x-test-user', ADMIN);
+
+        expect(res.status).toBe(200);
+        expect(find('interest_subcategories', 'insert')[0].row).toMatchObject({
+            category_id: 'cat-1', name: 'Blitz nights',
+        });
+        // The existing pick keeps its id; the typed one uses the row just created.
+        expect(find('club_interests', 'upsert')[0].row.subcategory_ids).toEqual(['sub-1', 'sub-new']);
+    });
+
+    it('reuses an existing subcategory rather than duplicating it', async () => {
+        results['club_onboarding.select'] = {
+            data: {
+                club_id: CLUB, status: 'pending_review',
+                draft: {
+                    modules: validModules,
+                    interests: { category_id: 'cat-1', subcategories: [{ name: 'chess' }, { name: 'Blitz' }] },
+                },
+            },
+            error: null,
+        };
+        results['club_page_data.upsert'] = { data: null, error: null };
+        results['interest_subcategories.select'] = { data: { id: 'sub-existing' }, error: null };
+        results['club_interests.upsert'] = { data: null, error: null };
+        results['club_onboarding.update'] = { data: { club_id: CLUB, status: 'approved' }, error: null };
+
+        await request(makeApp())
+            .post(`/api/admin/onboarding/${CLUB}/approve`)
+            .set('x-test-user', ADMIN);
+
+        expect(find('interest_subcategories', 'insert')).toHaveLength(0);
+    });
+
+    it('refuses a draft that never picked two subcategories', async () => {
+        results['club_onboarding.select'] = {
+            data: {
+                club_id: CLUB, status: 'pending_review',
+                draft: { modules: validModules, interests: { category_id: 'cat-1', subcategories: [] } },
+            },
+            error: null,
+        };
+
+        const res = await request(makeApp())
+            .post(`/api/admin/onboarding/${CLUB}/approve`)
+            .set('x-test-user', ADMIN);
+
+        expect(res.status).toBe(400);
+        expect(find('club_page_data', 'upsert')).toHaveLength(0);
+    });
+
     // The gate the whole review pipeline rests on.
     it('refuses to approve a draft that was never submitted', async () => {
         results['club_onboarding.select'] = {
-            data: { club_id: CLUB, status: 'claimed', draft: { modules: validModules } }, error: null,
+            data: { club_id: CLUB, status: 'claimed', draft: { modules: validModules, interests: validInterests } }, error: null,
         };
 
         const res = await request(makeApp())
@@ -271,6 +348,7 @@ describe('POST /onboarding/:clubId/approve', () => {
                         ...validModules,
                         { type: 'join', data: { tabs: [{ title: 'How', body: '<img src=x onerror=alert(1)>' }] } },
                     ],
+                    interests: validInterests,
                 },
             },
             error: null,
@@ -291,7 +369,7 @@ describe('POST /onboarding/:clubId/approve', () => {
         results['club_onboarding.select'] = {
             data: {
                 club_id: CLUB, status: 'pending_review',
-                draft: { modules: validModules, details: { club_description: 'd', school: 'Harvard', rating: 5 } },
+                draft: { modules: validModules, details: { club_description: 'd', school: 'Harvard', rating: 5 }, interests: validInterests },
             },
             error: null,
         };
@@ -314,7 +392,7 @@ describe('POST /onboarding/:clubId/approve', () => {
         results['club_onboarding.select'] = {
             data: {
                 club_id: CLUB, status: 'pending_review',
-                draft: { modules: validModules, details: {} },
+                draft: { modules: validModules, details: {}, interests: validInterests },
             },
             error: null,
         };

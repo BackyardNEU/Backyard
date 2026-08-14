@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { apiFetch } from '../../lib/api';
-import { Field, Text, Area, Repeater, LIMITS } from './fields.jsx';
+import { Field, FieldGroup, Text, Area, Repeater, LIMITS } from './fields.jsx';
+import CategoryPicker from './CategoryPicker.jsx';
 
 const MAX_LINKS = 5;
 
 export default function Basics({ wizard, clubId, clubName }) {
     const data = wizard.getModule('basic_info') ?? {};
-    const details = wizard.draft.details ?? {};
     const links = data.links ?? [];
     const [uploading, setUploading] = useState(false);
     const [uploadError, setUploadError] = useState(null);
@@ -60,11 +60,10 @@ export default function Basics({ wizard, clubId, clubName }) {
 
     return (
         <>
-            <p className="ob-eyebrow">Step 1 of 6</p>
             <h2 className="ob-h1">The basics</h2>
             <p className="ob-lede">
-                This is what students see first — the name on your card, your logo, and a
-                short description of what you actually do.
+                This is what students see first: your name, your logo, and what the club
+                actually does.
             </p>
 
             <Field label="Club name" value={data.club_name ?? clubName} max={LIMITS.CLUB_NAME_MAX}>
@@ -75,9 +74,9 @@ export default function Basics({ wizard, clubId, clubName }) {
                 />
             </Field>
 
-            <Field
-                label="Logo"
-                hint="Square images look best. PNG or JPG, up to about 5 MB."
+            <FieldGroup
+                label="Club Logo"
+                hint="Square images look best. PNG, JPG or WebP, up to about 5 MB."
             >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     {data.logo_url
@@ -90,7 +89,7 @@ export default function Basics({ wizard, clubId, clubName }) {
                         disabled={uploading}
                     />
                 </div>
-            </Field>
+            </FieldGroup>
             {uploading && <p className="ob-hint">Uploading…</p>}
             {uploadError && <div className="ob-error">{uploadError}</div>}
 
@@ -108,17 +107,11 @@ export default function Basics({ wizard, clubId, clubName }) {
                 />
             </Field>
 
-            <Field label="Category" hint="One word or two — how a student would search for you.">
-                <Text
-                    value={details.category}
-                    onChange={(v) => wizard.setDetails({ category: v })}
-                    placeholder="Games"
-                />
-            </Field>
+            <CategoryPicker wizard={wizard} />
 
             <h3 className="ob-label" style={{ marginTop: 26, display: 'block' }}>Links</h3>
             <p className="ob-hint" style={{ marginBottom: 12 }}>
-                Instagram, your website, a Discord invite — wherever students should go next.
+                Instagram, your website, a Discord invite. Anywhere students should go next.
             </p>
 
             <Repeater

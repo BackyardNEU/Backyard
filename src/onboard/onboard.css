@@ -380,6 +380,21 @@ body::before {
 
 .ob-add:hover { border-color: var(--crimson); color: var(--crimson); }
 
+.ob-check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.ob-check input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--crimson-lift);
+  cursor: pointer;
+}
+
 /* ── Google sign-in ───────────────────────────────────────────────────── */
 /* Built here rather than reused from LoginMorph: that button's styles live in
  * LoginMorph.css, and importing it would pull the whole auth-modal stylesheet into a
