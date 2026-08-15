@@ -64,11 +64,19 @@
   color: white;
 }
 
-/* The control is a convenience, not a necessity — drop it first when the row gets
-   tight so the search input keeps its width. */
+/* Column count is now controlled entirely by this toggle (ClubList.css has no
+   viewport-based column rules), so it has to stay reachable on phones too —
+   shrink it to make room instead of hiding it. */
 @media (max-width: 649px) {
   .uni-size-toggle {
-    display: none;
+    height: 1.8rem;
+    margin-left: 4px;
+  }
+
+  .uni-size-btn {
+    min-width: 1.6rem;
+    padding: 0 0.35rem;
+    font-size: 0.75rem;
   }
 }
 
