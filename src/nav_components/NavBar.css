@@ -44,6 +44,10 @@
    it instead of a floating overlay on the default page background elsewhere. */
 .nav-bar--profile-bg {
   background: #f9f9f9;
+  padding: 12px 2px;
+  border-left: 1px solid gray;
+  border-right: 1px solid gray;
+  border-top: 1px solid gray;
 }
 
 @media (max-width: 500px) {

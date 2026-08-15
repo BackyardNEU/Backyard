@@ -185,13 +185,17 @@ function SubmitTab({ user, onSubmitted }) {
       {status === 'error' && <p className="support-error">{errorMsg}</p>}
 
       <div className="support-form-footer">
-        <button
-          className="support-submit-btn"
-          type="submit"
-          disabled={status === 'loading'}
-        >
-          {status === 'loading' ? 'Submitting…' : 'Submit Ticket'}
-        </button>
+        <div className="duo-btn-wrap">
+          <div className="duo-btn-pill" aria-hidden="true" />
+          <button
+            className="support-submit-btn duo-btn"
+            style={{ '--duo-shadow': 'rgb(49, 90, 116)' }}
+            type="submit"
+            disabled={status === 'loading'}
+          >
+            {status === 'loading' ? 'Submitting…' : 'Submit Ticket'}
+          </button>
+        </div>
       </div>
     </form>
   );
