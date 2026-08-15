@@ -242,6 +242,16 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
 
   const selectedCat = taxonomy.find(c => c.id === clubInterests?.category_id) || null;
 
+  // Rendered twice (once under the name for web, once in the rectangle for mobile,
+  // same pattern as club-tag1--inline/--block below) — only one shows per breakpoint.
+  const interestsTagline = selectedCat && [
+    selectedCat.name,
+    ...(clubInterests.subcategory_ids || []).map(subId => {
+      const sub = selectedCat.subcategories?.find(s => s.id === subId);
+      return sub?.name;
+    }).filter(Boolean)
+  ].join(' · ');
+
   const getSuggestions = useCallback((index) => {
     if (!selectedCat) return { matches: [], showAdd: false };
     const subs = selectedCat.subcategories || [];
@@ -352,14 +362,8 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
               </div>
           }
           {!editing && selectedCat && (
-            <p className="club-interests-tagline">
-              {[
-                selectedCat.name,
-                ...(clubInterests.subcategory_ids || []).map(subId => {
-                  const sub = selectedCat.subcategories?.find(s => s.id === subId);
-                  return sub?.name;
-                }).filter(Boolean)
-              ].join(' · ')}
+            <p className="club-interests-tagline club-interests-tagline--inline">
+              {interestsTagline}
             </p>
           )}
           {editing && (
@@ -434,6 +438,11 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
 
         <div className="image-stack">
           <div className="rectangle_min" style={{ '--dominant-color': dominantColor }}>
+            {!editing && selectedCat && (
+              <p className="club-interests-tagline club-interests-tagline--block">
+                {interestsTagline}
+              </p>
+            )}
             <div
               className="club-img-exp"
               style={{ backgroundImage: `url(${logoPreview || logoUrl})`, marginTop: '1rem' }}

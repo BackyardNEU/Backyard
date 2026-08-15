@@ -106,6 +106,12 @@
 .club-tag1--inline,
 .club-tag1--block { display: none; }
 
+/* Same two-copies pattern for club-interests-tagline (rules further down). Declared here,
+   before the @media blocks below that turn the right one on — a same-specificity
+   unconditional rule placed after them in source order would win regardless of viewport. */
+.club-interests-tagline--inline,
+.club-interests-tagline--block { display: none; }
+
 .club-tag2 {
   font-family: "Barlow Condensed", sans-serif;
 
@@ -339,7 +345,9 @@
     width: 100%;
   }
 
-  /* Full-width rectangle: tag1 at the top-left (aligned with the name), logo centered below. */
+  /* Full-width rectangle: club-interests-tagline at the top-left (aligned with the name),
+     logo centered below. Height isn't fixed — flex-direction:column plus this padding lets
+     the box grow on its own to fit the tagline instead of clipping it. */
   .rectangle_min {
     width: 100%;
     box-sizing: border-box;
@@ -370,6 +378,7 @@
   }
 
   .club-tag1--block { display: block; }
+  .club-interests-tagline--block { display: block; }
   .club-tag1 {
     max-width: 100%;
     white-space: nowrap;
@@ -497,6 +506,7 @@
   }
 
   .club-tag1--inline { display: block; }
+  .club-interests-tagline--inline { display: block; }
   .club-tag1 {
     /* half the name (calc in base); one row, overflow handled with … */
     margin-top: 0.01rem;   /* ⬅ ADJUST web name↔tag vertical gap here */
@@ -1333,6 +1343,8 @@
 }
 
 .club-interests-tagline {
+  width: 100%;
+  box-sizing: border-box;
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 1.4rem;
   letter-spacing: 0.05em;
