@@ -1,8 +1,16 @@
+/* z-index 8600 — deliberately above the club-card/ExpandedTile stacking range (that
+   overlay system runs 8000-8500 across ExpandedTile.css/BasicInfoModule.css/
+   CalendarModule.css for a club's expanded page and its own sub-layers), so the nav bar
+   never gets covered while a club card is open or mid-expand-animation. Still well below
+   true page-covering modals (crop/login/support all sit at 9000-10101), which should
+   still be able to cover it. */
 .nav-bar {
   position: fixed;
   display: flex;
   gap: 50px;
-  z-index: 30;
+  z-index: 8600;
+  padding: 12px 16px;
+  border-radius: 8px;
 }
 
 .nav-bar-btn {
@@ -29,6 +37,12 @@
 
 .nav-bar-profile-btn.inactive img {
   filter: sepia(100%);
+}
+
+/* Profile page only — matches the page's own background so the bar reads as part of
+   it instead of a floating overlay on the default page background elsewhere. */
+.nav-bar--profile-bg {
+  background: #f9f9f9;
 }
 
 @media (max-width: 500px) {

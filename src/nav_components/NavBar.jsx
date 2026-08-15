@@ -69,9 +69,10 @@ export function NavBar({ loginOpen, setLoginOpen }) {
   const calendarCurrent = isOnUniPage && calendarViewActive;
   const clubsCurrent = isOnUniPage && !calendarViewActive;
   const profileCurrent = location.pathname === '/profile' || location.pathname === '/settings';
+  const isOnProfilePage = location.pathname === '/profile';
 
   return (
-    <nav className="nav-bar">
+    <nav className={`nav-bar${isOnProfilePage ? ' nav-bar--profile-bg' : ''}`}>
       <button
         type="button"
         className="nav-bar-btn"
