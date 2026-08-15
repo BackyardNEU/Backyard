@@ -517,9 +517,6 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
                   username={friend.username}
                 />
               ))}
-              {friendsInClub.length > 3 && (
-                <span className="friend-avatar-overflow">+{friendsInClub.length - 3}</span>
-              )}
               <span className="friend-names-text">
                 {friendsInClub.length === 1
                 ? (

@@ -634,29 +634,6 @@ padding: 0 10px;
   }
 }
 
-.calpg-close {
-  position: absolute;
-  top: 14px;
-  right: 16px;
-  background: #f0f0f0;
-  border: none;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  font-size: 14px;
-  color: #333;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-  transition: background 0.15s;
-}
-
-.calpg-close:hover {
-  background: #e0e0e0;
-}
-
 .cal-unauthed-msg {
   text-align: center;
   color: #666;

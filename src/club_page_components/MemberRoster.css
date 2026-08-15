@@ -214,9 +214,9 @@
   height: 30px;
   border: none;
   border-radius: 50%;
-  background: #f0f0f0;
+  /* background: #f0f0f0; */
   color: #555;
-  font-size: 17px;
+  font-size: 30px;
   line-height: 1;
   cursor: pointer;
 }

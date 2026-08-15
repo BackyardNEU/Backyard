@@ -141,7 +141,7 @@
   position: fixed;
   top: 32px;
   right: 32px;
-  background: none;
+  background: rgb(234, 234, 230);
   border: none;
   cursor: pointer;
   font-size: 2rem;
@@ -159,6 +159,7 @@
   z-index: auto;
   margin-left: auto;
   flex-shrink: 0;
+  background: rgb(234, 234, 230);
 }
 
 .review-btn {

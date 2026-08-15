@@ -418,7 +418,6 @@ export function CalendarPage({ onClose }) {
   if (status === 'unauthed') {
     return (
       <div className="calpg-card">
-        <button className="calpg-close" onClick={onClose}>✕</button>
         <p className="cal-unauthed-msg">Sign in to see your club events.</p>
       </div>
     );
@@ -430,7 +429,6 @@ export function CalendarPage({ onClose }) {
     <>
       <div className="calpg-card">
         <div className="calpg-header">
-          <button className="calpg-close" onClick={onClose}>✕</button>
           <div className="calpg-tree-wrap">
             <img src={treeImg} alt="" className="calpg-tree-img" />
           </div>

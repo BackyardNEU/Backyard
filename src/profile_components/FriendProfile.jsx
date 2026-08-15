@@ -167,31 +167,6 @@ export const FriendProfile = () => {
       </div>
       <hr className="profile-divider" />
 
-      {/* A visitor can't act on "no clubs joined" or "no mutual friends" the way the
-          profile's owner can, so each section only appears when there's actually
-          something to show — unlike ProfilePage.jsx, which always shows all three
-          with a friendly empty state. */}
-      {profile?.photos?.length > 0 && (
-        <div className="profile-section">
-          <h2 className="profile-divider-header">Photos</h2>
-          <PolaroidCards photos={profile.photos} />
-        </div>
-      )}
-
-      {profile?.member_list?.length > 0 && (
-        <div className="profile-section">
-          <h2 className="profile-divider-header">Clubs Joined</h2>
-          <ClubMembershipPanel memberList={profile.member_list} readOnly />
-        </div>
-      )}
-
-      {profile?.mutual_friends?.length > 0 && (
-        <div className="profile-section">
-          <h2 className="profile-divider-header">Mutual Friends</h2>
-          <MutualFriendsList friends={profile.mutual_friends} viewerId={viewerId} />
-        </div>
-      )}
-
       <div className="profile-section friend-block-section">
         {confirmingBlock ? (
           <div className="friend-block-confirm" role="alertdialog" aria-label="Confirm block">
@@ -220,15 +195,45 @@ export const FriendProfile = () => {
             {blockError && <p className="friend-block-error">{blockError}</p>}
           </div>
         ) : (
-          <button
-            type="button"
-            className="friend-block-trigger"
-            onClick={() => setConfirmingBlock(true)}
-          >
-            Block user
-          </button>
+          <div className="duo-btn-wrap">
+            <div className="duo-btn-pill" aria-hidden="true" />
+            <button
+              type="button"
+              className="friend-block-trigger duo-btn"
+              style={{ '--duo-shadow': 'rgb(110, 12, 8)' }}
+              onClick={() => setConfirmingBlock(true)}
+            >
+              Block user
+            </button>
+          </div>
         )}
       </div>
+      <hr className="profile-divider" />
+
+      {/* A visitor can't act on "no clubs joined" or "no mutual friends" the way the
+          profile's owner can, so each section only appears when there's actually
+          something to show — unlike ProfilePage.jsx, which always shows all three
+          with a friendly empty state. */}
+      {profile?.photos?.length > 0 && (
+        <div className="profile-section">
+          <h2 className="profile-divider-header">Photos</h2>
+          <PolaroidCards photos={profile.photos} />
+        </div>
+      )}
+
+      {profile?.member_list?.length > 0 && (
+        <div className="profile-section">
+          <h2 className="profile-divider-header">Clubs Joined</h2>
+          <ClubMembershipPanel memberList={profile.member_list} readOnly />
+        </div>
+      )}
+
+      {profile?.mutual_friends?.length > 0 && (
+        <div className="profile-section">
+          <h2 className="profile-divider-header">Mutual Friends</h2>
+          <MutualFriendsList friends={profile.mutual_friends} viewerId={viewerId} />
+        </div>
+      )}
     </div>
   )
 }

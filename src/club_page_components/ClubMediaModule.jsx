@@ -277,7 +277,7 @@ function PosterCard({ poster, editing, rank, count, onOpen, isPosterOpen, onUpda
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
             aria-label="Delete poster"
           >
-            X
+            x
           </button>
         )}
 
