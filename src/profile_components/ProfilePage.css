@@ -238,7 +238,8 @@
 .profile-duo-btn--interests,
 .profile-duo-btn--logout,
 .profile-duo-btn--notif,
-.profile-duo-btn--settings {
+.profile-duo-btn--settings,
+.profile-duo-btn--support {
   border: none !important;
   color: #fff !important;
 }
@@ -247,6 +248,16 @@
 .profile-duo-btn--logout    { background-color: #BC4A49 !important; }
 .profile-duo-btn--notif     { background-color: #4B8AB3 !important; }
 .profile-duo-btn--settings  { background-color: #1E1A18 !important; }
+/* Cream white, like the floating support trigger it replaces when signed in
+   (SupportModal.css .support-trigger) — dark text instead of white since the
+   background is light. Horizontal padding matches NotificationBell (14px) for
+   consistent visual weight with other icon buttons. */
+.profile-duo-btn--support   {
+  background-color: #f7f7f3 !important;
+  color: #494949 !important;
+  padding-left: 14px !important;
+  padding-right: 14px !important;
+}
 
 .profile-duo-btn--notif.duo-btn {
   width: auto !important;

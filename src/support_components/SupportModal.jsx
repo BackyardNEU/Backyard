@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '../lib/api';
 import { supabase } from '../lib/supabase';
+import { useGlobalStore } from '../lib/store';
 import borderImg from '/src/assets/border.svg';
 import borderHorizontalImg from '/src/assets/border-horizontal.svg';
 import './SupportModal.css';
@@ -270,6 +271,9 @@ export function SupportModal({ open, setOpen }) {
   const [activeTab, setActiveTab] = useState(0);
   const [user, setUser] = useState(null);
   const [lastSubmitted, setLastSubmitted] = useState(null);
+  // Signed-in users get the "?" trigger inline in ProfilePage's button row instead of
+  // this floating corner button — the modal itself is shared either way.
+  const signedIn = useGlobalStore((state) => state.GlobalValue);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data?.user ?? null));
@@ -281,7 +285,7 @@ export function SupportModal({ open, setOpen }) {
 
   return (
     <AnimatePresence>
-      {!open && (
+      {!open && !signedIn && (
         <motion.button
           key="support-trigger"
           className="support-trigger"

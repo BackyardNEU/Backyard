@@ -55,6 +55,7 @@ export const ProfilePage = () => {
   const [interestsOpen, setInterestsOpen] = useState(false);
 
   const lastPath = useGlobalStore((state) => state.lastPath);
+  const setSupportOpen = useGlobalStore((state) => state.setSupportOpen);
 
   useEffect(() => {
     const handleBack = () => {
@@ -235,6 +236,20 @@ export const ProfilePage = () => {
                 Settings
               </button>
             </div>
+            {user && (
+              <div className="duo-btn-wrap">
+                <div className="duo-btn-pill" aria-hidden="true" />
+                <button
+                  type="button"
+                  className="profile-setup-btn duo-btn profile-duo-btn--support"
+                  style={{ '--duo-shadow': 'rgb(184, 174, 150)' }}
+                  onClick={() => setSupportOpen(true)}
+                  aria-label="Open support"
+                >
+                  ?
+                </button>
+              </div>
+            )}
           </div>
         </div>
         <hr className="profile-divider" />

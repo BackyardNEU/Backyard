@@ -10,7 +10,7 @@
   display: flex;
   gap: 50px;
   z-index: 600;
-  padding: 12px 16px;
+  padding: 12px 0px;
   border-radius: 8px;
 }
 
@@ -49,9 +49,17 @@
 @media (max-width: 500px) {
   .nav-bar {
     flex-direction: row;
-    bottom: 1%;
+    /* Hardcoded, not fit-content: 3 icons (44px) + 2 gaps (50px) + 0 horizontal
+       padding = 232px. */
+    width: 232px;
+    bottom: -1%;
     left: 50%;
     transform: translateX(-50%);
+  }
+
+  .nav-bar-btn img {
+    width: 44px;
+    height: 44px;
   }
 }
 
