@@ -108,6 +108,20 @@ export function CalendarPage({ onClose }) {
   // Week/Month button.
   const [posterSize, setPosterSize] = useState('maximized'); // 'maximized' | 'minimized'
 
+  // Above 700px, only the minimized (single-line) layout is allowed — the full poster
+  // isn't an option there, so force it rather than let the toggle disagree with what's
+  // actually rendered. At or below 700px both modes are available and this leaves
+  // posterSize alone, so the toggle buttons (hidden above 700px, see the CSS) work
+  // normally.
+  useEffect(() => {
+    const checkWidth = () => {
+      if (window.innerWidth > 700) setPosterSize('minimized');
+    };
+    checkWidth();
+    window.addEventListener('resize', checkWidth);
+    return () => window.removeEventListener('resize', checkWidth);
+  }, []);
+
   const [displayYear, setDisplayYear] = useState(todayDate.getFullYear());
   const [displayMonth, setDisplayMonth] = useState(todayDate.getMonth() + 1);
   const [monthlyEvents, setMonthlyEvents] = useState([]);
@@ -430,10 +444,12 @@ export function CalendarPage({ onClose }) {
                 </span>
               )}
             </h1>
-              <div className="cal-month-nav">
-                <button className="cal-nav-btn" onClick={() => navigateMonth(-1)}>‹</button>
-                <button className="cal-nav-btn" onClick={() => navigateMonth(1)}>›</button>
-              </div>
+              {viewMode !== 'week' && (
+                <div className="cal-month-nav">
+                  <button className="cal-nav-btn" onClick={() => navigateMonth(-1)}>‹</button>
+                  <button className="cal-nav-btn" onClick={() => navigateMonth(1)}>›</button>
+                </div>
+              )}
           </div>
         </div>
         {viewMode === 'week' && (
@@ -447,8 +463,17 @@ export function CalendarPage({ onClose }) {
               <div key={day.date.toISOString()} className={`calendar-day calpg-week-day${day.isToday ? ' today' : ''}`}>
                 <div className="day-title-number calpg-day-title">
                   <span className={`calpg-day-label${i === activeDayIndex ? ' calpg-day-label--active' : ''}`}>
-                    <span className="calpg-day-full">{day.fullLabel}</span>
-                    <span className="calpg-day-abbr">{day.label}</span>
+                    {day.isToday ? (
+                      <>
+                        <span className="calpg-today-full">Today</span>
+                        <span className="calpg-today-abbr">TD</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="calpg-day-full">{day.fullLabel}</span>
+                        <span className="calpg-day-abbr">{day.label}</span>
+                      </>
+                    )}
                   </span>
                   <span className={`calpg-day-num${i === activeDayIndex ? ' calpg-day-num--active' : ''}`}>{day.sublabel}</span>
                 </div>
@@ -640,7 +665,7 @@ export function CalendarPage({ onClose }) {
         <div className="calpg-poster-size-toggle">
           <button
             type="button"
-            className="calpg-poster-size-btn"
+            className="calpg-poster-size-btn calpg-poster-size-btn--min"
             aria-label="Minimized poster view"
             aria-pressed={posterSize === 'minimized'}
             onClick={() => setPosterSize('minimized')}

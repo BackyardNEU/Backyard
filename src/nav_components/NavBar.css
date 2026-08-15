@@ -1,14 +1,15 @@
-/* z-index 8600 — deliberately above the club-card/ExpandedTile stacking range (that
-   overlay system runs 8000-8500 across ExpandedTile.css/BasicInfoModule.css/
-   CalendarModule.css for a club's expanded page and its own sub-layers), so the nav bar
-   never gets covered while a club card is open or mid-expand-animation. Still well below
-   true page-covering modals (crop/login/support all sit at 9000-10101), which should
-   still be able to cover it. */
+/* z-index 600 — above the club grid/card stacking (ClubGrid.css tops out at 100, the
+   search bar's category dropdown at 500), so the nav bar stays visible over the club
+   list. But below the ExpandedTile overlay range (8000-8500 across ExpandedTile.css/
+   BasicInfoModule.css/CalendarModule.css for a club's expanded page and its own
+   sub-layers), so an open/expanding club card covers it — and further below the
+   friends-modal (10000) and other page-covering modals (crop/login/support at
+   9000-10101), which should still be able to cover it too. */
 .nav-bar {
   position: fixed;
   display: flex;
   gap: 50px;
-  z-index: 8600;
+  z-index: 600;
   padding: 12px 16px;
   border-radius: 8px;
 }
