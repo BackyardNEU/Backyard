@@ -104,6 +104,7 @@
   background-image: url('/src/assets/white-paper-texture.jpg');
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
   filter: brightness(1.25) contrast(0.9);  /* Match card brightness */
   z-index: -1;
 }
@@ -133,6 +134,7 @@
   border-radius: 0px;
   font-size: 2rem;
   z-index: 1;  /* Above the texture */
+  filter: brightness(1.1) contrast(0.9);
 
   /* If it's an actual <img>, blend it with the texture */
   mix-blend-mode: multiply;  /* Blends with texture background */

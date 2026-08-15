@@ -141,7 +141,7 @@
 }
 
 .ProfileName {
-  font-family: "Bebas Neue", sans-serif;
+  font-family: "Oswald", sans-serif;
   font-size: clamp(2.8rem, 8vw, 5rem);
   font-weight: 400;
   line-height: 0.85;

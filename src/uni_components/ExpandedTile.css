@@ -347,7 +347,7 @@
 @media (min-width: 501px) {
   .divider-header {
     width: 99vw;
-    margin-left: -1%;
+    margin-left: 0;
     box-sizing: border-box;
   }
 }

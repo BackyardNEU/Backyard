@@ -80,6 +80,14 @@
   }
 }
 
+/* Below this, there just isn't room to shrink the toggle any further without it
+   becoming unusable — the search input needs the space more. */
+@media (max-width: 399px) {
+  .uni-size-toggle {
+    display: none;
+  }
+}
+
 .hamburger-wrapper {
   position: relative;
   flex-shrink: 0;

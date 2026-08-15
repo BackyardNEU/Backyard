@@ -53,11 +53,11 @@
 }
 
 .club-name-exp {
-  font-family: "Bebas Neue", sans-serif;
+  font-family: "Oswald", sans-serif;
   margin-right: 5vh;
   align-self: flex-start;
   color: rgb(44, 27, 43);
-  font-weight: 400;
+  font-weight: 500;
   font-style: normal;
   letter-spacing: 0px;
   font-size: var(--name-size, 4rem);   /* --name-size is set per breakpoint on .content-col */
