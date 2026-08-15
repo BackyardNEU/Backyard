@@ -183,20 +183,24 @@ export function CalendarPage({ onClose }) {
     if (!row || viewMode !== 'week') return;
     let ticking = false;
     const updateActiveDay = () => {
-      // With no scroll padding, the first/last day's center can never
-      // actually reach the row's center — so at either scroll extreme,
-      // just force that end's day active instead of nearest-to-center math.
-      const maxScroll = row.scrollWidth - row.clientWidth;
       const dayEls = row.querySelectorAll('.calpg-week-day');
-      if (row.scrollLeft <= 1) {
-        setActiveDayIndex(0);
-        ticking = false;
-        return;
-      }
-      if (row.scrollLeft >= maxScroll - 1) {
-        setActiveDayIndex(dayEls.length - 1);
-        ticking = false;
-        return;
+      // Below 700px .calpg-week-row has scroll padding sized so the first/last
+      // day can actually reach true center — nearest-to-center math alone is
+      // enough. Above that breakpoint there's no such padding, so the
+      // first/last day's center can never reach the row's center; clamp it
+      // at either scroll extreme instead.
+      if (window.innerWidth > 700) {
+        const maxScroll = row.scrollWidth - row.clientWidth;
+        if (row.scrollLeft <= 1) {
+          setActiveDayIndex(0);
+          ticking = false;
+          return;
+        }
+        if (row.scrollLeft >= maxScroll - 1) {
+          setActiveDayIndex(dayEls.length - 1);
+          ticking = false;
+          return;
+        }
       }
       const rowRect = row.getBoundingClientRect();
       const center = rowRect.left + rowRect.width / 2;
@@ -448,6 +452,7 @@ export function CalendarPage({ onClose }) {
                   </span>
                   <span className={`calpg-day-num${i === activeDayIndex ? ' calpg-day-num--active' : ''}`}>{day.sublabel}</span>
                 </div>
+                <div className={`calpg-week-day-events${i === activeDayIndex ? ' calpg-week-day-events--active' : ''}`}>
                 {day.events.length === 0 ? (
                   <p>No events</p>
                 ) : (
@@ -508,6 +513,7 @@ export function CalendarPage({ onClose }) {
                     );
                   })
                 )}
+                </div>
               </div>
             ))}
           </div>

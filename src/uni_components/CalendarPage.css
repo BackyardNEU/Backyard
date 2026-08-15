@@ -957,6 +957,42 @@ padding: 0 10px;
     flex: 0 0 46%;
     min-width: 130px;
   }
+
+  /* Lets the first/last day (header + event card together) actually reach
+     the screen's horizontal center, same as the header ribbon used to
+     before it got clamped to the scroll edges — half of the 46% column
+     width is subtracted from the 50% centering point. */
+  .calpg-week-row {
+    padding-left: 27%;
+    padding-right: 27%;
+  }
+
+  /* Only the highlighted day's events render — everything else stays
+     hidden (but mounted) until it becomes active. The active one stays in
+     normal flow (so it still gives .calendar-day/.calpg-week-row a real
+     height — no clipping against the row's overflow-y:hidden) but bleeds
+     symmetrically past its own 46%-wide column on both sides, into the
+     space its (hidden) neighbors would otherwise occupy — centered under
+     its own day header, which is itself centered on screen while active. */
+  .calpg-week-day-events {
+    display: none;
+  }
+
+  .calpg-week-day-events--active {
+    display: block;
+    width: 192%;
+    margin-left: -46%;
+    margin-right: -46%;
+    /* A plain opacity transition wouldn't fire on a display:none -> block
+       swap, since there's no "from" state to animate from — an animation
+       (re-triggered every time this class gets added) fades it in instead. */
+    animation: calpg-day-events-fade-in 400ms ease;
+  }
+
+  @keyframes calpg-day-events-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
 }
 
 @media (max-width: 400px) {
