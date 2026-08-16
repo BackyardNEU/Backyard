@@ -108,6 +108,20 @@ export function CalendarPage({ onClose }) {
   // Week/Month button.
   const [posterSize, setPosterSize] = useState('maximized'); // 'maximized' | 'minimized'
 
+  // Above 700px, only the minimized (single-line) layout is allowed — the full poster
+  // isn't an option there, so force it rather than let the toggle disagree with what's
+  // actually rendered. At or below 700px both modes are available and this leaves
+  // posterSize alone, so the toggle buttons (hidden above 700px, see the CSS) work
+  // normally.
+  useEffect(() => {
+    const checkWidth = () => {
+      if (window.innerWidth > 700) setPosterSize('minimized');
+    };
+    checkWidth();
+    window.addEventListener('resize', checkWidth);
+    return () => window.removeEventListener('resize', checkWidth);
+  }, []);
+
   const [displayYear, setDisplayYear] = useState(todayDate.getFullYear());
   const [displayMonth, setDisplayMonth] = useState(todayDate.getMonth() + 1);
   const [monthlyEvents, setMonthlyEvents] = useState([]);
@@ -183,20 +197,24 @@ export function CalendarPage({ onClose }) {
     if (!row || viewMode !== 'week') return;
     let ticking = false;
     const updateActiveDay = () => {
-      // With no scroll padding, the first/last day's center can never
-      // actually reach the row's center — so at either scroll extreme,
-      // just force that end's day active instead of nearest-to-center math.
-      const maxScroll = row.scrollWidth - row.clientWidth;
       const dayEls = row.querySelectorAll('.calpg-week-day');
-      if (row.scrollLeft <= 1) {
-        setActiveDayIndex(0);
-        ticking = false;
-        return;
-      }
-      if (row.scrollLeft >= maxScroll - 1) {
-        setActiveDayIndex(dayEls.length - 1);
-        ticking = false;
-        return;
+      // Below 700px .calpg-week-row has scroll padding sized so the first/last
+      // day can actually reach true center — nearest-to-center math alone is
+      // enough. Above that breakpoint there's no such padding, so the
+      // first/last day's center can never reach the row's center; clamp it
+      // at either scroll extreme instead.
+      if (window.innerWidth > 700) {
+        const maxScroll = row.scrollWidth - row.clientWidth;
+        if (row.scrollLeft <= 1) {
+          setActiveDayIndex(0);
+          ticking = false;
+          return;
+        }
+        if (row.scrollLeft >= maxScroll - 1) {
+          setActiveDayIndex(dayEls.length - 1);
+          ticking = false;
+          return;
+        }
       }
       const rowRect = row.getBoundingClientRect();
       const center = rowRect.left + rowRect.width / 2;
@@ -400,7 +418,6 @@ export function CalendarPage({ onClose }) {
   if (status === 'unauthed') {
     return (
       <div className="calpg-card">
-        <button className="calpg-close" onClick={onClose}>✕</button>
         <p className="cal-unauthed-msg">Sign in to see your club events.</p>
       </div>
     );
@@ -412,7 +429,6 @@ export function CalendarPage({ onClose }) {
     <>
       <div className="calpg-card">
         <div className="calpg-header">
-          <button className="calpg-close" onClick={onClose}>✕</button>
           <div className="calpg-tree-wrap">
             <img src={treeImg} alt="" className="calpg-tree-img" />
           </div>
@@ -426,10 +442,12 @@ export function CalendarPage({ onClose }) {
                 </span>
               )}
             </h1>
-              <div className="cal-month-nav">
-                <button className="cal-nav-btn" onClick={() => navigateMonth(-1)}>‹</button>
-                <button className="cal-nav-btn" onClick={() => navigateMonth(1)}>›</button>
-              </div>
+              {viewMode !== 'week' && (
+                <div className="cal-month-nav">
+                  <button className="cal-nav-btn" onClick={() => navigateMonth(-1)}>‹</button>
+                  <button className="cal-nav-btn" onClick={() => navigateMonth(1)}>›</button>
+                </div>
+              )}
           </div>
         </div>
         {viewMode === 'week' && (
@@ -443,11 +461,21 @@ export function CalendarPage({ onClose }) {
               <div key={day.date.toISOString()} className={`calendar-day calpg-week-day${day.isToday ? ' today' : ''}`}>
                 <div className="day-title-number calpg-day-title">
                   <span className={`calpg-day-label${i === activeDayIndex ? ' calpg-day-label--active' : ''}`}>
-                    <span className="calpg-day-full">{day.fullLabel}</span>
-                    <span className="calpg-day-abbr">{day.label}</span>
+                    {day.isToday ? (
+                      <>
+                        <span className="calpg-today-full">Today</span>
+                        <span className="calpg-today-abbr">TD</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="calpg-day-full">{day.fullLabel}</span>
+                        <span className="calpg-day-abbr">{day.label}</span>
+                      </>
+                    )}
                   </span>
                   <span className={`calpg-day-num${i === activeDayIndex ? ' calpg-day-num--active' : ''}`}>{day.sublabel}</span>
                 </div>
+                <div className={`calpg-week-day-events${i === activeDayIndex ? ' calpg-week-day-events--active' : ''}`}>
                 {day.events.length === 0 ? (
                   <p>No events</p>
                 ) : (
@@ -508,6 +536,7 @@ export function CalendarPage({ onClose }) {
                     );
                   })
                 )}
+                </div>
               </div>
             ))}
           </div>
@@ -634,7 +663,7 @@ export function CalendarPage({ onClose }) {
         <div className="calpg-poster-size-toggle">
           <button
             type="button"
-            className="calpg-poster-size-btn"
+            className="calpg-poster-size-btn calpg-poster-size-btn--min"
             aria-label="Minimized poster view"
             aria-pressed={posterSize === 'minimized'}
             onClick={() => setPosterSize('minimized')}

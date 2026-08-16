@@ -130,7 +130,12 @@
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 3rem 0 2rem 0;
+  /* Horizontal padding matches .uni-search-row's 1rem: --uni-content-width is a
+     percentage, so it only resolves to the same pixel width in both places if the
+     two rows' content boxes (outer width minus padding) actually match — otherwise
+     .clubs-list's "98% of the shell" cap silently drifts off by however much the
+     padding amounts differ. */
+  padding: 3rem 1rem 2rem 1rem;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }

@@ -1,7 +1,7 @@
 ﻿import React, {useState, useEffect} from 'react'
 import { apiFetch } from '../lib/api'
 import { useClubData } from '../context/useClubData'
-import {FaSearch, FaTh, FaThLarge, FaSquare} from 'react-icons/fa'
+import {FaSearch, FaTh, FaThLarge} from 'react-icons/fa'
 import './UniSearchBar.css'
 
 const CATEGORIES = [
@@ -30,7 +30,6 @@ const CATEGORIES = [
 const CARD_SIZE_OPTIONS = [
   { value: 'small', label: 'Small cards', glyph: <FaTh /> },
   { value: 'medium', label: 'Medium cards', glyph: <FaThLarge /> },
-  { value: 'large', label: 'Large cards', glyph: <FaSquare /> },
 ];
 
 export const UniSearchBar = ({

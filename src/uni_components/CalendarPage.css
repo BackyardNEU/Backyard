@@ -634,29 +634,6 @@ padding: 0 10px;
   }
 }
 
-.calpg-close {
-  position: absolute;
-  top: 14px;
-  right: 16px;
-  background: #f0f0f0;
-  border: none;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  font-size: 14px;
-  color: #333;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-  transition: background 0.15s;
-}
-
-.calpg-close:hover {
-  background: #e0e0e0;
-}
-
 .cal-unauthed-msg {
   text-align: center;
   color: #666;
@@ -878,6 +855,17 @@ padding: 0 10px;
   }
 }
 
+/* Above 700px only the minimized layout is allowed (see the resize guard in
+   CalendarPage.jsx that forces posterSize to 'minimized' there) — nothing to toggle
+   when the full poster isn't an option, so the whole control disappears rather than
+   offering a choice that doesn't actually exist. At or below 700px both modes are
+   available, so the toggle shows normally. */
+@media (min-width: 701px) {
+  .calpg-poster-size-toggle {
+    display: none;
+  }
+}
+
 /* ===== INLINE CALENDAR WEEK VIEW ALIGNMENT ===== */
 .calpg-week-row {
   justify-content: flex-start;
@@ -938,12 +926,44 @@ padding: 0 10px;
   }
 }
 
+/* The week view's first day is always today (weekDays starts from todayDate in
+   CalendarPage.jsx) — "Today"/"TD" instead of the weekday name, with its own 500px
+   breakpoint independent of the 700px one above for every other day. */
+.calpg-today-full {
+  display: inline;
+}
+
+.calpg-today-abbr {
+  display: none;
+}
+
+@media (max-width: 500px) {
+  .calpg-today-full {
+    display: none;
+  }
+  .calpg-today-abbr {
+    display: inline;
+  }
+}
+
 /* ===== INLINE CALENDAR MONTH VIEW WEEKDAY HEADER (S M T W T F S) ===== */
 .calpg-weekday-label {
   font-family: "Barlow Condensed", sans-serif;
   font-weight: 600;
   font-size: 1.2rem;
   color: #3b3c3c;
+}
+
+/* Experiment: hide the date number and center the day name (e.g. "SUNDAY") on wider
+   screens too, not just the narrow layout below — separate rule so it doesn't disturb
+   the max-width: 700px block's other narrow-screen-only sizing below. */
+@media (min-width: 501px) {
+  .calpg-day-title {
+    justify-content: center;
+  }
+  .calpg-day-num {
+    display: none;
+  }
 }
 
 @media (max-width: 700px) {
@@ -957,10 +977,46 @@ padding: 0 10px;
     flex: 0 0 46%;
     min-width: 130px;
   }
+
+  /* Lets the first/last day (header + event card together) actually reach
+     the screen's horizontal center, same as the header ribbon used to
+     before it got clamped to the scroll edges — half of the 46% column
+     width is subtracted from the 50% centering point. */
+  .calpg-week-row {
+    padding-left: 27%;
+    padding-right: 27%;
+  }
+
+  /* Only the highlighted day's events render — everything else stays
+     hidden (but mounted) until it becomes active. The active one stays in
+     normal flow (so it still gives .calendar-day/.calpg-week-row a real
+     height — no clipping against the row's overflow-y:hidden) but bleeds
+     symmetrically past its own 46%-wide column on both sides, into the
+     space its (hidden) neighbors would otherwise occupy — centered under
+     its own day header, which is itself centered on screen while active. */
+  .calpg-week-day-events {
+    display: none;
+  }
+
+  .calpg-week-day-events--active {
+    display: block;
+    width: 192%;
+    margin-left: -46%;
+    margin-right: -46%;
+    /* A plain opacity transition wouldn't fire on a display:none -> block
+       swap, since there's no "from" state to animate from — an animation
+       (re-triggered every time this class gets added) fades it in instead. */
+    animation: calpg-day-events-fade-in 400ms ease;
+  }
+
+  @keyframes calpg-day-events-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
 }
 
 @media (max-width: 400px) {
- 
+
   .calpg-month {
     font-size: 4rem;
   }
@@ -970,4 +1026,9 @@ padding: 0 10px;
   height: auto;
   object-fit: contain;
 }
+}
+
+.calpg-week-day-events > p {
+  text-align: center;
+  font-family: "Barlow Condensed", sans-serif;
 }
