@@ -68,6 +68,7 @@
 /* One-line club name; marquee-scrolls only when it overflows .club-name-wrap */
 .club-name-wrap {
   width: 100%;
+  padding: 12px 0;
   overflow: hidden;
 }
 .club-name-track {
@@ -507,6 +508,9 @@
 
   .club-tag1--inline { display: block; }
   .club-interests-tagline--inline { display: block; }
+  .club-interests-tagline {
+    margin: -3px 0 0;
+  }
   .club-tag1 {
     /* half the name (calc in base); one row, overflow handled with … */
     margin-top: 0.01rem;   /* ⬅ ADJUST web name↔tag vertical gap here */
