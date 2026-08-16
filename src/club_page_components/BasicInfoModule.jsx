@@ -509,7 +509,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
         {editing && (
           <p className="about-edit-help">
             {part === 'about'
-              ? 'Share a description telling users about your club.'
+              ? 'Think of this like your bio. Also if you want to hide your memmbers, hide this section.'
               : "This is your club's basic info section. Feel free to edit your club's name, profile photo, and a description telling users about your club."}
           </p>
         )}
