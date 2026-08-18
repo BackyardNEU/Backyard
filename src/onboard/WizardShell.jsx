@@ -4,19 +4,20 @@ import { apiFetch } from '../lib/api';
 import Basics from './steps/Basics.jsx';
 import Joining from './steps/Joining.jsx';
 import Faqs from './steps/Faqs.jsx';
-import People from './steps/People.jsx';
 import Stats from './steps/Stats.jsx';
 import Events from './steps/Events.jsx';
 import Review from './steps/Review.jsx';
 import wordmark from '../assets/BackyardOnBoardHeader.png';
 
+// Events sits right after Basics (rather than near the end) so it gets more traction —
+// upcoming events are one of the more valuable things a club can list, and step order
+// tends to track completion rate.
 const STEPS = [
     { key: 'basics', name: 'Basics', Component: Basics },
+    { key: 'events', name: 'Events', Component: Events },
     { key: 'joining', name: 'Joining', Component: Joining },
     { key: 'faqs', name: 'Questions', Component: Faqs },
-    { key: 'people', name: 'People', Component: People },
     { key: 'stats', name: 'Numbers', Component: Stats },
-    { key: 'events', name: 'Events', Component: Events },
     { key: 'review', name: 'Review', Component: Review },
 ];
 
@@ -110,6 +111,9 @@ export default function WizardShell({ clubId, clubName, clubLogo }) {
 
                         <p className="ob-eyebrow">
                             Step {index + 1} of {STEPS.length}
+                        </p>
+                        <p className="ob-hint" style={{ margin: '-4px 0 16px' }}>
+                            Nothing here is final — you can edit your page on our real site later.
                         </p>
                         <Component wizard={wizard} clubId={clubId} clubName={clubName} />
 
