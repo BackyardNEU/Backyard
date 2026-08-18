@@ -7,7 +7,6 @@ export default function Review({ wizard }) {
     const basic = wizard.getModule('basic_info') ?? {};
     const join = wizard.getModule('join') ?? {};
     const faqs = wizard.getModule('faqs')?.faqs ?? [];
-    const people = wizard.getModule('member_roster')?.members ?? [];
     const stats = wizard.getModule('stats')?.stats ?? [];
     const events = wizard.draft.events ?? [];
     const details = wizard.draft.details ?? {};
@@ -23,7 +22,6 @@ export default function Review({ wizard }) {
         { key: 'Joining', value: countLabel(join.tabs, 'section'), required: false },
         { key: 'Contact', value: details.email, required: false },
         { key: 'Questions', value: countLabel(faqs, 'question'), required: false },
-        { key: 'People', value: countLabel(people, 'person', 'people'), required: false },
         { key: 'Numbers', value: countLabel(stats, 'number'), required: false },
         { key: 'Events', value: countLabel(events, 'event'), required: false },
     ];

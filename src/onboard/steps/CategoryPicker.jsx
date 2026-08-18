@@ -99,7 +99,7 @@ export default function CategoryPicker({ wizard }) {
                         <p className="ob-hint" style={{ margin: '4px 0 0' }}>
                             {full
                                 ? 'That is both. Remove one to swap it.'
-                                : `Pick ${INTEREST_LIMITS.REQUIRED_SUBCATEGORIES - subs.length} more.`}
+                                : `Pick up to ${INTEREST_LIMITS.REQUIRED_SUBCATEGORIES}.`}
                         </p>
 
                         <div className="ob-sub-entry">
