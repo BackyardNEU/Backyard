@@ -170,12 +170,13 @@
 }
 
 .cm-marquee-copy {
-  font-family: "Bebas Neue", sans-serif;
-  font-weight: 600;
+  font-family: "Oswald", sans-serif;
+  font-weight: 500;
+  text-transform: uppercase;
   font-size: 2.4rem;
   line-height: 1;
   letter-spacing: 0.5px;
- 
+
 }
 
 /* Trailing gap between repeats — only in marquee mode, so it's part of the -50% loop
@@ -601,8 +602,9 @@
 }
 
 .cm-modal-title {
-  font-family: "Bebas Neue", sans-serif;
-  font-weight: 400;
+  font-family: "Oswald", sans-serif;
+  font-weight: 500;
+  text-transform: uppercase;
   font-size: 2.8rem;
   line-height: 1.05;
   letter-spacing: 0.5px;
