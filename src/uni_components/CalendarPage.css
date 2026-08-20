@@ -602,6 +602,44 @@
   object-fit: contain;
 }
 
+/* Height-driven poster, for the week-view card that gets an explicit height
+   (the --fill class is only applied when that height is set, i.e. under 700px —
+   so this can't reach the lightbox's own .cal-portrait-img-wrap). The title and
+   friends row keep their natural height and the image absorbs whatever is left,
+   with width:auto so its own aspect ratio follows from that height. Overrides
+   the base rule's fixed 3/4 ratio and its calc(100% + 24px) bleed: the poster
+   sits inside the wrap's padding here rather than running through it. */
+.cal-portrait-img-wrap--fill .cal-portrait-img {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: auto;
+  /* cover, not contain: the height here is fixed by flex, so if a very wide
+     poster ever gets clamped by max-width the image still fills that height
+     (cropping horizontally) instead of letterboxing and leaving the card short. */
+  object-fit: cover;
+}
+
+/* The card follows the poster, not the other way around: the image's width is
+   derived from its height (above), so the card shrinks to hug it rather than
+   forcing the poster to fit a full-width card. fit-content (not auto) so it
+   still can't exceed the column, and auto side margins keep it centered. */
+.cal-portrait-img-wrap--fill {
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Whatever the poster leaves over is theirs — they must not be squeezed by the
+   image's flex-grow. */
+.cal-portrait-img-wrap--fill .cal-portrait-title-wrap,
+.cal-portrait-img-wrap--fill .friend-rsvp-callout {
+  flex-shrink: 0;
+}
+
 .cal-portrait-no-img {
   color: rgba(0, 0, 0, 0.4);
   font-size: 13px;
@@ -1009,15 +1047,22 @@ padding: 0 10px;
   .calpg-week-day {
     flex: 0 0 46%;
     min-width: 130px;
+    /* Snaps to the exact center of .calpg-week-row's scrollport on release —
+       exact regardless of column width, gaps, or the padding below, unlike
+       computing the center by hand from percentages (which was never quite
+       right: the padding and this flex-basis are both percentages of the same
+       shrinking content-box, a self-referential relationship with no clean
+       fixed-percentage solution — see git history for the derivation). */
+    scroll-snap-align: center;
   }
 
-  /* Lets the first/last day (header + event card together) actually reach
-     the screen's horizontal center, same as the header ribbon used to
-     before it got clamped to the scroll edges — half of the 46% column
-     width is subtracted from the 50% centering point. */
+  /* Generous, not exact: just needs to be enough room for the first/last day
+     to physically scroll all the way to center. scroll-snap-align above (not
+     this padding) is what makes the centering itself exact. */
   .calpg-week-row {
-    padding-left: 27%;
-    padding-right: 27%;
+    scroll-snap-type: x mandatory;
+    padding-left: 33%;
+    padding-right: 33%;
   }
 
   /* Only the highlighted day's events render — everything else stays
@@ -1040,6 +1085,17 @@ padding: 0 10px;
        swap, since there's no "from" state to animate from — an animation
        (re-triggered every time this class gets added) fades it in instead. */
     animation: calpg-day-events-fade-in 400ms ease;
+    /* A day with several events scrolls inside this box rather than scrolling
+       .calpg-card, so the day tabs above never move. --calpg-day-events-h is
+       measured in CalendarPage.jsx (see the note there on why sticky can't be
+       used for this). */
+    height: var(--calpg-day-events-h, auto);
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+
+  .calpg-week-day-events--active::-webkit-scrollbar {
+    display: none;
   }
 
   @keyframes calpg-day-events-fade-in {
@@ -1062,6 +1118,24 @@ padding: 0 10px;
 }
 
 .calpg-week-day-events > p {
+  text-align: center;
+  font-family: "Barlow Condensed", sans-serif;
+}
+
+/* Empty day. Inherits .calendar-event's button reset (no background, border or
+   padding), so the box itself is invisible — it exists only to give the
+   horizontal day swipe a full-height target on days with nothing scheduled.
+   Height comes from CalendarPage.jsx, matching a real poster card. */
+.calendar-event--empty {
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+}
+
+/* The text was a direct child of .calpg-week-day-events before it moved inside
+   this card, so the `> p` rule above no longer reaches it. */
+.calendar-event--empty p {
+  margin: 0;
   text-align: center;
   font-family: "Barlow Condensed", sans-serif;
 }

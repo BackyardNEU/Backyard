@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+﻿import React, { useState, useMemo, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
 import {
   startOfDay, addDays, format, isSameDay, parseISO,
   getDay, getDaysInMonth, isToday, isBefore,
@@ -137,6 +137,9 @@ export function CalendarPage({ onClose }) {
   const [selectedOverlay, setSelectedOverlay] = useState(null);
 
   const containerRef = useRef(null);
+  const cardRef = useRef(null);
+  const headerRef = useRef(null);
+
   const handleWheel = useCallback((e) => {
     if (!containerRef.current) return;
     // Only intercept horizontal gestures (trackpad swipe). Let vertical scroll
@@ -152,6 +155,68 @@ export function CalendarPage({ onClose }) {
   // Tracks which day column sits closest to the row's horizontal center as the
   // user scrolls, so its label can highlight the same way the day dots do.
   const [activeDayIndex, setActiveDayIndex] = useState(0);
+
+  // Under 700px the week view is sized to fit .calpg-card exactly, so the card
+  // itself never scrolls and the day tabs stay in view — instead the active
+  // day's event list scrolls inside its own box (--calpg-day-events-h, applied
+  // in CalendarPage.css), and each poster fills that box.
+  //
+  // Sticky can't do this job here: .calpg-week-row needs overflow-x:auto for the
+  // horizontal day slider, and CSS won't pair that with overflow-y:visible — it
+  // computes to a non-visible value, which makes the row itself the sticky
+  // containing block for everything inside it. A sticky day title therefore
+  // scrolls away with the card rather than pinning to it, and its `top` offset
+  // just displaces it downward into the poster.
+  //
+  // Measured rather than computed from percentages, since "space left inside a
+  // scrolling ancestor after its sticky header" isn't expressible in CSS.
+  // Re-measured via ResizeObserver (font loading, orientation change, the
+  // header's own responsive sizing) rather than only on mount.
+  const [imgWrapHeight, setImgWrapHeight] = useState(null);
+  useLayoutEffect(() => {
+    if (viewMode !== 'week') return;
+
+    const measure = () => {
+      const card = cardRef.current;
+      const header = headerRef.current;
+      const row = containerRef.current;
+      if (!card || !header || !row || !window.matchMedia('(max-width: 700px)').matches) {
+        setImgWrapHeight(null);
+        card?.style.removeProperty('--calpg-day-events-h');
+        return;
+      }
+
+      const dayTitle = row.querySelector('.day-title-number');
+      const dayCol = row.querySelector('.calpg-week-day');
+      const event = row.querySelector('.calendar-event');
+
+      // .calendar-day's own vertical padding and .calendar-event's bottom margin
+      // are both inside this budget. Leaving them out is what pushed the poster
+      // past the card's bottom edge.
+      const colPad = dayCol
+        ? parseFloat(getComputedStyle(dayCol).paddingTop) +
+          parseFloat(getComputedStyle(dayCol).paddingBottom)
+        : 0;
+      const eventGap = event ? parseFloat(getComputedStyle(event).marginBottom) : 0;
+
+      const eventsH = Math.max(
+        0,
+        card.clientHeight - header.offsetHeight - (dayTitle?.offsetHeight ?? 0) - colPad - 3
+      );
+      card.style.setProperty('--calpg-day-events-h', `${eventsH}px`);
+      setImgWrapHeight(Math.max(0, eventsH - eventGap));
+    };
+
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (cardRef.current) ro.observe(cardRef.current);
+    if (headerRef.current) ro.observe(headerRef.current);
+    window.addEventListener('resize', measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [viewMode, activeDayIndex]);
 
   // Populates state when the calendar was opened without a prior hover (keyboard, touch,
   // a very fast click). On a warm cache prefetchCalendar resolves from memory, so this
@@ -195,6 +260,34 @@ export function CalendarPage({ onClose }) {
       return { date, label: format(date, 'EEE'), fullLabel: format(date, 'EEEE'), sublabel: format(date, 'd'), isToday: i === 0, events: dayEvents };
     });
   }, [weeklyEvents, todayDate]);
+
+  // The card hugs the poster (width: fit-content, CalendarPage.css), but CSS
+  // can't derive that width from the poster's flex-computed height on its own —
+  // it's circular, so the browser falls back to the image's intrinsic width and
+  // the poster renders distorted (hidden only by object-fit cropping). Setting
+  // the width explicitly from the already-laid-out height breaks the cycle:
+  // height stays flex-driven and fills the card, width follows the natural
+  // ratio, and the card then hugs that. Measured after layout rather than
+  // guessed, and re-applied per image via onLoad since naturalWidth is 0 until
+  // the poster actually arrives.
+  const fitPosterWidth = useCallback((img) => {
+    if (!img) return;
+    if (imgWrapHeight == null || !img.naturalWidth || !img.naturalHeight) {
+      img.style.removeProperty('width');
+      return;
+    }
+    const h = img.getBoundingClientRect().height;
+    if (!h) return;
+    img.style.width = `${h * (img.naturalWidth / img.naturalHeight)}px`;
+  }, [imgWrapHeight]);
+
+  useLayoutEffect(() => {
+    // Every poster, not just the filled ones — so an inline width left over from
+    // a narrower viewport is cleared once the fill layout no longer applies.
+    containerRef.current
+      ?.querySelectorAll('.cal-portrait-img')
+      .forEach(fitPosterWidth);
+  }, [fitPosterWidth, activeDayIndex, viewMode, weekDays, posterSize]);
 
   useEffect(() => {
     const row = containerRef.current;
@@ -434,8 +527,8 @@ export function CalendarPage({ onClose }) {
 
   return (
     <>
-      <div className="calpg-card">
-        <div className="calpg-header">
+      <div className="calpg-card" ref={cardRef}>
+        <div className="calpg-header" ref={headerRef}>
           <div className="calpg-tree-wrap">
             <img src={treeImg} alt="" className="calpg-tree-img" />
           </div>
@@ -484,7 +577,17 @@ export function CalendarPage({ onClose }) {
                 </div>
                 <div className={`calpg-week-day-events${i === activeDayIndex ? ' calpg-week-day-events--active' : ''}`}>
                 {day.events.length === 0 ? (
-                  <p>No events</p>
+                  /* Looks exactly like the bare "No events" text it replaces —
+                     .calendar-event is a button reset, so no background, border
+                     or padding — but sized like a real poster card so an empty
+                     day still offers a full-height target for the horizontal
+                     day swipe, rather than only the slider strip at the top. */
+                  <div
+                    className="calendar-event calendar-event--empty"
+                    style={imgWrapHeight != null ? { height: `${imgWrapHeight}px` } : undefined}
+                  >
+                    <p>No events</p>
+                  </div>
                 ) : (
                   day.events.map(event => {
                     // clubNameById (live, from demo_club_data) wins over event.club_name — the
@@ -520,7 +623,10 @@ export function CalendarPage({ onClose }) {
                             </div>
                           </div>
                         ) : (
-                          <div className="cal-portrait-img-wrap">
+                          <div
+                            className={`cal-portrait-img-wrap${imgWrapHeight != null ? ' cal-portrait-img-wrap--fill' : ''}`}
+                            style={imgWrapHeight != null ? { height: `${imgWrapHeight}px` } : undefined}
+                          >
                             <img src={borderImg} alt="" className="cal-portrait-card-border cal-portrait-card-border-left" />
                             <img src={borderImg} alt="" className="cal-portrait-card-border cal-portrait-card-border-right" />
                             <div
@@ -535,6 +641,7 @@ export function CalendarPage({ onClose }) {
                               src={posterUrl || '/raccoon_pfp.png'}
                               alt=""
                               className={`cal-portrait-img${posterUrl ? '' : ' cal-portrait-img--default'}`}
+                              onLoad={(e) => fitPosterWidth(e.currentTarget)}
                             />
                             <PortraitTitle text={titleText} />
                             <FriendRsvpCallout friends={friends} />
