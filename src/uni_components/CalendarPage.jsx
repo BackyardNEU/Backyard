@@ -8,6 +8,7 @@ import { apiFetch } from '../lib/api';
 import { useClubData } from '../context/useClubData';
 import { prefetchCalendar, readCalendar } from '../lib/calendarCache';
 import { Skeleton, SkeletonRegion } from '../components/Skeleton';
+import FriendRsvpCallout from '../components/FriendRsvpCallout';
 import '../club_page_components/CalendarModule.css';
 import './CalendarPage.css';
 import './EventInfoRow.css';
@@ -21,6 +22,9 @@ import maximizedPosterActiveIcon from '../assets/Maximized_poster_icon_active.pn
 import maximizedPosterInactiveIcon from '../assets/Maximized_poster_icon_inactive.png';
 
 const WEEK_DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+const EVENT_DAY_COLORS = ['#382825', '#56758b', '#BE0D00', '#FC7200', '#ffcc13'];
+const randomEventDayColor = () => EVENT_DAY_COLORS[Math.floor(Math.random() * EVENT_DAY_COLORS.length)];
 
 export function CalendarPage({ onClose }) {
   const { allData, friendsArray, profile: viewerProfile } = useClubData();
@@ -363,9 +367,12 @@ export function CalendarPage({ onClose }) {
     return [...Array(offset).fill(null), ...Array.from({ length: totalDays }, (_, i) => i + 1)];
   }
 
-  function getDayClass(dayNum) {
-    const date = new Date(displayYear, displayMonth - 1, dayNum);
-    const hasEvents = monthlyEventsByDay.has(dayNum);
+  // year/month/eventsByDay are passed explicitly (not read off displayYear/displayMonth/
+  // monthlyEventsByDay) because this is also used for the next-month panel, whose cells
+  // need nextYear/nextMonthNum/nextMonthlyEventsByDay instead.
+  function getDayClass(year, month, dayNum, eventsByDay) {
+    const date = new Date(year, month - 1, dayNum);
+    const hasEvents = eventsByDay.has(dayNum);
     if (isBefore(date, todayDate)) return 'cal-day-past';
     if (isToday(date)) return hasEvents ? 'cal-day-today-events' : 'cal-day-today';
     return hasEvents ? 'cal-day-has-events' : 'cal-day-normal';
@@ -480,7 +487,11 @@ export function CalendarPage({ onClose }) {
                   <p>No events</p>
                 ) : (
                   day.events.map(event => {
-                    const clubName = event.club_name || clubNameById.get(event.club_id) || '';
+                    // clubNameById (live, from demo_club_data) wins over event.club_name — the
+                    // latter is a snapshot stored at event-creation time (events.js), so it goes
+                    // stale the moment a club renames itself; falls back to it only for events
+                    // whose club_id no longer resolves (e.g. the club was deleted).
+                    const clubName = clubNameById.get(event.club_id) || event.club_name || '';
                     const eventName = event.event_name || '';
                     const titleText = clubName && eventName
                       ? `${clubName} • ${eventName}`
@@ -523,13 +534,7 @@ export function CalendarPage({ onClose }) {
                               className={`cal-portrait-img${posterUrl ? '' : ' cal-portrait-img--default'}`}
                             />
                             <PortraitTitle text={titleText} />
-                            {friends && friends.length > 0 && (
-                              <p className="friend-rsvp-callout">
-                                {friends.length === 1
-                                  ? `${friends[0].username} is going`
-                                  : `${friends[0].username} and ${friends.length - 1} ${friends.length - 1 === 1 ? 'other' : 'others'} you know are going`}
-                              </p>
-                            )}
+                            <FriendRsvpCallout friends={friends} />
                           </div>
                         )}
                       </button>
@@ -554,6 +559,7 @@ export function CalendarPage({ onClose }) {
                   <div
                     key={i}
                     className={`cal-day-cell${dayNum ? ` ${getDayClass(displayYear, displayMonth, dayNum, monthlyEventsByDay)}` : ' cal-day-empty'}`}
+                    style={dayNum && monthlyEventsByDay.has(dayNum) ? { color: randomEventDayColor() } : undefined}
                     onClick={dayNum && monthlyEventsByDay.has(dayNum) ? () => setSelectedOverlay({ type: 'month', year: displayYear, month: displayMonth, day: dayNum }) : undefined}
                   >
                     {dayNum || ''}
@@ -567,6 +573,7 @@ export function CalendarPage({ onClose }) {
                   <div
                     key={i}
                     className={`cal-day-cell${dayNum ? ` ${getDayClass(nextYear, nextMonthNum, dayNum, nextMonthlyEventsByDay)}` : ' cal-day-empty'}`}
+                    style={dayNum && nextMonthlyEventsByDay.has(dayNum) ? { color: randomEventDayColor() } : undefined}
                     onClick={dayNum && nextMonthlyEventsByDay.has(dayNum) ? () => setSelectedOverlay({ type: 'month', year: nextYear, month: nextMonthNum, day: dayNum }) : undefined}
                   >
                     {dayNum || ''}
@@ -586,7 +593,9 @@ export function CalendarPage({ onClose }) {
               </h2>
               <div className="cal-portrait-scroll">
                 {selectedDayEvents.map(event => {
-                  const clubName = event.club_name || clubNameById.get(event.club_id) || '';
+                  // See the comment at the other clubName assignment above: live club data
+                  // wins over the stale creation-time snapshot stored on the event itself.
+                  const clubName = clubNameById.get(event.club_id) || event.club_name || '';
                   const eventName = event.event_name || '';
                   const titleText = clubName && eventName
                     ? `${clubName} • ${eventName}`
@@ -616,6 +625,7 @@ export function CalendarPage({ onClose }) {
                         style={{ backgroundImage: `url(${borderHorizontalImg})` }}
                       />
                       <PortraitTitle text={titleText} />
+                      <FriendRsvpCallout friends={friends} />
                       {event.where && (
                         <p className="cal-info-row">
                           <span className="cal-info-label">where</span>
@@ -632,13 +642,6 @@ export function CalendarPage({ onClose }) {
                         <p className="cal-info-row">
                           <span className="cal-info-label">about</span>
                           <span className="cal-info-value">{event.event_description}</span>
-                        </p>
-                      )}
-                      {friends && friends.length > 0 && (
-                        <p className="friend-rsvp-callout">
-                          {friends.length === 1
-                            ? `${friends[0].username} is going`
-                            : `${friends[0].username} and ${friends.length - 1} ${friends.length - 1 === 1 ? 'other' : 'others'} you know are going`}
                         </p>
                       )}
                       {userId && event.club_id && (

@@ -66,7 +66,7 @@
 
 .calendar-event .friend-rsvp-callout {
   margin: 0;
-  text-align: center;
+  justify-content: center;
 }
 
 /* Minimized poster view — same outer .calendar-event button, but its
@@ -728,6 +728,12 @@ padding: 0 10px;
   max-width: 500px;
 }
 
+@media (max-width: 500px) {
+  .calpg-grid-panel {
+    margin-top: 10px;
+  }
+}
+
 .calpg-grid-panel-next {
   display: none;
 }
@@ -1033,4 +1039,14 @@ padding: 0 10px;
 .calpg-week-day-events > p {
   text-align: center;
   font-family: "Barlow Condensed", sans-serif;
+}
+
+.calpg-week-day-events .friend-rsvp-text,
+.calpg-week-day-events--active .friend-rsvp-text {
+  display: none;
+}
+
+.cal-portrait-info .friend-rsvp-text {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 18px;
 }
