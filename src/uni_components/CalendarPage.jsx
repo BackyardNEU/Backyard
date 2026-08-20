@@ -514,7 +514,10 @@ export function CalendarPage({ onClose }) {
                               alt=""
                               className={`calendar-event-min-thumb${posterUrl ? '' : ' calendar-event-min-thumb--default'}`}
                             />
-                            <PortraitTitle text={titleText} />
+                            <div className="calendar-event-min-text">
+                              <PortraitTitle text={eventName} />
+                              <p className="calendar-event-min-club">{clubName}</p>
+                            </div>
                           </div>
                         ) : (
                           <div className="cal-portrait-img-wrap">

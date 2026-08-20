@@ -73,7 +73,12 @@
    content is a single bordered row (shrunken square poster + title) instead
    of the tall .cal-portrait-img-wrap card. Toggled via .calpg-poster-size-toggle. */
 .calendar-event--minimized {
-  margin-bottom: 8px;
+  /* .day-title-number has no explicit width, so it just stretches to its parent
+     (.calendar-day) — the same parent this shares, making 80% here read as 80%
+     of the day header too, freeing up a little side width instead of running
+     edge to edge with it. */
+  width: 90%;
+  margin: 0 auto 8px;
   background-color: var(--dominant-color, rgb(211, 211, 211));
   border-radius: 8px;
   overflow: hidden;
@@ -97,8 +102,11 @@
 
 .calendar-event-min-thumb {
   flex: 0 0 auto;
-  width: 44px;
-  height: 44px;
+  /* Bumped up from 44px so the thumbnail reads as a real square next to two
+     lines of text (event name + club name) instead of the single line this
+     row used to hold. */
+  width: 60px;
+  height: 60px;
   object-fit: cover;
   border-radius: 3px;
 }
@@ -109,16 +117,33 @@
   background: rgba(0, 0, 0, 0.04);
 }
 
-.calendar-event-min-row .cal-portrait-title-wrap {
+.calendar-event-min-text {
+  display: flex;
+  flex-direction: column;
   flex: 1;
   min-width: 0;
+  gap: 2px;
+}
+
+.calendar-event-min-text .cal-portrait-title-wrap {
   width: auto;
   max-width: none;
   margin: 0;
 }
 
-.calendar-event-min-row .cal-portrait-title-track {
+.calendar-event-min-text .cal-portrait-title-track {
   justify-content: flex-start;
+}
+
+.calendar-event-min-club {
+  margin: 0;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 400;
+  font-size: 1rem;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* --- module wrapper --- */
