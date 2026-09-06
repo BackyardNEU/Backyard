@@ -4,6 +4,8 @@ import borderImg from '../assets/border.svg';
 import borderHorizontalImg from '../assets/border-horizontal.svg';
 import { CalendarExportRow } from './CalendarExportRow';
 import { useClubData } from '../context/useClubData';
+import FriendRsvpCallout from '../components/FriendRsvpCallout';
+import { apiFetch } from '../lib/api';
 import './CalendarModule.css';
 
 /**
@@ -12,17 +14,20 @@ import './CalendarModule.css';
  * AddEventPanel so the two can't be confused with each other.
  *
  * data shape: { filterByMembership: boolean }
- * @param {Object}   club          - club record (used for its image_url, as a
- *                                    poster placeholder for events with no image)
- * @param {Object}   data          - module data
- * @param {boolean}  editing       - page edit mode
- * @param {Function} onChange      - (updatedData) => void
- * @param {string}   warning       - displays a warning for invalid fields not entered in by page editor
- * @param {Array}    events        - upcoming events fetched by ExpandedTile, sorted by start_time
- * @param {Set}      myRsvpSet     - event IDs the current user has RSVPd to
- * @param {Map}      friendRsvpMap - event ID → [{ username, ... }]
- * @param {Function} onRsvp        - (eventId, isCurrentlyGoing) => void
- * @param {string}   userId        - null if not logged in
+ * @param {Object}   club              - club record (used for its image_url, as a
+ *                                        poster placeholder for events with no image)
+ * @param {Object}   data              - module data
+ * @param {boolean}  editing           - page edit mode
+ * @param {Function} onChange          - (updatedData) => void
+ * @param {string}   warning           - displays a warning for invalid fields not entered in by page editor
+ * @param {Array}    events            - upcoming events fetched by ExpandedTile, sorted by start_time
+ * @param {Set}      myRsvpSet         - event IDs the current user has RSVPd to ('going')
+ * @param {Set}      myMaybeSet        - event IDs the current user has marked 'maybe'
+ * @param {Map}      friendRsvpMap     - event ID → [{ username, ... }] for going friends
+ * @param {Map}      allAttendeesMap   - event ID → { going: [{ user_id, profile, isFriend }], maybe: [...] }
+ * @param {Function} onRsvp            - (eventId, isCurrentlyGoing) => void
+ * @param {Function} onMaybe           - (eventId, isCurrentlyMaybe) => void
+ * @param {string}   userId            - null if not logged in
  */
 export function CalendarModule({
   club,
@@ -30,22 +35,22 @@ export function CalendarModule({
   warning,
   events = [],
   myRsvpSet = new Set(),
+  myMaybeSet = new Set(),
   friendRsvpMap = new Map(),
-  attendeeMap = new Map(),
+  allAttendeesMap = new Map(),
   onRsvp,
+  onMaybe,
   userId,
 }) {
   const [overlayEvent, setOverlayEvent] = useState(null);
-  const [attendeeModal, setAttendeeModal] = useState(null);
   const [overlayHasMore, setOverlayHasMore] = useState(false);
+  const [attendeesMap, setAttendeesMap] = useState({});
+  const [attendeesOpenId, setAttendeesOpenId] = useState(null);
+  const [attendeesEvent, setAttendeesEvent] = useState(null);
+  const [attendeesTab, setAttendeesTab] = useState('going');
 
-  // Which format "Add to calendar" uses, set in Settings. Read from the shared profile
-  // rather than fetched here — this was another copy of /me/profile. Defaults to 'ics',
-  // which every calendar app imports, so it is correct before the profile loads and for
-  // signed-out visitors, who have no profile at all.
   const { profile: viewerProfile } = useClubData();
   const calendarPreference = viewerProfile?.calendar_preference || 'ics';
-
 
   const overlayScrollRef = useRef(null);
   const overlayItemRefs = useRef({});
@@ -54,7 +59,6 @@ export function CalendarModule({
     if (!overlayEvent || !overlayScrollRef.current) return;
     const el = overlayItemRefs.current[overlayEvent.id];
     if (el) el.scrollIntoView({ block: 'start', behavior: 'instant' });
-    // check after scroll settles
     const el2 = overlayScrollRef.current;
     setTimeout(() => {
       setOverlayHasMore(el2.scrollHeight - el2.scrollTop - el2.clientHeight > 10);
@@ -67,9 +71,90 @@ export function CalendarModule({
     setOverlayHasMore(el.scrollHeight - el.scrollTop - el.clientHeight > 10);
   };
 
+  const fetchAttendees = async (eventId) => {
+    if (attendeesMap[eventId] !== undefined) {
+      setAttendeesOpenId(prev => prev === eventId ? null : eventId);
+      return;
+    }
+    try {
+      const data = await apiFetch(`/clubs/${club.id}/events/${eventId}/attendees`);
+      setAttendeesMap(prev => ({ ...prev, [eventId]: data }));
+      setAttendeesOpenId(eventId);
+    } catch {
+      setAttendeesMap(prev => ({ ...prev, [eventId]: [] }));
+      setAttendeesOpenId(eventId);
+    }
+  };
+  const openAttendeesOverlay = (event, tab = 'going') => {
+    setAttendeesEvent(event);
+    setAttendeesTab(tab);
+  };
+
   const sorted = [...events].sort((a, b) => parseISO(a.start_time) - parseISO(b.start_time));
 
-  // ── render ─────────────────────────────────────────────────────────────
+  // ── helpers ────────────────────────────────────────────────────────────────
+
+  // Renders the small stacked avatar row for an event.
+  // Shows up to 4 circles (friends first), then a +N count.
+  function AttendeeAvatarRow({ event, onClick }) {
+    const buckets = allAttendeesMap.get(event.id);
+    if (!buckets) return null;
+    const all = [...buckets.going, ...buckets.maybe];
+    if (all.length === 0) return null;
+
+    const shown = all.slice(0, 4);
+    const extra = all.length - shown.length;
+
+    return (
+      <button
+        className="cal-attendee-row"
+        onClick={(e) => { e.stopPropagation(); onClick(); }}
+        aria-label={`See who's going (${all.length})`}
+      >
+        <div className="cal-attendee-avatars">
+          {shown.map((a, i) => (
+            <span key={a.user_id} className="cal-attendee-avatar-wrap" style={{ zIndex: shown.length - i }}>
+              <Avatar
+                url={a.profile?.avatar_url}
+                firstName={a.profile?.first_name}
+                lastName={a.profile?.last_name}
+                username={a.profile?.username}
+                className="cal-attendee-avatar"
+              />
+            </span>
+          ))}
+        </div>
+        {extra > 0 && <span className="cal-attendee-extra">+{extra}</span>}
+      </button>
+    );
+  }
+
+  // ── action buttons (shared between list card and overlay) ──────────────────
+
+  function RsvpButtons({ event, stopProp = false }) {
+    const isGoing = myRsvpSet.has(event.id);
+    const isMaybe = myMaybeSet.has(event.id);
+    if (!userId) return null;
+    const wrap = (fn) => stopProp ? (e) => { e.stopPropagation(); fn(); } : fn;
+    return (
+      <div className="cal-action-row">
+        <button
+          className={`rsvp-button${isGoing ? ' rsvp-going' : ''}`}
+          onClick={wrap(() => onRsvp?.(event.id, isGoing))}
+        >
+          {isGoing ? 'Interested ✓' : 'Interested'}
+        </button>
+        <button
+          className={`rsvp-button rsvp-maybe${isMaybe ? ' rsvp-maybe--active' : ''}`}
+          onClick={wrap(() => onMaybe?.(event.id, isMaybe))}
+        >
+          {isMaybe ? 'Maybe ✓' : 'Maybe'}
+        </button>
+      </div>
+    );
+  }
+
+  // ── render ─────────────────────────────────────────────────────────────────
   return (
     <div className="cal-module">
       <p className="divider-header">Coming Up</p>
@@ -83,9 +168,6 @@ export function CalendarModule({
             const start = parseISO(event.start_time);
             const end = parseISO(event.end_time);
             const friends = friendRsvpMap.get(event.id);
-            const isGoing = myRsvpSet.has(event.id);
-
-            const attendeeEntry = attendeeMap.get(event.id) ?? { count: 0, attendees: [] };
 
             return (
               <div
@@ -117,71 +199,19 @@ export function CalendarModule({
                   {event.is_members_only && (
                     <span className="cal-members-badge">Members only</span>
                   )}
-                  {friends && friends.length > 0 && (
-                    <p className="friend-rsvp-callout">
-                      {friends.length === 1
-                        ? `${friends[0].username} is going`
-                        : `${friends[0].username} and ${friends.length - 1} ${friends.length - 1 === 1 ? 'other' : 'others'} you know are going`}
-                    </p>
-                  )}
-                  <div className="cal-event-footer">
+                  <FriendRsvpCallout friends={friends} />
+                  {userId && (
                     <button
-                      className="cal-attendee-btn"
-                      onClick={(e) => { e.stopPropagation(); setAttendeeModal({ event, ...attendeeEntry }); }}
+                      className={`rsvp-button${isGoing ? ' rsvp-going' : ''}`}
+                      onClick={(e) => { e.stopPropagation(); onRsvp?.(event.id, isGoing); }}
                     >
-                      {attendeeEntry.count} going
+                      {isGoing ? 'Going ✓' : "I'm going!"}
                     </button>
-                    {userId && (
-                      <button
-                        className={`rsvp-button${isGoing ? ' rsvp-going' : ''}`}
-                        onClick={(e) => { e.stopPropagation(); onRsvp?.(event.id, isGoing); }}
-                      >
-                        {isGoing ? 'Going ✓' : "I'm going!"}
-                      </button>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
             );
           })}
-        </div>
-      )}
-
-      {/* Attendee count modal */}
-      {attendeeModal && (
-        <div
-          className="cal-attendee-backdrop"
-          onClick={() => setAttendeeModal(null)}
-        >
-          <div
-            className="cal-attendee-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="cal-attendee-modal-header">
-              <span className="cal-attendee-modal-title">Who's going</span>
-              <button
-                className="cal-attendee-modal-close"
-                onClick={() => setAttendeeModal(null)}
-                aria-label="Close"
-              >✕</button>
-            </div>
-            {attendeeModal.attendees.length === 0 ? (
-              <p className="cal-attendee-empty">No one has RSVPd yet. Be the first!</p>
-            ) : (
-              <ul className="cal-attendee-list">
-                {attendeeModal.attendees.map((a, i) => (
-                  <li key={a.user_id ?? i} className="cal-attendee-item">
-                    <img
-                      className="cal-attendee-avatar"
-                      src={a.avatar_url || '/raccoon_pfp.png'}
-                      alt=""
-                    />
-                    <span className="cal-attendee-name">{a.username || '...'}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
         </div>
       )}
 
@@ -208,7 +238,6 @@ export function CalendarModule({
               {sorted.map((ev) => {
                 const evStart = parseISO(ev.start_time);
                 const evEnd = parseISO(ev.end_time);
-                const evIsGoing = myRsvpSet.has(ev.id);
                 const evFriends = friendRsvpMap.get(ev.id);
                 return (
                   <div
@@ -232,13 +261,7 @@ export function CalendarModule({
                       {ev.is_members_only && (
                         <span className="cal-members-badge">Members only</span>
                       )}
-                      {evFriends && evFriends.length > 0 && (
-                        <p className="friend-rsvp-callout">
-                          {evFriends.length === 1
-                            ? `${evFriends[0].username} is going`
-                            : `${evFriends[0].username} and ${evFriends.length - 1} ${evFriends.length - 1 === 1 ? 'other' : 'others'} you know are going`}
-                        </p>
-                      )}
+                      <FriendRsvpCallout friends={evFriends} />
                       {userId && (
                         <button
                           className={`rsvp-button${evIsGoing ? ' rsvp-going' : ''}`}
@@ -247,11 +270,101 @@ export function CalendarModule({
                           {evIsGoing ? 'Going ✓' : "I'm going!"}
                         </button>
                       )}
+                      {userId && (
+                        <button
+                          className="cal-attendees-btn"
+                          onClick={() => fetchAttendees(ev.id)}
+                        >
+                          {attendeesOpenId === ev.id ? 'Hide attendees' : 'See who\'s going'}
+                        </button>
+                      )}
+                      {attendeesOpenId === ev.id && attendeesMap[ev.id] !== undefined && (
+                        <div className="cal-attendees-list">
+                          {attendeesMap[ev.id].length === 0 ? (
+                            <p className="cal-attendees-empty">No RSVPs yet.</p>
+                          ) : (
+                            attendeesMap[ev.id].map(a => (
+                              <div key={a.user_id} className="cal-attendee-row">
+                                {a.avatar_url
+                                  ? <img className="cal-attendee-avatar" src={a.avatar_url} alt="" />
+                                  : <div className="cal-attendee-avatar cal-attendee-avatar--placeholder" />}
+                                <span className="cal-attendee-name">{a.username}</span>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      )}
                     </div>
                     <CalendarExportRow event={ev} preference={calendarPreference} />
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Attendees overlay — INTERESTED / MAYBE tabs */}
+      {attendeesEvent && (
+        <div
+          className="cal-overlay-backdrop"
+          onClick={() => setAttendeesEvent(null)}
+        >
+          <div
+            className="cal-attendees-panel"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="cal-attendees-header">
+              <div className="cal-attendees-tabs">
+                <button
+                  className={`cal-attendees-tab${attendeesTab === 'going' ? ' cal-attendees-tab--active' : ''}`}
+                  onClick={() => setAttendeesTab('going')}
+                >
+                  Interested
+                </button>
+                <button
+                  className={`cal-attendees-tab${attendeesTab === 'maybe' ? ' cal-attendees-tab--active' : ''}`}
+                  onClick={() => setAttendeesTab('maybe')}
+                >
+                  Maybe
+                </button>
+              </div>
+              <button
+                className="cal-overlay-close"
+                onClick={() => setAttendeesEvent(null)}
+                aria-label="Close"
+              >✕</button>
+            </div>
+
+            <div className="cal-attendees-list">
+              {(() => {
+                const buckets = allAttendeesMap.get(attendeesEvent.id);
+                const list = buckets?.[attendeesTab] || [];
+                if (list.length === 0) {
+                  return (
+                    <p className="cal-attendees-empty">
+                      No one has marked {attendeesTab === 'going' ? 'interested' : 'maybe'} yet.
+                    </p>
+                  );
+                }
+                return list.map((a) => (
+                  <div key={a.user_id} className={`cal-attendee-row-item${a.isFriend ? ' cal-attendee-row-item--friend' : ''}`}>
+                    <Avatar
+                      url={a.profile?.avatar_url}
+                      firstName={a.profile?.first_name}
+                      lastName={a.profile?.last_name}
+                      username={a.profile?.username}
+                      className="cal-attendees-avatar"
+                    />
+                    <span className="cal-attendees-name">
+                      {a.profile?.first_name && a.profile?.last_name
+                        ? `${a.profile.first_name} ${a.profile.last_name}`
+                        : a.profile?.username || 'Unknown'}
+                    </span>
+                    {a.isFriend && <span className="cal-attendees-mutual">friend</span>}
+                  </div>
+                ));
+              })()}
             </div>
           </div>
         </div>

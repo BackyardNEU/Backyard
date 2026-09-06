@@ -18,12 +18,17 @@ export const useGlobalStore = create((set) => ({
   // Login modal open state — in Zustand so deep components (e.g. ExpandedTile)
   // can open it without prop drilling.
   loginOpen: false,
+  // Whether the support modal is open. Lives here (not local App state) so the
+  // signed-in trigger button in ProfilePage's button row can open the same
+  // modal App renders, without threading a prop through the router.
+  supportOpen: false,
 
   setGlobalValue: (newValue) => set({ GlobalValue: newValue }),
   setLastPath: (path) => set({ lastPath: path }),
   setUnreadCount: (count) => set({ unreadCount: count }),
   setCalendarViewActive: (value) => set({ calendarViewActive: value }),
   setLoginOpen: (value) => set({ loginOpen: value }),
+  setSupportOpen: (value) => set({ supportOpen: value }),
 }));
 
 /*

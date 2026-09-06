@@ -80,7 +80,7 @@ function JoinModule({ data, editing, onChange, warning }) {
 
       {editing && (
         <p className="about-edit-help">
-          These tabs help potential new members be informed in the joining process. Optional: Enter your application link and your recruiter email.
+          These tabs help potential new members learn about your club's joining process. Optional: Enter your application link and your recruiter email.
         </p>
       )}
       {editing && warning && <p className="module-warning">{warning}</p>}
@@ -101,13 +101,19 @@ function JoinModule({ data, editing, onChange, warning }) {
               </button>
             ))}
           </div>
-          <div className="join-tab-content" dangerouslySetInnerHTML={{ __html: tabs[activeIndex]?.body || '' }} />
+          {/* Sanitized at render as well as on write. Rows stored before server-side
+              sanitization existed are still in the database, and a future write path
+              could forget — neither layer should be the only thing standing here. */}
+          <div
+            className="join-tab-content"
+            dangerouslySetInnerHTML={{ __html: sanitizeBioHtml(tabs[activeIndex]?.body || '') }}
+          />
         </>
       )}
 
-      {(applicationLink || contactLink) && (
+      {(isValidUrl(applicationLink) || isValidContactLink(contactLink)) && (
         <div className="join-actions">
-          {applicationLink && (
+          {isValidUrl(applicationLink) && (
             <div className="duo-btn-wrap">
               <div className="duo-btn-pill" aria-hidden="true" />
               <a
@@ -122,7 +128,7 @@ function JoinModule({ data, editing, onChange, warning }) {
               </a>
             </div>
           )}
-          {contactLink && (
+          {isValidContactLink(contactLink) && (
             <div className="duo-btn-wrap">
               <div className="duo-btn-pill" aria-hidden="true" />
               <a

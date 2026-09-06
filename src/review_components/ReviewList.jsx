@@ -280,7 +280,7 @@ function LikeButton({ count, isLiked, onToggle }) {
 
 /* ── Comment card ── */
 
-export function CommentCard({ review, userVote, onVote, onToggleHide, editing, composeProps }) {
+export function CommentCard({ review, userVote, onVote, onToggleHide, editing, composeProps, onDelete }) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [needsExpand, setNeedsExpand] = useState(false);
     const [expandedHeight, setExpandedHeight] = useState(null);
@@ -400,7 +400,17 @@ export function CommentCard({ review, userVote, onVote, onToggleHide, editing, c
 
             {!isCompose && (
                 <div className="comment-footer">
-                    {date && <span className="comment-date">{formatRelativeDate(date)}</span>}
+                    <div className="comment-footer-left">
+                        {date && <span className="comment-date">{formatRelativeDate(date)}</span>}
+                        {onDelete && (
+                            <button
+                                className="comment-delete-btn"
+                                onClick={() => onDelete(review.id)}
+                            >
+                                Delete
+                            </button>
+                        )}
+                    </div>
                     <LikeButton
                         count={review._liveScore}
                         isLiked={userVote === 1}
@@ -426,7 +436,7 @@ export function CommentCard({ review, userVote, onVote, onToggleHide, editing, c
 
 /* ── ReviewList (main export) ── */
 
-export default function ReviewList({ reviews, editing, members, hideDraft = {}, onToggleHide }) {
+export default function ReviewList({ reviews, editing, members, hideDraft = {}, onToggleHide, onDelete }) {
     const [userVotes, setUserVotes] = useState({});
     const [reviewScores, setReviewScores] = useState({});
     const { userId } = useClubData();
@@ -484,7 +494,7 @@ export default function ReviewList({ reviews, editing, members, hideDraft = {}, 
     const visible = editing ? enriched : enriched.filter(r => !r._pendingHidden);
 
     const memberIds = useMemo(() => new Set((members || []).map(m => m.user_id)), [members]);
-    const memberReviews = visible.filter(r => memberIds.has(r.user_id));
+    const activeReviews = visible.filter(r => memberIds.has(r.user_id));
 
     return (
         <div className="review-item">
@@ -495,9 +505,9 @@ export default function ReviewList({ reviews, editing, members, hideDraft = {}, 
                 </p>
             )}
 
-            {memberReviews.length > 0 ? (
+            {activeReviews.length > 0 ? (
                 <div className="rl-comments-row">
-                    {memberReviews.map(review => (
+                    {activeReviews.map(review => (
                         <CommentCard
                             key={review.id}
                             review={review}
@@ -505,6 +515,7 @@ export default function ReviewList({ reviews, editing, members, hideDraft = {}, 
                             onVote={(val) => handleVote(review.id, val)}
                             onToggleHide={handleToggleHide}
                             editing={editing}
+                            onDelete={userId && review.user_id === userId ? onDelete : undefined}
                         />
                     ))}
                 </div>

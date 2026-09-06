@@ -1,0 +1,756 @@
+/* Club onboarding wizard.
+ *
+ * Palette and button language are lifted from the live landing page (style.css on the
+ * landing-page branch) rather than invented, so a president who clicked through from
+ * explorethebackyard.com lands somewhere that looks like the same product. Warm paper,
+ * brown ink, crimson accent, and the offset-pill buttons already used there.
+ */
+
+:root {
+  --paper: #f5f1ea;
+  --paper-edge: #e4ded3;
+  --ink: #29241d;
+  --ink-soft: #8a8174;
+  --rule: #c8c1b6;
+  --crimson: #7a2528;
+  --crimson-lift: #c53b3f;
+  --sage: #2f8f57;
+  --sand: #e2c9b0;
+
+  --step: clamp(14px, 1.4vw, 18px);
+  --radius: 14px;
+
+  --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --font-body: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background-color: var(--sand);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--step);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The paper grain that ties this to the marketing site. Inline SVG turbulence so there
+   is no image request on a page people open from a phone on campus wifi. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.16;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── Shell ────────────────────────────────────────────────────────────── */
+
+.ob-page {
+  position: relative;
+  z-index: 1;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(16px, 4vw, 48px) clamp(12px, 3vw, 32px) 64px;
+}
+
+/* Full-bleed rather than sharing the card's 980px column, so the logo sits in the
+ * page's actual top-left corner instead of floating in from it. The club name stays
+ * pinned to the opposite corner. */
+.ob-brand {
+  position: absolute;
+  top: clamp(16px, 3vw, 32px);
+  left: clamp(16px, 3vw, 36px);
+  right: clamp(16px, 3vw, 36px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* The header is out of flow now, so the card needs room to clear it. */
+.ob-page { padding-top: clamp(78px, 11vw, 132px); }
+
+.ob-wordmark {
+  margin: 0;
+  line-height: 0;
+}
+
+.ob-wordmark img {
+  display: block;
+  height: clamp(26px, 3.4vw, 40px);
+  width: auto;
+}
+
+/* Fallback for the text version, kept so the header still reads if the image is ever
+   missing rather than collapsing to nothing. */
+.ob-wordmark--text {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.6vw, 30px);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+@media (max-width: 560px) {
+  .ob-club-tag { display: none; }
+}
+
+.ob-club-tag {
+  font-family: var(--font-display);
+  font-size: clamp(15px, 1.8vw, 19px);
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  text-align: right;
+}
+
+.ob-card {
+  width: 100%;
+  max-width: 980px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: 0 18px 40px rgba(41, 36, 29, 0.14);
+  overflow: hidden;
+}
+
+.ob-card--narrow { max-width: 520px; }
+
+.ob-body { display: grid; grid-template-columns: 232px 1fr; }
+
+@media (max-width: 760px) {
+  .ob-body { grid-template-columns: 1fr; }
+}
+
+/* ── Step rail ────────────────────────────────────────────────────────── */
+
+.ob-rail {
+  background: rgba(226, 201, 176, 0.28);
+  border-right: 1px solid var(--rule);
+  padding: 22px 18px;
+}
+
+@media (max-width: 760px) {
+  .ob-rail {
+    border-right: none;
+    border-bottom: 1px solid var(--rule);
+    padding: 14px;
+  }
+}
+
+.ob-rail-title {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin: 0 0 14px;
+}
+
+.ob-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+
+@media (max-width: 760px) {
+  .ob-steps { grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; }
+  .ob-rail-title, .ob-step-name { display: none; }
+}
+
+.ob-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  font: inherit;
+  color: var(--ink-soft);
+  text-align: left;
+  cursor: pointer;
+}
+
+.ob-step:hover:not(:disabled) { background: rgba(41, 36, 29, 0.05); }
+.ob-step:disabled { cursor: default; opacity: 0.55; }
+.ob-step[aria-current='step'] { background: rgba(122, 37, 40, 0.09); color: var(--ink); }
+
+.ob-step-num {
+  flex: none;
+  width: 24px; height: 24px;
+  display: grid; place-items: center;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ob-step.is-done { color: var(--crimson); }
+.ob-step.is-done .ob-step-num { border-color: var(--crimson); background: var(--crimson); color: var(--paper); }
+
+.ob-step-name {
+  font-family: var(--font-display);
+  font-size: 16px;
+  letter-spacing: 0.03em;
+}
+
+@media (max-width: 760px) {
+  .ob-step { justify-content: center; padding: 8px 4px; }
+}
+
+.ob-saved {
+  margin-top: 18px;
+  font-size: 12px;
+  color: var(--ink-soft);
+  min-height: 1.2em;
+}
+
+@media (max-width: 760px) { .ob-saved { display: none; } }
+
+/* ── Step content ─────────────────────────────────────────────────────── */
+
+.ob-main { padding: clamp(20px, 3vw, 34px); min-width: 0; }
+
+.ob-eyebrow {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 12px;
+  color: var(--crimson);
+  margin: 0 0 6px;
+}
+
+.ob-h1 {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 600;
+  line-height: 1.05;
+  margin: 0 0 6px;
+}
+
+.ob-lede { color: var(--ink-soft); margin: 0 0 24px; max-width: 52ch; }
+
+.ob-field { display: grid; gap: 6px; margin-bottom: 18px; }
+
+.ob-label {
+  font-family: var(--font-display);
+  font-size: 15px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.ob-hint { font-size: 13px; color: var(--ink-soft); }
+
+.ob-input, .ob-textarea, .ob-select {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1.5px solid var(--rule);
+  border-radius: 10px;
+  background: #fffdf9;
+  color: var(--ink);
+  font: inherit;
+}
+
+.ob-textarea { resize: vertical; min-height: 104px; }
+
+.ob-input:focus-visible, .ob-textarea:focus-visible, .ob-select:focus-visible,
+.ob-step:focus-visible, .ob-btn:focus-visible, .ob-ghost:focus-visible {
+  outline: 3px solid var(--crimson-lift);
+  outline-offset: 2px;
+}
+
+.ob-count { font-size: 12px; color: var(--ink-soft); text-align: right; }
+.ob-count.is-over { color: var(--crimson-lift); font-weight: 700; }
+
+.ob-error {
+  background: rgba(197, 59, 63, 0.1);
+  border: 1px solid rgba(197, 59, 63, 0.4);
+  color: var(--crimson);
+  padding: 10px 13px;
+  border-radius: 10px;
+  margin-bottom: 18px;
+  font-size: 14px;
+}
+
+.ob-note {
+  background: rgba(47, 143, 87, 0.1);
+  border: 1px solid rgba(47, 143, 87, 0.35);
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+/* Repeating groups: FAQs, links, tabs, people */
+.ob-row {
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  background: rgba(255, 253, 249, 0.6);
+}
+
+.ob-row-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.ob-row-label {
+  font-family: var(--font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.ob-actions {
+  display: flex; align-items: center; gap: 12px;
+  margin-top: 28px; padding-top: 20px;
+  border-top: 1px solid var(--rule);
+}
+
+.ob-spacer { flex: 1; }
+
+/* ── Buttons: the offset-pill language from the landing page ──────────── */
+
+.ob-btn {
+  position: relative;
+  border: none;
+  border-radius: 999px;
+  background: var(--crimson-lift);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 11px 26px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--crimson);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.2s;
+}
+
+.ob-btn:hover:not(:disabled) { background: #ad3236; }
+.ob-btn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 0 0 var(--crimson); }
+.ob-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: 0 4px 0 rgba(122, 37, 40, 0.4); }
+
+.ob-btn--sage { background: var(--sage); box-shadow: 0 4px 0 #1b5734; }
+.ob-btn--sage:hover:not(:disabled) { background: #27784a; }
+
+.ob-ghost {
+  border: 1.5px solid var(--rule);
+  background: transparent;
+  border-radius: 999px;
+  color: var(--ink-soft);
+  font-family: var(--font-display);
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.ob-ghost:hover { color: var(--ink); border-color: var(--ink-soft); }
+
+.ob-link {
+  background: none; border: none; padding: 0;
+  color: var(--crimson); font: inherit; text-decoration: underline; cursor: pointer;
+}
+
+.ob-add {
+  border: 1.5px dashed var(--rule);
+  background: transparent;
+  border-radius: 10px;
+  width: 100%;
+  padding: 11px;
+  color: var(--ink-soft);
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.ob-add:hover { border-color: var(--crimson); color: var(--crimson); }
+
+.ob-check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.ob-check input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--crimson-lift);
+  cursor: pointer;
+}
+
+/* ── Google sign-in ───────────────────────────────────────────────────── */
+/* Built here rather than reused from LoginMorph: that button's styles live in
+ * LoginMorph.css, and importing it would pull the whole auth-modal stylesheet into a
+ * bundle that has no modal. Same offset-pill language as the other buttons, but on
+ * white — Google's branding requires a light surface behind the mark. */
+
+.ob-oauth {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 18px;
+  border: 1.5px solid var(--rule);
+  border-radius: 999px;
+  background: #fff;
+  color: #3c4043;
+  font-family: var(--font-display);
+  font-size: 17px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #cfc8bd;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.2s;
+}
+
+.ob-oauth:hover { background: #faf8f4; }
+.ob-oauth:active { transform: translateY(4px); box-shadow: 0 0 0 #cfc8bd; }
+.ob-oauth:focus-visible { outline: 3px solid var(--crimson-lift); outline-offset: 2px; }
+
+/* Hairlines that stop either side of the word, rather than a full rule with a label
+   sitting on top of it. */
+.ob-or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  text-transform: lowercase;
+}
+
+.ob-or::before,
+.ob-or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rule), transparent);
+}
+
+/* ── Borrowed login form ──────────────────────────────────────────────── */
+/* form.css sizes every field with `width: min(70vh, 88vw)` — viewport units tuned for
+ * the main app's full-screen login modal. On a tall display that resolves to well over
+ * 1200px, so inside this card the inputs, the name row and the submit row all ran off
+ * the right edge.
+ *
+ * Scoped under .ob-auth so the main app's login is untouched. The hand-drawn ink borders
+ * from BorderedInput are kept exactly as they are — they are the most characterful thing
+ * on the page and the reason this reads as Backyard rather than a generic form. */
+
+/* The actual cause of the overflow, and why `width: 100%` alone did nothing.
+ *
+ * form.css makes the form `display: grid` with no explicit columns, so the single
+ * column is auto-sized — and an auto column grows to its widest child's min-content
+ * rather than being capped by the container. One child measured 551px, so the column
+ * became 551px inside a 438px form, and every `width: 100%` child then resolved
+ * against the COLUMN, faithfully rendering 113px too wide.
+ *
+ * minmax(0, 1fr) is the fix: the 0 minimum lets the column shrink below its content,
+ * which is what stops a grid item from forcing its parent open. */
+.ob-auth form { grid-template-columns: minmax(0, 1fr); }
+
+.ob-auth { container-type: inline-size; }
+
+.ob-auth .bordered-input-wrap,
+.ob-auth .submit-row,
+.ob-auth .name-row,
+.ob-auth .username-field,
+.ob-auth .reset-submit-wrap,
+.ob-auth form button:not(.toggle-auth-btn):not(.need-help-btn):not(.auth-submit-btn) {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.ob-auth .name-row .bordered-input-wrap { width: auto; min-width: 0; }
+
+/* The row holds the submit button and a sign-in link. Side by side they need more room
+ * than this card has, and the link was the half that got clipped. Stack them. */
+.ob-auth .submit-row {
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: flex-start;
+}
+
+.ob-auth .submit-row .toggle-auth-btn,
+.ob-auth .submit-row .need-help-btn {
+  flex: 1 1 100%;
+  text-align: center;
+  white-space: normal;
+}
+
+.ob-auth .auth-submit-wrap { flex: 1 1 100%; }
+
+/* form.css paints the submit teal. Everything else on this surface is crimson, and the
+ * primary action is the last place to be inconsistent about it. */
+.ob-auth .auth-submit-btn,
+.ob-auth .auth-submit-btn.duo-btn {
+  background: var(--crimson-lift);
+  box-shadow: 0 4px 0 var(--crimson);
+  border-radius: 999px;
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+}
+
+.ob-auth .auth-submit-btn:hover:not(:disabled) { background: #ad3236; }
+
+.ob-auth .toggle-auth-btn,
+.ob-auth .need-help-btn {
+  color: var(--crimson);
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+
+/* Form-level messages inherit the app's own colours; keep them on-palette here. */
+.ob-auth .form-error { color: var(--crimson); }
+
+
+/* ── Category and subcategory picker ──────────────────────────────────── */
+
+/* A native <select> can be styled down to its closed state and no further: the open list
+   is drawn by the operating system, in system fonts and system colours, which on a page
+   built to look like paper is the one element that reads as borrowed. Select.jsx renders
+   the list itself so it can be styled here. */
+
+.ob-dd { position: relative; }
+
+.ob-dd-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 13px;
+  border: 1.5px solid var(--rule);
+  border-radius: 10px;
+  background: #fffdf9;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ob-dd-button:hover:not(:disabled) { border-color: var(--ink-soft); }
+.ob-dd-button.is-open { border-color: var(--crimson); }
+.ob-dd-button:focus-visible { outline: 3px solid var(--crimson-lift); outline-offset: 2px; }
+.ob-dd-button:disabled { color: var(--ink-soft); cursor: default; }
+
+.ob-dd-placeholder { color: var(--ink-soft); }
+
+.ob-dd-caret {
+  flex: none;
+  width: 8px; height: 8px;
+  border-right: 2px solid var(--ink-soft);
+  border-bottom: 2px solid var(--ink-soft);
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 0.15s ease;
+}
+
+.ob-dd-button.is-open .ob-dd-caret { transform: translateY(2px) rotate(-135deg); }
+
+.ob-dd-list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  left: 0; right: 0;
+  max-height: 264px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--paper);
+  border: 1.5px solid var(--rule);
+  border-radius: 12px;
+  box-shadow: 0 14px 30px rgba(41, 36, 29, 0.18);
+}
+
+.ob-dd-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Hover and keyboard focus share one highlight, so arrowing and pointing look the same. */
+.ob-dd-option.is-active { background: rgba(122, 37, 40, 0.1); color: var(--crimson); }
+.ob-dd-option[aria-selected='true'] { font-weight: 600; }
+.ob-dd-tick { color: var(--crimson); }
+
+/* ── Image upload ─────────────────────────────────────────────────────── */
+
+.ob-upload { display: flex; align-items: flex-start; gap: 16px; }
+.ob-upload-controls { display: grid; gap: 6px; min-width: 0; }
+
+.ob-preview {
+  flex: none;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid var(--rule);
+  background: var(--paper-edge);
+}
+
+.ob-preview--square { width: 84px; height: 84px; }
+/* Posters are landscape on the calendar, so preview them at the shape they will appear. */
+.ob-preview--wide { width: 132px; height: 84px; }
+
+.ob-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.ob-chips--picked { margin-bottom: 2px; }
+
+.ob-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+/* Suggestions are buttons, and look like buttons, so it is obvious they can be tapped
+   rather than being decorative labels. */
+.ob-chip--suggest {
+  border: 1.5px dashed var(--rule);
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.ob-chip--suggest:hover { border-style: solid; border-color: var(--crimson); color: var(--crimson); }
+.ob-chip--suggest:focus-visible { outline: 3px solid var(--crimson-lift); outline-offset: 2px; }
+
+/* Chosen ones are solid, so the difference between picked and available is legible at a
+   glance and not just from position. */
+.ob-chip--picked {
+  border: 1.5px solid var(--crimson);
+  background: rgba(197, 59, 63, 0.1);
+  color: var(--crimson);
+  font-weight: 600;
+}
+
+.ob-chip-x {
+  border: none;
+  background: none;
+  padding: 0;
+  color: inherit;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ob-chip-x:hover { opacity: 0.65; }
+
+.ob-sub-entry { display: flex; gap: 8px; align-items: stretch; margin-top: 8px; }
+.ob-sub-entry .ob-input { flex: 1; min-width: 0; }
+.ob-sub-add { flex: none; white-space: nowrap; }
+.ob-sub-add:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Sits under the logo preview. */
+.ob-remove-image {
+  border: none;
+  background: none;
+  padding: 0;
+  margin-top: 6px;
+  color: var(--crimson);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ── The signature: a filing stamp ────────────────────────────────────── */
+/* Submitting is the one moment worth marking. Everything else on the page stays
+   quiet so this lands. */
+
+.ob-stamp {
+  display: inline-grid;
+  place-items: center;
+  padding: 16px 26px;
+  border: 3px solid var(--crimson);
+  border-radius: 8px;
+  color: var(--crimson);
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3.4vw, 34px);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transform: rotate(-6deg);
+  opacity: 0.92;
+  animation: ob-stamp-down 420ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+@keyframes ob-stamp-down {
+  from { transform: rotate(-6deg) scale(2.1); opacity: 0; }
+  70%  { transform: rotate(-6deg) scale(0.94); opacity: 1; }
+  to   { transform: rotate(-6deg) scale(1); opacity: 0.92; }
+}
+
+.ob-centered { text-align: center; padding: clamp(28px, 5vw, 52px); }
+
+.ob-logo-preview {
+  width: 84px; height: 84px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid var(--rule);
+  background: var(--paper-edge);
+}
+
+.ob-review-list { list-style: none; margin: 0 0 22px; padding: 0; display: grid; gap: 10px; }
+
+.ob-review-item {
+  display: flex; align-items: baseline; gap: 12px;
+  padding: 11px 14px;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: rgba(255, 253, 249, 0.6);
+}
+
+.ob-review-key {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 13px;
+  color: var(--ink-soft);
+  flex: none; width: 116px;
+}
+
+.ob-review-val { min-width: 0; word-break: break-word; }
+.ob-review-val.is-empty { color: var(--crimson-lift); }
+
+.ob-skeleton {
+  background: var(--paper-edge);
+  border-radius: 8px;
+  animation: ob-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes ob-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,5 +1,5 @@
 ﻿import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import './App.css';
 import { SearchBar } from './home_components/SearchBar';
 import { UniversityPage } from './uni_components/UniversityPage';
@@ -23,7 +23,8 @@ import { useGlobalStore } from './lib/store'
 function App() {
   const loginOpen = useGlobalStore((s) => s.loginOpen);
   const setLoginOpen = useGlobalStore((s) => s.setLoginOpen);
-  const [supportOpen, setSupportOpen] = useState(false);
+  const supportOpen = useGlobalStore((state) => state.supportOpen);
+  const setSupportOpen = useGlobalStore((state) => state.setSupportOpen);
   const location = useLocation();
 
   useEffect(() => {

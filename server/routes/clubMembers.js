@@ -2,6 +2,7 @@ import express from 'express';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { requireModerator, requireTopModerator } from '../lib/clubPermissions.js';
+import { admitMember, grantClubRole } from '../lib/clubMembership.js';
 
 const router = express.Router();
 
@@ -61,54 +62,11 @@ router.get('/:clubId/members', requireAuth, async (req, res) => {
   res.json(result);
 });
 
-// Create the membership row and keep profiles.member_list in step with it.
-//
-// That array is legacy but still load-bearing — clubEvents.js and reviews.js both read
-// it — so any path that admits a member has to write both. Approving a join request goes
-// through here for exactly that reason: an approval that inserted the membership alone
-// would leave a member who cannot see their own club's events.
-async function admitMember(userId, clubId) {
-  // Idempotent on purpose. Someone can be admitted twice by two different routes —
-  // request to join, get added through an invite link while still queued, then have the
-  // original request approved. Inserting again violates the (user_id, club_id) primary
-  // key, and the caller would surface a 502 for a user who is in fact already a member.
-  const { data: existing } = await supabaseAdmin
-    .from('club_memberships')
-    .select('role')
-    .eq('user_id', userId)
-    .eq('club_id', clubId)
-    .maybeSingle();
+// Membership writes live in lib/clubMembership.js so the invite-redemption path can
+// grant a role instead of only ever admitting a plain member. That array is legacy but
+// still load-bearing — clubEvents.js and reviews.js both read it — so every path that
+// admits a member writes both tables.
 
-  if (existing) return existing.role;
-
-  const role = 'member';
-
-  const { error: insertError } = await supabaseAdmin
-    .from('club_memberships')
-    .insert({ user_id: userId, club_id: clubId, role });
-
-  if (insertError) {
-    const err = new Error(insertError.message);
-    err.status = 502;
-    throw err;
-  }
-
-  const { data: profile } = await supabaseAdmin
-    .from('profiles')
-    .select('member_list')
-    .eq('id', userId)
-    .single();
-
-  const currentList = profile?.member_list || [];
-  if (!currentList.includes(clubId)) {
-    await supabaseAdmin
-      .from('profiles')
-      .update({ member_list: [...currentList, clubId] })
-      .eq('id', userId);
-  }
-
-  return role;
-}
 
 // POST /:clubId/members/me — join, or request to join (auth required)
 // School-match guard enforced here; RLS is defense-in-depth.
@@ -162,7 +120,20 @@ router.post('/:clubId/members/me', requireAuth, async (req, res) => {
     return res.status(202).json({ status: 'requested' });
   }
 
-  const role = await admitMember(userId, clubId);
+  // Scoped narrowly on purpose. The deadlock the comment above describes only exists for
+  // request-policy clubs: with zero members there is nobody holding the role needed to
+  // approve anyone, so the club can never be joined. Open clubs have no such problem.
+  //
+  // Granting ownership to the first joiner of ANY empty club would mean any student could
+  // claim every scraped, zero-member club on the platform — and scraped rows default to
+  // join_policy 'open' — so the condition has to match the justification exactly.
+  const firstIntoLockedClub = memberCount === 0 && club?.join_policy === 'request';
+
+  const { role } = await grantClubRole(
+    userId,
+    clubId,
+    firstIntoLockedClub ? 'top_moderator' : 'member'
+  );
   res.status(201).json({ role, status: 'joined' });
 });
 

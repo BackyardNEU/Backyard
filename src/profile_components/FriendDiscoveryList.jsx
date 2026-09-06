@@ -134,7 +134,9 @@ export const FriendDiscoveryList = ({ userId }) => {
           </button>
         ))}
         <button className="find-friends-card" onClick={openModal}>
-          <span className="find-friends-plus">+</span>
+          <div className="friend-avatar find-friends-circle">
+            <span className="find-friends-plus">+</span>
+          </div>
           <span className="find-friends-label">
             {friends.length === 0 ? 'Find Friends' : 'Find More'}
           </span>

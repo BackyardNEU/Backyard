@@ -8,18 +8,30 @@ import borderImg from '../assets/border.svg';
 import borderHorizontalImg from '../assets/border-horizontal.svg';
 import EventPosterCropModal from './EventPosterCropModal';
 import PortraitTitle from '../uni_components/PortraitTitle';
+import FriendRsvpCallout from '../components/FriendRsvpCallout';
 import '../uni_components/EventInfoRow.css';
 import './AddEventPanel.css';
-import './CalendarModule.css';
 
-const EMPTY_FORM = { eventName: '', start: '', end: '', where: '', description: '', membersOnly: false };
+const EMPTY_FORM = { eventName: '', date: '', startTime: '', endTime: '', where: '', description: '', membersOnly: false, allDay: false };
 
-// datetime-local inputs need "YYYY-MM-DDTHH:mm" (no seconds/timezone)
-function toDatetimeLocalValue(iso) {
+// Cropping (EventPosterCropModal) re-compresses to JPEG at 0.92 quality, which would
+// bring nearly any phone photo under this — but cropping is optional here, so an
+// uncropped raw camera photo (easily 8-10MB+ on a modern phone) can go straight to
+// the PUT and get rejected by the bucket's own size limit with a bare "upload failed".
+// This catches it up front with an actionable message instead.
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+
+function toDateValue(iso) {
   if (!iso) return '';
   const d = new Date(iso);
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+function toTimeValue(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2, '0');
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 /**
@@ -49,13 +61,11 @@ export default function AddEventPanel({
   onDeleteEvent,
   myRsvpSet = new Set(),
   friendRsvpMap = new Map(),
-  attendeeMap = new Map(),
   onRsvp,
   userId,
 }) {
   const imageInputRef = useRef(null);
 
-  const [attendeeModal, setAttendeeModal] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editingEventId, setEditingEventId] = useState(null);
   const [formData, setFormData] = useState(EMPTY_FORM);
@@ -117,15 +127,23 @@ export default function AddEventPanel({
   }, [editingEventId, imagePreview, formWarning]);
 
   function validateForm() {
-    const { start: startVal, end: endVal, description } = formData;
+    const { date, startTime, endTime, description, allDay } = formData;
     if (description.length > 200) { setFormWarning('Description must be 200 characters or fewer.'); return false; }
-    if (!startVal || !endVal) { setFormWarning('Please fill in the start and end times.'); return false; }
-    const start = new Date(startVal);
-    const end = new Date(endVal);
-    if (isNaN(start) || isNaN(end)) { setFormWarning('Invalid date or time format.'); return false; }
-    if (start < new Date()) { setFormWarning('Event cannot begin in the past.'); return false; }
-    if (start >= end) { setFormWarning('Start time must be before end time.'); return false; }
-    if (end - start > 12 * 60 * 60 * 1000) { setFormWarning('Event cannot last more than 12 hours.'); return false; }
+    if (!date) { setFormWarning('Please fill in a date.'); return false; }
+    if (!allDay && !startTime) { setFormWarning('Please fill in a start time.'); return false; }
+    if (!allDay && !endTime) { setFormWarning('Please fill in an end time.'); return false; }
+    if (allDay) {
+      const start = new Date(`${date}T00:00:00`);
+      if (isNaN(start)) { setFormWarning('Invalid date format.'); return false; }
+      if (start < new Date(new Date().toDateString())) { setFormWarning('Event cannot begin in the past.'); return false; }
+    } else {
+      const start = new Date(`${date}T${startTime}`);
+      const end = new Date(`${date}T${endTime}`);
+      if (isNaN(start) || isNaN(end)) { setFormWarning('Invalid date or time format.'); return false; }
+      if (start < new Date()) { setFormWarning('Event cannot begin in the past.'); return false; }
+      if (start >= end) { setFormWarning('Start time must be before end time.'); return false; }
+      if (end - start > 12 * 60 * 60 * 1000) { setFormWarning('Event cannot last more than 12 hours.'); return false; }
+    }
     setFormWarning('');
     return true;
   }
@@ -138,6 +156,11 @@ export default function AddEventPanel({
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Not rejected here even if oversized: Scale/Crop (still reachable below, since it
+    // only needs imageFile set) re-compresses to JPEG and usually brings a raw phone
+    // photo well under the limit. The real gate is in handleSubmit, after cropping has
+    // had its chance.
+    setFormWarning('');
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
   };
@@ -182,6 +205,14 @@ export default function AddEventPanel({
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
+    // Checked here rather than at file-select: cropping (optional, via Scale/Crop)
+    // re-compresses to JPEG and usually shrinks a raw phone photo well under this —
+    // by submit time that's already happened if it was going to. Without this check,
+    // an oversized file reaches the PUT and comes back as a bare "Image upload failed."
+    if (imageFile && imageFile.size > MAX_IMAGE_BYTES) {
+      setFormWarning('That image is too large. Use Scale/Crop to shrink it before sending.');
+      return;
+    }
     setIsSubmitting(true);
     try {
       let imageUrl = null;
@@ -189,7 +220,7 @@ export default function AddEventPanel({
         const ext = imageFile.name.split('.').pop() || 'jpg';
         const { signedUrl, publicUrl } = await apiFetch('/storage/event-poster-upload-url', {
           method: 'POST',
-          body: { ext },
+          body: { ext, club_id: club.id },
         });
         const uploadRes = await fetch(signedUrl, {
           method: 'PUT',
@@ -207,8 +238,8 @@ export default function AddEventPanel({
         eventName: formData.eventName,
         description: formData.description,
         where: formData.where,
-        startTime: `${formData.start}:00`,
-        endTime: `${formData.end}:00`,
+        startTime: formData.allDay ? `${formData.date}T00:00:00` : `${formData.date}T${formData.startTime}:00`,
+        endTime: formData.allDay ? `${formData.date}T23:59:00` : `${formData.date}T${formData.endTime}:00`,
         imageUrl,
         isMembersOnly: formData.membersOnly,
       };
@@ -230,8 +261,9 @@ export default function AddEventPanel({
     setEditingEventId(event.id);
     setFormData({
       eventName: event.event_name || '',
-      start: toDatetimeLocalValue(event.start_time),
-      end: toDatetimeLocalValue(event.end_time),
+      date: toDateValue(event.start_time),
+      startTime: toTimeValue(event.start_time),
+      endTime: toTimeValue(event.end_time),
       where: event.where || '',
       description: event.event_description || '',
       membersOnly: !!event.is_members_only,
@@ -345,25 +377,42 @@ export default function AddEventPanel({
         placeholder="Event Name (Optional)"
       />
       <div className="cal-datetime-field">
-        <span className="cal-datetime-label">Start</span>
+        <span className="cal-datetime-label">Date</span>
         <input
           className="cal-input"
-          type="datetime-local"
-          name="start"
-          value={formData.start}
+          type="date"
+          name="date"
+          value={formData.date}
           onChange={handleFormChange}
+          data-empty={!formData.date ? 'true' : undefined}
         />
       </div>
-      <div className="cal-datetime-field">
-        <span className="cal-datetime-label">End</span>
-        <input
-          className="cal-input"
-          type="datetime-local"
-          name="end"
-          value={formData.end}
-          onChange={handleFormChange}
-        />
-      </div>
+      {!formData.allDay && (
+        <div className="cal-datetime-field">
+          <span className="cal-datetime-label">Start</span>
+          <input
+            className="cal-input"
+            type="time"
+            name="startTime"
+            value={formData.startTime}
+            onChange={handleFormChange}
+            data-empty={!formData.startTime ? 'true' : undefined}
+          />
+        </div>
+      )}
+      {!formData.allDay && (
+        <div className="cal-datetime-field">
+          <span className="cal-datetime-label">End</span>
+          <input
+            className="cal-input"
+            type="time"
+            name="endTime"
+            value={formData.endTime}
+            onChange={handleFormChange}
+            data-empty={!formData.endTime ? 'true' : undefined}
+          />
+        </div>
+      )}
       <input
         className="cal-input"
         type="text"
@@ -385,15 +434,26 @@ export default function AddEventPanel({
       {formWarning && <p className="cal-form-warning">{formWarning}</p>}
 
       <div className="cal-form-footer">
-        <label className="cal-members-only-label">
-          <input
-            type="checkbox"
-            name="membersOnly"
-            checked={formData.membersOnly}
-            onChange={(e) => setFormData(prev => ({ ...prev, membersOnly: e.target.checked }))}
-          />
-          <span>Members Only</span>
-        </label>
+        <div className="cal-footer-checks">
+          <label className="cal-members-only-label">
+            <input
+              type="checkbox"
+              name="membersOnly"
+              checked={formData.membersOnly}
+              onChange={(e) => setFormData(prev => ({ ...prev, membersOnly: e.target.checked }))}
+            />
+            <span>Members Only</span>
+          </label>
+          <label className="cal-members-only-label">
+            <input
+              type="checkbox"
+              name="allDay"
+              checked={formData.allDay}
+              onChange={(e) => setFormData(prev => ({ ...prev, allDay: e.target.checked, startTime: '', endTime: '' }))}
+            />
+            <span>All Day</span>
+          </label>
+        </div>
 
         <div className="duo-btn-wrap cal-submit-wrap">
           <div className="duo-btn-pill" aria-hidden="true" />
@@ -489,53 +549,34 @@ export default function AddEventPanel({
                       <PortraitTitle text={event.event_name} />
                       {event.where && (
                         <p className="cal-info-row">
-                          <span className="cal-info-label">where</span>
+                          <span className="cal-info-label">Where: </span>
                           <span className="cal-info-value">{event.where}</span>
                         </p>
                       )}
                       <p className="cal-info-row">
-                        <span className="cal-info-label">when</span>
+                        <span className="cal-info-label">When: </span>
                         <span className="cal-info-value">
                           {format(start, 'EEE MMM d')} {format(start, 'h:mm a')}–{format(end, 'h:mm a')}
                         </span>
                       </p>
                       {event.event_description && (
                         <p className="cal-info-row">
-                          <span className="cal-info-label">about</span>
+                          <span className="cal-info-label">About: </span>
                           <span className="cal-info-value">{event.event_description}</span>
                         </p>
                       )}
                       {event.is_members_only && (
                         <span className="cal-members-badge">Members only</span>
                       )}
-                      {friends && friends.length > 0 && (
-                        <p className="friend-rsvp-callout">
-                          {friends.length === 1
-                            ? `${friends[0].username} is going`
-                            : `${friends[0].username} and ${friends.length - 1} ${friends.length - 1 === 1 ? 'other' : 'others'} you know are going`}
-                        </p>
+                      <FriendRsvpCallout friends={friends} />
+                      {userId && (
+                        <button
+                          className={`rsvp-button${isGoing ? ' rsvp-going' : ''}`}
+                          onClick={() => onRsvp?.(event.id, isGoing)}
+                        >
+                          {isGoing ? 'Going ✓' : "I'm going!"}
+                        </button>
                       )}
-                      <div className="cal-event-footer">
-                        {(() => {
-                          const evEntry = attendeeMap.get(event.id) ?? { count: 0, attendees: [] };
-                          return (
-                            <button
-                              className="cal-attendee-btn"
-                              onClick={() => setAttendeeModal({ event, ...evEntry })}
-                            >
-                              {evEntry.count} going
-                            </button>
-                          );
-                        })()}
-                        {userId && (
-                          <button
-                            className={`rsvp-button${isGoing ? ' rsvp-going' : ''}`}
-                            onClick={() => onRsvp?.(event.id, isGoing)}
-                          >
-                            {isGoing ? 'Going ✓' : "I'm going!"}
-                          </button>
-                        )}
-                      </div>
                       <div className="add-event-card-toggle-row">
                         <button
                           type="button"
@@ -574,33 +615,6 @@ export default function AddEventPanel({
           onCancel={() => setShowCropModal(false)}
           onConfirm={handleCropConfirm}
         />
-      )}
-
-      {attendeeModal && (
-        <div className="cal-attendee-backdrop" onClick={() => setAttendeeModal(null)}>
-          <div className="cal-attendee-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="cal-attendee-modal-header">
-              <span className="cal-attendee-modal-title">Who's going</span>
-              <button
-                className="cal-attendee-modal-close"
-                onClick={() => setAttendeeModal(null)}
-                aria-label="Close"
-              >✕</button>
-            </div>
-            {attendeeModal.attendees.length === 0 ? (
-              <p className="cal-attendee-empty">No one has RSVPd yet. Be the first!</p>
-            ) : (
-              <ul className="cal-attendee-list">
-                {attendeeModal.attendees.map((a, i) => (
-                  <li key={a.user_id ?? i} className="cal-attendee-item">
-                    <img className="cal-attendee-avatar" src={a.avatar_url || '/raccoon_pfp.png'} alt="" />
-                    <span className="cal-attendee-name">{a.username || '...'}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
       )}
     </div>
   );

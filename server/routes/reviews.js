@@ -90,6 +90,35 @@ function pickWritable(body) {
     return out;
 }
 
+router.delete('/:reviewId', async (req, res) => {
+    const { data: review, error: fetchErr } = await supabaseAdmin
+        .from('reviews')
+        .select('id, user_id')
+        .eq('id', req.params.reviewId)
+        .single();
+
+    if (fetchErr || !review) {
+        return res.status(404).json({ error: 'Review not found' });
+    }
+
+    if (review.user_id !== req.user.id) {
+        return res.status(403).json({ error: 'You can only delete your own comments' });
+    }
+
+    const { error } = await supabaseAdmin
+        .from('reviews')
+        .delete()
+        .eq('id', req.params.reviewId);
+
+    if (error) {
+        const err = new Error(error.message);
+        err.status = 502;
+        throw err;
+    }
+
+    res.status(204).end();
+});
+
 router.post('/', checkMuted, async (req, res) => {
     const patch = pickWritable(req.body);
     if (!patch.club_id) {
@@ -130,6 +159,12 @@ router.post('/', checkMuted, async (req, res) => {
         .single();
 
     if (error) {
+        // Postgres unique_violation (23505) on reviews_one_per_user — surfaced as a real
+        // 409 rather than the generic 502 below, which is what the frontend's own
+        // `err.status === 409` branch (ReviewPage.jsx) has been waiting on all along.
+        if (error.code === '23505') {
+            return res.status(409).json({ error: 'Sorry, only one review per user' });
+        }
         const err = new Error(error.message);
         err.status = 502;
         throw err;

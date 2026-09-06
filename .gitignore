@@ -23,3 +23,9 @@ __pycache__
 # Claude settings
 .claude/settings.local.json
 .claude/CLAUDE.md
+dist-onboard/
+
+# Playwright MCP scratch output
+.playwright-mcp/
+.vercel
+.env*

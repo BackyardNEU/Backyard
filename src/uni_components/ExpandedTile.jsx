@@ -23,122 +23,14 @@ import { useGlobalStore } from '../lib/store';
 import { readClubPage, invalidateClubPage } from '../lib/clubPageCache';
 import { Skeleton, SkeletonText } from '../components/Skeleton';
 import InviteLinkButton from '../club_page_components/InviteLinkButton';
+import QrFlyerButton from '../club_page_components/QrFlyerButton';
 import dividerLineImg from '/src/assets/border-horizontal-gray.svg';
 
-// --- Validation helpers ---
-const isValidUrl = (url) => {
-  try { const u = new URL(url); return u.protocol === 'http:' || u.protocol === 'https:'; }
-  catch { return false; }
-};
+// Validation moved to shared/clubPageValidation.js so the server enforces the same
+// rules. It previously lived only here, which meant PUT /clubs/:clubId/page accepted
+// anything that survived the profanity check.
+import { getModuleWarnings } from '../../shared/clubPageValidation.js';
 
-function validateBasicInfo(data) {
-    if (!data?.club_name?.trim()) return 'Club name cannot be empty.';
-    if (data.club_name.trim().length > 80) return 'Club name must be 80 characters or fewer.';
-    if (!data?.description?.trim()) return 'Description cannot be empty.';
-    for (const l of (data?.links ?? [])) {
-        if (l.name.length > 15) return 'Link names must be 15 characters or fewer.';
-        if (l.url && !isValidUrl(l.url)) return 'One or more link URLs are invalid.';
-    }
-    return null;
-}
-
-function validateLinks(basicInfoData) {
-    for (const l of (basicInfoData?.links ?? [])) {
-        if (l.name.length > 15) return 'Link names must be 15 characters or fewer.';
-        if (l.url && !isValidUrl(l.url)) return 'One or more link URLs are invalid.';
-    }
-    return null;
-}
-
-function validateJoin(data) {
-    const tabs = data?.tabs ?? [];
-    for (const tab of tabs) {
-        if (!tab.title?.trim()) return 'Each tab must have a title.';
-        if (tab.title.trim().length > 60) return 'Tab titles must be 60 characters or fewer.';
-        if (!tab.body?.trim()) return 'Each tab must have body text.';
-        if (tab.body.trim().length > 500) return 'Tab body must be 500 characters or fewer.';
-    }
-    return null;
-}
-
-function validateStats(data) {
-    const stats = data?.stats ?? [];
-    for (const s of stats) {
-        if (s.value < 0) return 'Stat values cannot be negative.';
-        if (s.value % 1 !== 0) return 'Stat value must be a whole number.';
-        if (s.type === 'quantitative') {
-            if (!s.unit1?.trim()) return 'Each quantitative stat must have a unit.';
-        }
-        if (s.type === 'qualitative') {
-            if (!s.label?.trim()) return 'Each qualitative stat must have a name.';
-            const max = s.max ?? 10;
-            if (max < 1) return 'Max must be at least 1.';
-            if (s.value > max) return 'A stat value exceeds its max.';
-            if (max % 1 !== 0) return 'Max must be a whole number.';
-        }
-    }
-    return null;
-}
-
-function validateFaq(data) {
-    const faqs = data?.faqs ?? [];
-    for (const f of faqs) {
-        if (!f.q?.trim()) return 'Each FAQ must have a question.';
-        if (f.q.trim().length > 200) return 'FAQ questions must be 200 characters or fewer.';
-        if (f.a && f.a.length > 500) return 'FAQ answers must be 500 characters or fewer.';
-    }
-    return null;
-}
-
-function validateMemberRoster(data) {
-    const categories = data?.categories ?? [];
-    const members = data?.members ?? [];
-    for (const c of categories) {
-        if (!c?.trim()) return 'Category names cannot be empty.';
-        if (c.trim().length > 25) return 'Category names must be 25 characters or fewer.';
-    }
-    for (const m of members) {
-        if (!m.name?.trim()) return 'Each member must have a name.';
-        if (m.name.trim().length > 50) return 'Member names must be 50 characters or fewer.';
-        const bioText = (m.bio || '').replace(/<[^>]*>/g, '');
-        if (bioText.length > 500) return 'Member bios must be 500 characters or fewer.';
-    }
-    return null;
-}
-
-function validateComments() { return null; }
-
-function validateClubMedia(data) {
-    const posters = data?.posters ?? [];
-    const validWidths = new Set(['50', '70', '100']);
-    for (const p of posters) {
-        if (p.poster_text && p.poster_text.length > 100) return 'Poster titles must be 100 characters or fewer.';
-        for (const block of (p.content ?? [])) {
-            if (block.type === 'title' && block.value && block.value.length > 100) return 'Content headings must be 100 characters or fewer.';
-            if (block.type === 'text' && block.value && block.value.length > 500) return 'Content text must be 500 characters or fewer.';
-            if (block.type === 'uploaded_video' && block.width && !validWidths.has(String(block.width))) {
-                return 'Video width must be 50%, 70%, or 100%.';
-            }
-        }
-    }
-    return null;
-}
-
-function getModuleWarnings(draft) {
-    const w = {};
-    const basicInfo = draft.find((m) => m.type === 'basic_info');
-    for (const m of draft) {
-        if (m.type === 'basic_info') w.basic_info = validateBasicInfo(m.data);
-        if (m.type === 'links') w.links = validateLinks(basicInfo?.data);
-        if (m.type === 'join') w.join = validateJoin(m.data);
-        if (m.type === 'stats') w.stats = validateStats(m.data);
-        if (m.type === 'faqs') w.faqs = validateFaq(m.data);
-        if (m.type === 'member_roster') w.member_roster = validateMemberRoster(m.data);
-        if (m.type === 'club_media') w.club_media = validateClubMedia(m.data);
-        if (m.type === 'comments') w.comments = validateComments(m.data);
-    }
-    return w;
-}
 
 function normalizeModules(modules) {
     const normalized = (modules ?? []).map((m, i) => ({
@@ -223,12 +115,12 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const [joinPolicy, setJoinPolicy] = useState(() => club?.join_policy ?? 'open');
     // NOTE2SELF: THIS WILL BECOME IRRELEVANT LATER AS A LOADING STATE ACROSS ALL MODULES/INFO IS PUT IN PLACE
     const [memberLoading, setMemberLoading] = useState(false);
+    const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
     // active tab: 'page' | 'members'
     const [activeTab, setActiveTab] = useState('page');
     // info from modules data to be displayed from db
     const [pageData, setPageData] = useState(() => warmed?.page ?? null);
     // top tags derived from reviews
-    const [topTags, setTopTags] = useState(() => (warmed?.topTags ?? []).map((r) => r.tag));
     // editing state for changing modules
     const [isEditing, setIsEditing] = useState(false);
     // copy of the pageData.modules array initially so that it can record changes aggregated over all the modules
@@ -241,17 +133,15 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     // favorites heart — mirrors the behavior in ClubGrid
     const [heartAnimating, setHeartAnimating] = useState(false);
     const [favError, setFavError] = useState(null);
-    // Subscribe/Unsubscribe — UI-only toggle for now, no backend persistence yet
-    const [subscribed, setSubscribed] = useState(false);
     // pending user-submitted FAQ questions (approved editors only) + ids to delete on Save
     const [userFaqs, setUserFaqs] = useState([]);
     const [questionDeletes, setQuestionDeletes] = useState(() => new Set());
     // club events (for the calendar module)
     const [clubEvents, setClubEvents] = useState(() => warmed?.events ?? []);
     const [clubMyRsvpSet, setClubMyRsvpSet] = useState(new Set());
+    const [clubMyMaybeSet, setClubMyMaybeSet] = useState(new Set());
     const [clubFriendRsvpMap, setClubFriendRsvpMap] = useState(new Map());
-    const [clubAttendeeMap, setClubAttendeeMap] = useState(new Map());
-    const [userProfile, setUserProfile] = useState(null);
+    const [clubAllAttendeesMap, setClubAllAttendeesMap] = useState(new Map());
     // club members (for comments module authorized/unauthorized tabs)
     const [clubMembers, setClubMembers] = useState(() => warmed?.members ?? []);
     // pending hide/show changes for comments — keyed by reviewId, only committed on Save
@@ -261,11 +151,11 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const [clubInterestsSaved, setClubInterestsSaved] = useState(null);
     const [clubInterestsDraft, setClubInterestsDraft] = useState(null);
 
-    const isMember = myRole != null; // excludes both null and undefined
+    const isMember = myRole !== null;
     const isApproved = myRole === 'moderator' || myRole === 'top_moderator';
+    const hasOwner = clubMembers.length > 0;
     // Deliberately narrower than isApproved: changing who can get in is an ownership
     // decision, so a plain moderator does not get the toggle.
-    const isOwner = myRole === 'top_moderator';
 
     // The membership button used to be a straight isMember ternary. It now has to say
     // whether clicking will join outright or only ask, and offer a way back out of the
@@ -281,9 +171,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     const id = club.id;
 
     const GlobalValue = useGlobalStore((state) => state.GlobalValue);
-    const setLoginOpen = useGlobalStore((state) => state.setLoginOpen);
     const liked = favoritesCache?.has(club.id) ?? false;
-    const [showJoinPrompt, setShowJoinPrompt] = useState(false);
 
     const handleHeartClick = async (e) => {
         e.stopPropagation();
@@ -328,14 +216,6 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     }, [handleClose]);
 
     const handleClick = () => {
-        if (!GlobalValue) {
-            setLoginOpen(true);
-            return;
-        }
-        if (!isMember) {
-            setShowJoinPrompt(true);
-            return;
-        }
         setIsOpen(!isOpen);
         setIsClicked(true);
         setTimeout(() => setIsClicked(false), 350);
@@ -345,11 +225,8 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
         if (!animationDone) return;
 
         async function fetchAll() {
-            let authUser = null;
-            try {
-            const { data: { user: au } } = await supabase.auth.getUser();
-            authUser = au ?? null;
-            setUser(authUser);
+            const { data: { user: authUser } } = await supabase.auth.getUser();
+            setUser(authUser ?? null);
 
             // Already rendered from the prefetch cache, so the five public requests would
             // be re-fetching what is on screen. Only the auth-dependent calls are left,
@@ -370,7 +247,6 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             const roleKnown = warmed && warmed.role !== undefined;
             const authFetches = authUser && !roleKnown ? [
                 apiFetch(`/clubs/${id}/is-approved`),
-                apiFetch('/me/profile'),
             ] : [];
 
             // Settled separately rather than as one concatenated array: publicFetches is
@@ -407,25 +283,44 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     try {
                         const eventIds = eventsData.map((e) => e.id);
                         const rsvpData = await apiFetch(`/clubs/${id}/events/rsvps?eventIds=${eventIds.join(',')}`);
+
                         setClubMyRsvpSet(new Set(
-                            rsvpData.filter((r) => r.user_id === authUser.id).map((r) => r.event_id)
+                            rsvpData.filter((r) => r.user_id === authUser.id && r.status === 'going').map((r) => r.event_id)
                         ));
+                        setClubMyMaybeSet(new Set(
+                            rsvpData.filter((r) => r.user_id === authUser.id && r.status === 'maybe').map((r) => r.event_id)
+                        ));
+
                         const friendIdSet = new Set((friendsArray || []).map((f) => f.id));
                         const friendProfileMap = new Map((friendsArray || []).map((f) => [f.id, f]));
                         const newFriendRsvpMap = new Map();
-                        const newAttendeeMap = new Map();
+                        const newAllAttendeesMap = new Map();
+
                         for (const rsvp of rsvpData) {
-                            if (friendIdSet.has(rsvp.user_id)) {
+                            // friend callout (going only, matches existing behaviour)
+                            if (friendIdSet.has(rsvp.user_id) && rsvp.status === 'going') {
                                 if (!newFriendRsvpMap.has(rsvp.event_id)) newFriendRsvpMap.set(rsvp.event_id, []);
                                 newFriendRsvpMap.get(rsvp.event_id).push(friendProfileMap.get(rsvp.user_id));
                             }
-                            if (!newAttendeeMap.has(rsvp.event_id)) newAttendeeMap.set(rsvp.event_id, { count: 0, attendees: [] });
-                            const entry = newAttendeeMap.get(rsvp.event_id);
-                            entry.count++;
-                            entry.attendees.push({ user_id: rsvp.user_id, username: rsvp.username, avatar_url: rsvp.avatar_url });
+                            // full attendees map for overlay
+                            if (!newAllAttendeesMap.has(rsvp.event_id)) {
+                                newAllAttendeesMap.set(rsvp.event_id, { going: [], maybe: [] });
+                            }
+                            const bucket = rsvp.status === 'maybe' ? 'maybe' : 'going';
+                            newAllAttendeesMap.get(rsvp.event_id)[bucket].push({
+                                user_id: rsvp.user_id,
+                                profile: rsvp.profile,
+                                isFriend: friendIdSet.has(rsvp.user_id),
+                            });
                         }
+                        // friends first within each bucket
+                        for (const { going, maybe } of newAllAttendeesMap.values()) {
+                            going.sort((a, b) => b.isFriend - a.isFriend);
+                            maybe.sort((a, b) => b.isFriend - a.isFriend);
+                        }
+
                         setClubFriendRsvpMap(newFriendRsvpMap);
-                        setClubAttendeeMap(newAttendeeMap);
+                        setClubAllAttendeesMap(newAllAttendeesMap);
                     } catch (err) {
                         console.error('Failed to fetch club RSVPs:', err);
                     }
@@ -525,32 +420,29 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             if (isCurrentlyGoing) {
                 await apiFetch(`/clubs/${id}/events/${eventId}/rsvp`, { method: 'DELETE' });
                 setClubMyRsvpSet((prev) => { const next = new Set(prev); next.delete(eventId); return next; });
-                setClubAttendeeMap((prev) => {
-                    const next = new Map(prev);
-                    const entry = next.get(eventId);
-                    if (entry) {
-                        next.set(eventId, {
-                            count: Math.max(0, entry.count - 1),
-                            attendees: entry.attendees.filter((a) => a.user_id !== user.id),
-                        });
-                    }
-                    return next;
-                });
             } else {
                 await apiFetch(`/clubs/${id}/events/${eventId}/rsvp`, { method: 'POST' });
                 setClubMyRsvpSet((prev) => new Set([...prev, eventId]));
-                setClubAttendeeMap((prev) => {
-                    const next = new Map(prev);
-                    const entry = next.get(eventId) ?? { count: 0, attendees: [] };
-                    next.set(eventId, {
-                        count: entry.count + 1,
-                        attendees: [...entry.attendees, { user_id: user.id, username: userProfile?.username ?? null, avatar_url: userProfile?.avatar_url ?? null }],
-                    });
-                    return next;
-                });
+                setClubMyMaybeSet((prev) => { const next = new Set(prev); next.delete(eventId); return next; });
             }
         } catch (err) {
             console.error('RSVP failed:', err);
+        }
+    };
+
+    const handleClubMaybe = async (eventId, isCurrentlyMaybe) => {
+        if (!user) return;
+        try {
+            if (isCurrentlyMaybe) {
+                await apiFetch(`/clubs/${id}/events/${eventId}/maybe`, { method: 'DELETE' });
+                setClubMyMaybeSet((prev) => { const next = new Set(prev); next.delete(eventId); return next; });
+            } else {
+                await apiFetch(`/clubs/${id}/events/${eventId}/maybe`, { method: 'POST' });
+                setClubMyMaybeSet((prev) => new Set([...prev, eventId]));
+                setClubMyRsvpSet((prev) => { const next = new Set(prev); next.delete(eventId); return next; });
+            }
+        } catch (err) {
+            console.error('Maybe failed:', err);
         }
     };
 
@@ -597,6 +489,15 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
         await apiFetch(`/events/${eventId}`, { method: 'DELETE' });
         setClubEvents((prev) => prev.filter((e) => e.id !== eventId));
     };
+
+    const handleDeleteReview = useCallback(async (reviewId) => {
+        set_reviews(prev => prev.filter(r => r.id !== reviewId));
+        try {
+            await apiFetch(`/reviews/${reviewId}`, { method: 'DELETE' });
+        } catch (err) {
+            console.error('Failed to delete comment:', err);
+        }
+    }, []);
 
     const moduleWarnings = isEditing ? getModuleWarnings(draft) : {};
     const isDraftValid = Object.values(moduleWarnings).every(w => w == null);
@@ -736,26 +637,14 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     // Action row rendered inside the basic_info module (between the banner and the About text)
     const actionRow = (
         <div className="exp-action-row">
-            {showJoinPrompt && !isMember && (
-                <div className="exp-join-prompt">
-                    Join this club to share your experience.
-                    <button
-                        className="exp-join-prompt-dismiss"
-                        aria-label="Dismiss"
-                        onClick={() => setShowJoinPrompt(false)}
-                    >
-                        ✕
-                    </button>
-                </div>
-            )}
             <div className="exp-action-row-inner">
-                {user && (
+                {user && (isMember || hasOwner) && (
                     <div className="duo-btn-wrap">
                         <div className="duo-btn-pill" aria-hidden="true" />
                         <button
                             className={`membership-btn duo-btn ${isMember ? 'leave' : 'join'}`}
                             style={{ '--duo-shadow': isMember ? 'rgb(90, 20, 20)' : 'rgb(76, 102, 57)' }}
-                            onClick={handleMembership}
+                            onClick={isMember ? () => setShowLeaveConfirm(true) : handleMembership}
                             disabled={memberLoading}
                         >
                             {memberLoading ? '...' : membershipAction.label}
@@ -777,7 +666,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     </div>
                 )}
 
-                {isClicked
+                {isMember && (isClicked
                     ? <img src={logImage} className="log-btn" alt="Clicked state" />
                     : (
                         <div className="duo-btn-wrap">
@@ -791,19 +680,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                             </button>
                         </div>
                     )
-                }
-
-                <div className="duo-btn-wrap">
-                    <div className="duo-btn-pill" aria-hidden="true" />
-                    <button
-                        className="add-events-btn duo-btn"
-                        style={{ '--duo-shadow': 'rgb(0, 0, 0)' }}
-                        type="button"
-                        onClick={() => setSubscribed(prev => !prev)}
-                    >
-                        {subscribed ? 'Unsubscribe' : 'Subscribe'}
-                    </button>
-                </div>
+                )}
 
                 {favError && <div className="exp-fav-error">{favError}</div>}
             </div>
@@ -827,6 +704,11 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     taxonomy={taxonomy}
                     clubInterests={clubInterestsDraft}
                     onInterestsChange={setClubInterestsDraft}
+                    onSubcategoryCreated={(newSub) => setTaxonomy(prev => prev.map(cat =>
+                      cat.id === newSub.category_id
+                        ? { ...cat, subcategories: [...cat.subcategories, newSub].sort((a, b) => a.name.localeCompare(b.name)) }
+                        : cat
+                    ))}
                     currentUserId={user?.id ?? null}
                 />
             );
@@ -921,6 +803,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                         setHideDraft(prev => ({ ...prev, [reviewId]: hidden }))
                     }
                     warning={moduleWarnings.comments ?? null}
+                    onDelete={handleDeleteReview}
                 />
             );
         }
@@ -928,6 +811,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     };
 
     return (
+        <>
         <motion.div
             className="expanded-card"
             style={{ pointerEvents: isClosing ? "none" : "auto" }}
@@ -1028,6 +912,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                                     </button>
                                 </div>
                                 <InviteLinkButton clubId={id} />
+                                <QrFlyerButton club={club} />
                             </>
                         ) : (
                             <>
@@ -1077,12 +962,14 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             {activeTab === 'members' ? (
                 <ClubMembersPanel
                     clubId={id}
+                    joinPolicy={joinPolicy}
                     myRole={myRole}
                     currentUserId={user?.id ?? null}
                     onMembershipChange={(newRole) => {
                         setMyRole(newRole);
                         if (onMembershipChange) onMembershipChange(club.id, newRole !== null);
                     }}
+                    onJoinPolicyChange={handleJoinPolicyToggle}
                 />
             ) : (
 
@@ -1094,9 +981,11 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                         editing={false}
                         events={clubEvents}
                         myRsvpSet={clubMyRsvpSet}
+                        myMaybeSet={clubMyMaybeSet}
                         friendRsvpMap={clubFriendRsvpMap}
-                        attendeeMap={clubAttendeeMap}
+                        allAttendeesMap={clubAllAttendeesMap}
                         onRsvp={handleClubRsvp}
+                        onMaybe={handleClubMaybe}
                         userId={user?.id ?? null}
                     />
                 )}
@@ -1113,9 +1002,11 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     onEditEvent={handleEditEvent}
                     onDeleteEvent={handleDeleteEvent}
                     myRsvpSet={clubMyRsvpSet}
+                    myMaybeSet={clubMyMaybeSet}
                     friendRsvpMap={clubFriendRsvpMap}
-                    attendeeMap={clubAttendeeMap}
+                    allAttendeesMap={clubAllAttendeesMap}
                     onRsvp={handleClubRsvp}
+                    onMaybe={handleClubMaybe}
                     userId={user?.id ?? null}
                 />
                 {isApproved && (
@@ -1161,6 +1052,37 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             </>
             )}
         </motion.div>
+
+        {showLeaveConfirm && (
+            <div className="leave-confirm-overlay" onClick={() => setShowLeaveConfirm(false)}>
+                <div className="leave-confirm-modal" onClick={(e) => e.stopPropagation()}>
+                    <p className="leave-confirm-title">Leave {club.club_name}?</p>
+                    <p className="leave-confirm-body">
+                        You'll lose your membership and any role you hold in this club.
+                    </p>
+                    {joinPolicy === 'request' && (
+                        <p className="leave-confirm-warning">
+                            This club requires approval to join — you'll have to submit a new request and wait to be let back in.
+                        </p>
+                    )}
+                    <div className="leave-confirm-actions">
+                        <button
+                            className="leave-confirm-btn leave-confirm-cancel"
+                            onClick={() => setShowLeaveConfirm(false)}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            className="leave-confirm-btn leave-confirm-confirm"
+                            onClick={() => { setShowLeaveConfirm(false); handleMembership(); }}
+                        >
+                            Leave Club
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+        </>
     );
 }
 

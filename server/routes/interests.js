@@ -1,7 +1,12 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import { supabaseAdmin } from '../supabaseAdmin.js';
+import { requireAuth } from '../middleware/requireAuth.js';
+import textModerator from '../lib/textModerator.js';
 
 const router = express.Router();
+
+const writeLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 60 });
 
 // GET /api/interests
 // Returns the full taxonomy: all categories with their subcategories nested.
@@ -41,6 +46,76 @@ router.get('/', async (req, res) => {
 
   res.set('Cache-Control', 'public, max-age=300');
   res.json(taxonomy);
+});
+
+// POST /api/interests/subcategories
+// Authenticated. Creates a new subcategory under a given category.
+// If a subcategory with the same name (case-insensitive) already exists under that
+// category, returns the existing row — safe to call on every "Add" click.
+router.post('/subcategories', writeLimiter, requireAuth, async (req, res) => {
+  const { category_id, name } = req.body || {};
+
+  if (!category_id) return res.status(400).json({ error: 'category_id is required' });
+
+  const trimmedName = (name || '').trim();
+  if (trimmedName.length < 2) {
+    return res.status(400).json({ error: 'Subcategory name must be at least 2 characters' });
+  }
+  if (trimmedName.length > 50) {
+    return res.status(400).json({ error: 'Subcategory name must be 50 characters or fewer' });
+  }
+
+  // This writes into a taxonomy that GET /api/interests serves publicly and unauthenticated,
+  // and nothing moderated it. Every other user-authored string in the app runs through
+  // textModerator; a global, permanent, world-readable label should not be the exception.
+  const textCheck = textModerator.checkFields({ name: trimmedName });
+  if (!textCheck.clean) {
+    return res.status(400).json({ error: textCheck.message, field: 'name' });
+  }
+
+  // Only club moderators may extend the taxonomy. That matches where this is actually
+  // called from — the club page editor in BasicInfoModule — but the endpoint itself only
+  // checked for a logged-in user, so anyone with a token could add entries directly.
+  const { data: moderatorOf } = await supabaseAdmin
+    .from('club_memberships')
+    .select('club_id')
+    .eq('user_id', req.user.id)
+    .in('role', ['moderator', 'top_moderator'])
+    .limit(1);
+
+  if (!moderatorOf?.length) {
+    return res.status(403).json({ error: 'Only club moderators can add interests' });
+  }
+
+  // Validate the category exists
+  const { data: cat, error: catError } = await supabaseAdmin
+    .from('interest_categories')
+    .select('id')
+    .eq('id', category_id)
+    .maybeSingle();
+
+  if (catError) { const err = new Error(catError.message); err.status = 502; throw err; }
+  if (!cat) return res.status(400).json({ error: 'Category not found' });
+
+  // Return the existing row if the name is already taken (case-insensitive)
+  const { data: existing } = await supabaseAdmin
+    .from('interest_subcategories')
+    .select('id, name, category_id')
+    .eq('category_id', category_id)
+    .ilike('name', trimmedName)
+    .maybeSingle();
+
+  if (existing) return res.json(existing);
+
+  const { data, error } = await supabaseAdmin
+    .from('interest_subcategories')
+    .insert({ category_id, name: trimmedName })
+    .select('id, name, category_id')
+    .single();
+
+  if (error) { const err = new Error(error.message); err.status = 502; throw err; }
+
+  res.status(201).json(data);
 });
 
 export default router;

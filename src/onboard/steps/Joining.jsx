@@ -1,0 +1,96 @@
+import { Field, Text, Area, Repeater, LIMITS } from './fields.jsx';
+import { normalizeUrl } from '../../../shared/clubPageValidation.js';
+
+const MAX_TABS = 4;
+
+// The highest-value screen on the page: "how do I actually join" is the question every
+// student arrives with, and the one club directories usually answer worst.
+export default function Joining({ wizard }) {
+    const data = wizard.getModule('join') ?? {};
+    const details = wizard.draft.details ?? {};
+
+    // Shown, not stored. Folding the placeholder into every save persisted a tab with an
+    // empty body, which hard-blocks submit — so a club that only filled in the
+    // application link could not send their page and had no idea why.
+    const savedTabs = data.tabs ?? [];
+    const tabs = savedTabs.length ? savedTabs : [{ title: 'How to join', body: '' }];
+
+    const set = (patch) => wizard.setModule('join', { ...data, ...patch });
+    const setTabs = (next) => wizard.setModule('join', { ...data, tabs: next });
+
+    return (
+        <>
+            <h2 className="ob-h1">Joining</h2>
+            <p className="ob-lede">
+                When you meet, whether there&apos;s an application, and who to talk to. This is
+                the section students read first.
+            </p>
+
+            <Repeater
+                items={tabs}
+                label="Section"
+                addLabel="+ Add another section"
+                max={MAX_TABS}
+                onAdd={() => setTabs([...tabs, { title: '', body: '' }])}
+                onRemove={(i) => setTabs(tabs.filter((_, j) => j !== i))}
+            >
+                {(tab, i) => (
+                    <>
+                        <Field label="Heading" value={tab.title} max={LIMITS.TAB_TITLE_MAX}>
+                            <Text
+                                value={tab.title}
+                                onChange={(v) => setTabs(tabs.map((t, j) => (j === i ? { ...t, title: v } : t)))}
+                                placeholder="Meetings"
+                            />
+                        </Field>
+                        <Field label="Details" value={tab.body} max={LIMITS.TAB_BODY_MAX}>
+                            <Area
+                                value={tab.body}
+                                onChange={(v) => setTabs(tabs.map((t, j) => (j === i ? { ...t, body: v } : t)))}
+                                placeholder="Thursdays at 7pm in Curry Student Center 333. Drop in whenever. No experience needed, and we have boards."
+                            />
+                        </Field>
+                    </>
+                )}
+            </Repeater>
+
+            <Field
+                label="Application link"
+                hint="Optional. A form, a sign-up sheet, or a tryout page."
+                >
+                <Text
+                    // Not type="url", for the same reason as the links in step 1: the
+                    // browser rejects anything without a scheme, which is how most people
+                    // write an address down.
+                    value={data.applicationLink}
+                    onChange={(v) => set({ applicationLink: v })}
+                    onBlur={(e) => {
+                        const tidy = normalizeUrl(e.target.value);
+                        if (tidy && tidy !== data.applicationLink) set({ applicationLink: tidy });
+                    }}
+                    placeholder="forms.gle/…"
+                />
+            </Field>
+
+            <Field
+                label="Contact email"
+                hint="Where students should write with questions. We never show this publicly without your say-so."
+            >
+                <Text
+                    type="email"
+                    value={details.email}
+                    onChange={(v) => wizard.setDetails({ email: v })}
+                    placeholder="chess@northeastern.edu"
+                />
+            </Field>
+
+            <Field label="Instagram" hint="Just the handle. @yourclub or a full link both work.">
+                <Text
+                    value={details.instagram}
+                    onChange={(v) => wizard.setDetails({ instagram: v })}
+                    placeholder="@neuchess"
+                />
+            </Field>
+        </>
+    );
+}

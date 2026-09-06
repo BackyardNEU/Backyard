@@ -9,9 +9,7 @@ import { IoIosMail } from 'react-icons/io';
 import { SlSocialSpotify } from 'react-icons/sl';
 import { SiLinktree } from 'react-icons/si';
 import { TbBrandDiscord } from 'react-icons/tb';
-import { FiYoutube } from 'react-icons/fi';
-import borderImg from '/src/assets/border-green.svg';
-import borderHorizontalImg from '/src/assets/border-horizontal-green.svg';
+import { FiYoutube, FiGlobe } from 'react-icons/fi';
 import './BasicInfoModule.css';
 import Avatar from '../components/Avatar';
 
@@ -29,7 +27,7 @@ import Avatar from '../components/Avatar';
  * @param {'full'|'hero'|'about'} props.part - which slice to render; hero is fixed above the accordion
  * @param {boolean} props.linksDisplayed - whether the Links module's visibility checkbox is on; hides the action-bar link buttons entirely when false
  */
-function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange, actions, warning, part = 'full', linksDisplayed = true, taxonomy = [], clubInterests = null, onInterestsChange, currentUserId = null }) {
+function BasicInfoModule({ club, data, editing, onChange, onLogoChange, actions, warning, part = 'full', linksDisplayed = true, taxonomy = [], clubInterests = null, onInterestsChange, onSubcategoryCreated }) {
   const [dominantColor, setDominantColor] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
   const [descOpen, setDescOpen] = useState(false);
@@ -39,15 +37,13 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   const [friendsSearch, setFriendsSearch] = useState('');
   const [imageWarning, setImageWarning] = useState('');
   const [linksExpanded, setLinksExpanded] = useState(false);
-  const [linksModalOpen, setLinksModalOpen] = useState(false);
   // club interests edit state (only used when editing=true)
   const [subText, setSubText] = useState(['', '']);
-  const [subQuery, setSubQuery] = useState(['', '']); // live filter text while dropdown open
   const [subDropdown, setSubDropdown] = useState(null); // 0 | 1 | null
-  // Whether the text in each box should narrow the list. False until the user actually
-  // types, so opening a field that already holds a saved subcategory shows every option
-  // rather than filtering down to the one already chosen.
+  // Whether the user has typed since opening the dropdown. False until typing starts,
+  // so opening a field that already holds a saved subcategory shows every option first.
   const [subFiltering, setSubFiltering] = useState([false, false]);
+  const [subCreating, setSubCreating] = useState([false, false]);
   const [clubRoster, setClubRoster] = useState([]);
   // Drives how many links show before "More" — 2 on narrow viewports, 5 otherwise.
   // Tracked reactively (not just read once) so resizing across the breakpoint updates it.
@@ -69,8 +65,6 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   const { friendMembershipMap } = useClubData();
   const friendsInClub = friendMembershipMap?.get(club.id) || [];
 
-  const friendsInClubIds = new Set(friendsInClub.map(f => f.id));
-
   // Roster (with each member's custom role/tag) is fetched lazily — only needed
   // once the friends modal is actually open, not on every club page load.
   useEffect(() => {
@@ -88,19 +82,8 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
       .map((m) => [m.user_id, m.club_custom_roles])
   );
 
-  // "Other members" = everyone else in the club roster, minus friends already
-  // shown above and minus the current user viewing this modal.
-  const otherMembers = clubRoster
-    .filter((m) => m.user_id !== currentUserId && !friendsInClubIds.has(m.user_id))
-    .map((m) => ({
-      id: m.user_id,
-      username: m.profiles?.username ?? 'Unknown',
-      avatar_url: m.profiles?.avatar_url ?? null,
-    }));
-
   const q = friendsSearch.toLowerCase();
   const filteredInClub = friendsInClub.filter(f => f.username.toLowerCase().includes(q));
-  const filteredOther = otherMembers.filter(f => f.username.toLowerCase().includes(q));
 
   const links = data?.links ?? [];
   const enabledLinks = links.filter(l => l.enabled && l.url);
@@ -110,14 +93,33 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
   const visibleLinks = linksExpanded ? enabledLinks : enabledLinks.slice(0, collapsedCount);
   const showMoreToggle = enabledLinks.length > collapsedCount;
 
-  const getLinkKeyword = (name) => {
-    const n = (name || '').toLowerCase().trim();
-    const keywords = ['instagram', 'facebook', 'discord', 'email', 'spotify', 'slack', 'tiktok', 'linktree', 'youtube', 'linkedin'];
-    return keywords.find(k => n === k) || 'default';
+  const URL_KEYWORDS = [
+    ['instagram.com',  'instagram'],
+    ['fb.com',         'facebook'],
+    ['facebook.com',   'facebook'],
+    ['discord.gg',     'discord'],
+    ['discord.com',    'discord'],
+    ['open.spotify',   'spotify'],
+    ['spotify.com',    'spotify'],
+    ['tiktok.com',     'tiktok'],
+    ['linktr.ee',      'linktree'],
+    ['linktree.com',   'linktree'],
+    ['youtube.com',    'youtube'],
+    ['youtu.be',       'youtube'],
+    ['linkedin.com',   'linkedin'],
+    ['slack.com',      'slack'],
+    ['mailto:',        'email'],
+  ];
+
+  const getLinkKeyword = (url) => {
+    if (!url) return 'external';
+    const u = url.toLowerCase();
+    for (const [fragment, platform] of URL_KEYWORDS) {
+      if (u.includes(fragment)) return platform;
+    }
+    return 'external';
   };
 
-  // Each of these renders a logo instead of the platform name text. Icons default to
-  // 1em, so they auto-match .link-btn's font-size at every breakpoint.
   const LINK_ICONS = {
     instagram: FaInstagram,
     facebook: FaFacebookF,
@@ -129,6 +131,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
     linktree: SiLinktree,
     slack: FaSlack,
     linkedin: FaLinkedinIn,
+    external: FiGlobe,
   };
   // Spotify's icon keeps the same green .link-btn--spotify already uses for its text,
   // instead of the white used everywhere else.
@@ -211,7 +214,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
     });
 
     if (validity === 'load') {
-      setImageWarning('Image upload unsuccessful. Please try a different file.');
+      setImageWarning('This file format isn\'t supported. Save your image as JPEG, PNG, or WebP and try again.');
       return;
     }
     if (validity === 'proportions') {
@@ -238,21 +241,35 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
       return sub?.name || '';
     });
     setSubText([names[0] || '', names[1] || '']);
-    setSubQuery(['', '']);
+    setSubFiltering([false, false]);
   }, [editing, clubInterests?.category_id, taxonomy]);
 
   const selectedCat = taxonomy.find(c => c.id === clubInterests?.category_id) || null;
 
+  // Rendered twice (once under the name for web, once in the rectangle for mobile,
+  // same pattern as club-tag1--inline/--block below) — only one shows per breakpoint.
+  const interestsTagline = selectedCat && [
+    selectedCat.name,
+    ...(clubInterests.subcategory_ids || []).map(subId => {
+      const sub = selectedCat.subcategories?.find(s => s.id === subId);
+      return sub?.name;
+    }).filter(Boolean)
+  ].join(' · ');
+
   const getSuggestions = useCallback((index) => {
-    if (!selectedCat) return [];
+    if (!selectedCat) return { matches: [], showAdd: false };
     const subs = selectedCat.subcategories || [];
-    // Show the whole list until the user types. Previously the box was seeded with the
-    // saved subcategory's name and filtered on it, so opening the field matched exactly
-    // one option — the one already chosen — and the only way to see the others was to
-    // clear the box by hand. There was nothing on screen to suggest that.
-    if (!subFiltering[index]) return subs;
-    const text = subText[index].toLowerCase().trim();
-    return subs.filter(s => s.name.toLowerCase().includes(text));
+    const text = subText[index].trim();
+    // Show the full list until the user starts typing. Once they type,
+    // filter to names that contain the typed text.
+    const matches = (subFiltering[index] && text)
+      ? subs.filter(s => s.name.toLowerCase().includes(text.toLowerCase()))
+      : subs;
+    // Show "+ Add" when there's enough text and no exact match already exists.
+    const exactMatch = text.length >= 2 &&
+      subs.some(s => s.name.toLowerCase() === text.toLowerCase());
+    const showAdd = text.length >= 2 && !exactMatch;
+    return { matches, showAdd };
   }, [selectedCat, subText, subFiltering]);
 
   const openSubDropdown = useCallback((index) => {
@@ -264,17 +281,17 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
     const catId = e.target.value || null;
     onInterestsChange?.({ category_id: catId, subcategory_ids: [] });
     setSubText(['', '']);
-    setSubQuery(['', '']);
+    setSubFiltering([false, false]);
     setSubDropdown(null);
   }, [onInterestsChange]);
 
   const handleSubTextChange = useCallback((index, value) => {
-    setSubQuery(prev => prev.map((t, i) => i === index ? value : t));
+    // Update the displayed text immediately (this was the bug: subText wasn't updated on typing)
+    setSubText(prev => prev.map((t, i) => (i === index ? value : t)));
     setSubDropdown(index);
-    // Typing is what turns the box into a filter.
     setSubFiltering(prev => prev.map((v, i) => (i === index ? true : v)));
+    // Clearing the text removes that slot's selection
     if (!value.trim()) {
-      setSubText(prev => prev.map((t, i) => i === index ? '' : t));
       const newSubs = [...(clubInterests?.subcategory_ids || [])];
       newSubs[index] = undefined;
       onInterestsChange?.({ category_id: clubInterests?.category_id, subcategory_ids: newSubs.filter(Boolean) });
@@ -287,7 +304,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
     // Deduplicate: same sub selected in both slots is not meaningful
     const deduped = newSubs.filter((id, i, arr) => id && arr.indexOf(id) === i);
     onInterestsChange?.({ category_id: clubInterests?.category_id, subcategory_ids: deduped });
-    // Sync both text inputs to match the deduped IDs — clears a slot if its ID was removed
+    // Sync both text inputs to match the deduped IDs
     setSubText(prev => prev.map((t, i) => {
       const savedId = deduped[i];
       if (!savedId) return '';
@@ -295,9 +312,27 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
       const existing = selectedCat?.subcategories?.find(s => s.id === savedId);
       return existing?.name ?? t;
     }));
-    setSubQuery(['', '']);
+    setSubFiltering([false, false]);
     setSubDropdown(null);
   }, [clubInterests, onInterestsChange, selectedCat]);
+
+  const handleSubAdd = useCallback(async (index) => {
+    const name = subText[index].trim();
+    if (!name || !clubInterests?.category_id) return;
+    setSubCreating(prev => prev.map((v, i) => (i === index ? true : v)));
+    try {
+      const newSub = await apiFetch('/interests/subcategories', {
+        method: 'POST',
+        body: { category_id: clubInterests.category_id, name },
+      });
+      onSubcategoryCreated?.(newSub);
+      handleSubSelect(index, newSub);
+    } catch (err) {
+      console.error('Failed to create subcategory:', err);
+    } finally {
+      setSubCreating(prev => prev.map((v, i) => (i === index ? false : v)));
+    }
+  }, [subText, clubInterests?.category_id, onSubcategoryCreated, handleSubSelect]);
 
   return (
     <>
@@ -331,14 +366,8 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
               </div>
           }
           {!editing && selectedCat && (
-            <p className="club-interests-tagline">
-              {[
-                selectedCat.name,
-                ...(clubInterests.subcategory_ids || []).map(subId => {
-                  const sub = selectedCat.subcategories?.find(s => s.id === subId);
-                  return sub?.name;
-                }).filter(Boolean)
-              ].join(' · ')}
+            <p className="club-interests-tagline club-interests-tagline--inline">
+              {interestsTagline}
             </p>
           )}
           {editing && (
@@ -357,7 +386,10 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
                 </select>
               </label>
 
-              {selectedCat && [0, 1].map(index => (
+              {selectedCat && [0, 1].map(index => {
+                const { matches, showAdd } = getSuggestions(index);
+                const hasDropdown = subDropdown === index && (matches.length > 0 || showAdd);
+                return (
                 <div key={index} className="interests-edit-sub-wrap">
                   <label className="interests-edit-label">
                     Subcategory {index + 1}
@@ -366,20 +398,19 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
                         className="interests-edit-input"
                         type="text"
                         value={subText[index]}
-                        placeholder={`Choose or search ${selectedCat.name} subcategories…`}
+                        placeholder={`Search or add a ${selectedCat.name} subcategory…`}
                         role="combobox"
-                        aria-expanded={subDropdown === index}
+                        aria-expanded={hasDropdown}
                         aria-controls={`sub-listbox-${index}`}
+                        disabled={subCreating[index]}
                         onChange={e => handleSubTextChange(index, e.target.value)}
                         onFocus={() => openSubDropdown(index)}
                         onBlur={() => setTimeout(() => setSubDropdown(null), 150)}
                       />
-                      {/* Without this the field reads as a plain search box and nothing
-                          suggests there is a list behind it. */}
                       <span className="interests-edit-caret" aria-hidden="true" />
-                      {subDropdown === index && getSuggestions(index).length > 0 && (
+                      {hasDropdown && (
                         <div className="interests-edit-dropdown" id={`sub-listbox-${index}`} role="listbox">
-                          {getSuggestions(index).map(sub => (
+                          {matches.map(sub => (
                             <button
                               key={sub.id}
                               type="button"
@@ -389,18 +420,33 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
                               {sub.name}
                             </button>
                           ))}
+                          {showAdd && (
+                            <button
+                              type="button"
+                              className="interests-edit-suggestion interests-edit-add-option"
+                              onMouseDown={() => handleSubAdd(index)}
+                            >
+                              + Add &ldquo;{subText[index].trim()}&rdquo;
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
                   </label>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
 
         <div className="image-stack">
           <div className="rectangle_min" style={{ '--dominant-color': dominantColor }}>
+            {!editing && selectedCat && (
+              <p className="club-interests-tagline club-interests-tagline--block">
+                {interestsTagline}
+              </p>
+            )}
             <div
               className="club-img-exp"
               style={{ backgroundImage: `url(${logoPreview || logoUrl})`, marginTop: '1rem' }}
@@ -410,7 +456,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
               {editing && (
                 <label className="logo-upload-label">
                   Change Logo
-                  <input type="file" accept="image/*" hidden onChange={handleLogoChange} />
+                  <input type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif,.png,.jpg,.jpeg,.webp,.gif,.avif" hidden onChange={handleLogoChange} />
                 </label>
               )}
             </div>
@@ -430,7 +476,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
               <span className="links-sep">|</span>
               <div className="links-bar">
                 {visibleLinks.map((link, i) => {
-                  const keyword = getLinkKeyword(link.name);
+                  const keyword = getLinkKeyword(link.url);
                   const Icon = LINK_ICONS[keyword];
                   return (
                   <div className="duo-btn-wrap" key={link.id || i}>
@@ -467,7 +513,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
         {editing && (
           <p className="about-edit-help">
             {part === 'about'
-              ? 'Share a description telling users about your club.'
+              ? 'Think of this like your bio. Also if you want to hide your memmbers, hide this section.'
               : "This is your club's basic info section. Feel free to edit your club's name, profile photo, and a description telling users about your club."}
           </p>
         )}
@@ -484,9 +530,6 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
                   username={friend.username}
                 />
               ))}
-              {friendsInClub.length > 3 && (
-                <span className="friend-avatar-overflow">+{friendsInClub.length - 3}</span>
-              )}
               <span className="friend-names-text">
                 {friendsInClub.length === 1
                 ? (
@@ -525,53 +568,22 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
               placeholder="Club description"
             />
           : <p className="club-description-exp">
-                {descPreview}
+                {descOpen ? displayDescription : descPreview}
               {isLongDesc && (
                 <>
-                  {'… '}
+                  {!descOpen && '… '}
                 <button
                   type="button"
                   className="desc-more-btn"
-                  onClick={() => setDescOpen(true)}
+                  onClick={() => setDescOpen(d => !d)}
                 >
-                    MORE
+                    {descOpen ? 'LESS' : 'MORE'}
                 </button>
                 </>
               )}
             </p>
         }
       </div>
-      )}
-
-      {showAbout && descOpen && (
-        <div className="desc-modal-overlay" onClick={() => setDescOpen(false)}>
-          <div className="desc-modal" onClick={(e) => e.stopPropagation()}>
-            <img src={borderImg} alt="" className="desc-modal-border desc-modal-border-left" />
-            <img src={borderImg} alt="" className="desc-modal-border desc-modal-border-right" />
-            <div
-              className="desc-modal-border-h-wrap desc-modal-border-top-wrap"
-              style={{ backgroundImage: `url(${borderHorizontalImg})` }}
-              aria-hidden="true"
-            />
-            <div
-              className="desc-modal-border-h-wrap desc-modal-border-bottom-wrap"
-              style={{ backgroundImage: `url(${borderHorizontalImg})` }}
-              aria-hidden="true"
-            />
-            <div className="desc-modal-header">
-              <h3 className="desc-modal-title">{displayName}</h3>
-              <button
-                type="button"
-                className="desc-modal-close"
-                onClick={() => setDescOpen(false)}
-                aria-label="Close"
-              >
-                ×
-              </button>
-            </div>
-            <p className="desc-modal-body">{displayDescription}</p>
-          </div>
-        </div>
       )}
 
       {showAbout && friendsModalOpen && (
@@ -616,29 +628,7 @@ function BasicInfoModule({ club, data, topTags, editing, onChange, onLogoChange,
               </>
             )}
 
-            {filteredOther.length > 0 && (
-              <>
-                <div className="friends-modal-section-title">Other Members</div>
-                <div className="friends-modal-list">
-                  {filteredOther.map((friend) => {
-                    const customRole = customRoleByUserId.get(friend.id);
-                    return (
-                      <div className="friend-modal-row" key={friend.id}>
-                        <Avatar className="friend-avatar-sm" url={friend.avatar_url} firstName={friend.first_name} lastName={friend.last_name} username={friend.username} />
-                        <span className="friend-result-name">{friend.username}</span>
-                        {customRole && (
-                          <span className="role-badge friend-result-badge" style={roleColorStyle(customRole.role_color)}>
-                            {customRole.name}
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-
-            {filteredInClub.length === 0 && filteredOther.length === 0 && (
+            {filteredInClub.length === 0 && (
               <p className="friends-empty">No friends found.</p>
             )}
           </div>
