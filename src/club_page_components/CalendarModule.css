@@ -4,6 +4,40 @@
   padding-left: 1.5%;
 }
 
+/* ===== MOD ACTIONS (edit/delete overlay on cards) ===== */
+.cal-event-mod-actions {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 3;
+  display: flex;
+  gap: 6px;
+}
+
+.cal-mod-btn {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+
+.cal-mod-btn:hover { opacity: 0.75; }
+
+.cal-mod-btn--edit {
+  background: #e8f0fe;
+  color: #1a56db;
+}
+
+.cal-mod-btn--delete {
+  background: #fde8e8;
+  color: #c81e1e;
+}
+
 /* ===== COMING UP LIST ===== */
 .cal-empty {
   color: #aaa;

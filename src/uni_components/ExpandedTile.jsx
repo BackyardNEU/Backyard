@@ -153,6 +153,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
     const isMember = myRole !== null;
     const isApproved = myRole === 'moderator' || myRole === 'top_moderator';
+    const [editingCalEvent, setEditingCalEvent] = useState(null);
     const hasOwner = clubMembers.length > 0;
     // Deliberately narrower than isApproved: changing who can get in is an ownership
     // decision, so a plain moderator does not get the toggle.
@@ -666,6 +667,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     </div>
                 )}
 
+
                 {isMember && (isClicked
                     ? <img src={logImage} className="log-btn" alt="Clicked state" />
                     : (
@@ -868,6 +870,19 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 <button className="close-btn" onClick={handleClose}>×</button>
             )}
 
+            {pageData && (
+                <div className="exp-verified-corner-badge" aria-label="Verified club page">✓ Verified</div>
+            )}
+
+            {!pageData && !isApproved && (
+                <div className="exp-unclaimed-banner" role="alert">
+                    <span className="exp-unclaimed-icon">⚠</span>
+                    <span className="exp-unclaimed-text">
+                        This club doesn&apos;t have an owner on Backyard yet. If you a are a member, reach out to one of your officers to join up!
+                    </span>
+                </div>
+            )}
+
             {isApproved && (
                 <div className="exp-editor-header">
                     <div className="club-tab-switcher">
@@ -975,7 +990,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
             <div className="club-modules">
                 {basicInfoModule && renderModule(basicInfoModule, 'hero')}
-                {!isApproved && clubEvents.length > 0 && (
+                {clubEvents.length > 0 && !isApproved && (
                     <CalendarModule
                         club={club}
                         editing={false}
@@ -987,6 +1002,9 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                         onRsvp={handleClubRsvp}
                         onMaybe={handleClubMaybe}
                         userId={user?.id ?? null}
+                        isApproved={isApproved}
+                        onEditEvent={setEditingCalEvent}
+                        onDeleteEvent={handleDeleteEvent}
                     />
                 )}
                 {(isApproved || clubEvents.length > 0) && (
@@ -1004,7 +1022,6 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                     myRsvpSet={clubMyRsvpSet}
                     myMaybeSet={clubMyMaybeSet}
                     friendRsvpMap={clubFriendRsvpMap}
-                    allAttendeesMap={clubAllAttendeesMap}
                     onRsvp={handleClubRsvp}
                     onMaybe={handleClubMaybe}
                     userId={user?.id ?? null}

@@ -66,7 +66,7 @@ describe('GET /api/clubs', () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual([
-      { id: 'club-1', club_name: 'Robotics Club', category_id: 'cat-1', subcategory_ids: ['sub-1'] },
+      { id: 'club-1', club_name: 'Robotics Club', category_id: 'cat-1', subcategory_ids: ['sub-1'], has_page: false },
     ]);
   });
 
@@ -81,7 +81,7 @@ describe('GET /api/clubs', () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual([
-      { id: 'club-2', club_name: 'Chess Club', category_id: null, subcategory_ids: [] },
+      { id: 'club-2', club_name: 'Chess Club', category_id: null, subcategory_ids: [], has_page: false },
     ]);
   });
 

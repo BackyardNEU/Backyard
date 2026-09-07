@@ -40,6 +40,9 @@ export function CalendarModule({
   allAttendeesMap = new Map(),
   onRsvp,
   onMaybe,
+  onEditEvent,
+  onDeleteEvent,
+  isApproved = false,
   userId,
 }) {
   const [overlayEvent, setOverlayEvent] = useState(null);
@@ -185,6 +188,20 @@ export function CalendarModule({
                   className="cal-event-item-border-h cal-event-item-border-h-bottom"
                   style={{ backgroundImage: `url(${borderHorizontalImg})` }}
                 />
+                {isApproved && (
+                  <div className="cal-event-mod-actions">
+                    <button
+                      type="button"
+                      className="cal-mod-btn cal-mod-btn--edit"
+                      onClick={(e) => { e.stopPropagation(); onEditEvent?.(event); }}
+                    >EDIT</button>
+                    <button
+                      type="button"
+                      className="cal-mod-btn cal-mod-btn--delete"
+                      onClick={(e) => { e.stopPropagation(); onDeleteEvent?.(event.id); }}
+                    >DELETE</button>
+                  </div>
+                )}
                 <img
                   className="cal-event-img"
                   src={event.event_image_url || club?.image_url || '/raccoon_pfp.png'}
@@ -200,14 +217,7 @@ export function CalendarModule({
                     <span className="cal-members-badge">Members only</span>
                   )}
                   <FriendRsvpCallout friends={friends} />
-                  {userId && (
-                    <button
-                      className={`rsvp-button${isGoing ? ' rsvp-going' : ''}`}
-                      onClick={(e) => { e.stopPropagation(); onRsvp?.(event.id, isGoing); }}
-                    >
-                      {isGoing ? 'Going ✓' : "I'm going!"}
-                    </button>
-                  )}
+                  <RsvpButtons event={event} stopProp={true} />
                 </div>
               </div>
             );
@@ -262,14 +272,7 @@ export function CalendarModule({
                         <span className="cal-members-badge">Members only</span>
                       )}
                       <FriendRsvpCallout friends={evFriends} />
-                      {userId && (
-                        <button
-                          className={`rsvp-button${evIsGoing ? ' rsvp-going' : ''}`}
-                          onClick={() => onRsvp?.(ev.id, evIsGoing)}
-                        >
-                          {evIsGoing ? 'Going ✓' : "I'm going!"}
-                        </button>
-                      )}
+                      <RsvpButtons event={ev} />
                       {userId && (
                         <button
                           className="cal-attendees-btn"

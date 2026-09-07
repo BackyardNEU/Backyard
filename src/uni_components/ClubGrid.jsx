@@ -134,6 +134,7 @@ const ClubGridCard = ({ result, onExpand, hideHeart, hidePins, showBorder, isMod
             </div>
             <div className="club-card-media-row-right">
               {isModerator && <span className="mod-badge">MOD</span>}
+              {result.has_page && <span className="verified-badge" title="Verified club page">✓</span>}
               {showHeart && (
                 <img
                   className = {`heart-btn ${animating ? 'pop' : ''}`}
@@ -148,6 +149,9 @@ const ClubGridCard = ({ result, onExpand, hideHeart, hidePins, showBorder, isMod
           <div className = "club-name">
             {result.club_name}
           </div>
+          {!hasMediaRow && result.has_page && (
+            <span className="verified-badge" title="Verified club page">✓</span>
+          )}
           {!hasMediaRow && showHeart && (
             <img
               className = {`heart-btn ${animating ? 'pop' : ''}`}
