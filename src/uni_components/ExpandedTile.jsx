@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import ReviewPage from "../review_components/ReviewPage";
 import "./ExpandedTile.css";
 import ReviewList from "../review_components/ReviewList";
-import { supabase } from '../lib/supabase';
 import { apiFetch } from '../lib/api';
 import logImage from '/src/assets/logImage.png';
 import BasicInfoModule from '../club_page_components/BasicInfoModule';
@@ -225,8 +224,10 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
         if (!animationDone) return;
 
         async function fetchAll() {
-            const { data: { user: authUser } } = await supabase.auth.getUser();
-            setUser(authUser ?? null);
+            // viewerId comes from ClubDataProvider, which already resolved the session on
+            // app load — calling supabase.auth.getUser() here again would block every fetch
+            // below for ~150-400ms while we wait for a redundant round trip.
+            const authUser = viewerId ? { id: viewerId } : null;
 
             // Already rendered from the prefetch cache, so the five public requests would
             // be re-fetching what is on screen. Only the auth-dependent calls are left,
