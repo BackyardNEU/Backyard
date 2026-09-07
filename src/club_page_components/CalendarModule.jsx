@@ -168,6 +168,7 @@ export function CalendarModule({
             const start = parseISO(event.start_time);
             const end = parseISO(event.end_time);
             const friends = friendRsvpMap.get(event.id);
+            const isGoing = myRsvpSet.has(event.id);
 
             return (
               <div
