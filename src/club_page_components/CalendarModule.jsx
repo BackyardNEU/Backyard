@@ -1,10 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import borderImg from '../assets/border.svg';
 import borderHorizontalImg from '../assets/border-horizontal.svg';
 import FriendRsvpCallout from '../components/FriendRsvpCallout';
 import { apiFetch } from '../lib/api';
 import Avatar from '../components/Avatar';
+import { useClubData } from '../context/useClubData';
+import PortraitTitle from '../uni_components/PortraitTitle';
 import './CalendarModule.css';
 
 /**
@@ -49,6 +51,29 @@ export function CalendarModule({
 
   const { profile: viewerProfile } = useClubData();
   const calendarPreference = viewerProfile?.calendar_preference || 'ics';
+
+  const [expandedEventIds, setExpandedEventIds] = useState(() => new Set());
+  const [cardHeights, setCardHeights] = useState({});
+  const cardSlotRefs = useRef({});
+
+  const toggleCardExpanded = (eventId) => {
+    setExpandedEventIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(eventId)) next.delete(eventId);
+      else next.add(eventId);
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (expandedEventIds.size === 0) return;
+    const next = {};
+    expandedEventIds.forEach((id) => {
+      const el = cardSlotRefs.current[id];
+      if (el) next[id] = el.scrollHeight;
+    });
+    setCardHeights((prev) => ({ ...prev, ...next }));
+  }, [expandedEventIds]);
 
   const overlayScrollRef = useRef(null);
   const overlayItemRefs = useRef({});
@@ -129,6 +154,7 @@ export function CalendarModule({
             const end = parseISO(event.end_time);
             const friends = friendRsvpMap.get(event.id);
             const isGoing = myRsvpSet.has(event.id);
+            const isExpanded = expandedEventIds.has(event.id);
 
             return (
               <div
