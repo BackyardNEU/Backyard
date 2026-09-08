@@ -3,9 +3,8 @@ import { format, parseISO } from 'date-fns';
 import borderImg from '../assets/border.svg';
 import borderHorizontalImg from '../assets/border-horizontal.svg';
 import FriendRsvpCallout from '../components/FriendRsvpCallout';
-import PortraitTitle from '../uni_components/PortraitTitle';
-import '../uni_components/EventInfoRow.css';
-import './AddEventPanel.css';
+import { apiFetch } from '../lib/api';
+import Avatar from '../components/Avatar';
 import './CalendarModule.css';
 
 /**
@@ -41,28 +40,52 @@ export function CalendarModule({
   isApproved = false,
   userId,
 }) {
-  const [expandedEventIds, setExpandedEventIds] = useState(() => new Set());
-  const [cardHeights, setCardHeights] = useState({});
+  const [overlayEvent, setOverlayEvent] = useState(null);
+  const [overlayHasMore, setOverlayHasMore] = useState(false);
+  const [attendeesMap, setAttendeesMap] = useState({});
+  const [attendeesOpenId, setAttendeesOpenId] = useState(null);
+  const [attendeesEvent, setAttendeesEvent] = useState(null);
+  const [attendeesTab, setAttendeesTab] = useState('going');
 
-  const cardSlotRefs = useRef({});
+  const { profile: viewerProfile } = useClubData();
+  const calendarPreference = viewerProfile?.calendar_preference || 'ics';
 
-  useEffect(() => {
-    if (expandedEventIds.size === 0) return;
-    const next = {};
-    expandedEventIds.forEach((id) => {
-      const el = cardSlotRefs.current[id];
-      if (el) next[id] = el.scrollHeight;
-    });
-    setCardHeights((prev) => ({ ...prev, ...next }));
-  }, [expandedEventIds]);
+  const overlayScrollRef = useRef(null);
+  const overlayItemRefs = useRef({});
 
-  const toggleCardExpanded = (eventId) => {
-    setExpandedEventIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(eventId)) next.delete(eventId);
-      else next.add(eventId);
-      return next;
-    });
+  useLayoutEffect(() => {
+    if (!overlayEvent || !overlayScrollRef.current) return;
+    const el = overlayItemRefs.current[overlayEvent.id];
+    if (el) el.scrollIntoView({ block: 'start', behavior: 'instant' });
+    const el2 = overlayScrollRef.current;
+    setTimeout(() => {
+      setOverlayHasMore(el2.scrollHeight - el2.scrollTop - el2.clientHeight > 10);
+    }, 50);
+  }, [overlayEvent]);
+
+  const handleOverlayScroll = () => {
+    const el = overlayScrollRef.current;
+    if (!el) return;
+    setOverlayHasMore(el.scrollHeight - el.scrollTop - el.clientHeight > 10);
+  };
+
+  const fetchAttendees = async (eventId) => {
+    if (attendeesMap[eventId] !== undefined) {
+      setAttendeesOpenId(prev => prev === eventId ? null : eventId);
+      return;
+    }
+    try {
+      const data = await apiFetch(`/clubs/${club.id}/events/${eventId}/attendees`);
+      setAttendeesMap(prev => ({ ...prev, [eventId]: data }));
+      setAttendeesOpenId(eventId);
+    } catch {
+      setAttendeesMap(prev => ({ ...prev, [eventId]: [] }));
+      setAttendeesOpenId(eventId);
+    }
+  };
+  const openAttendeesOverlay = (event, tab = 'going') => {
+    setAttendeesEvent(event);
+    setAttendeesTab(tab);
   };
 
   const sorted = [...events].sort((a, b) => parseISO(a.start_time) - parseISO(b.start_time));
@@ -105,7 +128,7 @@ export function CalendarModule({
             const start = parseISO(event.start_time);
             const end = parseISO(event.end_time);
             const friends = friendRsvpMap.get(event.id);
-            const isExpanded = expandedEventIds.has(event.id);
+            const isGoing = myRsvpSet.has(event.id);
 
             return (
               <div
