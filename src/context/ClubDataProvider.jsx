@@ -63,92 +63,95 @@ export const ClubDataProvider = ({ children }) => {
         let newFriendsArray = [];
         let newTaxonomy = [];
 
-        // Tier 1: independent fetches fire together. allSettled keeps one failure
-        // from killing the rest — matches the old per-fetch try/catch behavior.
-        const [clubsResult, userResult, taxonomyResult] = await Promise.allSettled([
-            apiFetch('/clubs'),
-            supabase.auth.getUser(),
-            apiFetch('/interests', { auth: false }),
-        ]);
-
-        if (clubsResult.status === 'fulfilled') {
-            newAllData = Array.isArray(clubsResult.value) ? clubsResult.value : [];
-            console.log("successful fetching from server");
-        } else {
-            console.error("Error fetching from server: " + clubsResult.reason);
-        }
-
-        if (taxonomyResult.status === 'fulfilled') {
-            newTaxonomy = taxonomyResult.value || [];
-        } else {
-            console.error("Error fetching taxonomy:", taxonomyResult.reason);
-        }
-
-        const userData = userResult.status === 'fulfilled' ? userResult.value.data : null;
-        if (userData?.user) {
-            newUserId = userData.user.id;
-
-            // Tier 2: needs the user, but favorites and friends are independent of each other.
-            const [favResult, friendsResult, profileResult] = await Promise.allSettled([
-                apiFetch('/me/favorites'),
-                apiFetch('/me/friends'),
-                apiFetch('/me/profile'),
+        try {
+            // Tier 1: independent fetches fire together. allSettled keeps one failure
+            // from killing the rest — matches the old per-fetch try/catch behavior.
+            const [clubsResult, userResult, taxonomyResult] = await Promise.allSettled([
+                apiFetch('/clubs'),
+                supabase.auth.getUser(),
+                apiFetch('/interests', { auth: false }),
             ]);
 
-            if (profileResult.status === 'fulfilled') {
-                newProfile = profileResult.value;
+            if (clubsResult.status === 'fulfilled') {
+                newAllData = Array.isArray(clubsResult.value) ? clubsResult.value : [];
+                console.log("successful fetching from server");
             } else {
-                console.error("Error retrieving profile:", profileResult.reason);
+                console.error("Error fetching from server: " + clubsResult.reason);
             }
 
-            if (favResult.status === 'fulfilled') {
-                const favData = favResult.value;
-                newFavoritesCache = new Set((favData || []).map((fav) => fav.club_id));
-                console.log("Favorites loaded:", favData.length);
+            if (taxonomyResult.status === 'fulfilled') {
+                newTaxonomy = Array.isArray(taxonomyResult.value) ? taxonomyResult.value : [];
             } else {
-                console.error("Error retrieving favorites:", favResult.reason);
+                console.error("Error fetching taxonomy:", taxonomyResult.reason);
             }
 
-            if (friendsResult.status === 'fulfilled') {
-                const friendProfiles = friendsResult.value;
-                newFriendsArray = (friendProfiles || []).map((f) => ({
-                    id: f.id,
-                    username: f.username,
-                    avatar_url: f.avatar_url,
-                    first_name: f.first_name,
-                    last_name: f.last_name,
-                }));
-                for (const friend of friendProfiles || []) {
-                    const clubs = friend.member_list || [];
-                    for (const clubId of clubs) {
-                        if (!newFriendMembershipMap.has(clubId)) newFriendMembershipMap.set(clubId, []);
-                        newFriendMembershipMap.get(clubId).push({
-                            id: friend.id,
-                            username: friend.username,
-                            avatar_url: friend.avatar_url,
-                            first_name: friend.first_name,
-                            last_name: friend.last_name,
-                        });
-                    }
+            const userData = userResult.status === 'fulfilled' ? userResult.value.data : null;
+            if (userData?.user) {
+                newUserId = userData.user.id;
+
+                // Tier 2: needs the user, but favorites and friends are independent of each other.
+                const [favResult, friendsResult, profileResult] = await Promise.allSettled([
+                    apiFetch('/me/favorites'),
+                    apiFetch('/me/friends'),
+                    apiFetch('/me/profile'),
+                ]);
+
+                if (profileResult.status === 'fulfilled') {
+                    newProfile = profileResult.value;
+                } else {
+                    console.error("Error retrieving profile:", profileResult.reason);
                 }
-            } else {
-                console.error("Error retrieving friends:", friendsResult.reason);
-            }
-        }
 
-        // single dispatch — one render
-        dispatch({
-            type: 'FETCH_COMPLETE',
-            payload: {
-                allData: newAllData,
-                favoritesCache: newFavoritesCache,
-                userId: newUserId,
-                friendMembershipMap: newFriendMembershipMap,
-                friendsArray: newFriendsArray,
-                profile: newProfile,
-                taxonomy: newTaxonomy,
+                if (favResult.status === 'fulfilled') {
+                    const favData = Array.isArray(favResult.value) ? favResult.value : [];
+                    newFavoritesCache = new Set(favData.map((fav) => fav.club_id));
+                } else {
+                    console.error("Error retrieving favorites:", favResult.reason);
+                }
+
+                if (friendsResult.status === 'fulfilled') {
+                    const friendProfiles = Array.isArray(friendsResult.value) ? friendsResult.value : [];
+                    newFriendsArray = friendProfiles.map((f) => ({
+                        id: f.id,
+                        username: f.username,
+                        avatar_url: f.avatar_url,
+                        first_name: f.first_name,
+                        last_name: f.last_name,
+                    }));
+                    for (const friend of friendProfiles) {
+                        const clubs = friend.member_list || [];
+                        for (const clubId of clubs) {
+                            if (!newFriendMembershipMap.has(clubId)) newFriendMembershipMap.set(clubId, []);
+                            newFriendMembershipMap.get(clubId).push({
+                                id: friend.id,
+                                username: friend.username,
+                                avatar_url: friend.avatar_url,
+                                first_name: friend.first_name,
+                                last_name: friend.last_name,
+                            });
+                        }
+                    }
+                } else {
+                    console.error("Error retrieving friends:", friendsResult.reason);
+                }
             }
-        });
+        } catch (err) {
+            console.error("fetchAllData failed:", err);
+        } finally {
+            isFetching.current = false;
+            dispatch({
+                type: 'FETCH_COMPLETE',
+                payload: {
+                    allData: newAllData,
+                    favoritesCache: newFavoritesCache,
+                    userId: newUserId,
+                    friendMembershipMap: newFriendMembershipMap,
+                    friendsArray: newFriendsArray,
+                    profile: newProfile,
+                    taxonomy: newTaxonomy,
+                }
+            });
+        }
     }, []);
 
     // called by favorite button handlers — single dispatch, one render
