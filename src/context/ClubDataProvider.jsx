@@ -72,7 +72,7 @@ export const ClubDataProvider = ({ children }) => {
         ]);
 
         if (clubsResult.status === 'fulfilled') {
-            newAllData = clubsResult.value;
+            newAllData = Array.isArray(clubsResult.value) ? clubsResult.value : [];
             console.log("successful fetching from server");
         } else {
             console.error("Error fetching from server: " + clubsResult.reason);

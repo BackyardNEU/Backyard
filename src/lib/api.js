@@ -88,5 +88,5 @@ function sleep(ms) {
 }
 
 function safeParseJson(text) {
-  try { return JSON.parse(text); } catch { return text; }
+  try { return JSON.parse(text); } catch (e) { return text; }
 }
