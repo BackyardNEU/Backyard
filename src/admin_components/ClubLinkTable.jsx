@@ -78,7 +78,7 @@ const s = {
 function loadStored() {
     try {
         return JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
-    } catch {
+    } catch (e) {
         return {};
     }
 }
@@ -100,7 +100,7 @@ export default function ClubLinkTable({ onReview, reloadKey = 0 }) {
 
     const persist = (next) => {
         setLinks(next);
-        try { localStorage.setItem(STORE_KEY, JSON.stringify(next)); } catch { /* quota */ }
+        try { localStorage.setItem(STORE_KEY, JSON.stringify(next)); } catch (e) { /* quota */ }
     };
 
     const loadStatuses = useCallback(() => {

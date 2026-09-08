@@ -20,13 +20,13 @@ import borderHorizontalBlackImg from '/src/assets/border-horizontal.svg';
  */
 const isValidUrl = (url) => {
   try { const u = new URL(url); return u.protocol === 'http:' || u.protocol === 'https:'; }
-  catch { return false; }
+  catch (e) { return false; }
 };
 
 const normalizeContactLink = (v) => {
   const s = v.trim();
   if (!s) return '';
-  try { new URL(s); return s; } catch {}
+  try { new URL(s); return s; } catch (e) {}
   if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return `mailto:${s}`;
   if (/^[+\d][\d\s\-().]{6,}$/.test(s)) return `tel:${s}`;
   return s;
@@ -41,7 +41,7 @@ const isValidContactLink = (url) => {
     if (u.protocol === 'mailto:') return u.pathname.includes('@');
     if (u.protocol === 'tel:') return u.pathname.trim().length > 0;
     return false;
-  } catch { /* not a full URI — check bare email / phone below */ }
+  } catch (e) { /* not a full URI — check bare email / phone below */ }
   if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return true;       // bare email
   if (/^[+\d][\d\s\-().]{6,}$/.test(v)) return true;           // bare phone
   return false;
@@ -247,14 +247,14 @@ function JoinTabEditor({ value, onChange, placeholder }) {
 
   React.useEffect(() => {
     if (ref.current) ref.current.innerHTML = value || '';
-    try { document.execCommand('styleWithCSS', false, false); } catch { /* not supported */ }
+    try { document.execCommand('styleWithCSS', false, false); } catch (e) { /* not supported */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const refreshActive = () => {
     const next = {};
     ['bold', 'italic', 'underline'].forEach((c) => {
-      try { next[c] = document.queryCommandState(c); } catch { /* ignore */ }
+      try { next[c] = document.queryCommandState(c); } catch (e) { /* ignore */ }
     });
     setActive(next);
   };
@@ -268,7 +268,7 @@ function JoinTabEditor({ value, onChange, placeholder }) {
   const exec = (cmd) => (e) => {
     e.preventDefault();
     ref.current?.focus();
-    try { document.execCommand(cmd, false, null); } catch { /* ignore */ }
+    try { document.execCommand(cmd, false, null); } catch (e) { /* ignore */ }
     handleInput();
     refreshActive();
   };

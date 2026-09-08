@@ -169,7 +169,7 @@ function RichTextEditor({ value, onChange, placeholder }) {
 
   useEffect(() => {
     if (ref.current) ref.current.innerHTML = value || '';
-    try { document.execCommand('styleWithCSS', false, false); } catch { /* not supported */ }
+    try { document.execCommand('styleWithCSS', false, false); } catch (e) { /* not supported */ }
     // seed once
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -177,7 +177,7 @@ function RichTextEditor({ value, onChange, placeholder }) {
   const refreshActive = () => {
     const next = {};
     ['bold', 'italic', 'underline'].forEach((c) => {
-      try { next[c] = document.queryCommandState(c); } catch { /* ignore */ }
+      try { next[c] = document.queryCommandState(c); } catch (e) { /* ignore */ }
     });
     setActive(next);
   };
@@ -191,7 +191,7 @@ function RichTextEditor({ value, onChange, placeholder }) {
   const exec = (cmd) => (e) => {
     e.preventDefault(); // keep the editor's selection
     ref.current?.focus();
-    try { document.execCommand(cmd, false, null); } catch { /* ignore */ }
+    try { document.execCommand(cmd, false, null); } catch (e) { /* ignore */ }
     handleInput();
     refreshActive();
   };
