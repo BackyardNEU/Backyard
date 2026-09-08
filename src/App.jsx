@@ -1,4 +1,4 @@
-﻿import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import './App.css';
 import { SearchBar } from './home_components/SearchBar';
@@ -19,6 +19,7 @@ import { ClubDataProvider } from './context/ClubDataProvider'
 import { SupportModal } from './support_components/SupportModal'
 import { DEFAULT_UNIVERSITY_PATH } from './lib/university'
 import { useGlobalStore } from './lib/store'
+import { Analytics } from '@vercel/analytics/react'
 
 function App() {
   const loginOpen = useGlobalStore((s) => s.loginOpen);
@@ -60,6 +61,7 @@ function App() {
           <Route path="/join/:token" element={<JoinPage />} />
           <Route path="/admin" element={<AdminPage />} />
         </Routes>
+        <Analytics />
       </div>
     </ClubDataProvider>
   );
