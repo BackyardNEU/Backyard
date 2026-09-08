@@ -398,6 +398,11 @@
   background: transparent;
   border: 2px solid #ECE7E5;
   color: #ECE7E5;
+  /* -webkit-text-fill-color overrides the browser's own text rendering color,
+     including the focus-state and OS-level dark-mode overrides that would
+     otherwise make typed text invisible against the dark form background. */
+  -webkit-text-fill-color: #ECE7E5;
+  caret-color: #ECE7E5;
   font-size: 14px;
   font-family: 'Barlow Condensed', sans-serif;
   outline: none;
@@ -407,6 +412,16 @@
   font-family: 'Barlow Condensed', sans-serif;
   color: #ECE7E5;
   opacity: 0.9;
+}
+/* Browser autofill injects its own background and text color; override both
+   so text stays light on the dark navy form background. */
+.cal-input:-webkit-autofill,
+.cal-input:-webkit-autofill:hover,
+.cal-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #ECE7E5;
+  -webkit-box-shadow: 0 0 0 1000px #2e4064 inset;
+  caret-color: #ECE7E5;
+  transition: background-color 5000s;
 }
 
 /* Start/End datetime fields — the label sits inside the same bordered box,
@@ -430,14 +445,34 @@
   color: #ECE7E5;
 }
 
-.cal-datetime-field .cal-input {
+.cal-datetime-input-wrap {
+  position: relative;
   flex: 1;
-  width: auto;
+  min-width: 0;
+}
+
+.cal-datetime-field .cal-input {
+  width: 100%;
   min-width: 0;
   height: auto;
   margin-bottom: 0;
   padding: 0;
   border: none;
+}
+
+.cal-datetime-ph {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(236, 231, 229, 0.5);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.cal-datetime-input-wrap:focus-within .cal-datetime-ph {
+  visibility: hidden;
 }
 
 .cal-form-warning {
@@ -486,8 +521,8 @@
 .cal-members-only-label input:checked::after {
   content: '';
   position: absolute;
-  left: 3px;
-  top: -1px;
+  left: 5px;
+  top: 1px;
   width: 4px;
   height: 9px;
   border: solid #ECE7E5;
@@ -500,19 +535,14 @@
   flex: none;
 }
 
-/* Empty date/time inputs: hide the number placeholders (mm, dd, yyyy, hh, mm)
-   but keep the "/" and ":" separators visible */
-.cal-input[type="date"][data-empty="true"]::-webkit-datetime-edit-month-field,
-.cal-input[type="date"][data-empty="true"]::-webkit-datetime-edit-day-field,
-.cal-input[type="date"][data-empty="true"]::-webkit-datetime-edit-year-field,
-.cal-input[type="time"][data-empty="true"]::-webkit-datetime-edit-hours-field,
-.cal-input[type="time"][data-empty="true"]::-webkit-datetime-edit-minutes-field,
-.cal-input[type="time"][data-empty="true"]::-webkit-datetime-edit-ampm-field {
-  color: transparent;
-}
-.cal-input[type="date"][data-empty="true"]::-webkit-datetime-edit-text,
-.cal-input[type="time"][data-empty="true"]::-webkit-datetime-edit-text {
-  color: #ECE7E5;
+/* Empty date/time inputs: hide the browser's native content (which on Safari
+   shows today's date/current time on click even before the user types anything)
+   so the field looks blank until the user actually interacts with it. The JS
+   removes data-empty on first keydown so the native content becomes visible
+   as soon as the user starts typing. */
+.cal-input[type="date"][data-empty="true"]::-webkit-datetime-edit,
+.cal-input[type="time"][data-empty="true"]::-webkit-datetime-edit {
+  opacity: 0;
 }
 
 
@@ -540,3 +570,35 @@
 .duo-btn-pill:has(+ .cal-submit-btn:disabled) {
   opacity: 0.4;
 }
+
+/* ===== RSVP ACTION ROW (Interested + Maybe) ===== */
+.cal-action-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.rsvp-button {
+  align-self: flex-start;
+  background: #4e7da9;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.rsvp-button:hover { background: #3d6a96; }
+
+.rsvp-button.rsvp-going { background: #2e7d32; }
+.rsvp-button.rsvp-going:hover { background: #1b5e20; }
+
+.rsvp-button.rsvp-maybe { background: #888; }
+.rsvp-button.rsvp-maybe:hover { background: #666; }
+
+.rsvp-button.rsvp-maybe.rsvp-maybe--active { background: #7b5ea7; }
+.rsvp-button.rsvp-maybe.rsvp-maybe--active:hover { background: #634a8a; }

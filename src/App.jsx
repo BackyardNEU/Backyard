@@ -1,5 +1,5 @@
 ﻿import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import './App.css';
 import { SearchBar } from './home_components/SearchBar';
 import { UniversityPage } from './uni_components/UniversityPage';
@@ -21,7 +21,8 @@ import { DEFAULT_UNIVERSITY_PATH } from './lib/university'
 import { useGlobalStore } from './lib/store'
 
 function App() {
-  const [loginOpen, setLoginOpen] = useState(false);
+  const loginOpen = useGlobalStore((s) => s.loginOpen);
+  const setLoginOpen = useGlobalStore((s) => s.setLoginOpen);
   const supportOpen = useGlobalStore((state) => state.supportOpen);
   const setSupportOpen = useGlobalStore((state) => state.setSupportOpen);
   const location = useLocation();
@@ -38,7 +39,7 @@ function App() {
       <div className="App">
           <AuthListener />
           <LoginMorph open={loginOpen} setOpen={setLoginOpen} />
-          <NavBar loginOpen={loginOpen} setLoginOpen={setLoginOpen} />
+          <NavBar />
           <SupportModal open={supportOpen} setOpen={setSupportOpen} />
 
         <Routes>

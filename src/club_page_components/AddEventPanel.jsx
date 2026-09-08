@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import { apiFetch } from '../lib/api';
 import newEventBtnImg from '../assets/New_Event_Btn.png';
@@ -60,8 +60,10 @@ export default function AddEventPanel({
   onEditEvent,
   onDeleteEvent,
   myRsvpSet = new Set(),
+  myMaybeSet = new Set(),
   friendRsvpMap = new Map(),
   onRsvp,
+  onMaybe,
   userId,
 }) {
   const imageInputRef = useRef(null);
@@ -69,6 +71,7 @@ export default function AddEventPanel({
   const [showForm, setShowForm] = useState(false);
   const [editingEventId, setEditingEventId] = useState(null);
   const [formData, setFormData] = useState(EMPTY_FORM);
+  const [fieldInteracted, setFieldInteracted] = useState({ date: false, startTime: false, endTime: false });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [formWarning, setFormWarning] = useState('');
@@ -112,12 +115,15 @@ export default function AddEventPanel({
   }, [expandedEventIds]);
 
   // Re-measure the add-slot whenever it's the one open and its content
-  // changes shape (image added/removed, warning appears, etc.).
-  useEffect(() => {
+  // changes shape (image added/removed, warning appears, allDay toggled, etc.).
+  // useLayoutEffect fires synchronously after DOM mutations so the measured
+  // scrollHeight is always accurate before the browser paints — prevents a
+  // flash where overflow:hidden clips the form at the old max-height.
+  useLayoutEffect(() => {
     if (showForm && !editingEventId && addSlotRef.current) {
       setAddSlotHeight(addSlotRef.current.scrollHeight);
     }
-  }, [showForm, editingEventId, imagePreview, formWarning]);
+  }, [showForm, editingEventId, imagePreview, formWarning, formData.allDay]);
 
   // Same, but for whichever existing event's slot is currently being edited.
   useEffect(() => {
@@ -142,7 +148,6 @@ export default function AddEventPanel({
       if (isNaN(start) || isNaN(end)) { setFormWarning('Invalid date or time format.'); return false; }
       if (start < new Date()) { setFormWarning('Event cannot begin in the past.'); return false; }
       if (start >= end) { setFormWarning('Start time must be before end time.'); return false; }
-      if (end - start > 12 * 60 * 60 * 1000) { setFormWarning('Event cannot last more than 12 hours.'); return false; }
     }
     setFormWarning('');
     return true;
@@ -201,6 +206,7 @@ export default function AddEventPanel({
     setImageFile(null);
     setImagePreview(null);
     setFormWarning('');
+    setFieldInteracted({ date: false, startTime: false, endTime: false });
   };
 
   const handleSubmit = async () => {
@@ -378,39 +384,54 @@ export default function AddEventPanel({
       />
       <div className="cal-datetime-field">
         <span className="cal-datetime-label">Date</span>
-        <input
-          className="cal-input"
-          type="date"
-          name="date"
-          value={formData.date}
-          onChange={handleFormChange}
-          data-empty={!formData.date ? 'true' : undefined}
-        />
+        <div className="cal-datetime-input-wrap">
+          <input
+            className="cal-input"
+            type="date"
+            name="date"
+            value={formData.date}
+            onChange={handleFormChange}
+            onKeyDown={() => setFieldInteracted(prev => ({ ...prev, date: true }))}
+            onBlur={() => { if (!formData.date) setFieldInteracted(prev => ({ ...prev, date: false })); }}
+            data-empty={!formData.date && !fieldInteracted.date ? 'true' : undefined}
+          />
+          {!formData.date && !fieldInteracted.date && <span className="cal-datetime-ph" aria-hidden="true">mm/dd/yyyy</span>}
+        </div>
       </div>
       {!formData.allDay && (
         <div className="cal-datetime-field">
           <span className="cal-datetime-label">Start</span>
-          <input
-            className="cal-input"
-            type="time"
-            name="startTime"
-            value={formData.startTime}
-            onChange={handleFormChange}
-            data-empty={!formData.startTime ? 'true' : undefined}
-          />
+          <div className="cal-datetime-input-wrap">
+            <input
+              className="cal-input"
+              type="time"
+              name="startTime"
+              value={formData.startTime}
+              onChange={handleFormChange}
+              onKeyDown={() => setFieldInteracted(prev => ({ ...prev, startTime: true }))}
+              onBlur={() => { if (!formData.startTime) setFieldInteracted(prev => ({ ...prev, startTime: false })); }}
+              data-empty={!formData.startTime && !fieldInteracted.startTime ? 'true' : undefined}
+            />
+            {!formData.startTime && !fieldInteracted.startTime && <span className="cal-datetime-ph" aria-hidden="true">00:00</span>}
+          </div>
         </div>
       )}
       {!formData.allDay && (
         <div className="cal-datetime-field">
           <span className="cal-datetime-label">End</span>
-          <input
-            className="cal-input"
-            type="time"
-            name="endTime"
-            value={formData.endTime}
-            onChange={handleFormChange}
-            data-empty={!formData.endTime ? 'true' : undefined}
-          />
+          <div className="cal-datetime-input-wrap">
+            <input
+              className="cal-input"
+              type="time"
+              name="endTime"
+              value={formData.endTime}
+              onChange={handleFormChange}
+              onKeyDown={() => setFieldInteracted(prev => ({ ...prev, endTime: true }))}
+              onBlur={() => { if (!formData.endTime) setFieldInteracted(prev => ({ ...prev, endTime: false })); }}
+              data-empty={!formData.endTime && !fieldInteracted.endTime ? 'true' : undefined}
+            />
+            {!formData.endTime && !fieldInteracted.endTime && <span className="cal-datetime-ph" aria-hidden="true">00:00</span>}
+          </div>
         </div>
       )}
       <input
@@ -449,7 +470,10 @@ export default function AddEventPanel({
               type="checkbox"
               name="allDay"
               checked={formData.allDay}
-              onChange={(e) => setFormData(prev => ({ ...prev, allDay: e.target.checked, startTime: '', endTime: '' }))}
+              onChange={(e) => {
+                setFormData(prev => ({ ...prev, allDay: e.target.checked, startTime: '', endTime: '' }));
+                if (e.target.checked) setFieldInteracted(prev => ({ ...prev, startTime: false, endTime: false }));
+              }}
             />
             <span>All Day</span>
           </label>
@@ -494,6 +518,7 @@ export default function AddEventPanel({
           const end = parseISO(event.end_time);
           const friends = friendRsvpMap.get(event.id);
           const isGoing = myRsvpSet.has(event.id);
+          const isMaybe = myMaybeSet.has(event.id);
           const isExpandedThis = expandedEventIds.has(event.id);
           return (
             <div
@@ -523,7 +548,7 @@ export default function AddEventPanel({
                     <button
                       type="button"
                       className="cal-image-scale-btn"
-                      onClick={() => handleEditClick(event)}
+                      onClick={(e) => { e.stopPropagation(); handleEditClick(event); }}
                       aria-label="Edit event"
                     >
                       EDIT
@@ -531,7 +556,7 @@ export default function AddEventPanel({
                     <button
                       type="button"
                       className="cal-image-remove-btn"
-                      onClick={() => onDeleteEvent?.(event.id)}
+                      onClick={(e) => { e.stopPropagation(); onDeleteEvent?.(event.id); }}
                       aria-label="Delete event"
                     >
                       DELETE
@@ -542,6 +567,8 @@ export default function AddEventPanel({
                     className={`add-event-card-img${!event.event_image_url ? ' add-event-card-img--default' : ''}`}
                     src={event.event_image_url || club?.image_url || '/raccoon_pfp.png'}
                     alt=""
+                    onClick={() => toggleCardExpanded(event.id)}
+                    style={{ cursor: 'pointer' }}
                   />
 
                   {isExpandedThis ? (
@@ -570,12 +597,20 @@ export default function AddEventPanel({
                       )}
                       <FriendRsvpCallout friends={friends} />
                       {userId && (
-                        <button
-                          className={`rsvp-button${isGoing ? ' rsvp-going' : ''}`}
-                          onClick={() => onRsvp?.(event.id, isGoing)}
-                        >
-                          {isGoing ? 'Going ✓' : "I'm going!"}
-                        </button>
+                        <div className="cal-action-row">
+                          <button
+                            className={`rsvp-button${isGoing ? ' rsvp-going' : ''}`}
+                            onClick={() => onRsvp?.(event.id, isGoing)}
+                          >
+                            {isGoing ? 'Interested ✓' : 'Interested'}
+                          </button>
+                          <button
+                            className={`rsvp-button rsvp-maybe${isMaybe ? ' rsvp-maybe--active' : ''}`}
+                            onClick={() => onMaybe?.(event.id, isMaybe)}
+                          >
+                            {isMaybe ? 'Maybe ✓' : 'Maybe'}
+                          </button>
+                        </div>
                       )}
                       <div className="add-event-card-toggle-row">
                         <button
@@ -588,14 +623,18 @@ export default function AddEventPanel({
                       </div>
                     </div>
                   ) : (
-                    <div className="add-event-card-body">
+                    <div
+                      className="add-event-card-body"
+                      onClick={() => toggleCardExpanded(event.id)}
+                      style={{ cursor: 'pointer' }}
+                    >
                       <p className="add-event-card-date">{format(start, 'EEE, MMM d').toUpperCase()}</p>
                       <PortraitTitle text={event.event_name} />
                       <div className="add-event-card-toggle-row">
                         <button
                           type="button"
                           className="add-event-expand-btn"
-                          onClick={() => toggleCardExpanded(event.id)}
+                          onClick={(e) => { e.stopPropagation(); toggleCardExpanded(event.id); }}
                         >
                           More
                         </button>

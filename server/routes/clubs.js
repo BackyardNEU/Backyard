@@ -24,10 +24,10 @@ async function isClubMember(userId, clubId) {
 // against Supabase as if RLS didn't exist, which is fine here because the data
 // is meant to be public anyway.
 router.get('/', async (req, res) => {
-  const { data, error } = await supabaseAdmin
-    .from('demo_club_data')
-    .select(PUBLIC_CLUB_COLUMNS);
-
+  const [{ data, error }, { data: pageRows }] = await Promise.all([
+    supabaseAdmin.from('demo_club_data').select(PUBLIC_CLUB_COLUMNS),
+    supabaseAdmin.from('club_page_data').select('club_id'),
+  ]);
 
   if (error) {
     const err = new Error(error.message);
@@ -35,7 +35,9 @@ router.get('/', async (req, res) => {
     throw err;
   }
 
-  res.json(await attachClubInterests(supabaseAdmin, data));
+  const pageSet = new Set((pageRows ?? []).map(r => r.club_id));
+  const clubs = data.map(c => ({ ...c, has_page: pageSet.has(c.id) }));
+  res.json(await attachClubInterests(supabaseAdmin, clubs));
 });
 
 

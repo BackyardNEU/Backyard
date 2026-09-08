@@ -115,6 +115,51 @@
   color: #fff;
 }
 
+.exp-verified-corner-badge {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 8300;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  color: #fff;
+  background: #0b9434;
+  border-radius: 20px;
+  padding: 5px 13px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.exp-unclaimed-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 8290;
+  background: #fff8e1;
+  border-bottom: 2px solid #f0b429;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 56px 10px 16px;
+  box-sizing: border-box;
+}
+
+.exp-unclaimed-icon {
+  font-size: 1.05rem;
+  flex-shrink: 0;
+  line-height: 1.5;
+}
+
+.exp-unclaimed-text {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1rem;
+  color: #5d4037;
+  line-height: 1.5;
+}
+
 .exp-save-error {
   color: #8a3b2f;
   font-family: "Barlow Condensed", sans-serif;
@@ -479,5 +524,30 @@
 .leave-confirm-confirm {
   background: rgb(120, 30, 30);
   color: #fff;
+}
+
+.exp-join-prompt {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 8px 12px;
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #5d4037;
+  box-sizing: border-box;
+}
+
+.exp-join-prompt-dismiss {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: #9e9e9e;
+  padding: 0 2px;
+  line-height: 1;
 }
 

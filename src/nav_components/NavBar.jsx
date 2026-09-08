@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+// eslint-disable-next-line no-unused-vars
+import { motion } from 'framer-motion';
 import { useGlobalStore } from '../lib/store';
 import { apiFetch } from '../lib/api';
 import { DEFAULT_UNIVERSITY_PATH } from '../lib/university';
@@ -10,15 +12,15 @@ import clubsActiveIcon from '../assets/Nav_bar_clubs_active.png';
 import clubsInactiveIcon from '../assets/Nav_bar_clubs_inactive.png';
 
 // Global, persistent nav bar: calendar/clubs view switches for UniversityPage,
-// plus the login/profile entry point. Plain button, no shared layoutId with
-// LoginMorph — that morph made this icon slide in from the bottom on every
-// remount (e.g. right after the login card closed), not just when actually
-// clicked open, so it's a plain button like the other two icons instead.
-export function NavBar({ loginOpen, setLoginOpen }) {
+// plus the login/profile entry point (shares LoginMorph's layoutId="login" so
+// the icon-to-card morph animation still plays from this button).
+export function NavBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const GlobalValue = useGlobalStore((state) => state.GlobalValue);
   const calendarViewActive = useGlobalStore((state) => state.calendarViewActive);
+  const loginOpen = useGlobalStore((state) => state.loginOpen);
+  const setLoginOpen = useGlobalStore((state) => state.setLoginOpen);
   const [avatarUrl, setAvatarUrl] = useState(null);
 
   useEffect(() => {
@@ -68,11 +70,9 @@ export function NavBar({ loginOpen, setLoginOpen }) {
   // announce a selection the user cannot see.
   const calendarCurrent = isOnUniPage && calendarViewActive;
   const clubsCurrent = isOnUniPage && !calendarViewActive;
-  const profileCurrent = location.pathname === '/profile' || location.pathname === '/settings';
-  const isOnProfilePage = location.pathname === '/profile';
 
   return (
-    <nav className={`nav-bar${isOnProfilePage ? ' nav-bar--profile-bg' : ''}`}>
+    <nav className="nav-bar">
       <button
         type="button"
         className="nav-bar-btn"
@@ -91,14 +91,15 @@ export function NavBar({ loginOpen, setLoginOpen }) {
       >
         <img src={clubsCurrent ? clubsActiveIcon : clubsInactiveIcon} alt="" />
       </button>
-      <button
+      <motion.button
+        layoutId="login"
         type="button"
-        className={`nav-bar-btn nav-bar-profile-btn${profileCurrent ? '' : ' inactive'}`}
+        className="nav-bar-btn nav-bar-profile-btn"
         aria-label={GlobalValue ? 'Profile' : 'Login'}
         onClick={handleProfileClick}
       >
         <img src={avatarUrl || '/raccoon_pfp.png'} alt="" />
-      </button>
+      </motion.button>
     </nav>
   );
 }
