@@ -6,6 +6,7 @@ import { CalendarExportRow } from './CalendarExportRow';
 import { useClubData } from '../context/useClubData';
 import FriendRsvpCallout from '../components/FriendRsvpCallout';
 import { apiFetch } from '../lib/api';
+import Avatar from '../components/Avatar';
 import './CalendarModule.css';
 
 /**
@@ -168,6 +169,7 @@ export function CalendarModule({
             const start = parseISO(event.start_time);
             const end = parseISO(event.end_time);
             const friends = friendRsvpMap.get(event.id);
+            const isGoing = myRsvpSet.has(event.id);
 
             return (
               <div
@@ -264,10 +266,10 @@ export function CalendarModule({
                       <FriendRsvpCallout friends={evFriends} />
                       {userId && (
                         <button
-                          className={`rsvp-button${evIsGoing ? ' rsvp-going' : ''}`}
-                          onClick={() => onRsvp?.(ev.id, evIsGoing)}
+                          className={`rsvp-button${myRsvpSet.has(ev.id) ? ' rsvp-going' : ''}`}
+                          onClick={() => onRsvp?.(ev.id, myRsvpSet.has(ev.id))}
                         >
-                          {evIsGoing ? 'Going ✓' : "I'm going!"}
+                          {myRsvpSet.has(ev.id) ? 'Going ✓' : "I'm going!"}
                         </button>
                       )}
                       {userId && (

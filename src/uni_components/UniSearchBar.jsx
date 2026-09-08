@@ -184,7 +184,7 @@ useEffect(() => {
           Below 500px each becomes its own full-width flex row, so the bar reflows
           to two lines without any duplicated markup per breakpoint. */}
       <div className="usb-row-top">
-        <icon className="search-icon"><FaSearch /></icon>
+        <span className="search-icon"><FaSearch /></span>
 
         <div className="input-container">
 
