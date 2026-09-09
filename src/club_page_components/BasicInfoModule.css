@@ -151,10 +151,17 @@
     text-transform: uppercase;
 }
 
+/* Type and vertical rhythm are kept identical to .join-tab-content (JoinModule.css) at
+   every viewport, so the About copy and the Join copy read as one voice down the page.
+   That means the size/line-height/colour below, plus margins set explicitly: this
+   renders as a <p> in view mode, whose UA default `margin: 1em 0` would otherwise add a
+   top gap .join-tab-content (a <div>) does not have. */
 .club-description-exp {
   font-size: 1.5rem;
+  line-height: 1.55;
+  margin: 0 0 1.5rem;
   align-self: flex-start;
-  color: rgb(75, 74, 74);
+  color: rgb(66, 66, 66);
   text-align: left;
   width: 95%;
   max-width: 1200px;
@@ -320,14 +327,6 @@
   width: 1.8rem;
   height: 1.8rem;
   }
-
-  .club-description-exp {
-  font-size: 1rem;
-  line-height: -1em;
-  
-
-  
-}
 
   .text-flex {
     width: 100%;

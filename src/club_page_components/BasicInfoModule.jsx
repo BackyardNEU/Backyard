@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { useClubData } from '../context/useClubData';
+import { useGlobalStore } from '../lib/store';
 import { apiFetch } from '../lib/api';
 import { roleColorStyle } from '../lib/roleColor';
 import ColorThief from 'colorthief';
@@ -23,6 +24,11 @@ import Avatar from '../components/Avatar';
  * @param {boolean} props.linksDisplayed - whether the Links module's visibility checkbox is on; hides the action-bar link buttons entirely when false
  */
 function BasicInfoModule({ club, data, editing, onChange, onLogoChange, actions, warning, part = 'full', linksDisplayed = true, taxonomy = [], clubInterests = null, onInterestsChange, onSubcategoryCreated }) {
+  // Every control in the `actions` slot is gated on being signed in (see actionRow in
+  // ExpandedTile), so signed out it renders empty and the separator below would be a
+  // stray leading "|" with nothing to its left.
+  const signedIn = useGlobalStore((state) => state.GlobalValue);
+
   const [dominantColor, setDominantColor] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
   const [descOpen, setDescOpen] = useState(false);
@@ -424,7 +430,7 @@ function BasicInfoModule({ club, data, editing, onChange, onLogoChange, actions,
           {actions}
           {linksDisplayed && enabledLinks.length > 0 && (
             <>
-              <span className="links-sep">|</span>
+              {signedIn && <span className="links-sep">|</span>}
               <div className="links-bar">
                 {visibleLinks.map((link, i) => {
                   const keyword = getLinkKeyword(link.name);
