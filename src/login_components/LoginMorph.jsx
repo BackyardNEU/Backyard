@@ -100,7 +100,7 @@ function LoginMorph({ open, setOpen }) {
             &times;
           </button>
           <div className="login-card-scroll">
-          <img className="raccoon" src="/raccoon_pfp.png" />
+          <img className="raccoon" src="/rac7.0.png" />
           <h2>{viewHeading[view]}{view === "signup" ? typedGreeting : ""}</h2>
 
           {view !== "forgot" && (

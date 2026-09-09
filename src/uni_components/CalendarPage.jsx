@@ -549,7 +549,7 @@ export function CalendarPage() {
                         {isMinimized ? (
                           <div className="calendar-event-min-row">
                             <img
-                              src={posterUrl || '/raccoon_pfp.png'}
+                              src={posterUrl || '/rac7.0.png'}
                               alt=""
                               className={`calendar-event-min-thumb${posterUrl ? '' : ' calendar-event-min-thumb--default'}`}
                             />
@@ -571,7 +571,7 @@ export function CalendarPage() {
                               style={{ backgroundImage: `url(${borderHorizontalImg})` }}
                             />
                             <img
-                              src={posterUrl || '/raccoon_pfp.png'}
+                              src={posterUrl || '/rac7.0.png'}
                               alt=""
                               className={`cal-portrait-img${posterUrl ? '' : ' cal-portrait-img--default'}`}
                             />
@@ -678,7 +678,7 @@ export function CalendarPage() {
                       style={{ backgroundImage: `url(${borderHorizontalImg})` }}
                     />
                     <img
-                      src={posterUrl || '/raccoon_pfp.png'}
+                      src={posterUrl || '/rac7.0.png'}
                       alt="Event"
                       className={`cal-portrait-img${posterUrl ? '' : ' cal-portrait-img--default'}`}
                     />
@@ -737,7 +737,6 @@ export function CalendarPage() {
             onClick={() => setPosterSize('minimized')}
           >
             <GiHamburgerMenu />
-            <span className="calpg-poster-size-label">Row</span>
           </button>
           <button
             type="button"
@@ -747,7 +746,6 @@ export function CalendarPage() {
             onClick={() => setPosterSize('maximized')}
           >
             <TbCropPortrait />
-            <span className="calpg-poster-size-label">Card</span>
           </button>
         </div>
       )}

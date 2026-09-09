@@ -56,7 +56,7 @@ function BasicInfoModule({ club, data, editing, onChange, onLogoChange, actions,
 
   const displayName = data?.club_name || club.club_name || '';
   const displayDescription = data?.description || club.club_description || '';
-  const logoUrl = data?.logo_url || club.image_url || '/raccoon_pfp.png';
+  const logoUrl = data?.logo_url || club.image_url || '/rac7.0.png';
   // Truncate the description to 50 words in view mode; the full text opens in a modal.
   const descWords = displayDescription.trim() ? displayDescription.trim().split(/\s+/) : [];
   const isLongDesc = descWords.length > 50;

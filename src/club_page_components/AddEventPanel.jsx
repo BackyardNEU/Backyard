@@ -565,7 +565,7 @@ export default function AddEventPanel({
 
                   <img
                     className={`add-event-card-img${!event.event_image_url ? ' add-event-card-img--default' : ''}`}
-                    src={event.event_image_url || club?.image_url || '/raccoon_pfp.png'}
+                    src={event.event_image_url || club?.image_url || '/rac7.0.png'}
                     alt=""
                     onClick={() => toggleCardExpanded(event.id)}
                     style={{ cursor: 'pointer' }}

@@ -948,6 +948,21 @@
   }
 }
 
+/* Above 500px (still under the 700px cutoff above), center the abbreviated month
+   on the page instead of leaving it flush left with the row.
+
+   Centred by stretching the h1 across the row and centring its text, NOT by
+   absolutely positioning the abbr: in this range .calpg-month-abbr is the h1's
+   only in-flow child (.calpg-month-full is display:none above, .calpg-month-range
+   until 1400px), so taking it out of flow collapsed the h1 and .calpg-month-row to
+   zero height and .calpg-week-row rode up into the exact band the month paints in. */
+@media (min-width: 501px) and (max-width: 700px) {
+  .calpg-month {
+    flex: 1;
+    text-align: center;
+  }
+}
+
 @media (min-width: 1400px) {
   .calpg-month-monthly .calpg-month-full,
   .calpg-month-monthly .calpg-month-abbr {
@@ -1012,13 +1027,6 @@
   height: 18px;
   width: 18px;
   flex-shrink: 0;
-}
-
-.calpg-poster-size-label {
-  font-family: "Barlow Condensed", sans-serif;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .calpg-poster-size-btn--active {
