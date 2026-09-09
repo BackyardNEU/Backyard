@@ -132,7 +132,7 @@ export default function JoinPage() {
             <>
               <h2>You now have editor access to {invite.club_name}!</h2>
               <p>Head to the club page to start managing it.</p>
-              <button className="join-home-btn" onClick={() => navigate(neuID)}>
+              <button className="join-home-btn" onClick={() => navigate(`${neuID}?club=${invite.club_id}`)}>
                 Go to your club
               </button>
             </>
