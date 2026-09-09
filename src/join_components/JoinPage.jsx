@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { apiFetch } from '../lib/api';
+import { describeInviteError } from '../lib/inviteLinkError';
 import Form from '../login_components/form';
 import './JoinPage.css';
 import { Skeleton, SkeletonRegion } from '../components/Skeleton';
@@ -39,7 +40,9 @@ export default function JoinPage() {
   useEffect(() => {
     apiFetch(`/invite/${token}`, { auth: false })
       .then((data) => { setInvite(data); setInviteLoading(false); })
-      .catch((err) => { setInviteError(err.message); setInviteLoading(false); });
+      // Keep the error itself: its status is what tells a truncated token apart
+      // from a link that is genuinely dead, and those need different advice.
+      .catch((err) => { setInviteError(err); setInviteLoading(false); });
   }, [token]);
 
   const redeem = async () => {
@@ -98,8 +101,8 @@ export default function JoinPage() {
     return (
       <div className="join-page">
         <div className="join-card join-card--error">
-          <h2>Link unavailable</h2>
-          <p>{inviteError}</p>
+          <h2>{describeInviteError(inviteError).title}</h2>
+          <p>{describeInviteError(inviteError).body}</p>
           <button className="join-home-btn" onClick={() => navigate(neuID)}>Go home</button>
         </div>
       </div>
