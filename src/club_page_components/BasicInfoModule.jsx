@@ -3,13 +3,8 @@ import { useClubData } from '../context/useClubData';
 import { apiFetch } from '../lib/api';
 import { roleColorStyle } from '../lib/roleColor';
 import ColorThief from 'colorthief';
-import { FaSearch, FaTimes, FaInstagram, FaFacebookF } from 'react-icons/fa';
-import { FaTiktok, FaSlack, FaLinkedinIn } from 'react-icons/fa6';
-import { IoIosMail } from 'react-icons/io';
-import { SlSocialSpotify } from 'react-icons/sl';
-import { SiLinktree } from 'react-icons/si';
-import { TbBrandDiscord } from 'react-icons/tb';
-import { FiYoutube, FiGlobe } from 'react-icons/fi';
+import { FaSearch, FaTimes } from 'react-icons/fa';
+import { getLinkKeyword, LINK_ICONS, LINK_ICON_COLORS } from './linkIcons';
 import './BasicInfoModule.css';
 import Avatar from '../components/Avatar';
 
@@ -92,50 +87,6 @@ function BasicInfoModule({ club, data, editing, onChange, onLogoChange, actions,
   const collapsedCount = isNarrow ? 2 : 5;
   const visibleLinks = linksExpanded ? enabledLinks : enabledLinks.slice(0, collapsedCount);
   const showMoreToggle = enabledLinks.length > collapsedCount;
-
-  const URL_KEYWORDS = [
-    ['instagram.com',  'instagram'],
-    ['fb.com',         'facebook'],
-    ['facebook.com',   'facebook'],
-    ['discord.gg',     'discord'],
-    ['discord.com',    'discord'],
-    ['open.spotify',   'spotify'],
-    ['spotify.com',    'spotify'],
-    ['tiktok.com',     'tiktok'],
-    ['linktr.ee',      'linktree'],
-    ['linktree.com',   'linktree'],
-    ['youtube.com',    'youtube'],
-    ['youtu.be',       'youtube'],
-    ['linkedin.com',   'linkedin'],
-    ['slack.com',      'slack'],
-    ['mailto:',        'email'],
-  ];
-
-  const getLinkKeyword = (url) => {
-    if (!url) return 'external';
-    const u = url.toLowerCase();
-    for (const [fragment, platform] of URL_KEYWORDS) {
-      if (u.includes(fragment)) return platform;
-    }
-    return 'external';
-  };
-
-  const LINK_ICONS = {
-    instagram: FaInstagram,
-    facebook: FaFacebookF,
-    email: IoIosMail,
-    youtube: FiYoutube,
-    discord: TbBrandDiscord,
-    spotify: SlSocialSpotify,
-    tiktok: FaTiktok,
-    linktree: SiLinktree,
-    slack: FaSlack,
-    linkedin: FaLinkedinIn,
-    external: FiGlobe,
-  };
-  // Spotify's icon keeps the same green .link-btn--spotify already uses for its text,
-  // instead of the white used everywhere else.
-  const LINK_ICON_COLORS = { spotify: '#65D46E' };
 
   const handleMoreLinks = () => setLinksExpanded(prev => !prev);
 
@@ -476,7 +427,7 @@ function BasicInfoModule({ club, data, editing, onChange, onLogoChange, actions,
               <span className="links-sep">|</span>
               <div className="links-bar">
                 {visibleLinks.map((link, i) => {
-                  const keyword = getLinkKeyword(link.url);
+                  const keyword = getLinkKeyword(link.name);
                   const Icon = LINK_ICONS[keyword];
                   return (
                   <div className="duo-btn-wrap" key={link.id || i}>
