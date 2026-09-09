@@ -6,11 +6,14 @@
 }
 
 .ProfilePage {
+  /* Containing block for .profile-close-btn, so the × tracks this page's own top-right
+     corner rather than the viewport's. */
+  position: relative;
+
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   width: 100%;
-  max-width: 800px;
   margin: 0 auto;
   padding: 0 20px;
   box-sizing: border-box;
@@ -39,8 +42,8 @@
   /* Name → bio only — deliberately its own token, not --profile-gap-xs reused, because
      this one scales with viewport instead of sitting at one fixed size (clamp, same
      idea as .ProfileName's and .user-description's own font-size clamps just above/
-     below it) and lands around 5px at a typical width rather than a flat 8px. */
-  --profile-gap-name: clamp(2px, 0.6vw, 6px);
+     below it). */
+  --profile-gap-name: clamp(5px, 0.6vw, 10px);
 
   /* .profile-image lives in .avatar-upload-wrap, a sibling of .profile-copy — a variable
      declared on .profile-copy itself wouldn't inherit across to it, so this sits here on
@@ -281,10 +284,12 @@
   }
 }
 
+/* Anchored to .ProfilePage, not the viewport, so the × tracks the page's own top-right
+   corner. top matches --profile-gap-header, the page's top clearance above the header. */
 .profile-close-btn {
-  position: fixed;
-  top: 32px;
-  right: 32px;
+  position: absolute;
+  top: var(--profile-gap-header);
+  right: 10px;
   z-index: 20;
   background: none;
   border: none;
