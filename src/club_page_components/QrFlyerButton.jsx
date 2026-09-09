@@ -37,7 +37,7 @@ export default function QrFlyerButton({ club }) {
       try {
         const bg = await loadImage(flyerBg);
         ctx.drawImage(bg, 0, 0, W, H);
-      } catch {
+      } catch (e) {
         ctx.fillStyle = '#ECE7E5';
         ctx.fillRect(0, 0, W, H);
       }

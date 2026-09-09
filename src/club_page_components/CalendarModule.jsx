@@ -103,7 +103,7 @@ export function CalendarModule({
       const data = await apiFetch(`/clubs/${club.id}/events/${eventId}/attendees`);
       setAttendeesMap(prev => ({ ...prev, [eventId]: data }));
       setAttendeesOpenId(eventId);
-    } catch {
+    } catch (e) {
       setAttendeesMap(prev => ({ ...prev, [eventId]: [] }));
       setAttendeesOpenId(eventId);
     }

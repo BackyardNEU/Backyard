@@ -194,7 +194,7 @@ export default function AddEventPanel({
       const fetched = new File([blob], 'poster.jpg', { type: blob.type || 'image/jpeg' });
       setImageFile(fetched);
       setShowCropModal(true);
-    } catch {
+    } catch (e) {
       setFormWarning('Could not load the existing poster for cropping. Try uploading a new image instead.');
     }
   };

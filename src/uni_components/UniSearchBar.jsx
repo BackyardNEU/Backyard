@@ -144,7 +144,7 @@ useEffect(() => {
     // already set the filtered results; overwriting them here would undo the filter.
     if (input.trim() === "") {
       if (skipSearchRef.current) { skipSearchRef.current = false; return; }
-      const data = allData.filter((c) => c.school === university).slice(0, 100);
+      const data = (allData || []).filter((c) => c.school === university).slice(0, 100);
       setResults(data);
       return;
     }

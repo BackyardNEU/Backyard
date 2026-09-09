@@ -161,7 +161,7 @@ function BasicInfoModule({ club, data, editing, onChange, onLogoChange, actions,
       try {
         const [r, g, b] = colorThief.getColor(img);
         setDominantColor(getPastelColor(r, g, b));
-      } catch {
+      } catch (e) {
         setDominantColor('rgb(211, 211, 211)');
       }
     };

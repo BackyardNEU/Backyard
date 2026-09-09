@@ -76,7 +76,7 @@ export function useProfileForm() {
                 { auth: false }
             );
             setUsernameStatus(available ? 'available' : reason || 'taken');
-        } catch {
+        } catch (e) {
             setUsernameStatus(null);
         }
     }, []);

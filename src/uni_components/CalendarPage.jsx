@@ -79,7 +79,7 @@ export function CalendarPage() {
                           b + (255 - b) * 0.85 >= 240) ? 0.5 : 0.85;
           const pastel = `rgb(${Math.round(r + (255 - r) * factor)}, ${Math.round(g + (255 - g) * factor)}, ${Math.round(b + (255 - b) * factor)})`;
           setDominantColorByClubId(prev => ({ ...prev, [clubId]: pastel }));
-        } catch {
+        } catch (e) {
           setDominantColorByClubId(prev => ({ ...prev, [clubId]: 'rgb(211, 211, 211)' }));
         }
       };

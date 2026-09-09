@@ -51,7 +51,7 @@ export const ProfileFields = ({ form, idPrefix = 'profile' }) => {
         try {
             const file = await fetchAsFile(avatarPreview, 'avatar.jpg');
             setCropTarget({ kind: 'avatar', file });
-        } catch {
+        } catch (e) {
             // Best-effort — the button just stops loading and nothing opens.
         } finally {
             setBusyKey(null);
@@ -67,7 +67,7 @@ export const ProfileFields = ({ form, idPrefix = 'profile' }) => {
         try {
             const file = await fetchAsFile(url, `photo-${index}.jpg`);
             setCropTarget({ kind: 'photo', index, file });
-        } catch {
+        } catch (e) {
             // Best-effort — same as above.
         } finally {
             setBusyKey(null);
