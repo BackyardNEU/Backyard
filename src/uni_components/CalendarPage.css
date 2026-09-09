@@ -945,17 +945,17 @@
   }
 }
 
-/* Above 475px (still under the 700px cutoff above), swap the abbreviation back for
-   the full month name and centre it. At or below 475px the abbreviation stays, since
-   the 4rem size set further down leaves no room for "SEPTEMBER" on one line.
+/* Above 475px, swap the abbreviation back for the full month name and centre it — at
+   every width the full name is shown, not just up to 700px. At or below 475px the
+   abbreviation stays, since the 4rem size set further down leaves no room for
+   "SEPTEMBER" on one line.
 
-   Centred by stretching the h1 across the row and centring its text, NOT by
-   absolutely positioning the name: exactly one of .calpg-month-full/.calpg-month-abbr
-   shows at a time here (.calpg-month-range waits until 1400px), so whichever it is is
-   the h1's only in-flow child — taking it out of flow collapsed the h1 and
-   .calpg-month-row to zero height, and .calpg-week-row rode up into the exact band the
-   month paints in. */
-@media (min-width: 476px) and (max-width: 700px) {
+   Centred by stretching the h1 across the row and centring its text, NOT by absolutely
+   positioning the name: only one of .calpg-month-full/.calpg-month-abbr shows at a
+   time, so whichever it is is the h1's only in-flow child — taking it out of flow
+   collapsed the h1 and .calpg-month-row to zero height, and .calpg-week-row rode up
+   into the exact band the month paints in. */
+@media (min-width: 476px) {
   .calpg-month-full {
     display: inline;
   }
@@ -975,6 +975,13 @@
   }
   .calpg-month-range {
     display: inline;
+  }
+  /* The centring above is for the full month name. This view shows .calpg-month-range
+     instead, which is deliberately left-offset to line up with the dual grid's own
+     34px padding (see .calpg-month-monthly's padding-left just above), so it opts back
+     out rather than inheriting the centre. */
+  .calpg-month-monthly {
+    text-align: left;
   }
 }
 

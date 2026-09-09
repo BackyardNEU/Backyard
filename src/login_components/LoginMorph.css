@@ -182,7 +182,10 @@
   top: 16px;
   right: 20px;
 
-  background: rgb(234, 234, 230);
+  /* none, not simply omitted — a bare <button> falls back to the UA's grey
+     `buttonface`, so dropping the declaration would leave a background rather
+     than remove one. */
+  background: none;
   border: none;
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 2rem;

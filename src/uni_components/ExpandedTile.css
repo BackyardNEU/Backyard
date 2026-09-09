@@ -132,12 +132,16 @@
   pointer-events: none;
 }
 
+/* sticky, not fixed: fixed took the banner out of flow, so it painted straight over
+   .club-modules and buried the club name underneath it. Sticky keeps it pinned to the
+   top of .expanded-card (its scroll container, same as .exp-editor-header) while still
+   occupying a row, so the content below starts beneath it — and margin-bottom then has
+   something to push against, which it would not have had while fixed. */
 .exp-unclaimed-banner {
-  position: fixed;
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
   z-index: 8290;
+  margin-bottom: 1rem;
   background: #fff8e1;
   border-bottom: 2px solid #f0b429;
   display: flex;
