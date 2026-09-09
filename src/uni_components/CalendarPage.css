@@ -744,6 +744,13 @@
   box-sizing: border-box;
   overflow-y: auto;
 
+  /* Scrolling past either end of this box used to chain up to its ancestors, and
+     since nothing above it scrolls, the browser answered with the elastic
+     rubber-band instead — the whole panel visibly shifting up/down on a hard
+     flick. contain keeps the gesture in this box: it still gets its own end-of-
+     scroll bounce, but the page behind it no longer moves. */
+  overscroll-behavior: contain;
+
   scrollbar-width: none;
 }
 

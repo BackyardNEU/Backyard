@@ -5,6 +5,13 @@ html, body {
   min-height: 100%;
   box-sizing: border-box;
   font-family: "Barlow", sans-serif;
+  /* The viewport rubber-bands on a hard flick even where the document itself does
+     not scroll — on the university page nothing above .uni-club-viewport/.calpg-card
+     is scrollable, so the whole layout visibly bounced up and down and settled back.
+     contain would not help here: the bounce is the root's own overscroll, not scroll
+     chaining out of it, and only none suppresses that. Trade-off: this also disables
+     Android Chrome's pull-to-refresh. */
+  overscroll-behavior-y: none;
 }
 
 /* make the viewport root a flex container so children are centered */

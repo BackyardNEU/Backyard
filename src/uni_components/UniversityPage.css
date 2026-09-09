@@ -1,7 +1,7 @@
 .UniPage {
   position: relative;
   width: 100%;
-  min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
   box-sizing: border-box;
   color: rgb(0, 0, 0);
@@ -66,9 +66,9 @@
 .uni-layout {
   position: relative;
 
-  min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
-  grid-template-rows: 20vh 6vh 70vh ;
+  grid-template-rows: 20dvh 6dvh 70dvh ;
 }
 
 /* >500px: flag pinned flex-start, logo centered in the remaining space via a
@@ -132,6 +132,11 @@
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
+  /* Same reason as .calpg-card's (CalendarPage.css): this is the only thing on the
+     page that scrolls, so without containment a hard flick past either end chains
+     out to the document and rubber-bands the whole layout — including the sticky
+     header — rather than stopping here. */
+  overscroll-behavior: contain;
   /* Horizontal padding matches .uni-search-row's 1rem: --uni-content-width is a
      percentage, so it only resolves to the same pixel width in both places if the
      two rows' content boxes (outer width minus padding) actually match — otherwise
@@ -162,7 +167,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: 20vh;
+  top: 20dvh;
   bottom: 3%;
   margin: 0 auto;
   width: var(--uni-content-width);
@@ -251,11 +256,11 @@
 
 @media (max-width: 900px) {
   .uni-layout {
-    grid-template-rows: 16vh 5.5vh 76vh;
+    grid-template-rows: 16dvh 5.5dvh 76dvh;
   }
 
   .uni-calendar-inline {
-    top: 16vh;
+    top: 16dvh;
   }
 }
 
@@ -265,7 +270,7 @@
   }
 
   .uni-layout {
-    grid-template-rows: 11vh 6vh 76vh;
+    grid-template-rows: 11dvh 6dvh 76dvh;
   }
 
   /* Coupled: flag + logo sit side by side, flex-start, ~3% from the left edge
@@ -290,7 +295,7 @@
   }
 
   .uni-calendar-inline {
-    top: 11vh;
+    top: 11dvh;
     bottom: 7%;
     width: 91%;
   }
@@ -317,10 +322,22 @@
      .uni-club-viewport at all — it was inflating .uni-layout to the height of
      every card (tens of thousands of px), so the whole *document* scrolled
      instead, and position:sticky only tracks scroll within .uni-layout/.UniPage
-     (nearest ancestor with non-visible overflow), which itself never moved. */
+     (nearest ancestor with non-visible overflow), which itself never moved.
+
+     dvh, not vh, for that definite height — and for every other viewport-height
+     value in this file, since the rows and the tops positioned against them
+     (.uni-search-row, .uni-calendar-inline) have to resolve against the same
+     viewport or they desync. On mobile Safari 100vh is the *large* viewport, the
+     height the page has only once the URL bar has retracted, so a vh-sized layout
+     is taller than what is actually visible while the bar is showing — the document
+     gets a scrollbar it should not have and the header scrolls away with it, which
+     is the same class of failure as the bug described above. 100dvh tracks the
+     viewport as the bar shows/hides, so the layout is never taller than the space
+     it has. Safe without a vh fallback: dvh shipped in Safari 15.4 / Chrome 108,
+     both older than the container queries this codebase already relies on. */
   .uni-layout {
-    height: 100vh;
-    grid-template-rows: 11vh minmax(6vh, auto) 1fr;
+    height: 100dvh;
+    grid-template-rows: 11dvh minmax(6dvh, auto) 1fr;
   }
 
   /* Sticky (like .uni-plant-layer, which is already position:fixed) so the flag
@@ -334,7 +351,7 @@
 
   .uni-search-row {
     position: sticky;
-    top: 11vh;
+    top: 11dvh;
     z-index: 120;
   }
 }
