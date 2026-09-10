@@ -4,6 +4,7 @@ import { requireAuth } from '../middleware/requireAuth.js';
 import { checkMuted } from '../middleware/checkMuted.js';
 import textModerator from '../lib/textModerator.js';
 import { WILDCARD_TYPE } from '../notifications/decisionLayer.js';
+import { isAdmin } from '../lib/isAdmin.js';
 
 const router = express.Router();
 
@@ -48,7 +49,13 @@ router.get('/profile', async (req, res) => {
         throw err;
     }
 
-    res.json(data);
+    // Derived per request from ADMIN_USER_IDS, deliberately not a profiles column.
+    // The nav bar needs it to decide whether to offer /admin, and firing a separate
+    // /admin/is-admin call from every visitor would 403 for almost all of them.
+    //
+    // Spread last so a stored column of this name can never win — it is the one flag
+    // that must not be reachable through a mass-assignment slip.
+    res.json({ ...data, is_admin: isAdmin(req.user.id) });
 });
 
 router.put('/profile', checkMuted, async (req, res) => {
