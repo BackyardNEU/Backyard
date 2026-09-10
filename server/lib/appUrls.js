@@ -79,6 +79,21 @@ export const ALLOWED_ORIGINS = urls.allowedOrigins;
 export const PUBLIC_APP_URL = urls.publicAppUrl;
 export const ONBOARD_URL = urls.onboardUrl;
 
+// The onboarding wizard is served from its own origin and calls this API from the
+// browser, so ONBOARD_URL being absent from the CORS allowlist breaks every request it
+// makes — and ClaimGate reported that as "your link may have expired", sending clubs
+// back to ask for a replacement that would fail identically.
+//
+// Two variables that have to agree and live in different places, which is exactly the
+// kind of drift that goes unnoticed. Say so at boot rather than at a club's expense.
+if (ONBOARD_URL && !ALLOWED_ORIGINS.includes(ONBOARD_URL)) {
+    console.warn(
+        `[cors] ONBOARD_URL is ${ONBOARD_URL} but that origin is not in FRONTEND_URL ` +
+        `(${ALLOWED_ORIGINS.join(', ')}). Every request from the onboarding wizard will ` +
+        'be blocked by CORS. Add it to FRONTEND_URL.'
+    );
+}
+
 export const inviteUrl = (token) => buildInviteUrl(PUBLIC_APP_URL, token);
 export const onboardingUrl = (token) => {
     if (!ONBOARD_URL) {
