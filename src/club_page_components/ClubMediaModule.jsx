@@ -676,7 +676,10 @@ function UploadedVideoBlock({ block }) {
   const width = VIDEO_WIDTHS.includes(block.width) ? block.width : '100';
   return (
     <div className={`cm-video-block cm-video-block--${width}`}>
-      <video className="cm-media-video" src={block.url} controls playsInline />
+      {/* No controls, so nothing can start it by hand — autoPlay is what makes it run,
+          and muted is what makes autoPlay allowed (browsers block audible autoplay).
+          playsInline keeps iOS from taking it fullscreen. */}
+      <video className="cm-media-video" src={block.url} autoPlay loop muted playsInline />
     </div>
   );
 }
@@ -815,7 +818,7 @@ function renderMediaItem(item) {
         />
       );
     }
-    return <video className="cm-media-video" src={item.url} controls />;
+    return <video className="cm-media-video" src={item.url} autoPlay loop muted playsInline />;
   }
   return <img className="cm-media-img" src={item.url} alt="" />;
 }

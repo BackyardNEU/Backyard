@@ -619,6 +619,16 @@
   gap: 18px;
 }
 
+/* This is a column flex container, so its children default to flex-shrink: 1 — once the
+   blocks are taller than the body, flex compresses them instead of letting the body
+   scroll. Paragraphs survive it (min-height:auto floors them at their content height),
+   but anything with a set or intrinsic height — the media carousel, uploaded video —
+   gets flattened: a 220px block measured 24px here. Pinning shrink to 0 makes the
+   overflow go to the scrollbar, which is what overflow-y: auto above is already for. */
+.cm-modal-body > * {
+  flex-shrink: 0;
+}
+
 .cm-modal-empty {
   color: #999;
   font-style: italic;
@@ -877,10 +887,17 @@
   border: 0;
 }
 
-/* Standalone uploaded short-video blocks (outside the carousel) */
+.cm-media-video {
+  border-radius: 0;
+}
+
+/* Standalone uploaded short-video blocks (outside the carousel).
+   radius 0 here too, not just on .cm-media-video: this wrapper is the element that
+   actually rounded the video, since it clips with overflow: hidden. Zeroing only the
+   <video> would leave the corners visibly cut by this box. */
 .cm-video-block {
   margin: 0 auto;
-  border-radius: 12px;
+  border-radius: 0;
   overflow: hidden;
   background: #000;
 }

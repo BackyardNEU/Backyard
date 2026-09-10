@@ -23,7 +23,14 @@ export default defineConfig([
       },
     },
     rules: {
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // caughtErrors: 'none' because `catch (e)` here is a syntax requirement, not an
+      // intent to use the error. Bare `catch {}` is ES2019 optional catch binding, which
+      // throws a SyntaxError on older Safari — the whole point of the "add a parameter to
+      // all catch bindings" pass. ESLint 9 flipped this option's default from 'none' to
+      // 'all', so that pass lit up 30 unused-`e` errors across src/ overnight. They are
+      // all false, and they bury the real ones (same argument as the node-globals block
+      // below).
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]', caughtErrors: 'none' }],
     },
   },
   {
@@ -37,6 +44,7 @@ export default defineConfig([
     files: [
       'server/**/*.js',
       'shared/**/*.js',
+      'scripts/**/*.js',
       'tests/**/*.js',
       '**/*.test.js',
       '*.config.js',

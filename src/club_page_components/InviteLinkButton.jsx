@@ -63,7 +63,7 @@ export default function InviteLinkButton({ clubId }) {
             disabled={loading}
             type="button"
           >
-            {loading ? 'Generating...' : 'Generate Invite Link'}
+            {loading ? 'Generating...' : 'Member Invite Link'}
           </button>
         </div>
       )}

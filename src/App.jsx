@@ -1,5 +1,5 @@
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+﻿import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect, lazy, Suspense } from 'react';
 import './App.css';
 import { SearchBar } from './home_components/SearchBar';
 import { UniversityPage } from './uni_components/UniversityPage';
@@ -14,12 +14,18 @@ import { ProfilePage } from './profile_components/ProfilePage';
 import { FriendProfile } from './profile_components/FriendProfile';
 import ResetPasswordPage from './login_components/ResetPasswordPage';
 import JoinPage from './join_components/JoinPage';
-import AdminPage from './admin_components/AdminPage';
 import { ClubDataProvider } from './context/ClubDataProvider'
 import { SupportModal } from './support_components/SupportModal'
 import { DEFAULT_UNIVERSITY_PATH } from './lib/university'
+import NotFoundPage from './components/NotFoundPage'
 import { useGlobalStore } from './lib/store'
 import { Analytics } from '@vercel/analytics/react'
+
+// Split out so the admin UI is not in the bundle every visitor downloads. It shipped
+// there as a static import, which meant anyone could read the admin screens and the
+// endpoints they call — and made the 404 below fairly hollow, since the code
+// announcing /admin was sitting in the same file that was hiding it.
+const AdminPage = lazy(() => import('./admin_components/AdminPage'));
 
 function App() {
   const loginOpen = useGlobalStore((s) => s.loginOpen);
@@ -59,7 +65,19 @@ function App() {
           <Route path="/profile-setup" element={<ProfileSetupPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/join/:token" element={<JoinPage />} />
-          <Route path="/admin" element={<AdminPage />} />
+          <Route
+            path="/admin"
+            element={(
+              // No fallback UI: AdminPage renders its own "checking access" state, and a
+              // spinner here would flash on every load for the one person who is an admin.
+              <Suspense fallback={null}>
+                <AdminPage />
+              </Suspense>
+            )}
+          />
+          {/* Must be last. Without it an unmatched path rendered nothing at all —
+              a blank page rather than a 404, which is what people were hitting. */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
         <Analytics />
       </div>

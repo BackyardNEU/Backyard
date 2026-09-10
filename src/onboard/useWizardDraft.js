@@ -166,7 +166,7 @@ export function useWizardDraft(clubId) {
 
     // Moving between steps should not block on a save; the retry handles it.
     const saveNowQuietly = useCallback(async () => {
-        try { await saveNow(); } catch { /* surfaced through saveState */ }
+        try { await saveNow(); } catch (e) { /* surfaced through saveState */ }
     }, [saveNow]);
 
     return {

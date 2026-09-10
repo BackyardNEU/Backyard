@@ -43,9 +43,11 @@ const utf8Bytes = (s) => encoder.encode(s).length;
 
 // A same-origin path or an absolute http(s) URL. Still blocks javascript: and data:,
 // which is the point — this value lands in demo_club_data.image_url and renders as
-// <img src>. Relative paths have to pass because ExpandedTile seeded '/raccoon_pfp.png'
-// as the default logo and clubs persisted it; rejecting those would disable Save on
-// every page created before /page/init existed, with a warning they could not clear.
+// <img src>. Relative paths have to pass because ExpandedTile seeds a same-origin
+// default logo ('/rac7.0.png' now, '/raccoon_pfp.png' before it) and clubs persisted
+// it; rejecting those would disable Save on every page created before /page/init
+// existed, with a warning they could not clear. Both files have to stay in public/ for
+// the same reason — rows written earlier still point at the old name.
 export const isSafeImageRef = (value) => {
     if (typeof value !== 'string') return false;
     if (value.startsWith('//')) return false; // protocol-relative — off-origin

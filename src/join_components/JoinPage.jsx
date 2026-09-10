@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { apiFetch } from '../lib/api';
+import { describeInviteError } from '../lib/inviteLinkError';
 import Form from '../login_components/form';
 import './JoinPage.css';
 import { Skeleton, SkeletonRegion } from '../components/Skeleton';
@@ -39,7 +40,9 @@ export default function JoinPage() {
   useEffect(() => {
     apiFetch(`/invite/${token}`, { auth: false })
       .then((data) => { setInvite(data); setInviteLoading(false); })
-      .catch((err) => { setInviteError(err.message); setInviteLoading(false); });
+      // Keep the error itself: its status is what tells a truncated token apart
+      // from a link that is genuinely dead, and those need different advice.
+      .catch((err) => { setInviteError(err); setInviteLoading(false); });
   }, [token]);
 
   const redeem = async () => {
@@ -98,8 +101,8 @@ export default function JoinPage() {
     return (
       <div className="join-page">
         <div className="join-card join-card--error">
-          <h2>Link unavailable</h2>
-          <p>{inviteError}</p>
+          <h2>{describeInviteError(inviteError).title}</h2>
+          <p>{describeInviteError(inviteError).body}</p>
           <button className="join-home-btn" onClick={() => navigate(neuID)}>Go home</button>
         </div>
       </div>
@@ -132,7 +135,11 @@ export default function JoinPage() {
             <>
               <h2>You now have editor access to {invite.club_name}!</h2>
               <p>Head to the club page to start managing it.</p>
-              <button className="join-home-btn" onClick={() => navigate(neuID)}>
+              {/* welcome=1 is the handoff that opens the editor walkthrough on the other
+                  side. This is the only place that knows the user is arriving straight
+                  from accepting an editor invite — ExpandedTile can only see "is an
+                  editor", which is also true of every club they already ran. */}
+              <button className="join-home-btn" onClick={() => navigate(`${neuID}?club=${invite.club_id}&welcome=1`)}>
                 Go to your club
               </button>
             </>
@@ -140,7 +147,7 @@ export default function JoinPage() {
             <>
               <h2>You've joined {invite.club_name}!</h2>
               <p>You're now a member. Check them out on Backyard.</p>
-              <button className="join-home-btn" onClick={() => navigate(neuID)}>Explore clubs</button>
+              <button className="join-home-btn" onClick={() => navigate(`${neuID}?club=${invite.club_id}`)}>Explore clubs</button>
             </>
           )}
         </div>

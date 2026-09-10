@@ -1,6 +1,7 @@
 ﻿import React, {useState, useEffect, useRef, useLayoutEffect} from 'react'
 import { apiFetch } from '../lib/api'
 import { useClubData } from '../context/useClubData'
+import { useGlobalStore } from '../lib/store'
 import {FaSearch, FaTh, FaThLarge} from 'react-icons/fa'
 import './UniSearchBar.css'
 
@@ -44,6 +45,11 @@ export const UniSearchBar = ({
   const [activeCategory, setActiveCategory] = useState(null)
   const [displayText, setDisplayText] = useState("")
   const { allData } = useClubData()
+  // Signed-out visitors get the support "?" here, inline with the other bar controls;
+  // signed-in ones get it in ProfilePage's button row instead (SupportModal renders no
+  // floating trigger of its own, so exactly one is mounted either way).
+  const signedIn = useGlobalStore((state) => state.GlobalValue)
+  const setSupportOpen = useGlobalStore((state) => state.setSupportOpen)
   const textareaRef = useRef(null)
 
   // Below 500px (UniSearchBar.css) the bar wraps and grows with the query, like
@@ -144,7 +150,7 @@ useEffect(() => {
     // already set the filtered results; overwriting them here would undo the filter.
     if (input.trim() === "") {
       if (skipSearchRef.current) { skipSearchRef.current = false; return; }
-      const data = allData.filter((c) => c.school === university).slice(0, 100);
+      const data = (allData || []).filter((c) => c.school === university).slice(0, 100);
       setResults(data);
       return;
     }
@@ -208,6 +214,17 @@ useEffect(() => {
       </div>
 
       <div className="usb-row-bottom">
+        {!signedIn && (
+          <button
+            type="button"
+            className="usb-support-btn"
+            onClick={() => setSupportOpen(true)}
+            aria-label="Open support"
+          >
+            ?
+          </button>
+        )}
+
         <div className="hamburger-wrapper">
           <button
             className={`uni-hamburger-btn ${activeCategory ? 'active' : ''}`}

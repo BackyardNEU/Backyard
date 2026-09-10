@@ -41,7 +41,7 @@ export default function AuthCallbackPage() {
         } else {
           navigate('/profile', { replace: true });
         }
-      } catch {
+      } catch (e) {
         navigate('/profile-setup', { replace: true });
       }
     }

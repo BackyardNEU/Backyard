@@ -1,0 +1,222 @@
+/* First-run editor walkthrough.
+
+   z-index 9600: above the club media modal (9500) and .exp-editor-header (8400), below
+   login/support (9999). See the stack comment in BasicInfoModule.css.
+
+   Positioned against the viewport, which only works because ExpandedTile renders this as
+   a sibling of .expanded-card rather than inside it — that card is position:fixed and
+   framer-motion animates scale on it, and a transformed ancestor becomes the containing
+   block for fixed descendants. */
+.fd-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9600;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.fd-card {
+  position: relative;
+  width: min(560px, 94vw);
+  max-height: 92vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+
+  /* Flat, hard black hairline — matches .join-card and the rest of the recent styling
+     pass. No drop shadow; the backdrop already separates it from the page. */
+  background: #fff;
+  border: 1px solid #000;
+  border-radius: 8px;
+  padding: 2rem 1.75rem 1.5rem;
+
+  font-family: 'Barlow Condensed', sans-serif;
+  scrollbar-width: none;
+}
+
+.fd-card::-webkit-scrollbar {
+  display: none;
+}
+
+.fd-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  z-index: 2;
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: #000;
+  cursor: pointer;
+}
+
+/* ── Welcome phase ── */
+
+.fd-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  /* Roughly the height the carousel settles at, so the cross-fade does not visibly
+     resize the card mid-transition. */
+  min-height: 320px;
+  gap: 0.5rem;
+}
+
+.fd-welcome-title {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 2.4rem;
+  letter-spacing: 0.5px;
+  line-height: 1.1;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+.fd-welcome-sub {
+  font-size: 1.25rem;
+  color: rgb(66, 66, 66);
+  margin: 0;
+}
+
+/* ── Carousel phase ── */
+
+.fd-carousel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Slides stack in one grid cell and cross-fade, rather than sitting in a scroll track.
+   index is the source of truth here (chevrons drive it, and only the active clip plays),
+   so a scroll container would just be a second, competing source of position. */
+.fd-stage {
+  display: grid;
+  min-height: 320px;
+}
+
+.fd-slide {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.fd-slide--active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* No aspect-ratio and no object-fit: the clips are 960x576 (5:3) and let the intrinsic
+   ratio drive the height. Forcing a ratio here either crops the recording (cover) or
+   letterboxes it (contain), and these are UI walkthroughs — cropping the edge of the
+   screen is exactly what must not happen. */
+.fd-video {
+  width: 100%;
+  height: auto;
+  border-radius: 20px;
+  display: block;
+  background: #000;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.fd-caption {
+  margin: 0;
+  text-align: center;
+  font-size: 1.25rem;
+  line-height: 1.45;
+  color: rgb(66, 66, 66);
+}
+
+/* ── Nav ── */
+
+.fd-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* The button is the circle, not the icon — see the note on the plain-chevron import in
+   the JSX. Fixed width/height rather than padding so the two stay perfectly round
+   whichever glyph is inside. */
+.fd-chevron {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #f1f1f1;
+  border: none;
+  border-radius: 50%;
+  padding: 0;
+  font-size: 1.35rem;
+  line-height: 1;
+  color: #1a1a1a;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, opacity 0.15s;
+}
+
+.fd-chevron:hover:not(:disabled) {
+  background: #000;
+  color: #fff;
+}
+
+/* Hidden rather than removed, so the dots stay centred on the first slide instead of
+   jumping sideways when the back arrow appears. */
+.fd-chevron:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.fd-dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fd-dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 1px solid #1a1a1a;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.fd-dot--active {
+  background: #1a1a1a;
+}
+
+@media (max-width: 560px) {
+  .fd-card {
+    padding: 1.5rem 1rem 1.25rem;
+  }
+
+  .fd-welcome-title {
+    font-size: 1.9rem;
+  }
+
+  .fd-welcome,
+  .fd-stage {
+    min-height: 260px;
+  }
+}

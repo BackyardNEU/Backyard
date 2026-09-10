@@ -303,7 +303,7 @@ export default function ClubMembersPanel({ clubId, joinPolicy, myRole, currentUs
     try {
       const data = await apiFetch(`/clubs/${clubId}/roles`);
       setCustomRoles(data || []);
-    } catch {
+    } catch (e) {
       // non-fatal — panel still works without custom roles
     }
   }
@@ -313,7 +313,7 @@ export default function ClubMembersPanel({ clubId, joinPolicy, myRole, currentUs
     try {
       const data = await apiFetch(`/clubs/${clubId}/join-requests`);
       setJoinRequests(data || []);
-    } catch {
+    } catch (e) {
       // Non-fatal: an open club simply has none, and a failure here must not stop the
       // roster itself from rendering.
     }
@@ -481,7 +481,7 @@ export default function ClubMembersPanel({ clubId, joinPolicy, myRole, currentUs
             <div key={request.user_id} className="join-request-row">
               <img
                 className="join-request-row__avatar"
-                src={request.avatar_url || '/raccoon_pfp.png'}
+                src={request.avatar_url || '/rac7.0.png'}
                 alt=""
               />
               <span className="join-request-row__name">{request.username ?? 'Unknown user'}</span>

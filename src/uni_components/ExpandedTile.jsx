@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useCallback } from "react";
 // eslint-disable-next-line no-unused-vars
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import ReviewPage from "../review_components/ReviewPage";
 import "./ExpandedTile.css";
 import ReviewList from "../review_components/ReviewList";
@@ -23,6 +23,8 @@ import { readClubPage, invalidateClubPage } from '../lib/clubPageCache';
 import { Skeleton, SkeletonText } from '../components/Skeleton';
 import InviteLinkButton from '../club_page_components/InviteLinkButton';
 import QrFlyerButton from '../club_page_components/QrFlyerButton';
+import FeaturesDemoModal from './FeaturesDemoModal';
+import { useFeaturesDemo } from '../lib/useFeaturesDemo';
 import dividerLineImg from '/src/assets/border-horizontal-gray.svg';
 
 // Validation moved to shared/clubPageValidation.js so the server enforces the same
@@ -67,7 +69,7 @@ function buildDraft(pageValue, club) {
             isDisplayed: true,
             data: {
                 club_name: club?.club_name || '',
-                logo_url: club?.image_url || '/raccoon_pfp.png',
+                logo_url: club?.image_url || '/rac7.0.png',
                 description: club?.club_description || '',
                 links: [],
             },
@@ -110,6 +112,12 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
     // button, so resolving it after mount used to swap the header and shove everything
     // below it down — the buttons visibly jumping on open.
     const [myRole, setMyRole] = useState(() => warmed?.role ?? null);
+    // Distinct from `hydrated`, which is seeded !!warmed and so can be true while myRole
+    // is still null: warmed.role is undefined whenever the prefetch's is-approved never
+    // resolved (see roleKnown below), and the re-fetch lands ~300ms later. Anything that
+    // must not appear for a non-editor has to wait on this, not on hydrated — otherwise
+    // it pops in late, over an already-settled page.
+    const [roleResolved, setRoleResolved] = useState(() => !!warmed && warmed.role !== undefined);
     const [requestPending, setRequestPending] = useState(() => warmed?.joinRequestPending ?? false);
     const [joinPolicy, setJoinPolicy] = useState(() => club?.join_policy ?? 'open');
     // NOTE2SELF: THIS WILL BECOME IRRELEVANT LATER AS A LOADING STATE ACROSS ALL MODULES/INFO IS PUT IN PLACE
@@ -152,6 +160,12 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
 
     const isMember = myRole !== null;
     const isApproved = myRole === 'moderator' || myRole === 'top_moderator';
+    const [showFeaturesDemo, markFeaturesDemoSeen] = useFeaturesDemo();
+    // Held separately from the localStorage flag because the demo is marked seen the
+    // moment it opens, not when it closes — a refresh halfway through should not replay
+    // it. Marking seen flips showFeaturesDemo false immediately, so without this the
+    // modal would unmount the same tick it appeared.
+    const [demoOpen, setDemoOpen] = useState(false);
     const [editingCalEvent, setEditingCalEvent] = useState(null);
     const hasOwner = clubMembers.length > 0;
     // Deliberately narrower than isApproved: changing who can get in is an ownership
@@ -337,16 +351,75 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                 setRequestPending(Boolean(approvedResult.value?.joinRequestPending));
             }
 
+            setRoleResolved(true);
             setHydrated(true);
         }
 
         // Marks hydrated even if fetchAll throws, so a failed load shows the (empty) page
-        // rather than a skeleton that never resolves.
+        // rather than a skeleton that never resolves. Same for roleResolved: a failed
+        // lookup is a settled answer (not an editor), not a permanent maybe.
         fetchAll().catch((err) => {
             console.error('Failed to load club page:', err);
+            setRoleResolved(true);
             setHydrated(true);
         });
     }, [id, animationDone, club]);
+
+    // First-run editor walkthrough. Waits on roleResolved rather than hydrated so it
+    // cannot appear for a non-editor or arrive late over a settled page, and on
+    // animationDone so it does not fade in over the card's own 0.18s open tween.
+    //
+    // Two ways in, because "is an editor" and "just became an editor" are different
+    // things and only the second is the moment worth interrupting:
+    //
+    //   welcome=1  — handed over by JoinPage when an editor invite is redeemed. The
+    //                precise event, and the reason this is not left to the flag alone:
+    //                the flag fires on the first editable club a user opens, which for
+    //                anyone who already runs a club is some other page entirely, burning
+    //                the demo before they ever reach the club they were invited to.
+    //   the flag   — fallback for arriving any other way (accepting on a phone and
+    //                opening on a laptop, say).
+    //
+    // Either opens it; the localStorage flag then stops it happening twice.
+    //
+    // ?demo=1 forces it open in dev regardless of the flag. Without an override a
+    // once-ever popup is effectively single-use: any HMR reload with a club page open
+    // consumes it, and you are back to clearing storage by hand every time.
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const fromInvite = params.get('welcome') === '1';
+        const forced = import.meta.env.DEV && params.get('demo') === '1';
+
+        if (!isApproved || !roleResolved || !animationDone
+            || (!showFeaturesDemo && !forced && !fromInvite)) {
+            // Dev-only: say which condition held it back. "Nothing happened" is otherwise
+            // indistinguishable between "already seen", "not an editor yet" and "still
+            // resolving", which are three very different problems.
+            if (import.meta.env.DEV) {
+                console.log('[featuresDemo] not shown —', {
+                    isApproved,
+                    roleResolved,
+                    animationDone,
+                    notYetSeen: showFeaturesDemo,
+                    fromInvite,
+                    myRole,
+                    hint: 'window.__resetDemo() then reload, or add ?demo=1',
+                });
+            }
+            return;
+        }
+        setDemoOpen(true);
+        markFeaturesDemoSeen();
+
+        // Drop welcome=1 once it has done its job, so a refresh or a shared link does not
+        // replay the demo. replaceState rather than navigate(): this is a URL tidy-up, and
+        // routing through React Router would remount the tile mid-animation.
+        if (fromInvite) {
+            params.delete('welcome');
+            const qs = params.toString();
+            window.history.replaceState({}, '', window.location.pathname + (qs ? `?${qs}` : ''));
+        }
+    }, [isApproved, roleResolved, animationDone, showFeaturesDemo, markFeaturesDemoSeen, myRole]);
 
     // Approved editors: load the club's pending user-submitted FAQ questions.
     useEffect(() => {
@@ -1070,6 +1143,14 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
             </>
             )}
         </motion.div>
+
+        {/* Outside .expanded-card on purpose, like .leave-confirm-overlay below it. That
+            card is position:fixed AND framer-motion animates scale on it, and a
+            transformed ancestor becomes the containing block for fixed descendants — so
+            nested here, this modal would position against the card, not the viewport. */}
+        <AnimatePresence>
+            {demoOpen && <FeaturesDemoModal key="features-demo" onClose={() => setDemoOpen(false)} />}
+        </AnimatePresence>
 
         {showLeaveConfirm && (
             <div className="leave-confirm-overlay" onClick={() => setShowLeaveConfirm(false)}>

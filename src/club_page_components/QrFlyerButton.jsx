@@ -2,7 +2,6 @@ import { useState } from 'react';
 import QRCode from 'qrcode';
 import { slugifyUniversity } from '../../shared/slug';
 import flyerBg from '../assets/qr-flyer-bg.svg';
-import racImg from '../assets/rac7.0.png';
 import headerLogoImg from '../assets/header_logo.png';
 import './QrFlyerButton.css';
 
@@ -37,7 +36,7 @@ export default function QrFlyerButton({ club }) {
       try {
         const bg = await loadImage(flyerBg);
         ctx.drawImage(bg, 0, 0, W, H);
-      } catch {
+      } catch (e) {
         ctx.fillStyle = '#ECE7E5';
         ctx.fillRect(0, 0, W, H);
       }
@@ -46,7 +45,7 @@ export default function QrFlyerButton({ club }) {
       const imgSize = 380;
       const imgX = (W - imgSize) / 2;
       const imgY = 130;
-      const racImage = await loadImage(racImg);
+      const racImage = await loadImage('/rac7.0.png');
       ctx.drawImage(racImage, imgX, imgY, imgSize, imgSize);
 
       const textX = W / 2;

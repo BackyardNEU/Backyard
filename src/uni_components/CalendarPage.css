@@ -345,10 +345,18 @@
   color: #1a1a1a;
 }
 
+/* Fixed size rather than the cell-filling default, so the marker reads as a dot on the
+   date instead of a filled cell — same technique .cal-day-today-events already uses,
+   just smaller. The grid's columns are 1fr, so without an explicit size the circle
+   grows with the panel. */
 .cal-day-today {
-  color: #1a1a1a;
-  background: #fff9db;
+  color: #fff;
+  background: #d02a3e;
   font-weight: 700;
+  width: 30px;
+  height: 30px;
+  justify-self: center;
+  align-self: center;
 }
 
 .cal-day-today-events {
@@ -736,6 +744,13 @@
   box-sizing: border-box;
   overflow-y: auto;
 
+  /* Scrolling past either end of this box used to chain up to its ancestors, and
+     since nothing above it scrolls, the browser answered with the elastic
+     rubber-band instead — the whole panel visibly shifting up/down on a hard
+     flick. contain keeps the gesture in this box: it still gets its own end-of-
+     scroll bounce, but the page behind it no longer moves. */
+  overscroll-behavior: contain;
+
   scrollbar-width: none;
 }
 
@@ -860,25 +875,18 @@
   max-width: 500px;
 }
 
+/* Bottom-left corner, mirroring .calpg-toggle-btn in the bottom-right — both anchor to
+   the same positioned ancestor at the same 14px inset, so they share one bottom band.
+   No longer sits above each month grid, so the arrows group together rather than
+   spanning the grid's width. */
 .calpg-grid-nav-row {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  z-index: 20;
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 6px;
-}
-
-.calpg-grid-nav-row--right {
-  justify-content: flex-end;
-}
-
-.calpg-grid-nav-label {
-  font-family: "Barlow Condensed", sans-serif;
-  font-weight: 600;
-  font-size: 1.1rem;
-  text-transform: uppercase;
-  color: #3b3c3c;
-  flex: 1;
-  text-align: center;
 }
 
 .calpg-grid-panel-next {
@@ -899,10 +907,6 @@
   }
   .calpg-grid-divider {
     display: block;
-  }
-  /* On wide screens the forward arrow is in the right panel — hide it from the left panel */
-  .calpg-fwd-narrow {
-    display: none;
   }
 }
 
@@ -948,6 +952,29 @@
   }
 }
 
+/* Above 475px, swap the abbreviation back for the full month name and centre it — at
+   every width the full name is shown, not just up to 700px. At or below 475px the
+   abbreviation stays, since the 4rem size set further down leaves no room for
+   "SEPTEMBER" on one line.
+
+   Centred by stretching the h1 across the row and centring its text, NOT by absolutely
+   positioning the name: only one of .calpg-month-full/.calpg-month-abbr shows at a
+   time, so whichever it is is the h1's only in-flow child — taking it out of flow
+   collapsed the h1 and .calpg-month-row to zero height, and .calpg-week-row rode up
+   into the exact band the month paints in. */
+@media (min-width: 476px) {
+  .calpg-month-full {
+    display: inline;
+  }
+  .calpg-month-abbr {
+    display: none;
+  }
+  .calpg-month {
+    flex: 1;
+    text-align: center;
+  }
+}
+
 @media (min-width: 1400px) {
   .calpg-month-monthly .calpg-month-full,
   .calpg-month-monthly .calpg-month-abbr {
@@ -955,6 +982,13 @@
   }
   .calpg-month-range {
     display: inline;
+  }
+  /* The centring above is for the full month name. This view shows .calpg-month-range
+     instead, which is deliberately left-offset to line up with the dual grid's own
+     34px padding (see .calpg-month-monthly's padding-left just above), so it opts back
+     out rather than inheriting the centre. */
+  .calpg-month-monthly {
+    text-align: left;
   }
 }
 
@@ -1012,13 +1046,6 @@
   height: 18px;
   width: 18px;
   flex-shrink: 0;
-}
-
-.calpg-poster-size-label {
-  font-family: "Barlow Condensed", sans-serif;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .calpg-poster-size-btn--active {
@@ -1368,17 +1395,17 @@
   }
 }
 
-@media (max-width: 400px) {
+@media (max-width: 475px) {
 
   .calpg-month {
     font-size: 4rem;
   }
 
   .calpg-tree-img {
-  width: 10rem;
-  height: auto;
-  object-fit: contain;
-}
+    width: 10rem;
+    height: auto;
+    object-fit: contain;
+  }
 }
 
 .calpg-week-day-events > p {

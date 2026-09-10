@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { apiFetch } from '../lib/api';
 import OnboardingReview from './OnboardingReview';
+import NotFoundPage from '../components/NotFoundPage';
 
 const s = {
   page:    { padding: 24, fontFamily: 'monospace', maxWidth: 760 },
@@ -63,7 +64,11 @@ export default function AdminPage() {
   };
 
   if (access === 'checking') return <p style={s.page}>Checking access...</p>;
-  if (access === 'denied')   return <p style={s.page}>Access denied.</p>;
+  // The same component the catch-all route renders, deliberately. "Access denied"
+  // confirmed that /admin exists and that the account merely lacks the role, which
+  // is a free hint to anyone probing. This is not the access control — every admin
+  // endpoint is gated server side — it just stops the UI drawing the map.
+  if (access === 'denied')   return <NotFoundPage />;
 
   return (
     <div style={s.page}>

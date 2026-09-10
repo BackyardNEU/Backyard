@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { apiFetch } from '../lib/api';
+import { describeInviteError } from '../lib/inviteLinkError';
 import Form from '../login_components/form';
 import WizardShell from './WizardShell.jsx';
 import wordmark from '../assets/BackyardOnBoardHeader.png';
@@ -44,7 +45,9 @@ export default function ClaimGate() {
     useEffect(() => {
         apiFetch(`/invite/${token}`, { auth: false })
             .then(setInvite)
-            .catch((err) => setInviteError(err.message));
+            // The whole error, not just its message: the status is what separates
+            // "this link is dead" from "we could not reach the server".
+            .catch((err) => setInviteError(err));
     }, [token]);
 
     const redeem = async () => {
@@ -110,15 +113,27 @@ export default function ClaimGate() {
     };
 
     if (inviteError) {
+        // This used to say "It may have expired or been replaced" for every failure. A
+        // club whose onboarding origin was missing from the CORS allowlist was therefore
+        // told their link had expired and asked us for a new one — which would have
+        // failed in exactly the same way, because the link was never the problem.
+        const { title, body, retryable } = describeInviteError(inviteError);
         return (
             <Page>
                 <div className="ob-card ob-card--narrow ob-centered">
-                    <h1 className="ob-h1">This link isn&apos;t working</h1>
-                    <p className="ob-lede" style={{ margin: '0 auto' }}>
-                        It may have expired or been replaced. Email{' '}
-                        <a href="mailto:hello@explorethebackyard.com">hello@explorethebackyard.com</a>{' '}
-                        and we&apos;ll send you a fresh one.
-                    </p>
+                    <h1 className="ob-h1">{title}</h1>
+                    <p className="ob-lede" style={{ margin: '0 auto 18px' }}>{body}</p>
+                    {retryable ? (
+                        <button className="ob-btn" onClick={() => window.location.reload()}>
+                            Try again
+                        </button>
+                    ) : (
+                        <p className="ob-hint" style={{ margin: 0 }}>
+                            Email{' '}
+                            <a href="mailto:hello@explorethebackyard.com">hello@explorethebackyard.com</a>{' '}
+                            and we&apos;ll sort it out.
+                        </p>
+                    )}
                 </div>
             </Page>
         );

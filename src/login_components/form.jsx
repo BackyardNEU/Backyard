@@ -26,7 +26,7 @@ function Form({ isSignUp = false, onAuth, onFirstNameCommit, needHelpButton, tog
         { auth: false }
       );
       setUsernameStatus(available ? "available" : reason || "taken");
-    } catch {
+    } catch (e) {
       setUsernameStatus(null);
     }
   }, []);

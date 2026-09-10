@@ -109,7 +109,7 @@ const ClubGridCard = ({ result, onExpand, hideHeart, hidePins, showBorder, isMod
       <div className = "flex-card">
         <div className = "image-container">
         <div className="club-img-crop">
-          <img className = "club-img" src={result.image_url || "/raccoon_pfp.png"}/>
+          <img className = "club-img" src={result.image_url || "/rac7.0.png"}/>
         </div>
         </div>
         {favError && <div className="club-fav-error">{favError}</div>}

@@ -72,3 +72,23 @@
     transform: translateY(-50%);
   }
 }
+
+/* Admin entry. An inline SVG rather than the PNG pairs the other buttons use — one
+   shape, and currentColor lets it follow the bar instead of needing active/inactive
+   artwork. Sized to match .nav-bar-btn img so the row stays even. */
+.nav-bar-admin-btn svg {
+  display: block;
+  width: 44px;
+  height: 44px;
+  color: #8a8174;
+  transition: color 140ms ease;
+}
+
+.nav-bar-admin-btn:hover svg,
+.nav-bar-admin-btn[aria-current='page'] svg {
+  color: #C53B3F;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-bar-admin-btn svg { transition: none; }
+}

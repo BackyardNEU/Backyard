@@ -21,7 +21,7 @@ function readStored() {
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     return CARD_SIZES.includes(stored) ? stored : DEFAULT_CARD_SIZE;
-  } catch {
+  } catch (e) {
     return DEFAULT_CARD_SIZE;
   }
 }
@@ -29,7 +29,7 @@ function readStored() {
 function writeStored(size) {
   try {
     window.localStorage.setItem(STORAGE_KEY, size);
-  } catch {
+  } catch (e) {
     // Preference simply will not persist; the session still works.
   }
 }
