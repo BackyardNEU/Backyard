@@ -23,6 +23,7 @@ import { readClubPage, invalidateClubPage } from '../lib/clubPageCache';
 import { Skeleton, SkeletonText } from '../components/Skeleton';
 import InviteLinkButton from '../club_page_components/InviteLinkButton';
 import QrFlyerButton from '../club_page_components/QrFlyerButton';
+import AnnouncementButton from '../club_page_components/AnnouncementButton';
 import FeaturesDemoModal from './FeaturesDemoModal';
 import { useFeaturesDemo } from '../lib/useFeaturesDemo';
 import dividerLineImg from '/src/assets/border-horizontal-gray.svg';
@@ -1002,6 +1003,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                                 </div>
                                 <InviteLinkButton clubId={id} />
                                 <QrFlyerButton club={club} />
+                                <AnnouncementButton clubId={id} />
                             </>
                         ) : (
                             <>

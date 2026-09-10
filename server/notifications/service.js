@@ -3,10 +3,11 @@ import { supabaseAdmin } from '../supabaseAdmin.js';
 import { decide } from './decisionLayer.js';
 
 const HANDLERS = {
-  friend_request:  () => import('./handlers/friendRequest.js'),
-  friend_accepted: () => import('./handlers/friendAccepted.js'),
-  new_club_event:  () => import('./handlers/newClubEvent.js'),
-  new_review:      () => import('./handlers/newReview.js'),
+  friend_request:    () => import('./handlers/friendRequest.js'),
+  friend_accepted:   () => import('./handlers/friendAccepted.js'),
+  new_club_event:    () => import('./handlers/newClubEvent.js'),
+  new_review:        () => import('./handlers/newReview.js'),
+  club_announcement: () => import('./handlers/clubAnnouncement.js'),
 };
 
 export const NotificationService = {

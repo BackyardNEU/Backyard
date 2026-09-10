@@ -1,0 +1,124 @@
+.announce-trigger-btn {
+  background-color: #7b5c2e;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.announce-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.announce-modal {
+  background: rgb(249, 245, 240);
+  border-radius: 12px;
+  padding: 24px;
+  width: min(440px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.announce-modal h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1c2a44;
+}
+
+.announce-modal p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #555;
+}
+
+.announce-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 100px;
+  max-height: 240px;
+  border: 1.5px solid #ccc;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  background: #fff;
+  color: #1c2a44;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.announce-textarea:focus {
+  border-color: #1c2a44;
+}
+
+.announce-char-count {
+  text-align: right;
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: -6px;
+}
+
+.announce-char-count.announce-char-count--over {
+  color: #c0392b;
+  font-weight: 600;
+}
+
+.announce-error {
+  font-size: 0.8rem;
+  color: #c0392b;
+  margin: 0;
+}
+
+.announce-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.announce-cancel-btn {
+  background: #e8e4df;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #555;
+  transition: background 0.15s;
+}
+
+.announce-cancel-btn:hover {
+  background: #d8d4cf;
+}
+
+.announce-send-btn {
+  background: #1c2a44;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #fff;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.announce-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.announce-send-btn:not(:disabled):hover {
+  background: #2c3e5a;
+}

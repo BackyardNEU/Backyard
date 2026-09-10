@@ -4,8 +4,11 @@ import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { checkMuted } from '../middleware/checkMuted.js';
 import textModerator from '../lib/textModerator.js';
+import { requireModerator } from '../lib/clubPermissions.js';
+import { NotificationService } from '../notifications/service.js';
 
 const writeLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 60 });
+const announceLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
 
 const router = express.Router();
 
@@ -475,6 +478,62 @@ router.delete('/:clubId/interests', writeLimiter, requireAuth, async (req, res) 
   }
 
   res.status(204).end();
+});
+
+// POST /api/clubs/:clubId/announce
+// Authenticated, moderators only. Sends a custom message to all club members as
+// an in-app notification. Fire-and-forget fan-out — response returns immediately.
+const MAX_ANNOUNCEMENT_LENGTH = 500;
+router.post('/:clubId/announce', announceLimiter, requireAuth, checkMuted, async (req, res) => {
+  const { clubId } = req.params;
+  const { message } = req.body;
+
+  await requireModerator(req.user.id, clubId);
+
+  const trimmed = typeof message === 'string' ? message.trim() : '';
+  if (!trimmed) {
+    return res.status(400).json({ error: 'message is required' });
+  }
+  if (trimmed.length > MAX_ANNOUNCEMENT_LENGTH) {
+    return res.status(400).json({ error: `Message must be ${MAX_ANNOUNCEMENT_LENGTH} characters or fewer` });
+  }
+
+  const check = textModerator.checkFields({ message: trimmed });
+  if (!check.clean) {
+    return res.status(422).json({ error: check.message });
+  }
+
+  // Respond immediately; fan-out runs in the background.
+  res.json({ ok: true });
+
+  (async () => {
+    try {
+      const [{ data: club }, { data: memberships }] = await Promise.all([
+        supabaseAdmin.from('demo_club_data').select('club_name, image_url').eq('id', clubId).single(),
+        supabaseAdmin.from('club_memberships').select('user_id').eq('club_id', clubId).neq('user_id', req.user.id),
+      ]);
+
+      if (!memberships?.length) return;
+
+      await Promise.allSettled(
+        memberships.map((m) =>
+          NotificationService.dispatch({
+            type: 'club_announcement',
+            recipientId: m.user_id,
+            actorId: req.user.id,
+            entity: { kind: 'club', id: clubId },
+            payload: {
+              clubName: club?.club_name,
+              imageUrl: club?.image_url,
+              message: trimmed,
+            },
+          })
+        )
+      );
+    } catch (err) {
+      console.error('[announce] notification fan-out failed:', err.message);
+    }
+  })();
 });
 
 export default router;

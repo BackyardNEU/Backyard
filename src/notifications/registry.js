@@ -1,4 +1,4 @@
-import { UserPlus, UserCheck, CalendarPlus, Star } from 'lucide-react';
+import { UserPlus, UserCheck, CalendarPlus, Star, Megaphone } from 'lucide-react';
 
 export const registry = {
   friend_request: {
@@ -26,6 +26,15 @@ export const registry = {
       const club = n.payload?.clubName ?? 'A club you joined';
       const event = n.payload?.eventName;
       return event ? `${club} posted a new event: ${event}` : `${club} posted a new event`;
+    },
+  },
+  club_announcement: {
+    icon: Megaphone,
+    image: (n) => n.payload?.imageUrl ?? null,
+    message: (n) => {
+      const club = n.payload?.clubName ?? 'A club';
+      const msg = n.payload?.message ?? '';
+      return `${club}: ${msg}`;
     },
   },
 };
