@@ -5,7 +5,7 @@ import './AnnouncementButton.css';
 
 const MAX_LENGTH = 500;
 
-export default function AnnouncementButton({ clubId }) {
+export default function AnnouncementButton({ clubId, memberCount }) {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -51,7 +51,11 @@ export default function AnnouncementButton({ clubId }) {
         <div className="announce-backdrop" onClick={closeModal}>
           <div className="announce-modal" onClick={(e) => e.stopPropagation()}>
             <h3>Send Announcement</h3>
-            <p>All club members will receive this as an in-app notification.</p>
+            <p>
+              {memberCount > 0
+                ? `This will notify ${memberCount} member${memberCount === 1 ? '' : 's'}.`
+                : 'All club members will receive this as an in-app notification.'}
+            </p>
 
             {sent ? (
               <p style={{ color: '#27ae60', fontWeight: 600, textAlign: 'center', padding: '12px 0' }}>

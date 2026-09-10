@@ -1003,7 +1003,7 @@ function ExpandedTile({ club, onClose, onMembershipChange }) {
                                 </div>
                                 <InviteLinkButton clubId={id} />
                                 <QrFlyerButton club={club} />
-                                <AnnouncementButton clubId={id} />
+                                <AnnouncementButton clubId={id} memberCount={clubMembers.length} />
                             </>
                         ) : (
                             <>
