@@ -1,54 +1,7 @@
 import React from 'react';
-import { FaInstagram, FaFacebookF } from 'react-icons/fa';
-import { FaTiktok, FaSlack, FaLinkedinIn } from 'react-icons/fa6';
-import { IoIosMail } from 'react-icons/io';
-import { SlSocialSpotify } from 'react-icons/sl';
-import { SiLinktree } from 'react-icons/si';
-import { TbBrandDiscord } from 'react-icons/tb';
-import { FiYoutube, FiGlobe } from 'react-icons/fi';
 import LinksTable from './LinksTable';
+import { getLinkKeyword, LINK_ICONS, LINK_ICON_COLORS } from './linkIcons';
 import './LinksModule.css';
-
-const NAME_KEYWORDS = [
-  ['instagram', 'instagram'],
-  ['facebook',  'facebook'],
-  ['discord',   'discord'],
-  ['spotify',   'spotify'],
-  ['tiktok',    'tiktok'],
-  ['linktree',  'linktree'],
-  ['youtube',   'youtube'],
-  ['linkedin',  'linkedin'],
-  ['slack',     'slack'],
-  ['email',     'email'],
-  ['mail',      'email'],
-];
-function getLinkKeyword(name) {
-  if (!name) return 'external';
-  const n = name.toLowerCase();
-  for (const [fragment, platform] of NAME_KEYWORDS) {
-    if (n.includes(fragment)) return platform;
-  }
-  return 'external';
-}
-
-// Each of these renders a logo instead of the platform name text. Icons default to
-// 1em, so they auto-match .link-btn's font-size at every breakpoint.
-const LINK_ICONS = {
-  instagram: FaInstagram,
-  facebook: FaFacebookF,
-  email: IoIosMail,
-  youtube: FiYoutube,
-  discord: TbBrandDiscord,
-  spotify: SlSocialSpotify,
-  tiktok: FaTiktok,
-  linktree: SiLinktree,
-  slack: FaSlack,
-  linkedin: FaLinkedinIn,
-  external: FiGlobe,
-};
-// Spotify's icon keeps the same green .link-btn--spotify already uses for its text,
-// instead of the white used everywhere else.
-const LINK_ICON_COLORS = { spotify: '#65D46E' };
 
 /**
  * Links module — edits the same `links` array that lives on the basic_info module's data

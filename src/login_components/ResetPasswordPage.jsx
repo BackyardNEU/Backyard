@@ -58,7 +58,7 @@ function ResetPasswordPage() {
     return (
       <div className="reset-page">
         <div className="reset-card">
-          <img className="raccoon" src="/raccoon_pfp.png" alt="Backyard" />
+          <img className="raccoon" src="/rac7.0.png" alt="Backyard" />
           <SkeletonRegion label="Loading">
             <Skeleton width="60%" height="1.4rem" style={{ margin: '0 auto 12px' }} />
             <Skeleton height="2.4rem" radius={4} />
@@ -72,7 +72,7 @@ function ResetPasswordPage() {
     return (
       <div className="reset-page">
         <div className="reset-card">
-          <img className="raccoon" src="/raccoon_pfp.png" alt="Backyard" />
+          <img className="raccoon" src="/rac7.0.png" alt="Backyard" />
           <h2>Password Updated</h2>
           <p>Redirecting to your profile...</p>
         </div>
@@ -83,7 +83,7 @@ function ResetPasswordPage() {
   return (
     <div className="reset-page">
       <div className="reset-card">
-        <img className="raccoon" src="/raccoon_pfp.png" alt="Backyard" />
+        <img className="raccoon" src="/rac7.0.png" alt="Backyard" />
         <h2>Set a New Password</h2>
         <form className="input-field" onSubmit={handleSubmit}>
           <BorderedInput

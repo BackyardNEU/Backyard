@@ -67,7 +67,7 @@ function buildDraft(pageValue, club) {
             isDisplayed: true,
             data: {
                 club_name: club?.club_name || '',
-                logo_url: club?.image_url || '/raccoon_pfp.png',
+                logo_url: club?.image_url || '/rac7.0.png',
                 description: club?.club_description || '',
                 links: [],
             },

@@ -151,10 +151,17 @@
     text-transform: uppercase;
 }
 
+/* Type and vertical rhythm are kept identical to .join-tab-content (JoinModule.css) at
+   every viewport, so the About copy and the Join copy read as one voice down the page.
+   That means the size/line-height/colour below, plus margins set explicitly: this
+   renders as a <p> in view mode, whose UA default `margin: 1em 0` would otherwise add a
+   top gap .join-tab-content (a <div>) does not have. */
 .club-description-exp {
   font-size: 1.5rem;
+  line-height: 1.55;
+  margin: 0 0 1.5rem;
   align-self: flex-start;
-  color: rgb(75, 74, 74);
+  color: rgb(66, 66, 66);
   text-align: left;
   width: 95%;
   max-width: 1200px;
@@ -320,14 +327,6 @@
   width: 1.8rem;
   height: 1.8rem;
   }
-
-  .club-description-exp {
-  font-size: 1rem;
-  line-height: -1em;
-  
-
-  
-}
 
   .text-flex {
     width: 100%;
@@ -742,8 +741,12 @@
    Rendered only for approved club editors, above everything else in the
    page (higher z-index than .close-btn/.exp-action-row at 8300) but below
    true modal overlays (friends modal 10000, event crop 10000, etc. at
-   8500+). Sticky to .expanded-card, its own scroll container. Stays on one
-   line down to 500px; below that it wraps instead of squeezing/overflowing. */
+   8500+). Sticky to .expanded-card, its own scroll container.
+
+   Wraps at every width, not just under 500px: .exp-toolbar is flex-shrink:0 and the
+   greeting is white-space:nowrap, so with nowrap the row could not compress and simply
+   ran past the page's right edge instead. Wrapping is the only way this row stays
+   inside the page once its contents stop fitting, whatever the viewport. */
 .exp-editor-header {
   position: sticky;
   top: 0;
@@ -752,17 +755,11 @@
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 1rem;
   padding: 0.75rem 1.5rem;
   background: rgb(234, 234, 230);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-@media (max-width: 500px) {
-  .exp-editor-header {
-    flex-wrap: wrap;
-  }
 }
 
 /* Plain status text (moderator greeting) — unlike .about-edit-help, no pill

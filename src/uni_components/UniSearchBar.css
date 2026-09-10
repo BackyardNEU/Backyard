@@ -89,6 +89,37 @@
   }
 }
 
+/* Signed-out support trigger, sitting immediately left of Categories. Sized off
+   .uni-hamburger-btn rather than off .club-input-wrapper on purpose: the bar is
+   3.1rem and single-row above 700px but auto-height/two-row below it, so anything
+   measured against the bar itself would need a value per breakpoint. Matching the
+   neighbouring control instead makes it correct in both layouts for free — and
+   .uni-hamburger-btn is 2rem at every width (only .uni-size-toggle shrinks, at
+   649px), so this stays aligned with Categories the whole way down. */
+.usb-support-btn {
+  height: 2rem;
+  min-width: 2rem;
+  flex-shrink: 0;
+  padding: 0 0.5rem;
+  border-radius: 8px;
+  border: 1px solid rgb(202, 200, 200);
+  background: #e5e5e5;
+  color: #666;
+  font-family: "Barlow", sans-serif;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.3s ease, color 0.3s ease;
+  /* Above 700px .usb-row-bottom is display:contents, so this is a direct flex child
+     of the bar and carries the same 6px gap .hamburger-wrapper uses. */
+  margin-left: 6px;
+}
+
+.usb-support-btn:hover {
+  background: #d0d0d0;
+  color: #1f1f1f;
+}
+
 .hamburger-wrapper {
   position: relative;
   flex-shrink: 0;
@@ -253,6 +284,17 @@
 
   .hamburger-wrapper {
     margin-left: 0;
+  }
+
+  /* This row becomes a real, right-aligned flex container here, so its leftmost
+     child wants no left margin. When the signed-out support button is present it
+     is that child, so the zero moves to it and Categories takes the gap instead. */
+  .usb-support-btn {
+    margin-left: 0;
+  }
+
+  .usb-support-btn + .hamburger-wrapper {
+    margin-left: 6px;
   }
 
   .club-input-wrapper textarea {

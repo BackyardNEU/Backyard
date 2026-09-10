@@ -481,7 +481,7 @@ export default function ClubMembersPanel({ clubId, joinPolicy, myRole, currentUs
             <div key={request.user_id} className="join-request-row">
               <img
                 className="join-request-row__avatar"
-                src={request.avatar_url || '/raccoon_pfp.png'}
+                src={request.avatar_url || '/rac7.0.png'}
                 alt=""
               />
               <span className="join-request-row__name">{request.username ?? 'Unknown user'}</span>

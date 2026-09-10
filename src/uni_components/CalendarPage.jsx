@@ -549,7 +549,7 @@ export function CalendarPage() {
                         {isMinimized ? (
                           <div className="calendar-event-min-row">
                             <img
-                              src={posterUrl || '/raccoon_pfp.png'}
+                              src={posterUrl || '/rac7.0.png'}
                               alt=""
                               className={`calendar-event-min-thumb${posterUrl ? '' : ' calendar-event-min-thumb--default'}`}
                             />
@@ -571,7 +571,7 @@ export function CalendarPage() {
                               style={{ backgroundImage: `url(${borderHorizontalImg})` }}
                             />
                             <img
-                              src={posterUrl || '/raccoon_pfp.png'}
+                              src={posterUrl || '/rac7.0.png'}
                               alt=""
                               className={`cal-portrait-img${posterUrl ? '' : ' cal-portrait-img--default'}`}
                             />
@@ -599,11 +599,6 @@ export function CalendarPage() {
           ) : (
             <div className="calpg-align-row calpg-dual-grid-row">
               <div className="calpg-grid-col calpg-grid-panel">
-                <div className="calpg-grid-nav-row">
-                  <button className="cal-nav-btn" onClick={() => navigateMonth(-1)}>‹</button>
-                  <span className="calpg-grid-nav-label">{format(monthDisplayDate, 'MMMM')}</span>
-                  <button className="cal-nav-btn calpg-fwd-narrow" onClick={() => navigateMonth(1)}>›</button>
-                </div>
                 <div className="cal-grid">
                   {WEEK_DAYS.map((d, i) => <div key={i} className="cal-weekday-label calpg-weekday-label">{d}</div>)}
                   {cells.map((dayNum, i) => (
@@ -620,10 +615,6 @@ export function CalendarPage() {
               </div>
               <div className="calpg-grid-divider" aria-hidden="true" />
               <div className="calpg-grid-col calpg-grid-panel calpg-grid-panel-next">
-                <div className="calpg-grid-nav-row calpg-grid-nav-row--right">
-                  <span className="calpg-grid-nav-label">{format(nextMonthDate, 'MMMM')}</span>
-                  <button className="cal-nav-btn" onClick={() => navigateMonth(1)}>›</button>
-                </div>
                 <div className="cal-grid">
                   {WEEK_DAYS.map((d, i) => <div key={`next-${i}`} className="cal-weekday-label calpg-weekday-label">{d}</div>)}
                   {nextCells.map((dayNum, i) => (
@@ -678,7 +669,7 @@ export function CalendarPage() {
                       style={{ backgroundImage: `url(${borderHorizontalImg})` }}
                     />
                     <img
-                      src={posterUrl || '/raccoon_pfp.png'}
+                      src={posterUrl || '/rac7.0.png'}
                       alt="Event"
                       className={`cal-portrait-img${posterUrl ? '' : ' cal-portrait-img--default'}`}
                     />
@@ -737,7 +728,6 @@ export function CalendarPage() {
             onClick={() => setPosterSize('minimized')}
           >
             <GiHamburgerMenu />
-            <span className="calpg-poster-size-label">Row</span>
           </button>
           <button
             type="button"
@@ -747,8 +737,18 @@ export function CalendarPage() {
             onClick={() => setPosterSize('maximized')}
           >
             <TbCropPortrait />
-            <span className="calpg-poster-size-label">Card</span>
           </button>
+        </div>
+      )}
+
+      {/* Bottom-left month arrows, sharing the bottom band with the Week/Month toggle
+          in the opposite corner. One ‹ › pair serves both grid panels — nextMonthDate is
+          derived from the same displayYear/displayMonth these buttons move, so the two
+          in-grid nav rows this replaced were driving identical state. */}
+      {viewMode === 'month' && (
+        <div className="calpg-grid-nav-row">
+          <button className="cal-nav-btn" onClick={() => navigateMonth(-1)}>‹</button>
+          <button className="cal-nav-btn" onClick={() => navigateMonth(1)}>›</button>
         </div>
       )}
 

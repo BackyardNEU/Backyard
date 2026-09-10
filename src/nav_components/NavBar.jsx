@@ -138,7 +138,7 @@ export function NavBar() {
         aria-label={GlobalValue ? 'Profile' : 'Login'}
         onClick={handleProfileClick}
       >
-        <img src={avatarUrl || '/raccoon_pfp.png'} alt="" />
+        <img src={avatarUrl || '/rac7.0.png'} alt="" />
       </motion.button>
     </nav>
   );
