@@ -138,6 +138,14 @@
   background: rgba(239, 90, 77, 0.06);
 }
 
+.notif-item--clickable {
+  cursor: pointer;
+}
+
+.notif-item--clickable:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .notif-avatar {
   width: 40px;
   height: 40px;

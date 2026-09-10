@@ -515,11 +515,15 @@ router.post('/:clubId/announce', announceLimiter, requireAuth, checkMuted, async
   (async () => {
     try {
       const [{ data: club }, { data: memberships }] = await Promise.all([
-        supabaseAdmin.from('demo_club_data').select('club_name, image_url').eq('id', clubId).single(),
+        supabaseAdmin.from('demo_club_data').select('club_name, image_url, school').eq('id', clubId).single(),
         supabaseAdmin.from('club_memberships').select('user_id').eq('club_id', clubId).neq('user_id', req.user.id),
       ]);
 
       if (!memberships?.length) return;
+
+      const { data: uni } = club?.school
+        ? await supabaseAdmin.from('uni_names').select('id').eq('uni_name', club.school).maybeSingle()
+        : { data: null };
 
       await Promise.allSettled(
         memberships.map((m) =>
@@ -531,6 +535,7 @@ router.post('/:clubId/announce', announceLimiter, requireAuth, checkMuted, async
             payload: {
               clubName: club?.club_name,
               imageUrl: club?.image_url,
+              uniId: uni?.id ?? null,
               title: trimmedTitle || null,
               message: trimmedMessage,
             },

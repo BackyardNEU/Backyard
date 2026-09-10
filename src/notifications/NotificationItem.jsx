@@ -1,8 +1,10 @@
 import { formatDistanceToNow } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 import { registry } from './registry';
 import Avatar from '../components/Avatar';
 
-export function NotificationItem({ notification, onRespond }) {
+export function NotificationItem({ notification, onRespond, onClose }) {
+  const navigate = useNavigate();
   const entry = registry[notification.type];
   if (!entry) return null;
 
@@ -10,9 +12,21 @@ export function NotificationItem({ notification, onRespond }) {
   const isPending = !notification.action_taken && entry.actions?.length > 0;
   const avatarUrl = entry.image ? entry.image(notification) : notification.actor?.avatar_url;
   const avatarUsername = entry.image ? null : notification.actor?.username;
+  const url = entry.getUrl?.(notification) ?? null;
+
+  function handleClick() {
+    if (!url) return;
+    onClose?.();
+    navigate(url);
+  }
 
   return (
-    <div className={`notif-item${!notification.read_at ? ' notif-item--unread' : ''}`}>
+    <div
+      className={`notif-item${!notification.read_at ? ' notif-item--unread' : ''}${url ? ' notif-item--clickable' : ''}`}
+      onClick={handleClick}
+      role={url ? 'button' : undefined}
+      tabIndex={url ? 0 : undefined}
+    >
       <Avatar
         className="notif-avatar"
         url={avatarUrl}
@@ -27,13 +41,13 @@ export function NotificationItem({ notification, onRespond }) {
           <div className="notif-actions">
             <button
               className="notif-action-btn notif-action-btn--accept"
-              onClick={() => onRespond(notification.entity_id, 'accepted', notification.id)}
+              onClick={(e) => { e.stopPropagation(); onRespond(notification.entity_id, 'accepted', notification.id); }}
             >
               Accept
             </button>
             <button
               className="notif-action-btn notif-action-btn--decline"
-              onClick={() => onRespond(notification.entity_id, 'declined', notification.id)}
+              onClick={(e) => { e.stopPropagation(); onRespond(notification.entity_id, 'declined', notification.id); }}
             >
               Decline
             </button>

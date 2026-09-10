@@ -55,7 +55,7 @@ export function NotificationsPanel({ onClose, notifications, markAllRead, respon
           <div className="notif-section">
             <div className="notif-section-title">Requests</div>
             {pending.map((n) => (
-              <NotificationItem key={n.id} notification={n} onRespond={respondToRequest} />
+              <NotificationItem key={n.id} notification={n} onRespond={respondToRequest} onClose={onClose} />
             ))}
           </div>
         )}
@@ -64,7 +64,7 @@ export function NotificationsPanel({ onClose, notifications, markAllRead, respon
           <div className="notif-section">
             <div className="notif-section-title">Today</div>
             {today.map((n) => (
-              <NotificationItem key={n.id} notification={n} onRespond={respondToRequest} />
+              <NotificationItem key={n.id} notification={n} onRespond={respondToRequest} onClose={onClose} />
             ))}
           </div>
         )}
@@ -73,7 +73,7 @@ export function NotificationsPanel({ onClose, notifications, markAllRead, respon
           <div className="notif-section">
             <div className="notif-section-title">This week</div>
             {thisWeek.map((n) => (
-              <NotificationItem key={n.id} notification={n} onRespond={respondToRequest} />
+              <NotificationItem key={n.id} notification={n} onRespond={respondToRequest} onClose={onClose} />
             ))}
           </div>
         )}
@@ -82,7 +82,7 @@ export function NotificationsPanel({ onClose, notifications, markAllRead, respon
           <div className="notif-section">
             <div className="notif-section-title">Earlier</div>
             {earlier.map((n) => (
-              <NotificationItem key={n.id} notification={n} onRespond={respondToRequest} />
+              <NotificationItem key={n.id} notification={n} onRespond={respondToRequest} onClose={onClose} />
             ))}
           </div>
         )}
