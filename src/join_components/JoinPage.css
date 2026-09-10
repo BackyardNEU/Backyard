@@ -7,17 +7,20 @@
   padding: 2rem 1rem;
 }
 
+/* Flat card: a plain black hairline and an 8px radius instead of the soft grey border
+   and drop shadow. #000 rather than #231f20 — both are in use across the app, but #000
+   is the more common of the two for a hard 1px line. */
 .join-card {
   background: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 18px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid #000;
+  border-radius: 8px;
   padding: 2.5rem 2rem;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.6rem;
+  font-family: 'Barlow Condensed', sans-serif;
 }
 
 .join-club-logo {
@@ -25,42 +28,51 @@
   height: 80px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #e0e0e0;
+  border: 1px solid #000;
   margin-bottom: 0.25rem;
 }
 
+/* Oswald for the club name, matching the other display headings on a club page
+   (.cm-modal-title, .calpg-month). Sized up because Condensed faces read smaller
+   at the same px than the Be Vietnam Pro this replaces. */
 .join-card h2 {
-  font-family: "Be Vietnam Pro", sans-serif;
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-family: "Oswald", sans-serif;
+  font-size: 1.9rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.1;
   margin: 0;
   text-align: center;
 }
 
 .join-subtitle {
-  color: #666;
-  font-size: 0.95rem;
+  color: rgb(66, 66, 66);
+  font-size: 1.15rem;
+  line-height: 1.45;
   text-align: center;
   margin: 0 0 0.5rem;
 }
 
 .join-confirm-btn {
   width: 100%;
-  padding: 0.75rem;
-  background: #2d2d2d;
+  padding: 0.7rem;
+  background: #000;
   color: #fff;
-  border: none;
+  border: 1px solid #000;
   border-radius: 8px;
-  font-size: 1rem;
-  font-family: "Be Vietnam Pro", sans-serif;
+  font-size: 1.2rem;
+  font-family: 'Barlow Condensed', sans-serif;
   font-weight: 600;
+  letter-spacing: 0.02em;
   cursor: pointer;
   margin-top: 0.5rem;
-  transition: background 0.15s;
+  transition: background 0.15s, color 0.15s;
 }
 
 .join-confirm-btn:hover:not(:disabled) {
-  background: #111;
+  background: #fff;
+  color: #000;
 }
 
 .join-confirm-btn:disabled {
@@ -68,33 +80,38 @@
   cursor: not-allowed;
 }
 
+/* Secondary to .join-confirm-btn — outlined rather than filled, so the two read as a
+   hierarchy instead of two identical black slabs. */
 .join-home-btn {
-  padding: 0.65rem 1.5rem;
-  background: #2d2d2d;
-  color: #fff;
-  border: none;
+  padding: 0.6rem 1.5rem;
+  background: #fff;
+  color: #000;
+  border: 1px solid #000;
   border-radius: 8px;
-  font-size: 0.95rem;
-  font-family: "Be Vietnam Pro", sans-serif;
+  font-size: 1.15rem;
+  font-family: 'Barlow Condensed', sans-serif;
+  letter-spacing: 0.02em;
   cursor: pointer;
   margin-top: 0.5rem;
-  transition: background 0.15s;
+  transition: background 0.15s, color 0.15s;
 }
 
 .join-home-btn:hover {
-  background: #111;
+  background: #000;
+  color: #fff;
 }
 
 .join-error {
   color: #c0392b;
-  font-size: 0.88rem;
+  font-size: 1.05rem;
   text-align: center;
   margin: 0;
 }
 
 .join-loading {
   color: #888;
-  font-size: 1rem;
+  font-size: 1.15rem;
+  font-family: 'Barlow Condensed', sans-serif;
 }
 
 .join-card--error h2 {
