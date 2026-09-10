@@ -135,7 +135,11 @@ export default function JoinPage() {
             <>
               <h2>You now have editor access to {invite.club_name}!</h2>
               <p>Head to the club page to start managing it.</p>
-              <button className="join-home-btn" onClick={() => navigate(`${neuID}?club=${invite.club_id}`)}>
+              {/* welcome=1 is the handoff that opens the editor walkthrough on the other
+                  side. This is the only place that knows the user is arriving straight
+                  from accepting an editor invite — ExpandedTile can only see "is an
+                  editor", which is also true of every club they already ran. */}
+              <button className="join-home-btn" onClick={() => navigate(`${neuID}?club=${invite.club_id}&welcome=1`)}>
                 Go to your club
               </button>
             </>
