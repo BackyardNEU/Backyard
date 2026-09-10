@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import { DEFAULT_UNIVERSITY_PATH } from '../lib/university';
-import raccoon from '../assets/rac7.0.png';
 import './NotFoundPage.css';
 
 /**
@@ -19,7 +18,7 @@ export default function NotFoundPage() {
 
     return (
         <div className="nf-page">
-            <img className="nf-mascot" src={raccoon} alt="" aria-hidden="true" />
+            <img className="nf-mascot" src="/rac7.0.png" alt="" aria-hidden="true" />
 
             <p className="nf-code">Error 404</p>
             <h1 className="nf-title">This page wandered off</h1>
