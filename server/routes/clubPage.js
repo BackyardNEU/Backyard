@@ -484,21 +484,27 @@ router.delete('/:clubId/interests', writeLimiter, requireAuth, async (req, res) 
 // Authenticated, moderators only. Sends a custom message to all club members as
 // an in-app notification. Fire-and-forget fan-out — response returns immediately.
 const MAX_ANNOUNCEMENT_LENGTH = 500;
+const MAX_ANNOUNCEMENT_TITLE_LENGTH = 80;
 router.post('/:clubId/announce', announceLimiter, requireAuth, checkMuted, async (req, res) => {
   const { clubId } = req.params;
-  const { message } = req.body;
+  const { message, title } = req.body;
 
   await requireModerator(req.user.id, clubId);
 
-  const trimmed = typeof message === 'string' ? message.trim() : '';
-  if (!trimmed) {
+  const trimmedMessage = typeof message === 'string' ? message.trim() : '';
+  if (!trimmedMessage) {
     return res.status(400).json({ error: 'message is required' });
   }
-  if (trimmed.length > MAX_ANNOUNCEMENT_LENGTH) {
+  if (trimmedMessage.length > MAX_ANNOUNCEMENT_LENGTH) {
     return res.status(400).json({ error: `Message must be ${MAX_ANNOUNCEMENT_LENGTH} characters or fewer` });
   }
 
-  const check = textModerator.checkFields({ message: trimmed });
+  const trimmedTitle = typeof title === 'string' ? title.trim() : '';
+  if (trimmedTitle.length > MAX_ANNOUNCEMENT_TITLE_LENGTH) {
+    return res.status(400).json({ error: `Title must be ${MAX_ANNOUNCEMENT_TITLE_LENGTH} characters or fewer` });
+  }
+
+  const check = textModerator.checkFields({ message: trimmedMessage, ...(trimmedTitle && { title: trimmedTitle }) });
   if (!check.clean) {
     return res.status(422).json({ error: check.message });
   }
@@ -525,7 +531,8 @@ router.post('/:clubId/announce', announceLimiter, requireAuth, checkMuted, async
             payload: {
               clubName: club?.club_name,
               imageUrl: club?.image_url,
-              message: trimmed,
+              title: trimmedTitle || null,
+              message: trimmedMessage,
             },
           })
         )

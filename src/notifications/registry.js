@@ -33,8 +33,9 @@ export const registry = {
     image: (n) => n.payload?.imageUrl ?? null,
     message: (n) => {
       const club = n.payload?.clubName ?? 'A club';
+      const title = n.payload?.title;
       const msg = n.payload?.message ?? '';
-      return `${club}: ${msg}`;
+      return title ? `${club} — ${title}: ${msg}` : `${club}: ${msg}`;
     },
   },
 };

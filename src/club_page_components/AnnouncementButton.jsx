@@ -4,9 +4,11 @@ import { apiFetch } from '../lib/api';
 import './AnnouncementButton.css';
 
 const MAX_LENGTH = 500;
+const MAX_TITLE_LENGTH = 80;
 
 export default function AnnouncementButton({ clubId, memberCount }) {
   const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
@@ -14,9 +16,11 @@ export default function AnnouncementButton({ clubId, memberCount }) {
 
   const remaining = MAX_LENGTH - message.length;
   const overLimit = remaining < 0;
-  const canSend = message.trim().length > 0 && !overLimit && !sending;
+  const titleOverLimit = title.length > MAX_TITLE_LENGTH;
+  const canSend = message.trim().length > 0 && !overLimit && !titleOverLimit && !sending;
 
   function openModal() {
+    setTitle('');
     setMessage('');
     setError(null);
     setSent(false);
@@ -35,7 +39,7 @@ export default function AnnouncementButton({ clubId, memberCount }) {
     try {
       await apiFetch(`/clubs/${clubId}/announce`, {
         method: 'POST',
-        body: JSON.stringify({ message: message.trim() }),
+        body: JSON.stringify({ title: title.trim() || undefined, message: message.trim() }),
       });
       setSent(true);
       setTimeout(() => setOpen(false), 1500);
@@ -63,13 +67,21 @@ export default function AnnouncementButton({ clubId, memberCount }) {
               </p>
             ) : (
               <>
+                <input
+                  className={`announce-title-input${titleOverLimit ? ' announce-input--over' : ''}`}
+                  placeholder="Title (optional)"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  disabled={sending}
+                  maxLength={MAX_TITLE_LENGTH + 10}
+                  autoFocus
+                />
                 <textarea
                   className="announce-textarea"
                   placeholder="Write your announcement..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   disabled={sending}
-                  autoFocus
                 />
                 <span className={`announce-char-count${overLimit ? ' announce-char-count--over' : ''}`}>
                   {remaining < 0 ? `-${Math.abs(remaining)}` : remaining} characters remaining

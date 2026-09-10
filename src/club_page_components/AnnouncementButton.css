@@ -40,6 +40,29 @@
   color: #555;
 }
 
+.announce-title-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1.5px solid #ccc;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  background: #fff;
+  color: #1c2a44;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.announce-title-input:focus {
+  border-color: #1c2a44;
+}
+
+.announce-input--over {
+  border-color: #c0392b;
+}
+
 .announce-textarea {
   width: 100%;
   box-sizing: border-box;
