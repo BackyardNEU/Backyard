@@ -37,6 +37,7 @@ export default defineConfig([
     files: [
       'server/**/*.js',
       'shared/**/*.js',
+      'scripts/**/*.js',
       'tests/**/*.js',
       '**/*.test.js',
       '*.config.js',
