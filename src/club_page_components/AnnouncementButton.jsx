@@ -37,9 +37,13 @@ export default function AnnouncementButton({ clubId, memberCount }) {
     setSending(true);
     setError(null);
     try {
+      // apiFetch stringifies `body` itself (src/lib/api.js). Passing an already-encoded
+      // string double-encoded it into a top-level JSON string, which express.json()
+      // rejects in strict mode before the route is ever reached — so every send failed
+      // with a body-parser 400 and the feature had never worked.
       await apiFetch(`/clubs/${clubId}/announce`, {
         method: 'POST',
-        body: JSON.stringify({ title: title.trim() || undefined, message: message.trim() }),
+        body: { title: title.trim() || undefined, message: message.trim() },
       });
       setSent(true);
       setTimeout(() => setOpen(false), 1500);
