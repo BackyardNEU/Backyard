@@ -219,10 +219,9 @@ router.post('/', checkMuted, async (req, res) => {
         .single();
     */
 
-    const { data: isModerator } = await requireModerator(req.user.id, clubId);
+    const status = await requireModerator(req.user.id, clubId);
 
-    const role = isModerator?.role || '';
-    if (role !== 'top_moderator' && role !== 'moderator') {
+    if (status !== 'top_moderator' && status !== 'moderator') {
         return res.status(403).json({ error: 'You must be a moderator of this club to create events' });
     }
 
