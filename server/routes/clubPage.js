@@ -513,18 +513,51 @@ router.post('/:clubId/announce', announceLimiter, requireAuth, checkMuted, async
   // Respond immediately; fan-out runs in the background.
   res.json({ ok: true });
 
+  // .catch on the IIFE itself: if the catch below ever throws (err being null, or a
+  // string with no .message), the rejection would be unhandled and Node's default
+  // --unhandled-rejections=throw would take the whole API process down.
   (async () => {
     try {
-      const [{ data: club }, { data: memberships }] = await Promise.all([
+      // Errors are read, not discarded. Dropping them turned a failed membership query
+      // into `undefined`, which then read as "this club has no members" and returned
+      // without a single line of output — the one path here that failed with no trace.
+      const [clubRes, memberRes] = await Promise.all([
         supabaseAdmin.from('demo_club_data').select('club_name, image_url, school').eq('id', clubId).single(),
         supabaseAdmin.from('club_memberships').select('user_id').eq('club_id', clubId).neq('user_id', req.user.id),
       ]);
 
-      if (!memberships?.length) return;
+      if (memberRes.error) {
+        console.error('[announce] member lookup failed', { clubId, actorId: req.user.id, error: memberRes.error.message });
+        return;
+      }
+      if (clubRes.error || !clubRes.data) {
+        // Abort rather than fan out: without the club the notification renders as
+        // "A club: ..." with no name, no avatar and no link, and the recipient cannot
+        // tell which of their clubs sent it.
+        console.error('[announce] club lookup failed', { clubId, actorId: req.user.id, error: clubRes.error?.message ?? 'not found' });
+        return;
+      }
 
-      const { data: uni } = club?.school
-        ? await supabaseAdmin.from('uni_names').select('id').eq('uni_name', club.school).maybeSingle()
-        : { data: null };
+      const club = clubRes.data;
+      const memberships = memberRes.data ?? [];
+      if (!memberships.length) {
+        console.warn('[announce] no recipients', { clubId, actorId: req.user.id });
+        return;
+      }
+
+      // uni_names.uni_name is nullable and not unique, and the club->university link is
+      // exact string matching rather than a foreign key, so a no-match is expected often
+      // enough to be worth naming. Without it the notification is silently unclickable.
+      let uni = null;
+      if (club.school) {
+        const uniRes = await supabaseAdmin.from('uni_names').select('id').eq('uni_name', club.school).maybeSingle();
+        if (uniRes.error) {
+          console.error('[announce] uni lookup failed', { clubId, school: club.school, error: uniRes.error.message });
+        } else if (!uniRes.data) {
+          console.warn('[announce] no uni_names match — notification will not be clickable', { clubId, school: club.school });
+        }
+        uni = uniRes.data ?? null;
+      }
 
       // One id per announcement, not per club. decide() dedups on
       // (recipient_id, type, entity_id) over a 5 minute window, so a constant club id
@@ -533,7 +566,7 @@ router.post('/:clubId/announce', announceLimiter, requireAuth, checkMuted, async
       // reached nobody. new_club_event never hit this because its entity is the event.
       const announcementId = randomUUID();
 
-      await Promise.allSettled(
+      const results = await Promise.allSettled(
         memberships.map((m) =>
           NotificationService.dispatch({
             type: 'club_announcement',
@@ -542,8 +575,8 @@ router.post('/:clubId/announce', announceLimiter, requireAuth, checkMuted, async
             entity: { kind: 'club_announcement', id: announcementId },
             payload: {
               clubId,
-              clubName: club?.club_name,
-              imageUrl: club?.image_url,
+              clubName: club.club_name,
+              imageUrl: club.image_url,
               uniId: uni?.id ?? null,
               title: trimmedTitle || null,
               message: trimmedMessage,
@@ -551,10 +584,24 @@ router.post('/:clubId/announce', announceLimiter, requireAuth, checkMuted, async
           })
         )
       );
+      // allSettled never rejects and dispatch never throws, so without counting these
+      // a total fan-out failure produced no output at all and the catch below could not
+      // fire. This is the only place anyone can learn whether an announcement landed.
+      const settled = results.map((r) => (r.status === 'fulfilled' ? r.value : { ok: false, error: String(r.reason) }));
+      const delivered = settled.filter((r) => r.ok).length;
+      const skipped = settled.filter((r) => r.skipped).length;
+      const failed = settled.filter((r) => !r.ok && !r.skipped);
+
+      const summary = { clubId, actorId: req.user.id, announcementId, recipients: settled.length, delivered, skipped, failed: failed.length };
+      if (failed.length) {
+        console.error('[announce] fan-out completed with failures', { ...summary, firstError: failed[0].error });
+      } else {
+        console.log('[announce] fan-out complete', summary);
+      }
     } catch (err) {
-      console.error('[announce] notification fan-out failed:', err.message);
+      console.error('[announce] notification fan-out failed', { clubId, actorId: req.user.id, err });
     }
-  })();
+  })().catch((err) => console.error('[announce] fan-out crashed', err));
 });
 
 export default router;
