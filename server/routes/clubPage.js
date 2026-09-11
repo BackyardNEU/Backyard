@@ -491,7 +491,10 @@ const MAX_ANNOUNCEMENT_LENGTH = 500;
 const MAX_ANNOUNCEMENT_TITLE_LENGTH = 80;
 router.post('/:clubId/announce', announceLimiter, requireAuth, checkMuted, async (req, res) => {
   const { clubId } = req.params;
-  const { message, title } = req.body;
+  // A POST with no or a wrong Content-Type leaves req.body undefined, and
+  // destructuring it threw a TypeError that surfaced as a 500. The validation below
+  // already produces the right 400.
+  const { message, title } = req.body ?? {};
 
   await requireModerator(req.user.id, clubId);
 

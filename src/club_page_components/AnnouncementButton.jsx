@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { apiFetch } from '../lib/api';
 import './AnnouncementButton.css';
@@ -7,12 +7,20 @@ const MAX_LENGTH = 500;
 const MAX_TITLE_LENGTH = 80;
 
 export default function AnnouncementButton({ clubId, memberCount }) {
+  // The roster includes the sender; the fan-out excludes them (.neq on user_id), so
+  // the raw count promised one more notification than anyone would ever receive.
+  const recipientCount = Math.max(0, (memberCount ?? 0) - 1);
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
   const [sent, setSent] = useState(false);
+  // Cleared on unmount: closing the club card inside the 1.5s window otherwise fires
+  // setOpen on an unmounted component.
+  const closeTimer = useRef(null);
+
+  useEffect(() => () => clearTimeout(closeTimer.current), []);
 
   const remaining = MAX_LENGTH - message.length;
   const overLimit = remaining < 0;
@@ -46,7 +54,7 @@ export default function AnnouncementButton({ clubId, memberCount }) {
         body: { title: title.trim() || undefined, message: message.trim() },
       });
       setSent(true);
-      setTimeout(() => setOpen(false), 1500);
+      closeTimer.current = setTimeout(() => setOpen(false), 1500);
     } catch (err) {
       setError(err.message || 'Failed to send announcement');
     } finally {
@@ -60,8 +68,8 @@ export default function AnnouncementButton({ clubId, memberCount }) {
           <div className="announce-modal" onClick={(e) => e.stopPropagation()}>
             <h3>Send Announcement</h3>
             <p>
-              {memberCount > 0
-                ? `This will notify ${memberCount} member${memberCount === 1 ? '' : 's'}.`
+              {recipientCount > 0
+                ? `This will notify ${recipientCount} member${recipientCount === 1 ? '' : 's'}.`
                 : 'All club members will receive this as an in-app notification.'}
             </p>
 

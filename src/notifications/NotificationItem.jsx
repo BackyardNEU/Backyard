@@ -20,10 +20,19 @@ export function NotificationItem({ notification, onRespond, onClose }) {
     navigate(url);
   }
 
+  // role="button" and tabIndex=0 made the row focusable, but with onClick alone a
+  // keyboard user could tab to it and press Enter to no effect.
+  function handleKeyDown(e) {
+    if (!url || (e.key !== 'Enter' && e.key !== ' ')) return;
+    e.preventDefault();
+    handleClick();
+  }
+
   return (
     <div
       className={`notif-item${!notification.read_at ? ' notif-item--unread' : ''}${url ? ' notif-item--clickable' : ''}`}
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
       role={url ? 'button' : undefined}
       tabIndex={url ? 0 : undefined}
     >
