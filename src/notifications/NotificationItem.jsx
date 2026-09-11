@@ -24,6 +24,7 @@ export function NotificationItem({ notification, onRespond, onClose }) {
     <div
       className={`notif-item${!notification.read_at ? ' notif-item--unread' : ''}${url ? ' notif-item--clickable' : ''}`}
       onClick={handleClick}
+      onKeyDown={url ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClick(); } } : undefined}
       role={url ? 'button' : undefined}
       tabIndex={url ? 0 : undefined}
     >

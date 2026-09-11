@@ -1,14 +1,15 @@
 import express from 'express';
-import rateLimit from 'express-rate-limit';
+import { randomUUID } from 'crypto';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { checkMuted } from '../middleware/checkMuted.js';
 import textModerator from '../lib/textModerator.js';
 import { requireModerator } from '../lib/clubPermissions.js';
 import { NotificationService } from '../notifications/service.js';
+import { limiter } from '../lib/rateLimit.js';
 
-const writeLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 60 });
-const announceLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
+const writeLimiter = limiter(60);
+const announceLimiter = limiter(10);
 
 const router = express.Router();
 
@@ -483,11 +484,15 @@ router.delete('/:clubId/interests', writeLimiter, requireAuth, async (req, res) 
 // POST /api/clubs/:clubId/announce
 // Authenticated, moderators only. Sends a custom message to all club members as
 // an in-app notification. Fire-and-forget fan-out — response returns immediately.
+//
+// Dedup note: each broadcast gets its own UUID as entity_id so the decision layer
+// never collapses two separate announcements into one. announceLimiter (10/15 min,
+// keyed by user) is the abuse guard instead.
 const MAX_ANNOUNCEMENT_LENGTH = 500;
 const MAX_ANNOUNCEMENT_TITLE_LENGTH = 80;
 router.post('/:clubId/announce', announceLimiter, requireAuth, checkMuted, async (req, res) => {
   const { clubId } = req.params;
-  const { message, title } = req.body;
+  const { message, title } = req.body ?? {};
 
   await requireModerator(req.user.id, clubId);
 
@@ -512,27 +517,46 @@ router.post('/:clubId/announce', announceLimiter, requireAuth, checkMuted, async
   // Respond immediately; fan-out runs in the background.
   res.json({ ok: true });
 
+  // Capture sender id before the async IIFE — req is not guaranteed to be live.
+  const senderId = req.user.id;
+
   (async () => {
     try {
-      const [{ data: club }, { data: memberships }] = await Promise.all([
+      const [clubResult, membershipsResult] = await Promise.all([
         supabaseAdmin.from('demo_club_data').select('club_name, image_url, school').eq('id', clubId).single(),
-        supabaseAdmin.from('club_memberships').select('user_id').eq('club_id', clubId).neq('user_id', req.user.id),
+        supabaseAdmin.from('club_memberships').select('user_id').eq('club_id', clubId).neq('user_id', senderId),
       ]);
 
+      if (clubResult.error) {
+        console.error('[announce] club lookup failed:', clubResult.error.message);
+        return;
+      }
+      if (membershipsResult.error) {
+        console.error('[announce] membership lookup failed:', membershipsResult.error.message);
+        return;
+      }
+
+      const club = clubResult.data;
+      const memberships = membershipsResult.data;
       if (!memberships?.length) return;
 
       const { data: uni } = club?.school
         ? await supabaseAdmin.from('uni_names').select('id').eq('uni_name', club.school).maybeSingle()
         : { data: null };
 
-      await Promise.allSettled(
+      // One UUID per broadcast so the decision layer never deduplicates two separate
+      // announcements sent within the 5-minute window. announceLimiter bounds abuse.
+      const announcementId = randomUUID();
+
+      const settled = await Promise.allSettled(
         memberships.map((m) =>
           NotificationService.dispatch({
             type: 'club_announcement',
             recipientId: m.user_id,
-            actorId: req.user.id,
-            entity: { kind: 'club', id: clubId },
+            actorId: senderId,
+            entity: { kind: 'announcement', id: announcementId },
             payload: {
+              clubId,
               clubName: club?.club_name,
               imageUrl: club?.image_url,
               uniId: uni?.id ?? null,
@@ -542,6 +566,11 @@ router.post('/:clubId/announce', announceLimiter, requireAuth, checkMuted, async
           })
         )
       );
+
+      const delivered = settled.filter((r) => r.status === 'fulfilled' && r.value?.ok).length;
+      const skipped  = settled.filter((r) => r.status === 'fulfilled' && r.value?.skipped).length;
+      const failed   = settled.filter((r) => r.status === 'rejected'  || r.value?.error).length;
+      console.log(`[announce] clubId=${clubId} delivered=${delivered} skipped=${skipped} failed=${failed}`);
     } catch (err) {
       console.error('[announce] notification fan-out failed:', err.message);
     }

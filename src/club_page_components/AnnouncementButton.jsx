@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { apiFetch } from '../lib/api';
 import './AnnouncementButton.css';
@@ -12,23 +12,34 @@ export default function AnnouncementButton({ clubId, memberCount }) {
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
-  const [sent, setSent] = useState(false);
+  const [queued, setQueued] = useState(false);
+  const closeTimerRef = useRef(null);
+
+  // memberCount includes the sender, who is excluded from the fan-out.
+  // null  → still loading; show generic copy, allow send
+  // 0     → genuinely empty (shouldn't happen); treat as unknown
+  // 1     → only the moderator; no one to notify → disable send
+  // 2+    → memberCount - 1 will be notified
+  const recipientCount = memberCount > 0 ? memberCount - 1 : null;
 
   const remaining = MAX_LENGTH - message.length;
   const overLimit = remaining < 0;
   const titleOverLimit = title.length > MAX_TITLE_LENGTH;
-  const canSend = message.trim().length > 0 && !overLimit && !titleOverLimit && !sending;
+  const canSend = message.trim().length > 0 && !overLimit && !titleOverLimit && !sending && recipientCount !== 0;
+
+  useEffect(() => () => clearTimeout(closeTimerRef.current), []);
 
   function openModal() {
     setTitle('');
     setMessage('');
     setError(null);
-    setSent(false);
+    setQueued(false);
     setOpen(true);
   }
 
   function closeModal() {
     if (sending) return;
+    clearTimeout(closeTimerRef.current);
     setOpen(false);
   }
 
@@ -39,10 +50,10 @@ export default function AnnouncementButton({ clubId, memberCount }) {
     try {
       await apiFetch(`/clubs/${clubId}/announce`, {
         method: 'POST',
-        body: JSON.stringify({ title: title.trim() || undefined, message: message.trim() }),
+        body: { title: title.trim() || undefined, message: message.trim() },
       });
-      setSent(true);
-      setTimeout(() => setOpen(false), 1500);
+      setQueued(true);
+      closeTimerRef.current = setTimeout(() => setOpen(false), 1500);
     } catch (err) {
       setError(err.message || 'Failed to send announcement');
     } finally {
@@ -50,20 +61,22 @@ export default function AnnouncementButton({ clubId, memberCount }) {
     }
   }
 
+  function recipientLine() {
+    if (recipientCount === null) return 'All club members will receive this as an in-app notification.';
+    if (recipientCount === 0) return 'There are no other members to notify yet.';
+    return `This will notify ${recipientCount} member${recipientCount === 1 ? '' : 's'}.`;
+  }
+
   const modal = open
     ? createPortal(
         <div className="announce-backdrop" onClick={closeModal}>
           <div className="announce-modal" onClick={(e) => e.stopPropagation()}>
             <h3>Send Announcement</h3>
-            <p>
-              {memberCount > 0
-                ? `This will notify ${memberCount} member${memberCount === 1 ? '' : 's'}.`
-                : 'All club members will receive this as an in-app notification.'}
-            </p>
+            <p>{recipientLine()}</p>
 
-            {sent ? (
+            {queued ? (
               <p style={{ color: '#27ae60', fontWeight: 600, textAlign: 'center', padding: '12px 0' }}>
-                Announcement sent!
+                Announcement queued — members will be notified shortly.
               </p>
             ) : (
               <>

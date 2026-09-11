@@ -37,6 +37,10 @@ export const registry = {
       const msg = n.payload?.message ?? '';
       return title ? `${club} — ${title}: ${msg}` : `${club}: ${msg}`;
     },
-    getUrl: (n) => n.payload?.uniId ? `/university/${n.payload.uniId}` : null,
+    getUrl: (n) => {
+      const { uniId, clubId } = n.payload ?? {};
+      if (!uniId) return null;
+      return clubId ? `/university/${uniId}?club=${clubId}` : `/university/${uniId}`;
+    },
   },
 };
