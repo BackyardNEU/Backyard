@@ -34,7 +34,6 @@ export function CalendarModule({
   myRsvpSet = new Set(),
   myMaybeSet = new Set(),
   friendRsvpMap = new Map(),
-  allAttendeesMap = new Map(),
   onRsvp,
   onMaybe,
   onEditEvent,
@@ -45,12 +44,6 @@ export function CalendarModule({
   const [overlayEvent, setOverlayEvent] = useState(null);
   const [overlayHasMore, setOverlayHasMore] = useState(false);
   const [attendeesMap, setAttendeesMap] = useState({});
-  const [attendeesOpenId, setAttendeesOpenId] = useState(null);
-  const [attendeesEvent, setAttendeesEvent] = useState(null);
-  const [attendeesTab, setAttendeesTab] = useState('going');
-
-  const { profile: viewerProfile } = useClubData();
-  const calendarPreference = viewerProfile?.calendar_preference || 'ics';
 
   const [expandedEventIds, setExpandedEventIds] = useState(() => new Set());
   const [cardHeights, setCardHeights] = useState({});
@@ -88,6 +81,7 @@ export function CalendarModule({
     }, 50);
   }, [overlayEvent]);
 
+  /*
   const handleOverlayScroll = () => {
     const el = overlayScrollRef.current;
     if (!el) return;
@@ -112,6 +106,7 @@ export function CalendarModule({
     setAttendeesEvent(event);
     setAttendeesTab(tab);
   };
+  */
 
   const sorted = [...events].sort((a, b) => parseISO(a.start_time) - parseISO(b.start_time));
 
