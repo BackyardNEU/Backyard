@@ -519,9 +519,11 @@ router.post('/:clubId/announce', announceLimiter, requireAuth, checkMuted, async
   // Respond immediately; fan-out runs in the background.
   res.json({ ok: true });
 
-  // .catch on the IIFE itself: if the catch below ever throws (err being null, or a
-  // string with no .message), the rejection would be unhandled and Node's default
-  // --unhandled-rejections=throw would take the whole API process down.
+  // Belt and braces. The catch below is currently total — it logs `err` rather than
+  // reaching into it — so nothing should escape. The .catch() is here because an
+  // unhandled rejection from a detached IIFE takes the whole API process down under
+  // Node's default --unhandled-rejections=throw, and that is too large a blast radius
+  // to leave resting on the catch block staying total.
   (async () => {
     try {
       // Errors are read, not discarded. Dropping them turned a failed membership query
@@ -565,6 +567,13 @@ router.post('/:clubId/announce', announceLimiter, requireAuth, checkMuted, async
         uni = uniRes.data ?? null;
       }
 
+      // NOTE: this disables dedup for club_announcement rather than tuning it — a fresh
+      // id never collides. That is the intended trade: the alternative was collapsing
+      // distinct announcements, which loses real messages. A moderator can now push up
+      // to announceLimiter's 10 identical announcements per 15 minutes; the UI blocks
+      // accidental repeats and apiFetch does not retry POSTs, so that is deliberate
+      // abuse, bounded. Keying on a content hash would cover both, if it ever matters.
+      //
       // One id per announcement, not per club. decide() dedups on
       // (recipient_id, type, entity_id) over a 5 minute window, so a constant club id
       // meant the SECOND announcement a club sent within five minutes was dropped for

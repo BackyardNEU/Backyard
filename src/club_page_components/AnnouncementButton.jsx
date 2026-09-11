@@ -9,7 +9,12 @@ const MAX_TITLE_LENGTH = 80;
 export default function AnnouncementButton({ clubId, memberCount }) {
   // The roster includes the sender; the fan-out excludes them (.neq on user_id), so
   // the raw count promised one more notification than anyone would ever receive.
-  const recipientCount = Math.max(0, (memberCount ?? 0) - 1);
+  //
+  // null, not 0, when the roster has not loaded: a club whose only member is the founder
+  // is a real zero and must say so, while an unknown count must not claim anything. The
+  // two were collapsed, and 0 fell through to the most reassuring string in the file.
+  const recipientCount = memberCount == null ? null : Math.max(0, memberCount - 1);
+  const noRecipients = recipientCount === 0;
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
@@ -25,9 +30,12 @@ export default function AnnouncementButton({ clubId, memberCount }) {
   const remaining = MAX_LENGTH - message.length;
   const overLimit = remaining < 0;
   const titleOverLimit = title.length > MAX_TITLE_LENGTH;
-  const canSend = message.trim().length > 0 && !overLimit && !titleOverLimit && !sending;
+  const canSend = message.trim().length > 0 && !overLimit && !titleOverLimit && !sending && !noRecipients;
 
   function openModal() {
+    // A send arms a 1.5s auto-close. Dismissing by hand and reopening inside that window
+    // otherwise let the stale timer close the modal while someone was typing.
+    clearTimeout(closeTimer.current);
     setTitle('');
     setMessage('');
     setError(null);
@@ -68,14 +76,20 @@ export default function AnnouncementButton({ clubId, memberCount }) {
           <div className="announce-modal" onClick={(e) => e.stopPropagation()}>
             <h3>Send Announcement</h3>
             <p>
-              {recipientCount > 0
-                ? `This will notify ${recipientCount} member${recipientCount === 1 ? '' : 's'}.`
-                : 'All club members will receive this as an in-app notification.'}
+              {noRecipients
+                ? 'No one else has joined this club yet, so there is nobody to notify.'
+                : recipientCount > 0
+                  ? `This will notify ${recipientCount} member${recipientCount === 1 ? '' : 's'}.`
+                  : 'All club members will receive this as an in-app notification.'}
             </p>
 
             {sent ? (
+              // The endpoint answers before the fan-out starts, so it can only attest
+              // that the message was accepted. Saying "sent" claimed a delivery the
+              // server never confirmed — and was shown identically when zero
+              // notifications were written.
               <p style={{ color: '#27ae60', fontWeight: 600, textAlign: 'center', padding: '12px 0' }}>
-                Announcement sent!
+                Announcement queued — members will see it shortly.
               </p>
             ) : (
               <>

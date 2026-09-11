@@ -101,7 +101,8 @@ const post = (body, user = SENDER) => {
 };
 
 // The fan-out is a detached IIFE started after res.json(), so it has not run when
-// supertest resolves. Two macrotask turns clears the awaits inside it.
+// supertest resolves. Each mocked query resolves via Promise.resolve, so one
+// setImmediate boundary drains the chain; four is headroom, not luck.
 const flush = async () => {
     for (let i = 0; i < 4; i += 1) await new Promise((r) => setImmediate(r));
 };
