@@ -168,7 +168,9 @@ describe('POST /:clubId/announce — validation', () => {
 });
 
 describe('POST /:clubId/announce — fan-out', () => {
-    it('fans out to all members except the sender', async () => {
+    it('fans out to all members including the sender', async () => {
+        results['club_memberships.select'] = { data: [{ user_id: USER }, { user_id: MEMBER_A }, { user_id: MEMBER_B }], error: null };
+
         await request(makeApp())
             .post(`/api/clubs/${CLUB}/announce`)
             .set('x-test-user', USER)
@@ -177,9 +179,9 @@ describe('POST /:clubId/announce — fan-out', () => {
         await flush();
 
         const recipientIds = dispatchSpy.mock.calls.map((c) => c[0].recipientId);
+        expect(recipientIds).toContain(USER);
         expect(recipientIds).toContain(MEMBER_A);
         expect(recipientIds).toContain(MEMBER_B);
-        expect(recipientIds).not.toContain(USER);
     });
 
     it('includes clubId, clubName, uniId, and message in the payload', async () => {

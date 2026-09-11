@@ -20,7 +20,7 @@ export default function AnnouncementButton({ clubId, memberCount }) {
   // 0     → genuinely empty (shouldn't happen); treat as unknown
   // 1     → only the moderator; no one to notify → disable send
   // 2+    → memberCount - 1 will be notified
-  const recipientCount = memberCount > 0 ? memberCount - 1 : null;
+  const recipientCount = memberCount > 0 ? memberCount : null;
 
   const remaining = MAX_LENGTH - message.length;
   const overLimit = remaining < 0;

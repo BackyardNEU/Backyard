@@ -524,7 +524,7 @@ router.post('/:clubId/announce', announceLimiter, requireAuth, checkMuted, async
     try {
       const [clubResult, membershipsResult] = await Promise.all([
         supabaseAdmin.from('demo_club_data').select('club_name, image_url, school').eq('id', clubId).single(),
-        supabaseAdmin.from('club_memberships').select('user_id').eq('club_id', clubId).neq('user_id', senderId),
+        supabaseAdmin.from('club_memberships').select('user_id').eq('club_id', clubId),
       ]);
 
       if (clubResult.error) {

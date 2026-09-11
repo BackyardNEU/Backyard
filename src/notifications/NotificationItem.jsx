@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { registry } from './registry';
@@ -5,6 +6,7 @@ import Avatar from '../components/Avatar';
 
 export function NotificationItem({ notification, onRespond, onClose }) {
   const navigate = useNavigate();
+  const [expanded, setExpanded] = useState(false);
   const entry = registry[notification.type];
   if (!entry) return null;
 
@@ -14,7 +16,8 @@ export function NotificationItem({ notification, onRespond, onClose }) {
   const avatarUsername = entry.image ? null : notification.actor?.username;
   const url = entry.getUrl?.(notification) ?? null;
 
-  function handleClick() {
+  function handleAvatarClick(e) {
+    e.stopPropagation();
     if (!url) return;
     onClose?.();
     navigate(url);
@@ -22,19 +25,27 @@ export function NotificationItem({ notification, onRespond, onClose }) {
 
   return (
     <div
-      className={`notif-item${!notification.read_at ? ' notif-item--unread' : ''}${url ? ' notif-item--clickable' : ''}`}
-      onClick={handleClick}
-      onKeyDown={url ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClick(); } } : undefined}
-      role={url ? 'button' : undefined}
-      tabIndex={url ? 0 : undefined}
+      className={`notif-item${!notification.read_at ? ' notif-item--unread' : ''}${expanded ? ' notif-item--expanded' : ''}`}
+      onClick={() => setExpanded((prev) => !prev)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpanded((prev) => !prev); } }}
+      tabIndex={0}
     >
-      <Avatar
-        className="notif-avatar"
-        url={avatarUrl}
-        username={avatarUsername}
-      />
+      {/* Avatar is a separate button so clicking it navigates without toggling expand */}
+      <button
+        className={`notif-avatar-btn${url ? ' notif-avatar-btn--linked' : ''}`}
+        onClick={handleAvatarClick}
+        type="button"
+        tabIndex={url ? 0 : -1}
+        aria-label={url ? 'Go to club page' : undefined}
+      >
+        <Avatar
+          className="notif-avatar"
+          url={avatarUrl}
+          username={avatarUsername}
+        />
+      </button>
       <div className="notif-content">
-        <p className="notif-message">{message}</p>
+        <p className={`notif-message${expanded ? '' : ' notif-message--collapsed'}`}>{message}</p>
         <span className="notif-time">
           {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
         </span>
