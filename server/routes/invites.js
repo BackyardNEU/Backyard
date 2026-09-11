@@ -35,7 +35,7 @@ router.post('/admin/clubs/:clubId/editor-invite-link', requireAuth, async (req, 
     return res.status(403).json({ error: 'Admin access required' });
   }
   const { clubId } = req.params;
-  const { max_uses = 1, days_valid = 7 } = req.body;
+  const { max_uses = 20, days_valid = 7, revoke_on_accept = true } = req.body;
 
   const token = mintToken();
   const expires_at = new Date(Date.now() + days_valid * 24 * 60 * 60 * 1000).toISOString();
@@ -51,6 +51,7 @@ router.post('/admin/clubs/:clubId/editor-invite-link', requireAuth, async (req, 
       max_uses,
       expires_at,
       link_type: 'editor',
+      revoke_on_accept: Boolean(revoke_on_accept),
     })
     .select('id, expires_at')
     .single();
@@ -231,6 +232,9 @@ router.post('/invite/:token/redeem', requireAuth, async (req, res) => {
     err.status = 502;
     throw err;
   }
+
+  // Revoke-on-accept for editor links is now handled atomically inside
+  // consume_invite_link under the FOR UPDATE lock — no app-layer revoke needed.
 
   res.json({
     joined: true,
