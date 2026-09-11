@@ -1,15 +1,18 @@
 import express from 'express';
 import { randomUUID } from 'crypto';
-import rateLimit from 'express-rate-limit';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { checkMuted } from '../middleware/checkMuted.js';
 import textModerator from '../lib/textModerator.js';
 import { requireModerator } from '../lib/clubPermissions.js';
 import { NotificationService } from '../notifications/service.js';
+import { limiter } from '../lib/rateLimit.js';
 
-const writeLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 60 });
-const announceLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
+// limiter() keys by user id. These previously called rateLimit() directly with no
+// keyGenerator, so they fell back to req.ip — and ten announcements would 429 an
+// entire campus NAT for fifteen minutes.
+const writeLimiter = limiter(60);
+const announceLimiter = limiter(10);
 
 const router = express.Router();
 
