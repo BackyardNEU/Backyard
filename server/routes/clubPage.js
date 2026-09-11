@@ -1,4 +1,5 @@
 import express from 'express';
+import { randomUUID } from 'crypto';
 import rateLimit from 'express-rate-limit';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
@@ -525,14 +526,22 @@ router.post('/:clubId/announce', announceLimiter, requireAuth, checkMuted, async
         ? await supabaseAdmin.from('uni_names').select('id').eq('uni_name', club.school).maybeSingle()
         : { data: null };
 
+      // One id per announcement, not per club. decide() dedups on
+      // (recipient_id, type, entity_id) over a 5 minute window, so a constant club id
+      // meant the SECOND announcement a club sent within five minutes was dropped for
+      // every member who received the first — a moderator correcting a time silently
+      // reached nobody. new_club_event never hit this because its entity is the event.
+      const announcementId = randomUUID();
+
       await Promise.allSettled(
         memberships.map((m) =>
           NotificationService.dispatch({
             type: 'club_announcement',
             recipientId: m.user_id,
             actorId: req.user.id,
-            entity: { kind: 'club', id: clubId },
+            entity: { kind: 'club_announcement', id: announcementId },
             payload: {
+              clubId,
               clubName: club?.club_name,
               imageUrl: club?.image_url,
               uniId: uni?.id ?? null,

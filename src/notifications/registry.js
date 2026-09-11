@@ -37,6 +37,13 @@ export const registry = {
       const msg = n.payload?.message ?? '';
       return title ? `${club} — ${title}: ${msg}` : `${club}: ${msg}`;
     },
-    getUrl: (n) => n.payload?.uniId ? `/university/${n.payload.uniId}` : null,
+    // ?club= is what UniversityPage reads into autoExpandId, so the tap opens the
+    // club that announced rather than dropping the member on a hub of every tile.
+    // Same shape QrFlyerButton and JoinPage already use.
+    getUrl: (n) => {
+      const { uniId, clubId } = n.payload ?? {};
+      if (!uniId) return null;
+      return clubId ? `/university/${uniId}?club=${clubId}` : `/university/${uniId}`;
+    },
   },
 };
