@@ -45,6 +45,11 @@ export function NavBar() {
     return () => { active = false; };
   }, [GlobalValue]);
 
+  const isOnProfilePage = location.pathname === '/profile'
+    || location.pathname.startsWith('/profile/')
+    || location.pathname === '/profile-setup'
+    || location.pathname === '/settings'
+    || location.pathname.startsWith('/friend/');
   const isOnUniPage = location.pathname.startsWith('/university/');
 
   // UniversityPage owns the calendar/clubs toggle as local state and already
@@ -71,7 +76,7 @@ export function NavBar() {
   // rather than a backdrop element, so it darkens these buttons without
   // covering them — on narrow screens the bar sits below the card and stays
   // clickable. Unmount the whole bar, as the old floating cluster did.
-  if (loginOpen) return null;
+  if (loginOpen || isOnProfilePage) return null;
 
   // Calendar and Clubs describe which view UniversityPage is showing. On any
   // other route neither is current, so claiming a pressed state there would

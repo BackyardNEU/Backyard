@@ -30,6 +30,9 @@ export default function AnnouncementButton({ clubId, memberCount }) {
   useEffect(() => () => clearTimeout(closeTimerRef.current), []);
 
   function openModal() {
+    // A send arms a 1.5s auto-close. Dismissing by hand and reopening inside that window
+    // otherwise let the stale timer close the modal while someone was typing.
+    clearTimeout(closeTimerRef.current);
     setTitle('');
     setMessage('');
     setError(null);
@@ -48,6 +51,10 @@ export default function AnnouncementButton({ clubId, memberCount }) {
     setSending(true);
     setError(null);
     try {
+      // apiFetch stringifies `body` itself (src/lib/api.js). Passing an already-encoded
+      // string double-encoded it into a top-level JSON string, which express.json()
+      // rejects in strict mode before the route is ever reached — so every send failed
+      // with a body-parser 400 and the feature had never worked.
       await apiFetch(`/clubs/${clubId}/announce`, {
         method: 'POST',
         body: { title: title.trim() || undefined, message: message.trim() },

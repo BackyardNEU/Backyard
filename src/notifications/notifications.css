@@ -188,6 +188,7 @@
   overflow: hidden;
 }
 
+
 .notif-content {
   flex: 1;
   min-width: 0;
@@ -198,7 +199,9 @@
   font-size: 0.88rem;
   line-height: 1.45;
   color: #000;
+  white-space: pre-wrap;
 }
+
 
 .notif-time {
   font-size: 0.74rem;

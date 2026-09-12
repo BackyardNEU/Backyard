@@ -21,8 +21,9 @@ export default function AdminPage() {
   const [access, setAccess]       = useState('checking'); // 'checking' | 'denied' | 'ok'
   const [clubs, setClubs]         = useState([]);
   const [clubId, setClubId]       = useState('');
-  const [maxUses, setMaxUses]     = useState(1);
+  const [maxUses, setMaxUses]     = useState(20);
   const [daysValid, setDaysValid] = useState(7);
+  const [revokeOnAccept, setRevokeOnAccept] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [result, setResult]       = useState(null);
   const [genError, setGenError]   = useState(null);
@@ -47,7 +48,7 @@ export default function AdminPage() {
     try {
       const data = await apiFetch(`/admin/clubs/${clubId}/editor-invite-link`, {
         method: 'POST',
-        body: { max_uses: maxUses, days_valid: daysValid },
+        body: { max_uses: maxUses, days_valid: daysValid, revoke_on_accept: revokeOnAccept },
       });
       setResult(data);
     } catch (err) {
@@ -85,12 +86,17 @@ export default function AdminPage() {
       <div style={s.field}>
         <label>Max uses</label>
         <input style={s.input} type="number" min={1} value={maxUses} onChange={e => setMaxUses(Number(e.target.value))} />
-        <span style={s.muted}>1 = single-use (recommended for editor links)</span>
+        <span style={{ ...s.muted, color: '#b45309' }}>⚠ Avoid single-use — email clients (Outlook, Gmail) preview links and consume the use before the recipient opens it.</span>
       </div>
 
       <div style={s.field}>
         <label>Days valid</label>
         <input style={s.input} type="number" min={1} value={daysValid} onChange={e => setDaysValid(Number(e.target.value))} />
+      </div>
+
+      <div style={{ ...s.field, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <input type="checkbox" id="revokeOnAccept" checked={revokeOnAccept} onChange={e => setRevokeOnAccept(e.target.checked)} />
+        <label htmlFor="revokeOnAccept" style={{ fontFamily: 'monospace', cursor: 'pointer' }}>Expire link after accepted</label>
       </div>
 
       <button style={s.btn} onClick={generate} disabled={!clubId || generating}>

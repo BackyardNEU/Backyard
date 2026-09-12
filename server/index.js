@@ -2,9 +2,9 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { identifyUser } from './middleware/requireAuth.js';
 import { ALLOWED_ORIGINS } from './lib/appUrls.js';
+import { limiter } from './lib/rateLimit.js';
 
 import clubsRouter from './routes/clubs.js';
 import clubDetailsRouter from './routes/clubDetails.js';
@@ -56,23 +56,6 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json({ limit: '100kb' }));
-
-const WINDOW_MS = 15 * 60 * 1000;
-
-// Key by user ID whenever we know who is calling. A university campus NATs thousands of
-// students behind a handful of public addresses, so keying by IP throttles the entire
-// school as if it were one person. ipKeyGenerator is the library's own helper — it
-// normalizes IPv6 to a /56 subnet, which hand-rolled `req.ip` keying gets wrong.
-const keyByUser = (req) => req.user?.id ?? ipKeyGenerator(req.ip ?? '');
-
-const limiter = (max) =>
-  rateLimit({
-    windowMs: WINDOW_MS,
-    max,
-    keyGenerator: keyByUser,
-    standardHeaders: true, // RateLimit-* headers so the client can back off intelligently
-    legacyHeaders: false,
-  });
 
 // Populate req.user before any limiter runs. requireAuth lives inside the routers, which
 // is too late for keyGenerator to see it.

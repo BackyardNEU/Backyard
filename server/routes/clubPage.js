@@ -537,12 +537,22 @@ router.post('/:clubId/announce', announceLimiter, requireAuth, checkMuted, async
       }
 
       const club = clubResult.data;
-      const memberships = membershipsResult.data;
-      if (!memberships?.length) return;
+      const memberships = membershipsResult.data ?? [];
+      if (!memberships.length) {
+        console.warn('[announce] no recipients', { clubId, actorId: senderId });
+        return;
+      }
 
-      const { data: uni } = club?.school
-        ? await supabaseAdmin.from('uni_names').select('id').eq('uni_name', club.school).maybeSingle()
-        : { data: null };
+      let uni = null;
+      if (club.school) {
+        const uniRes = await supabaseAdmin.from('uni_names').select('id').eq('uni_name', club.school).maybeSingle();
+        if (uniRes.error) {
+          console.error('[announce] uni lookup failed', { clubId, school: club.school, error: uniRes.error.message });
+        } else if (!uniRes.data) {
+          console.warn('[announce] no uni_names match — notification will not be clickable', { clubId, school: club.school });
+        }
+        uni = uniRes.data ?? null;
+      }
 
       // One UUID per broadcast so the decision layer never deduplicates two separate
       // announcements sent within the 5-minute window. announceLimiter bounds abuse.
@@ -572,9 +582,9 @@ router.post('/:clubId/announce', announceLimiter, requireAuth, checkMuted, async
       const failed   = settled.filter((r) => r.status === 'rejected'  || r.value?.error).length;
       console.log(`[announce] clubId=${clubId} delivered=${delivered} skipped=${skipped} failed=${failed}`);
     } catch (err) {
-      console.error('[announce] notification fan-out failed:', err.message);
+      console.error('[announce] notification fan-out failed', { clubId, actorId: req.user.id, err });
     }
-  })();
+  })().catch((err) => console.error('[announce] fan-out crashed', err));
 });
 
 export default router;

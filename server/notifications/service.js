@@ -27,9 +27,15 @@ export const NotificationService = {
 
       const { channels, skip } = await decide(event);
       if (skip) {
+        // Logged as well as returned. Three of the four callers discard the return
+        // value, so returning it INSTEAD of logging made friend_request,
+        // friend_accepted, new_club_event and new_review skips invisible — trading four
+        // types' observability for one's.
         console.log(`[notifications] skipping ${type}: ${skip}`);
         return { skipped: skip };
       }
+
+      let delivered = false;
 
       if (channels.includes('in_app')) {
         const row = handler.buildRow(event);
@@ -37,6 +43,7 @@ export const NotificationService = {
           .from('notifications')
           .insert({ id: randomUUID(), ...row, channel_status: { in_app: 'delivered' } });
         if (error) throw error;
+        delivered = true;
       }
 
       // email and push are stubbed — skipped until templates exist

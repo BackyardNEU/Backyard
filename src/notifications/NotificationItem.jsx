@@ -12,15 +12,27 @@ export function NotificationItem({ notification, onRespond, onClose }) {
 
   const message = entry.message(notification);
   const isPending = !notification.action_taken && entry.actions?.length > 0;
-  const avatarUrl = entry.image ? entry.image(notification) : notification.actor?.avatar_url;
-  const avatarUsername = entry.image ? null : notification.actor?.username;
+  // entity_type drives both what the avatar shows and where it navigates.
+  // 'user' → person photo → actor profile; 'club'/'other' → club logo → club page.
+  const isUserEntity = notification.entity_type === 'user';
+  const avatarUrl = isUserEntity ? notification.actor?.avatar_url : entry.image?.(notification) ?? null;
+  const avatarUsername = isUserEntity ? notification.actor?.username : null;
   const url = entry.getUrl?.(notification) ?? null;
+  const avatarHref = isUserEntity
+    ? (notification.actor_id ? `/friend/${notification.actor_id}` : null)
+    : url;
 
   function handleAvatarClick(e) {
     e.stopPropagation();
-    if (!url) return;
+    if (!avatarHref) return;
     onClose?.();
-    navigate(url);
+    navigate(avatarHref);
+  }
+
+  function handleKeyDown(e) {
+    if (!url || (e.key !== 'Enter' && e.key !== ' ')) return;
+    e.preventDefault();
+    handleClick();
   }
 
   return (
@@ -32,11 +44,11 @@ export function NotificationItem({ notification, onRespond, onClose }) {
     >
       {/* Avatar is a separate button so clicking it navigates without toggling expand */}
       <button
-        className={`notif-avatar-btn${url ? ' notif-avatar-btn--linked' : ''}`}
+        className={`notif-avatar-btn${avatarHref ? ' notif-avatar-btn--linked' : ''}`}
         onClick={handleAvatarClick}
         type="button"
-        tabIndex={url ? 0 : -1}
-        aria-label={url ? 'Go to club page' : undefined}
+        tabIndex={avatarHref ? 0 : -1}
+        aria-label={avatarHref ? (isUserEntity ? 'Go to profile' : 'Go to club page') : undefined}
       >
         <Avatar
           className="notif-avatar"

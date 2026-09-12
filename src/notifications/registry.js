@@ -20,7 +20,6 @@ export const registry = {
   },
   new_club_event: {
     icon: CalendarPlus,
-    // Show the club logo instead of the actor's avatar
     image: (n) => n.payload?.imageUrl ?? null,
     message: (n) => {
       const club = n.payload?.clubName ?? 'A club you joined';
@@ -32,11 +31,16 @@ export const registry = {
     icon: Megaphone,
     image: (n) => n.payload?.imageUrl ?? null,
     message: (n) => {
-      const club = n.payload?.clubName ?? 'A club';
+      const sender = n.actor?.username ?? 'A moderator';
+      const club = n.payload?.clubName ?? 'a club';
       const title = n.payload?.title;
-      const msg = n.payload?.message ?? '';
-      return title ? `${club} — ${title}: ${msg}` : `${club}: ${msg}`;
+      const body = n.payload?.message ?? '';
+      const headline = title ? `${sender} from ${club}: ${title}` : `${sender} from ${club}`;
+      return body ? `${headline}\n${body}` : headline;
     },
+    // ?club= is what UniversityPage reads into autoExpandId, so the tap opens the
+    // club that announced rather than dropping the member on a hub of every tile.
+    // Same shape QrFlyerButton and JoinPage already use.
     getUrl: (n) => {
       const { uniId, clubId } = n.payload ?? {};
       if (!uniId) return null;
