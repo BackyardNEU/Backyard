@@ -7,14 +7,6 @@ const MAX_LENGTH = 500;
 const MAX_TITLE_LENGTH = 80;
 
 export default function AnnouncementButton({ clubId, memberCount }) {
-  // The roster includes the sender; the fan-out excludes them (.neq on user_id), so
-  // the raw count promised one more notification than anyone would ever receive.
-  //
-  // null, not 0, when the roster has not loaded: a club whose only member is the founder
-  // is a real zero and must say so, while an unknown count must not claim anything. The
-  // two were collapsed, and 0 fell through to the most reassuring string in the file.
-  const recipientCount = memberCount == null ? null : Math.max(0, memberCount - 1);
-  const noRecipients = recipientCount === 0;
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
@@ -40,7 +32,7 @@ export default function AnnouncementButton({ clubId, memberCount }) {
   function openModal() {
     // A send arms a 1.5s auto-close. Dismissing by hand and reopening inside that window
     // otherwise let the stale timer close the modal while someone was typing.
-    clearTimeout(closeTimer.current);
+    clearTimeout(closeTimerRef.current);
     setTitle('');
     setMessage('');
     setError(null);
