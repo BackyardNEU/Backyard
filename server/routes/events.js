@@ -6,6 +6,7 @@ import textModerator from '../lib/textModerator.js';
 import { getBlockedIds, filterBlocked } from '../lib/blocks.js';
 import { NotificationService } from '../notifications/service.js';
 import { weeklyWindow } from '../lib/wallClock.js';
+import { requireModerator } from '../lib/clubPermissions.js';
 
 const router = express.Router();
 
@@ -210,15 +211,18 @@ router.post('/', checkMuted, async (req, res) => {
         eventName, where, isMembersOnly,
     } = req.body;
 
+    /*
     const { data: profile } = await supabaseAdmin
         .from('profiles')
         .select('member_list')
         .eq('id', req.user.id)
         .single();
+    */
 
-    const memberList = profile?.member_list || [];
-    if (!memberList.includes(clubId)) {
-        return res.status(403).json({ error: 'You must be a member of this club to create events' });
+    const status = await requireModerator(req.user.id, clubId);
+
+    if (status !== 'top_moderator' && status !== 'moderator') {
+        return res.status(403).json({ error: 'You must be a moderator of this club to create events' });
     }
 
     const insert = {
