@@ -42,16 +42,19 @@ export const NotificationService = {
         return { ok: false, skipped: skip };
       }
 
+      let delivered = false;
+
       if (channels.includes('in_app')) {
         const row = handler.buildRow(event);
         const { error } = await supabaseAdmin
           .from('notifications')
           .insert({ id: randomUUID(), ...row, channel_status: { in_app: 'delivered' } });
         if (error) throw error;
+        delivered = true;
       }
 
       // email and push are stubbed — skipped until templates exist
-      return { ok: true };
+      return delivered ? { ok: true } : { ok: false, skipped: 'no_channels' };
     } catch (err) {
       // Log the whole error, not just .message: a PostgrestError carries code, details
       // and hint, and those are the fields that name the actual problem.

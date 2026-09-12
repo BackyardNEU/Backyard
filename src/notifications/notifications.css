@@ -154,6 +154,7 @@
   flex-shrink: 0;
 }
 
+
 .notif-content {
   flex: 1;
   min-width: 0;
@@ -165,6 +166,7 @@
   line-height: 1.45;
   color: #000;
 }
+
 
 .notif-time {
   font-size: 0.74rem;
