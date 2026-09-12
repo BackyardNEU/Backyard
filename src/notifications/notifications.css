@@ -127,15 +127,48 @@
   align-items: flex-start;
   gap: 0.75rem;
   padding: 0.7rem 1.25rem;
+  cursor: pointer;
   transition: background 0.12s;
+  outline: none;
 }
 
 .notif-item:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.notif-item:focus-visible {
+  outline: 2px solid #ef5a4d;
+  outline-offset: -2px;
 }
 
 .notif-item--unread {
   background: rgba(239, 90, 77, 0.06);
+}
+
+/* Avatar button — resets <button> chrome; linked variant gets pointer + hover */
+.notif-avatar-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  flex-shrink: 0;
+  cursor: default;
+  border-radius: 50%;
+  display: block;
+}
+
+.notif-avatar-btn--linked {
+  cursor: pointer;
+}
+
+.notif-avatar-btn--linked:hover .notif-avatar,
+.notif-avatar-btn--linked:hover .avatar {
+  opacity: 0.8;
+}
+
+.notif-avatar-btn--linked:focus-visible {
+  outline: 2px solid #ef5a4d;
+  outline-offset: 2px;
 }
 
 .notif-avatar {
@@ -143,8 +176,18 @@
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
-  flex-shrink: 0;
+  display: block;
+  transition: opacity 0.15s;
 }
+
+/* Message — collapsed to 2 lines by default, full when expanded */
+.notif-message--collapsed {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 
 .notif-content {
   flex: 1;
@@ -156,7 +199,9 @@
   font-size: 0.88rem;
   line-height: 1.45;
   color: #000;
+  white-space: pre-wrap;
 }
+
 
 .notif-time {
   font-size: 0.74rem;

@@ -1,11 +1,15 @@
 import express from 'express';
-import rateLimit from 'express-rate-limit';
+import { randomUUID } from 'crypto';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { checkMuted } from '../middleware/checkMuted.js';
 import textModerator from '../lib/textModerator.js';
+import { requireModerator } from '../lib/clubPermissions.js';
+import { NotificationService } from '../notifications/service.js';
+import { limiter } from '../lib/rateLimit.js';
 
-const writeLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 60 });
+const writeLimiter = limiter(60);
+const announceLimiter = limiter(10);
 
 const router = express.Router();
 
@@ -475,6 +479,112 @@ router.delete('/:clubId/interests', writeLimiter, requireAuth, async (req, res) 
   }
 
   res.status(204).end();
+});
+
+// POST /api/clubs/:clubId/announce
+// Authenticated, moderators only. Sends a custom message to all club members as
+// an in-app notification. Fire-and-forget fan-out — response returns immediately.
+//
+// Dedup note: each broadcast gets its own UUID as entity_id so the decision layer
+// never collapses two separate announcements into one. announceLimiter (10/15 min,
+// keyed by user) is the abuse guard instead.
+const MAX_ANNOUNCEMENT_LENGTH = 500;
+const MAX_ANNOUNCEMENT_TITLE_LENGTH = 80;
+router.post('/:clubId/announce', announceLimiter, requireAuth, checkMuted, async (req, res) => {
+  const { clubId } = req.params;
+  const { message, title } = req.body ?? {};
+
+  await requireModerator(req.user.id, clubId);
+
+  const trimmedMessage = typeof message === 'string' ? message.trim() : '';
+  if (!trimmedMessage) {
+    return res.status(400).json({ error: 'message is required' });
+  }
+  if (trimmedMessage.length > MAX_ANNOUNCEMENT_LENGTH) {
+    return res.status(400).json({ error: `Message must be ${MAX_ANNOUNCEMENT_LENGTH} characters or fewer` });
+  }
+
+  const trimmedTitle = typeof title === 'string' ? title.trim() : '';
+  if (trimmedTitle.length > MAX_ANNOUNCEMENT_TITLE_LENGTH) {
+    return res.status(400).json({ error: `Title must be ${MAX_ANNOUNCEMENT_TITLE_LENGTH} characters or fewer` });
+  }
+
+  const check = textModerator.checkFields({ message: trimmedMessage, ...(trimmedTitle && { title: trimmedTitle }) });
+  if (!check.clean) {
+    return res.status(422).json({ error: check.message });
+  }
+
+  // Respond immediately; fan-out runs in the background.
+  res.json({ ok: true });
+
+  // Capture sender id before the async IIFE — req is not guaranteed to be live.
+  const senderId = req.user.id;
+
+  (async () => {
+    try {
+      const [clubResult, membershipsResult] = await Promise.all([
+        supabaseAdmin.from('demo_club_data').select('club_name, image_url, school').eq('id', clubId).single(),
+        supabaseAdmin.from('club_memberships').select('user_id').eq('club_id', clubId),
+      ]);
+
+      if (clubResult.error) {
+        console.error('[announce] club lookup failed:', clubResult.error.message);
+        return;
+      }
+      if (membershipsResult.error) {
+        console.error('[announce] membership lookup failed:', membershipsResult.error.message);
+        return;
+      }
+
+      const club = clubResult.data;
+      const memberships = membershipsResult.data ?? [];
+      if (!memberships.length) {
+        console.warn('[announce] no recipients', { clubId, actorId: senderId });
+        return;
+      }
+
+      let uni = null;
+      if (club.school) {
+        const uniRes = await supabaseAdmin.from('uni_names').select('id').eq('uni_name', club.school).maybeSingle();
+        if (uniRes.error) {
+          console.error('[announce] uni lookup failed', { clubId, school: club.school, error: uniRes.error.message });
+        } else if (!uniRes.data) {
+          console.warn('[announce] no uni_names match — notification will not be clickable', { clubId, school: club.school });
+        }
+        uni = uniRes.data ?? null;
+      }
+
+      // One UUID per broadcast so the decision layer never deduplicates two separate
+      // announcements sent within the 5-minute window. announceLimiter bounds abuse.
+      const announcementId = randomUUID();
+
+      const settled = await Promise.allSettled(
+        memberships.map((m) =>
+          NotificationService.dispatch({
+            type: 'club_announcement',
+            recipientId: m.user_id,
+            actorId: senderId,
+            entity: { kind: 'announcement', id: announcementId },
+            payload: {
+              clubId,
+              clubName: club?.club_name,
+              imageUrl: club?.image_url,
+              uniId: uni?.id ?? null,
+              title: trimmedTitle || null,
+              message: trimmedMessage,
+            },
+          })
+        )
+      );
+
+      const delivered = settled.filter((r) => r.status === 'fulfilled' && r.value?.ok).length;
+      const skipped  = settled.filter((r) => r.status === 'fulfilled' && r.value?.skipped).length;
+      const failed   = settled.filter((r) => r.status === 'rejected'  || r.value?.error).length;
+      console.log(`[announce] clubId=${clubId} delivered=${delivered} skipped=${skipped} failed=${failed}`);
+    } catch (err) {
+      console.error('[announce] notification fan-out failed', { clubId, actorId: req.user.id, err });
+    }
+  })().catch((err) => console.error('[announce] fan-out crashed', err));
 });
 
 export default router;

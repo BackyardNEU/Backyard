@@ -1,12 +1,12 @@
 import express from 'express';
-import rateLimit from 'express-rate-limit';
 import { supabaseAdmin } from '../supabaseAdmin.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import textModerator from '../lib/textModerator.js';
+import { limiter } from '../lib/rateLimit.js';
 
 const router = express.Router();
 
-const writeLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 60 });
+const writeLimiter = limiter(60);
 
 // GET /api/interests
 // Returns the full taxonomy: all categories with their subcategories nested.
