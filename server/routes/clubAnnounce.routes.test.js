@@ -119,7 +119,7 @@ describe('POST /api/clubs/:clubId/announce', () => {
         vi.spyOn(console, 'log').mockImplementation(() => {});
         results = {
             'demo_club_data.select': { data: { club_name: 'Chess Club', image_url: 'https://img/c.png', school: 'Northeastern' }, error: null },
-            'club_memberships.select': { data: [{ user_id: 'm1' }, { user_id: 'm2' }], error: null },
+            'club_memberships.select': { data: [{ user_id: 'm1' }, { user_id: 'm2' }, { user_id: SENDER }], error: null },
             'uni_names.select': { data: { id: 'uni-1' }, error: null },
         };
     });
@@ -175,15 +175,15 @@ describe('POST /api/clubs/:clubId/announce', () => {
 
     // ---- fan-out -------------------------------------------------------------
 
-    it('notifies every member except the sender', async () => {
+    it('notifies every member including the sender', async () => {
         await post({ message: 'Meeting at 7pm' });
         await flush();
 
-        expect(dispatch).toHaveBeenCalledTimes(2);
-        expect(dispatch.mock.calls.map(([e]) => e.recipientId).sort()).toEqual(['m1', 'm2']);
+        expect(dispatch).toHaveBeenCalledTimes(3);
+        expect(dispatch.mock.calls.map(([e]) => e.recipientId).sort()).toEqual(['m1', 'm2', SENDER].sort());
 
         const memberQuery = queries.find((q) => q.table === 'club_memberships');
-        expect(memberQuery.negated).toContainEqual(['user_id', SENDER]);
+        expect(memberQuery.negated).toHaveLength(0);
     });
 
     // The regression that made corrections vanish: decide() dedups on
@@ -196,14 +196,16 @@ describe('POST /api/clubs/:clubId/announce', () => {
         await flush();
 
         const ids = dispatch.mock.calls.map(([e]) => e.entity.id);
-        expect(ids).toHaveLength(4);
+        expect(ids).toHaveLength(6);
 
         // Every recipient of ONE announcement shares its id — that is the announcement's
         // identity. What must differ is one announcement from the next, which is what
         // decide()'s (recipient_id, type, entity_id) dedup key turns on.
-        const [a1, a2, b1, b2] = ids;
+        const [a1, a2, a3, b1, b2, b3] = ids;
         expect(a1).toBe(a2);
+        expect(a2).toBe(a3);
         expect(b1).toBe(b2);
+        expect(b2).toBe(b3);
         expect(a1).not.toBe(b1);
         expect(ids.every((id) => id && id !== CLUB)).toBe(true);
     });
@@ -266,7 +268,7 @@ describe('POST /api/clubs/:clubId/announce', () => {
         await post({ message: 'hi' });
         await flush();
 
-        expect(dispatch).toHaveBeenCalledTimes(2);
+        expect(dispatch).toHaveBeenCalledTimes(3);
         expect(dispatch.mock.calls[0][0].payload.uniId).toBeNull();
         expect(console.warn).toHaveBeenCalledWith(
             '[announce] no uni_names match — notification will not be clickable',
@@ -282,18 +284,18 @@ describe('POST /api/clubs/:clubId/announce', () => {
 
         expect(console.error).toHaveBeenCalledWith(
             '[announce] fan-out completed with failures',
-            expect.objectContaining({ recipients: 2, delivered: 1, failed: 1, firstError: 'PGRST204' }),
+            expect.objectContaining({ recipients: 3, delivered: 2, failed: 1, firstError: 'PGRST204' }),
         );
     });
 
     // A rejecting dispatch must not abort the rest of the fan-out.
     it('keeps going when one recipient throws', async () => {
-        dispatch.mockRejectedValueOnce(new Error('boom')).mockResolvedValueOnce({ ok: true });
+        dispatch.mockRejectedValueOnce(new Error('boom')).mockResolvedValue({ ok: true });
 
         await post({ message: 'hi' });
         await flush();
 
-        expect(dispatch).toHaveBeenCalledTimes(2);
+        expect(dispatch).toHaveBeenCalledTimes(3);
         expect(console.error).toHaveBeenCalledWith(
             '[announce] fan-out completed with failures',
             expect.objectContaining({ failed: 1 }),

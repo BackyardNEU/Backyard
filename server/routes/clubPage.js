@@ -531,7 +531,7 @@ router.post('/:clubId/announce', announceLimiter, requireAuth, checkMuted, async
       // without a single line of output — the one path here that failed with no trace.
       const [clubRes, memberRes] = await Promise.all([
         supabaseAdmin.from('demo_club_data').select('club_name, image_url, school').eq('id', clubId).single(),
-        supabaseAdmin.from('club_memberships').select('user_id').eq('club_id', clubId).neq('user_id', req.user.id),
+        supabaseAdmin.from('club_memberships').select('user_id').eq('club_id', clubId),
       ]);
 
       if (memberRes.error) {
