@@ -3,7 +3,7 @@ export function buildRow(event) {
     recipient_id: event.recipientId,
     actor_id: event.actorId,
     type: 'new_review',
-    entity_type: 'review',
+    entity_type: 'club',
     entity_id: event.entity?.id ?? null,
     payload: event.payload ?? null,
   };

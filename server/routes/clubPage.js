@@ -537,14 +537,21 @@ router.post('/:clubId/announce', announceLimiter, requireAuth, checkMuted, async
       }
 
       const club = clubResult.data;
-      const memberships = membershipsResult.data;
-      if (!memberships?.length) return;
-
-      const club = clubRes.data;
-      const memberships = memberRes.data ?? [];
+      const memberships = membershipsResult.data ?? [];
       if (!memberships.length) {
-        console.warn('[announce] no recipients', { clubId, actorId: req.user.id });
+        console.warn('[announce] no recipients', { clubId, actorId: senderId });
         return;
+      }
+
+      let uni = null;
+      if (club.school) {
+        const uniRes = await supabaseAdmin.from('uni_names').select('id').eq('uni_name', club.school).maybeSingle();
+        if (uniRes.error) {
+          console.error('[announce] uni lookup failed', { clubId, school: club.school, error: uniRes.error.message });
+        } else if (!uniRes.data) {
+          console.warn('[announce] no uni_names match — notification will not be clickable', { clubId, school: club.school });
+        }
+        uni = uniRes.data ?? null;
       }
 
       // One UUID per broadcast so the decision layer never deduplicates two separate

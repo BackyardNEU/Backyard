@@ -3,7 +3,7 @@ export function buildRow(event) {
     recipient_id: event.recipientId,
     actor_id: event.actorId,
     type: 'friend_accepted',
-    entity_type: 'friend_request',
+    entity_type: 'user',
     entity_id: event.entity?.id ?? null,
   };
 }
