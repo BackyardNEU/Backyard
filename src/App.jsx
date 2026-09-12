@@ -19,6 +19,7 @@ import { SupportModal } from './support_components/SupportModal'
 import { DEFAULT_UNIVERSITY_PATH } from './lib/university'
 import NotFoundPage from './components/NotFoundPage'
 import { useGlobalStore } from './lib/store'
+import { Analytics } from '@vercel/analytics/react'
 
 // Split out so the admin UI is not in the bundle every visitor downloads. It shipped
 // there as a static import, which meant anyone could read the admin screens and the
@@ -78,6 +79,7 @@ function App() {
               a blank page rather than a 404, which is what people were hitting. */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
+        <Analytics />
       </div>
     </ClubDataProvider>
   );
