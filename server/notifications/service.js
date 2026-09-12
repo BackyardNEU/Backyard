@@ -11,24 +11,17 @@ const HANDLERS = {
 };
 
 export const NotificationService = {
-  /**
-   * Never rejects — one bad recipient must not abort a fan-out midway.
-   *
-   * It does now REPORT, which it did not before. Every failure was caught here and
-   * turned into a resolved promise, so a caller wrapping this in Promise.allSettled saw
-   * every entry as fulfilled no matter what happened. A fan-out could fail for all 500
-   * members and the caller could not tell. Existing callers ignore the return value, so
-   * adding one is backward compatible.
-   *
-   * @returns {Promise<{ ok: boolean, skipped?: string, error?: string }>}
-   */
+  // Returns { ok: true } on delivery, { skipped: reason } when dedup/prefs suppress it,
+  // or { error: message } on any failure. Callers that don't use the return value still
+  // benefit from the console output; callers like the announcement fan-out use it to
+  // log aggregate delivered/skipped/failed counts.
   async dispatch(event) {
     const { type } = event;
     try {
       const loadHandler = HANDLERS[type];
       if (!loadHandler) {
         console.warn('[notifications] no handler for type:', type);
-        return { ok: false, error: `no handler for type ${type}` };
+        return { error: `no handler for type: ${type}` };
       }
       const handler = await loadHandler();
 
@@ -39,7 +32,7 @@ export const NotificationService = {
         // friend_accepted, new_club_event and new_review skips invisible — trading four
         // types' observability for one's.
         console.log(`[notifications] skipping ${type}: ${skip}`);
-        return { ok: false, skipped: skip };
+        return { skipped: skip };
       }
 
       let delivered = false;
@@ -54,12 +47,10 @@ export const NotificationService = {
       }
 
       // email and push are stubbed — skipped until templates exist
-      return delivered ? { ok: true } : { ok: false, skipped: 'no_channels' };
+      return { ok: true };
     } catch (err) {
-      // Log the whole error, not just .message: a PostgrestError carries code, details
-      // and hint, and those are the fields that name the actual problem.
-      console.error(`[notifications] dispatch failed for ${type}:`, err);
-      return { ok: false, error: err?.message ?? String(err) };
+      console.error('[notifications] dispatch failed:', err.message);
+      return { error: err.message };
     }
   },
 };

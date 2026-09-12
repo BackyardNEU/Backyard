@@ -45,5 +45,10 @@ export const registry = {
       if (!uniId) return null;
       return clubId ? `/university/${uniId}?club=${clubId}` : `/university/${uniId}`;
     },
+    getUrl: (n) => {
+      const { uniId, clubId } = n.payload ?? {};
+      if (!uniId) return null;
+      return clubId ? `/university/${uniId}?club=${clubId}` : `/university/${uniId}`;
+    },
   },
 };

@@ -6,8 +6,6 @@ import { limiter } from '../lib/rateLimit.js';
 
 const router = express.Router();
 
-// Shared helper: keyed by user id. This was a bare rateLimit() falling back to
-// req.ip, so 60 writes from anywhere on a campus NAT 429'd every student on it.
 const writeLimiter = limiter(60);
 
 // GET /api/interests

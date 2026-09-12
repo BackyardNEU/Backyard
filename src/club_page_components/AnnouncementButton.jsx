@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { apiFetch } from '../lib/api';
 import './AnnouncementButton.css';
@@ -20,17 +20,22 @@ export default function AnnouncementButton({ clubId, memberCount }) {
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
-  const [sent, setSent] = useState(false);
-  // Cleared on unmount: closing the club card inside the 1.5s window otherwise fires
-  // setOpen on an unmounted component.
-  const closeTimer = useRef(null);
+  const [queued, setQueued] = useState(false);
+  const closeTimerRef = useRef(null);
 
-  useEffect(() => () => clearTimeout(closeTimer.current), []);
+  // memberCount includes the sender, who is excluded from the fan-out.
+  // null  → still loading; show generic copy, allow send
+  // 0     → genuinely empty (shouldn't happen); treat as unknown
+  // 1     → only the moderator; no one to notify → disable send
+  // 2+    → memberCount - 1 will be notified
+  const recipientCount = memberCount > 0 ? memberCount : null;
 
   const remaining = MAX_LENGTH - message.length;
   const overLimit = remaining < 0;
   const titleOverLimit = title.length > MAX_TITLE_LENGTH;
-  const canSend = message.trim().length > 0 && !overLimit && !titleOverLimit && !sending && !noRecipients;
+  const canSend = message.trim().length > 0 && !overLimit && !titleOverLimit && !sending && recipientCount !== 0;
+
+  useEffect(() => () => clearTimeout(closeTimerRef.current), []);
 
   function openModal() {
     // A send arms a 1.5s auto-close. Dismissing by hand and reopening inside that window
@@ -39,12 +44,13 @@ export default function AnnouncementButton({ clubId, memberCount }) {
     setTitle('');
     setMessage('');
     setError(null);
-    setSent(false);
+    setQueued(false);
     setOpen(true);
   }
 
   function closeModal() {
     if (sending) return;
+    clearTimeout(closeTimerRef.current);
     setOpen(false);
   }
 
@@ -61,8 +67,8 @@ export default function AnnouncementButton({ clubId, memberCount }) {
         method: 'POST',
         body: { title: title.trim() || undefined, message: message.trim() },
       });
-      setSent(true);
-      closeTimer.current = setTimeout(() => setOpen(false), 1500);
+      setQueued(true);
+      closeTimerRef.current = setTimeout(() => setOpen(false), 1500);
     } catch (err) {
       setError(err.message || 'Failed to send announcement');
     } finally {
@@ -70,26 +76,22 @@ export default function AnnouncementButton({ clubId, memberCount }) {
     }
   }
 
+  function recipientLine() {
+    if (recipientCount === null) return 'All club members will receive this as an in-app notification.';
+    if (recipientCount === 0) return 'There are no other members to notify yet.';
+    return `This will notify ${recipientCount} member${recipientCount === 1 ? '' : 's'}.`;
+  }
+
   const modal = open
     ? createPortal(
         <div className="announce-backdrop" onClick={closeModal}>
           <div className="announce-modal" onClick={(e) => e.stopPropagation()}>
             <h3>Send Announcement</h3>
-            <p>
-              {noRecipients
-                ? 'No one else has joined this club yet, so there is nobody to notify.'
-                : recipientCount > 0
-                  ? `This will notify ${recipientCount} member${recipientCount === 1 ? '' : 's'}.`
-                  : 'All club members will receive this as an in-app notification.'}
-            </p>
+            <p>{recipientLine()}</p>
 
-            {sent ? (
-              // The endpoint answers before the fan-out starts, so it can only attest
-              // that the message was accepted. Saying "sent" claimed a delivery the
-              // server never confirmed — and was shown identically when zero
-              // notifications were written.
+            {queued ? (
               <p style={{ color: '#27ae60', fontWeight: 600, textAlign: 'center', padding: '12px 0' }}>
-                Announcement queued — members will see it shortly.
+                Announcement queued — members will be notified shortly.
               </p>
             ) : (
               <>

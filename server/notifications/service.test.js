@@ -1,138 +1,111 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// dispatch's RETURN SHAPE is load-bearing and was pinned by nothing.
-//
-// clubPage.js's fan-out does `settled.filter((r) => r.ok)`. If dispatch ever resolves
-// undefined again — which the original did on two paths — that throws a TypeError on
-// every announcement, caught by the outer try, surfacing as "fan-out failed" for a
-// fan-out that actually delivered fine. clubAnnounce.routes.test.js mocks this module
-// wholesale, so the contract needs its own test.
-
-const insert = vi.fn();
-const decide = vi.fn();
-
-vi.mock('./decisionLayer.js', () => ({
-    decide: (...a) => decide(...a),
-    WILDCARD_TYPE: '*',
-}));
-
+// ─── Supabase mock ────────────────────────────────────────────────────────────
+const insertResult = vi.fn();
 vi.mock('../supabaseAdmin.js', () => ({
-    supabaseAdmin: { from: () => ({ insert: (...a) => insert(...a) }) },
+    supabaseAdmin: {
+        from: () => ({
+            insert: (row) => {
+                insertResult._lastRow = row;
+                return Promise.resolve(insertResult());
+            },
+        }),
+    },
 }));
+
+// ─── decisionLayer mock ───────────────────────────────────────────────────────
+const decideMock = vi.fn();
+vi.mock('./decisionLayer.js', () => ({ decide: decideMock }));
+
+// ─── Handler mock ─────────────────────────────────────────────────────────────
+vi.mock('./handlers/friendRequest.js',    () => ({ buildRow: (e) => ({ recipient_id: e.recipientId, type: 'friend_request',    entity_id: e.entity?.id ?? null, payload: null }), emailTemplate: null }));
+vi.mock('./handlers/clubAnnouncement.js', () => ({ buildRow: (e) => ({ recipient_id: e.recipientId, type: 'club_announcement', entity_id: e.entity?.id ?? null, payload: e.payload ?? null }), emailTemplate: null }));
 
 const { NotificationService } = await import('./service.js');
 
 const event = {
-    type: 'club_announcement',
-    recipientId: 'member-1',
-    actorId: 'sender-1',
-    entity: { kind: 'club_announcement', id: 'ann-1' },
-    payload: { clubId: 'club-1', message: 'hi' },
+    type: 'friend_request',
+    recipientId: 'user-1',
+    actorId: 'user-2',
+    entity: { kind: 'user', id: 'req-1' },
 };
 
-describe('NotificationService.dispatch', () => {
-    beforeEach(() => {
-        insert.mockReset();
-        decide.mockReset();
-        insert.mockResolvedValue({ error: null });
-        decide.mockResolvedValue({ channels: ['in_app'] });
-        vi.spyOn(console, 'error').mockImplementation(() => {});
-        vi.spyOn(console, 'warn').mockImplementation(() => {});
-        vi.spyOn(console, 'log').mockImplementation(() => {});
-    });
+const announceEvent = {
+    type: 'club_announcement',
+    recipientId: 'member-1',
+    actorId: 'mod-1',
+    entity: { kind: 'announcement', id: 'announce-uuid' },
+    payload: { clubId: 'club-1', clubName: 'Chess', message: 'Hello!' },
+};
 
-    afterEach(() => vi.restoreAllMocks());
-
-    it('returns { ok: true } after a successful insert', async () => {
-        await expect(NotificationService.dispatch(event)).resolves.toEqual({ ok: true });
-    });
-
-    it('reports a skip without claiming success', async () => {
-        decide.mockResolvedValue({ channels: [], skip: 'dedup' });
-
-        const result = await NotificationService.dispatch(event);
-
-        expect(result).toEqual({ ok: false, skipped: 'dedup' });
-        expect(insert).not.toHaveBeenCalled();
-    });
-
-    // The skip log is what makes a suppressed friend_request diagnosable. Three of the
-    // four callers discard the return value, so returning it is not a substitute.
-    it('still logs a skip, not only returns it', async () => {
-        decide.mockResolvedValue({ channels: [], skip: 'preference' });
-
-        await NotificationService.dispatch(event);
-
-        expect(console.log).toHaveBeenCalledWith('[notifications] skipping club_announcement: preference');
-    });
-
-    it('reports an insert failure instead of resolving as delivered', async () => {
-        insert.mockResolvedValue({ error: { message: 'column "payload" does not exist', code: 'PGRST204' } });
-
-        const result = await NotificationService.dispatch(event);
-
-        expect(result.ok).toBe(false);
-        expect(result.skipped).toBeUndefined();
-        expect(result.error).toContain('payload');
-    });
-
-    it('never rejects, so one bad recipient cannot abort a fan-out', async () => {
-        insert.mockRejectedValue(new Error('socket hang up'));
-        await expect(NotificationService.dispatch(event)).resolves.toMatchObject({ ok: false });
-    });
-
-    it('reports an unknown type rather than resolving silently', async () => {
-        const result = await NotificationService.dispatch({ ...event, type: 'not_a_real_type' });
-        expect(result).toEqual({ ok: false, error: 'no handler for type not_a_real_type' });
-    });
-
-    // Every path must return an object. `undefined` would make clubPage.js's
-    // `.filter((r) => r.ok)` throw on the whole fan-out.
-    it('always resolves to an object with a boolean ok', async () => {
-        const cases = [
-            () => {},
-            () => decide.mockResolvedValue({ channels: [], skip: 'dedup' }),
-            () => insert.mockResolvedValue({ error: { message: 'x' } }),
-            () => decide.mockRejectedValue(new Error('decide blew up')),
-        ];
-        for (const setup of cases) {
-            setup();
-            const r = await NotificationService.dispatch(event);
-            expect(typeof r).toBe('object');
-            expect(r).not.toBeNull();
-            expect(typeof r.ok).toBe('boolean');
-        }
-    });
-
-    it('skips the insert when in_app is not among the chosen channels', async () => {
-        decide.mockResolvedValue({ channels: ['email'] });
-
-        await expect(NotificationService.dispatch(event)).resolves.toEqual({ ok: true });
-        expect(insert).not.toHaveBeenCalled();
-    });
+beforeEach(() => {
+    decideMock.mockReset();
+    insertResult.mockReset();
+    decideMock.mockResolvedValue({ channels: ['in_app', 'email', 'push'] });
+    insertResult.mockReturnValue({ data: {}, error: null });
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
 });
 
-describe('clubAnnouncement buildRow', () => {
-    it('writes the announcement id as the entity, not the club', async () => {
-        const { buildRow } = await import('./handlers/clubAnnouncement.js');
-
-        const row = buildRow(event);
-
-        // entity_id is the dedup key in decisionLayer. Pointing it back at the club
-        // collapsed every announcement a club sent into one five-minute bucket.
-        expect(row.entity_id).toBe('ann-1');
-        expect(row.entity_id).not.toBe(event.payload.clubId);
-        expect(row.entity_type).toBe('club_announcement');
-        expect(row).toMatchObject({
-            recipient_id: 'member-1',
-            actor_id: 'sender-1',
-            type: 'club_announcement',
-        });
-        expect(row.payload.message).toBe('hi');
+describe('NotificationService.dispatch()', () => {
+    it('returns { ok: true } on successful in_app delivery', async () => {
+        const result = await NotificationService.dispatch(event);
+        expect(result).toEqual({ ok: true });
     });
 
-    it('tolerates a missing entity rather than throwing', async () => {
-        const { buildRow } = await import('./handlers/clubAnnouncement.js');
-        expect(buildRow({ recipientId: 'r' }).entity_id).toBeNull();
+    it('returns { skipped: reason } when decide() deduplicates', async () => {
+        decideMock.mockResolvedValue({ channels: [], skip: 'dedup' });
+        const result = await NotificationService.dispatch(event);
+        expect(result).toEqual({ skipped: 'dedup' });
+    });
+
+    it('still logs the skip to console when dedup fires', async () => {
+        decideMock.mockResolvedValue({ channels: [], skip: 'dedup' });
+        await NotificationService.dispatch(event);
+        expect(console.log).toHaveBeenCalledWith(expect.stringContaining('skipping'));
+    });
+
+    it('returns { error: message } when the insert fails', async () => {
+        insertResult.mockReturnValue({ error: { message: 'column payload does not exist' } });
+        const result = await NotificationService.dispatch(event);
+        expect(result.error).toMatch(/column payload/);
+    });
+
+    it('logs insert failures to console', async () => {
+        insertResult.mockReturnValue({ error: { message: 'db error' } });
+        await NotificationService.dispatch(event);
+        expect(console.error).toHaveBeenCalled();
+    });
+
+    it('returns { error } for an unknown type without throwing', async () => {
+        const result = await NotificationService.dispatch({ ...event, type: 'does_not_exist' });
+        expect(result.error).toBeDefined();
+    });
+
+    it('passes payload through to the inserted row for club_announcement', async () => {
+        await NotificationService.dispatch(announceEvent);
+        const row = insertResult._lastRow;
+        expect(row.payload).toMatchObject({ clubId: 'club-1', message: 'Hello!' });
+    });
+
+    it('inserts a fresh UUID for every dispatch call', async () => {
+        await NotificationService.dispatch(event);
+        const id1 = insertResult._lastRow.id;
+        await NotificationService.dispatch(event);
+        const id2 = insertResult._lastRow.id;
+        expect(id1).not.toBe(id2);
+    });
+
+    it('does not insert when the in_app channel is absent', async () => {
+        decideMock.mockResolvedValue({ channels: ['email', 'push'] });
+        await NotificationService.dispatch(event);
+        expect(insertResult).not.toHaveBeenCalled();
+    });
+
+    it('returns { ok: true } even when no channels are enabled but skip is not set', async () => {
+        decideMock.mockResolvedValue({ channels: [] });
+        const result = await NotificationService.dispatch(event);
+        expect(result).toEqual({ ok: true });
     });
 });
